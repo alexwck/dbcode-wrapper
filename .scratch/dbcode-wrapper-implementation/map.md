@@ -2,7 +2,7 @@
 
 ## Destination
 
-Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, same-Mac acceptance, public source, and verified host-only package are complete. The remaining path uses an authenticated GitHub draft for private transfer and validates the package on another owned Mac.
+Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, same-Mac acceptance, public source, verified host-only package, authenticated draft upload, and anonymous privacy checks are complete. The remaining path downloads and validates the package on another owned Mac.
 
 ## Notes
 
