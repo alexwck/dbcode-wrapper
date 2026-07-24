@@ -15,6 +15,8 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - The current signed application is the accepted database-client checkpoint: Connections Home, Database Explorer, automatic DBCode result layout, focused query routes, and no generic Code OSS bottom panel.
 - The exact `v0.1.0` source was rebuilt after the focused first-run runtime installer landed, passed renewed full acceptance, and produced a verified host-only DMG without moving the annotated source tag.
 - Open work lives in child tickets and is found from their `Status`, `Blocked by`, and `Type` fields rather than being repeated on this map.
+- This implementation map carries execution as well as decisions. Work one ticket at a time, record focused and full verification before resolution, and commit each dependency-complete slice separately.
+- Repository learning, hygiene, and safe source-contract cleanup may continue while the other-owned-Mac acceptance remains open. Generated-artifact pruning and release-critical refactors wait for that acceptance so the retained `v0.1.0` evidence is not disturbed.
 
 ## Decisions so far
 
@@ -44,6 +46,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - [Read frozen Release Specifications for rollback](./issues/25-read-frozen-release-specifications-for-rollback.md) — Keep new candidates on the strict current schema while allowing only exact manifest-bound schema-2 and earlier schema-4 current sets through a read-only historical adapter.
 - [Require every compatibility pairing before promotion](./issues/26-require-every-compatibility-pairing-before-promotion.md) — Treat all four current/candidate host and DBCode receipts as promotion gates so no failed mixed pairing can be hidden by a passing baseline and intended pair.
 - [Canonicalize proof extension inventory](./issues/27-canonicalize-proof-extension-inventory.md) — Record the exact external extension set in canonical ID order so host CLI display ordering cannot make current acceptance evidence look stale.
+- [Establish the learning wiki and repository hygiene](./issues/28-establish-the-learning-wiki-and-repository-hygiene.md) — Keep the public source and local issue tracker authoritative, add a source-anchored public OpenKnowledge wiki for learning, retain only local ignored OpenKnowledge state, and protect release evidence while later cleanup waits for its retention contract.
 
 ## Not yet specified
 

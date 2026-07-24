@@ -49,13 +49,19 @@ That gate runs all four current/candidate host and DBCode pairings. Every pairin
 
 Acceptance evidence stores the exact external extension inventory in deterministic ID order. A harmless change in the host CLI's display order therefore cannot make an unchanged package set look stale.
 
-For DBCode `1.36.2`, the isolated rendered release gate sees 88 unique New Connection choices in 12 counted sections. Git stores only those counts and deterministic SHA-256 fingerprints, not a copied list of vendor connection names. The wrapper has no database allowlist and passes no database-type argument into DBCode's New Connection action. A changed count or fingerprint creates a new release candidate that must be reviewed with its exact host; it is not treated as a connection that the wrapper may silently omit.
+The isolated rendered release gate records only connection-section counts and deterministic SHA-256 fingerprints, not a copied list of vendor connection names. The wrapper has no database allowlist and passes no database-type argument into DBCode's New Connection action. A changed count or fingerprint creates a new release candidate that must be reviewed with its exact host; it is not treated as a connection that the wrapper may silently omit. Exact release-specific counts live in the maintained compatibility policy and acceptance evidence.
 
 ## Development
 
 The complete architecture, prerequisites, build commands, verification steps, and real-profile proof workflow are documented in [host/README.md](host/README.md).
 
-Start with [the architecture overview](docs/architecture/overview.md), then use [the learning path](docs/learning-path.md) to trace the real code in a deliberate order. The maintained patch plan is documented in [host/patches/README.md](host/patches/README.md), and [script/README.md](script/README.md) groups the command-line workflows by responsibility.
+### Learn the codebase
+
+Start with [the architecture overview](docs/architecture/overview.md), then use [the learning path](docs/learning-path.md) to trace the real code in a deliberate order. The generated [codebase wiki](wiki/OVERVIEW.md) adds linked module, flow, concept, and task guides, while the [implementation map](.scratch/dbcode-wrapper-implementation/map.md) records why the current design exists and what remains open.
+
+The wiki is derived learning material. Check the `source_commit` in its overview before relying on it, and prefer current source, policies, and tests whenever they disagree. OpenKnowledge is optional documentation tooling: it is not required to build, run, verify, update, or package DBCode Wrapper.
+
+The maintained patch plan is documented in [host/patches/README.md](host/patches/README.md), and [script/README.md](script/README.md) groups the command-line workflows by responsibility.
 
 Use the narrowest useful verification level:
 

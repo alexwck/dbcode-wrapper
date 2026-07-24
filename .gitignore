@@ -24,6 +24,7 @@ node_modules/
 .playwright-cli/
 .venv/
 venv/
+.ipynb_checkpoints/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -32,6 +33,7 @@ venv/
 .vscode/
 .idea/
 *.code-workspace
+*.code-profile
 .codex/environments/
 
 # Generated application and test output
@@ -50,6 +52,7 @@ test-results/
 
 # Public-repository release and signing material
 *.dmg
+*.dmg.sha256
 *.db
 *.db3
 *.sqlite
@@ -94,3 +97,9 @@ tnsnames.ora
 # Python runtime caches
 __pycache__/
 *.py[cod]
+.claude/skills/open-knowledge/
+.cursor/skills/open-knowledge/
+.codex/skills/open-knowledge/
+.github/skills/open-knowledge/
+.opencode/skills/open-knowledge/
+.pi/skills/open-knowledge/

@@ -23,8 +23,9 @@ Before changing behaviour, read:
 1. `README.md` for the public product and privacy contract.
 2. `CONTEXT.md` for the project's domain language.
 3. `docs/architecture/overview.md` for the maintained seams and data flow.
-4. The relevant issue under `.scratch/dbcode-wrapper-implementation/issues/`.
-5. `host/README.md` and the exact source or test being changed.
+4. `wiki/OVERVIEW.md`, when present and current, for derived orientation and links.
+5. The relevant issue under `.scratch/dbcode-wrapper-implementation/issues/`.
+6. `host/README.md` and the exact source or test being changed.
 
 ## Sources of truth
 
@@ -90,4 +91,14 @@ Full builds are expensive. App launches can open GUI windows and trigger real ma
 
 When current behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the current `## Answer` of affected resolved issues. Preserve dated issue comments as historical evidence even when they describe an older state.
 
-If OpenKnowledge is initialized, use its tools only for `wiki/**/*.md`. Keep `.scratch/` as the issue tracker and keep source and tests authoritative.
+## OpenKnowledge
+
+When OpenKnowledge is initialized:
+
+- Use `wiki/OVERVIEW.md` and its linked pages for orientation, but check its `source_commit` before relying on it. Source, policies, and tests remain authoritative.
+- Use OpenKnowledge tools for reads, searches, creates, edits, moves, and deletions under `wiki/**/*.md`. Use normal repository tools for source code and for Markdown outside `wiki/`.
+- Keep `.scratch/` as the only issue tracker. Do not seed another proposal, decision, specification, or task lifecycle.
+- Refresh the wiki after meaningful changes to architecture, modules, product flows, profile handling, release handling, or verification. Do not refresh it for wording-only or fixture-only changes.
+- After generation or refresh, require complete overview navigation, zero dead links, `ok preview`, and the public source-tree and exact-ref readiness gates.
+- Do not use OpenKnowledge GitHub sync, share links, authentication, semantic search, or diagnostic uploads for this repository.
+- OpenKnowledge must remain optional. Builds, tests, releases, and application startup must work when it is not installed.

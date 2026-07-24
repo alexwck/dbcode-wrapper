@@ -1,18 +1,18 @@
 # OpenKnowledge setup for learning DBCode Wrapper
 
-Date: 2026-07-22
+Date: 2026-07-25
 
 ## Recommendation
 
 Set up OpenKnowledge, but use it only to produce and explore a **public codebase wiki** under `wiki/`. Do not use its Software lifecycle starter pack and do not replace the local Markdown issue tracker.
 
-Keep OpenKnowledge's own configuration, generated templates, project skill, MCP registration, runtime data, and Git integration local to each owned Mac. Commit only the reviewed `wiki/**/*.md` learning pages. This gives the owner the useful architecture map, diagrams, backlinks, search, and guided learning path without adding a second issue system or mixing OpenKnowledge-owned files into a public repository whose outbound licence is still being decided.
+Keep OpenKnowledge's own configuration, generated templates, project skill, MCP registration, runtime data, and Git integration local to each owned Mac. Commit only the reviewed `wiki/**/*.md` learning pages. This gives the owner the useful architecture map, diagrams, backlinks, search, and guided learning path without adding a second issue system or mixing OpenKnowledge-owned files into the public source repository.
 
-Do this after the clean public Git history exists. OpenKnowledge's Codebase wiki records a `source_commit` in `wiki/OVERVIEW.md` and uses it as the refresh baseline. Generating the wiki before the planned clean-history step would immediately leave that baseline pointing at an old commit that will not exist in the public history. The official workflow explicitly uses `source_commit` to determine what changed during later refreshes ([Codebase wiki](https://openknowledge.ai/docs/workflows/codebase-wiki)).
+The clean public Git history and annotated `v0.1.0` baseline now exist, so setup may proceed without creating an immediately obsolete freshness anchor. OpenKnowledge's Codebase wiki records a `source_commit` in `wiki/OVERVIEW.md` and uses it to determine what changed during later refreshes ([Codebase wiki](https://openknowledge.ai/docs/workflows/codebase-wiki)).
 
 ## Why this repository benefits
 
-This is no longer a small wrapper with one obvious entry point. The current tree has 152 tracked files, including 74 scripts and 15 host patch files. Important behaviour is spread across:
+This is no longer a small wrapper with one obvious entry point. The public tree has more than 190 maintained files, with most implementation and verification behaviour under `script/` and `host/`. Important behaviour is spread across:
 
 - the host architecture and operating workflow in [`host/README.md`](../../../host/README.md);
 - the stable product language and boundaries in [`CONTEXT.md`](../../../CONTEXT.md);
@@ -114,19 +114,20 @@ After the clean public baseline commit exists:
 
 ```sh
 ok init \
-  --content-dir wiki \
+  --content-dir . \
   --scope user \
   --local-only \
   --no-skills
 
-ok seed --pack codebase-wiki --root wiki --dry-run
+ok seed --pack codebase-wiki --dry-run
 ```
 
-Review the dry-run file list, then seed the pack and ask the agent to generate the Codebase wiki with `public` audience and `standard` depth. `--no-skills` prevents installation of the optional user-global skill bundles; the Codebase wiki pack still supplies its project workflow locally. The CLI documents `--content-dir`, editor registration scope, local-only configuration, skill controls, dry-run seeding, preview, and config validation ([CLI reference](https://openknowledge.ai/docs/reference/cli)).
+Review the dry-run file list and accept it only when it creates `wiki/OVERVIEW.md`, not `wiki/wiki/OVERVIEW.md`. Then seed the pack and ask the agent to generate the Codebase wiki with `public` audience and `standard` depth. `--no-skills` prevents installation of optional user-global skill bundles; the Codebase wiki pack still supplies its project workflow locally. The CLI documents `--content-dir`, editor registration scope, local-only configuration, skill controls, dry-run seeding, preview, and config validation ([CLI reference](https://openknowledge.ai/docs/reference/cli)).
 
 This layout is intentionally narrow:
 
-- `content.dir: wiki` means OpenKnowledge indexes the reviewed learning pages, not the local issue tracker, third-party licence text, or operational evidence.
+- `content.dir: .` matches the Codebase wiki workflow's repository-root assumption, so its built-in `wiki/` path resolves once rather than becoming `wiki/wiki/`.
+- A local `.okignore` hides `.scratch/` and maintained Markdown outside `wiki/` from OpenKnowledge search and agent tools. Source code remains available through normal repository tools.
 - `--scope user` avoids committing MCP configuration for every supported editor when this is currently a one-owner project.
 - `--local-only` uses OpenKnowledge's supported per-clone Git exclusion for its configuration. The public wiki Markdown remains ordinary tracked content.
 - `--no-skills` avoids installing unrelated global skill bundles. The seeded codebase workflow remains local to this project.
@@ -156,7 +157,7 @@ OpenKnowledge does not replace this repository's privacy gates.
 - Do not enable OpenKnowledge GitHub sync, share links, or `ok auth login` for this setup. Use the repository's normal reviewed Git workflow so a wiki edit cannot bypass the exact-ref publication gate. The CLI's `ok sync`, `ok pull`, and `ok push` operate on the Git remote ([CLI reference](https://openknowledge.ai/docs/reference/cli)).
 - OpenKnowledge states that normal project data stays local by default, while GitHub sync, sharing, semantic search, and submitted diagnostic bundles cause data to leave the machine. Its desktop app also performs update checks and a one-time first-launch share-link check ([What OpenKnowledge writes](https://openknowledge.ai/docs/reference/what-open-knowledge-writes)).
 
-OpenKnowledge itself is GPL-3.0-or-later software ([official repository](https://github.com/inkeep/open-knowledge)). Keeping its configuration, copied project skill, and pack templates local avoids introducing another third-party licence surface while the wrapper's own outbound licence is unresolved. The generated wiki pages should still be reviewed as part of the wrapper repository and covered by the owner's eventual repository licence decision.
+OpenKnowledge itself is GPL-3.0-or-later software ([official repository](https://github.com/inkeep/open-knowledge)). Keeping its configuration, copied project skill, and pack templates local avoids introducing another third-party licence surface into the All Rights Reserved public source tree. Generated wiki pages still require public-source review and are covered by the repository's existing licence decision.
 
 ## Maintenance cost
 
