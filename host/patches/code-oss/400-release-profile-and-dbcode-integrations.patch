@@ -1,0 +1,305 @@
+diff --git a/src/vs/editor/contrib/contextmenu/browser/contextmenu.ts b/src/vs/editor/contrib/contextmenu/browser/contextmenu.ts
+index 6bcb8223..01a90d59 100644
+--- a/src/vs/editor/contrib/contextmenu/browser/contextmenu.ts
++++ b/src/vs/editor/contrib/contextmenu/browser/contextmenu.ts
+@@ -26,8 +26,20 @@ import { IContextMenuService, IContextViewService } from '../../../../platform/c
+ import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
+ import { KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
+ import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
++import product from '../../../../platform/product/common/product.js';
+ import { IWorkspaceContextService, isStandaloneEditorWorkspace } from '../../../../platform/workspace/common/workspace.js';
+ 
++const DBCODE_WRAPPER_SQL_EDITING_ACTIONS = new Set([
++	'editor.action.clipboardCutAction',
++	'editor.action.clipboardCopyAction',
++	'editor.action.clipboardPasteAction',
++	'editor.action.selectAll'
++]);
++
++function isDbcodeWrapperSqlContextAction(action: IAction): boolean {
++	return action.id.startsWith('dbcode.') || DBCODE_WRAPPER_SQL_EDITING_ACTIONS.has(action.id);
++}
++
+ export class ContextMenuController implements IEditorContribution {
+ 
+ 	public static readonly ID = 'editor.contrib.contextmenu';
+@@ -158,6 +170,7 @@ export class ContextMenuController implements IEditorContribution {
+ 
+ 	private _getMenuActions(model: ITextModel, menuId: MenuId): IAction[] {
+ 		const result: IAction[] = [];
++		const dbcodeWrapperSqlMenu = product.dbcodeWrapperFocusedShell && model.getLanguageId() === 'sql';
+ 
+ 		// get menu groups
+ 		const groups = this._menuService.getMenuActions(menuId, this._contextKeyService, { arg: model.uri });
+@@ -167,6 +180,9 @@ export class ContextMenuController implements IEditorContribution {
+ 			const [, actions] = group;
+ 			let addedItems = 0;
+ 			for (const action of actions) {
++				if (dbcodeWrapperSqlMenu && !isDbcodeWrapperSqlContextAction(action)) {
++					continue;
++				}
+ 				if (action instanceof SubmenuItemAction) {
+ 					const subActions = this._getMenuActions(model, action.item.submenu);
+ 					if (subActions.length > 0) {
+diff --git a/src/vs/platform/menubar/electron-main/menubar.ts b/src/vs/platform/menubar/electron-main/menubar.ts
+index c7a145e7..7c173338 100644
+--- a/src/vs/platform/menubar/electron-main/menubar.ts
++++ b/src/vs/platform/menubar/electron-main/menubar.ts
+@@ -297,6 +297,13 @@ export class Menubar extends Disposable {
+ 			app.dock!.setMenu(dockMenu);
+ 		}
+ 
++		if (this.productService.dbcodeWrapperFocusedShell) {
++			this.installDbcodeWrapperMenu(menubar);
++			this.doSetApplicationMenu(menubar);
++			this.menuGC.schedule();
++			return;
++		}
++
+ 		// File
+ 		if (this.shouldDrawMenu('File')) {
+ 			const fileMenu = new Menu();
+@@ -405,12 +412,63 @@ export class Menubar extends Disposable {
+ 		}
+ 	}
+ 
++	private installDbcodeWrapperMenu(menubar: Menu): void {
++		const databaseMenu = new Menu();
++		databaseMenu.append(new MenuItem({
++			label: this.mnemonicLabel(nls.localize('dbcodeWrapper.openSqlFile', "Open SQL File…")),
++			accelerator: 'CmdOrCtrl+O',
++			click: () => this.runActionInRenderer({ type: 'commandId', commandId: 'dbcodeWrapper.openSqlFile' })
++		}));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.newQuery', "New SQL Query"), 'dbcode.connections.sqlFile'));
++		databaseMenu.append(__separator__());
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.connections', "Connections"), 'dbcode.connections.view.focus'));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.profileSetup', "Profile Setup…"), 'dbcodeWrapper.startProfileMigration'));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.history', "History"), 'dbcode.history.view.focus'));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.library', "Library"), 'dbcode.library.view.focus'));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.account', "Account"), 'dbcode.account.view.focus'));
++		databaseMenu.append(__separator__());
++		const dbcodeToolsMenu = new Menu();
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.notebook', "New DBCode Notebook"), 'dbcode.notebook.new'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.pythonKernel', "Start Python Kernel…"), 'dbcodeWrapper.startPythonKernel'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.queryBuilder', "Query Builder"), 'dbcode.queryBuilder.open'));
++		dbcodeToolsMenu.append(__separator__());
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.settings', "DBCode Settings…"), 'dbcodeWrapper.openDbcodeSettings'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.checkForUpdates', "Check for Updates…"), 'dbcodeWrapper.checkForUpdates'));
++		dbcodeToolsMenu.append(__separator__());
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiProvider', "AI: Choose Provider"), 'dbcode.ai.chooseProvider'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiApiKey', "AI: Set API Key"), 'dbcode.ai.setApiKey'));
++		dbcodeToolsMenu.append(__separator__());
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.scratchFolder', "Show Scratch Files in Finder"), 'dbcodeWrapper.revealScratchFiles'));
++		databaseMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.dbcodeTools', "DBCode Tools"), submenu: dbcodeToolsMenu }));
++		databaseMenu.append(__separator__());
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.save', "Save Query"), 'workbench.action.files.save'));
++		databaseMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.saveAs', "Save Query As..."), 'workbench.action.files.saveAs'));
++		menubar.append(new MenuItem({ label: nls.localize('dbcodeWrapper.databaseMenu', "Database"), submenu: databaseMenu }));
++
++		const editMenu = new Menu();
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.undo', "Undo"), role: 'undo' }));
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.redo', "Redo"), role: 'redo' }));
++		editMenu.append(__separator__());
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.cut', "Cut"), role: 'cut' }));
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.copy', "Copy"), role: 'copy' }));
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.paste', "Paste"), role: 'paste' }));
++		editMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.selectAll', "Select All"), role: 'selectAll' }));
++		menubar.append(new MenuItem({ label: nls.localize('dbcodeWrapper.editMenu', "Edit"), submenu: editMenu }));
++
++		if (isMacintosh) {
++			const windowMenu = new Menu();
++			const windowMenuItem = new MenuItem({ label: nls.localize('mWindow', "Window"), submenu: windowMenu, role: 'window' });
++			this.setMacWindowMenu(windowMenu);
++			menubar.append(windowMenuItem);
++		}
++	}
++
+ 	private setMacApplicationMenu(macApplicationMenu: Menu): void {
+ 		const about = this.createMenuItem(nls.localize('mAbout', "About {0}", this.productService.nameLong), 'workbench.action.showAboutDialog');
+ 		const checkForUpdates = this.getUpdateMenuItems();
+ 
+ 		let preferences;
+-		if (this.shouldDrawMenu('Preferences')) {
++		if (!this.productService.dbcodeWrapperFocusedShell && this.shouldDrawMenu('Preferences')) {
+ 			const preferencesMenu = new Menu();
+ 			this.setMenuById(preferencesMenu, 'Preferences');
+ 			preferences = new MenuItem({ label: this.mnemonicLabel(nls.localize({ key: 'miPreferences', comment: ['&& denotes a mnemonic'] }, "&&Preferences")), submenu: preferencesMenu });
+diff --git a/src/vs/workbench/browser/parts/views/treeView.ts b/src/vs/workbench/browser/parts/views/treeView.ts
+index ff138204..d7801538 100644
+--- a/src/vs/workbench/browser/parts/views/treeView.ts
++++ b/src/vs/workbench/browser/parts/views/treeView.ts
+@@ -48,6 +48,7 @@ import { ILogService } from '../../../../platform/log/common/log.js';
+ import { INotificationService } from '../../../../platform/notification/common/notification.js';
+ import { IOpenerService } from '../../../../platform/opener/common/opener.js';
+ import { IProgressService } from '../../../../platform/progress/common/progress.js';
++import product from '../../../../platform/product/common/product.js';
+ import { Registry } from '../../../../platform/registry/common/platform.js';
+ import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
+ import { isDark } from '../../../../platform/theme/common/theme.js';
+@@ -79,6 +80,12 @@ import { IAccessibleViewInformationService } from '../../../services/accessibili
+ import { Command } from '../../../../editor/common/languages.js';
+ import { FONT } from '../../../../base/common/font.js';
+ 
++const DBCODE_WRAPPER_HIDDEN_TREE_ACTIONS = new Set([
++	'dbcode.library.revealFile',
++	'dbcode.notebook.new',
++	'dbcode.queryBuilder.open'
++]);
++
+ export class TreeViewPane extends ViewPane {
+ 
+ 	protected readonly treeView: ITreeView;
+@@ -1738,14 +1745,18 @@ class TreeMenus implements IDisposable {
+ 	 */
+ 	getResourceActions(elements: ITreeItem[]): IAction[] {
+ 		const actions = this.getActions(this.getMenuId(), elements);
+-		return actions.primary;
++		return actions.primary.filter(action =>
++			!product.dbcodeWrapperFocusedShell || !DBCODE_WRAPPER_HIDDEN_TREE_ACTIONS.has(action.id)
++		);
+ 	}
+ 
+ 	/**
+ 	 * Gets only the actions that apply to all of the given elements.
+ 	 */
+ 	getResourceContextActions(elements: ITreeItem[]): IAction[] {
+-		return this.getActions(this.getMenuId(), elements).secondary;
++		return this.getActions(this.getMenuId(), elements).secondary.filter(action =>
++			!product.dbcodeWrapperFocusedShell || !DBCODE_WRAPPER_HIDDEN_TREE_ACTIONS.has(action.id)
++		);
+ 	}
+ 
+ 	public setContextKeyService(service: IContextKeyService) {
+diff --git a/src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts b/src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts
+index 051836b9..2c490aaf 100644
+--- a/src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts
++++ b/src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts
+@@ -15,6 +15,7 @@ import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextke
+ import { inQuickPickContext, getQuickNavigateHandler } from '../../../browser/quickaccess.js';
+ import { KeybindingsRegistry, KeybindingWeight } from '../../../../platform/keybinding/common/keybindingsRegistry.js';
+ import { EditorContextKeys } from '../../../../editor/common/editorContextKeys.js';
++import product from '../../../../platform/product/common/product.js';
+ 
+ //#region Quick Access Proviers
+ 
+@@ -52,32 +53,34 @@ quickAccessRegistry.registerQuickAccessProvider({
+ 
+ //#region Menu contributions
+ 
+-MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
+-	group: '1_open',
+-	command: {
+-		id: ShowAllCommandsAction.ID,
+-		title: localize({ key: 'miCommandPalette', comment: ['&& denotes a mnemonic'] }, "&&Command Palette...")
+-	},
+-	order: 1
+-});
+-
+-MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
+-	group: '1_welcome',
+-	command: {
+-		id: ShowAllCommandsAction.ID,
+-		title: localize({ key: 'miShowAllCommands', comment: ['&& denotes a mnemonic'] }, "Show All Commands")
+-	},
+-	order: 2
+-});
+-
+-MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
+-	group: '1_open',
+-	command: {
+-		id: OpenViewPickerAction.ID,
+-		title: localize({ key: 'miOpenView', comment: ['&& denotes a mnemonic'] }, "&&Open View...")
+-	},
+-	order: 2
+-});
++if (!product.dbcodeWrapperFocusedShell) {
++	MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
++		group: '1_open',
++		command: {
++			id: ShowAllCommandsAction.ID,
++			title: localize({ key: 'miCommandPalette', comment: ['&& denotes a mnemonic'] }, "&&Command Palette...")
++		},
++		order: 1
++	});
++
++	MenuRegistry.appendMenuItem(MenuId.MenubarHelpMenu, {
++		group: '1_welcome',
++		command: {
++			id: ShowAllCommandsAction.ID,
++			title: localize({ key: 'miShowAllCommands', comment: ['&& denotes a mnemonic'] }, "Show All Commands")
++		},
++		order: 2
++	});
++
++	MenuRegistry.appendMenuItem(MenuId.MenubarViewMenu, {
++		group: '1_open',
++		command: {
++			id: OpenViewPickerAction.ID,
++			title: localize({ key: 'miOpenView', comment: ['&& denotes a mnemonic'] }, "&&Open View...")
++		},
++		order: 2
++	});
++}
+ 
+ MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
+ 	group: '5_infile_nav',
+@@ -88,24 +91,26 @@ MenuRegistry.appendMenuItem(MenuId.MenubarGoMenu, {
+ 	order: 1
+ });
+ 
+-MenuRegistry.appendMenuItem(MenuId.GlobalActivity, {
+-	group: '1_command',
+-	command: {
+-		id: ShowAllCommandsAction.ID,
+-		title: localize('commandPalette', "Command Palette...")
+-	},
+-	order: 1
+-});
+-
+-MenuRegistry.appendMenuItem(MenuId.EditorContext, {
+-	group: 'z_commands',
+-	when: EditorContextKeys.editorSimpleInput.toNegated(),
+-	command: {
+-		id: ShowAllCommandsAction.ID,
+-		title: localize('commandPalette', "Command Palette..."),
+-	},
+-	order: 1
+-});
++if (!product.dbcodeWrapperFocusedShell) {
++	MenuRegistry.appendMenuItem(MenuId.GlobalActivity, {
++		group: '1_command',
++		command: {
++			id: ShowAllCommandsAction.ID,
++			title: localize('commandPalette', "Command Palette...")
++		},
++		order: 1
++	});
++
++	MenuRegistry.appendMenuItem(MenuId.EditorContext, {
++		group: 'z_commands',
++		when: EditorContextKeys.editorSimpleInput.toNegated(),
++		command: {
++			id: ShowAllCommandsAction.ID,
++			title: localize('commandPalette', "Command Palette..."),
++		},
++		order: 1
++	});
++}
+ 
+ //#endregion
+ 
+@@ -113,9 +118,11 @@ MenuRegistry.appendMenuItem(MenuId.EditorContext, {
+ //#region Workbench actions and commands
+ 
+ registerAction2(ClearCommandHistoryAction);
+-registerAction2(ShowAllCommandsAction);
+-registerAction2(OpenViewPickerAction);
+-registerAction2(QuickAccessViewPickerAction);
++if (!product.dbcodeWrapperFocusedShell) {
++	registerAction2(ShowAllCommandsAction);
++	registerAction2(OpenViewPickerAction);
++	registerAction2(QuickAccessViewPickerAction);
++}
+ 
+ const inViewsPickerContextKey = 'inViewsPicker';
+ const inViewsPickerContext = ContextKeyExpr.and(inQuickPickContext, ContextKeyExpr.has(inViewsPickerContextKey));

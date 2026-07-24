@@ -1,0 +1,49 @@
+{
+  "name": "profile-migration",
+  "displayName": "DBCode Wrapper First Run",
+  "description": "Verifies the pinned external runtime and guides safe connection setup in the Standalone DBCode Profile.",
+  "publisher": "dbcode-wrapper",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.126.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:dbcodeWrapper.startRuntimeSetup",
+    "onCommand:dbcodeWrapper.startProfileMigration"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dbcodeWrapper.startProfileMigration",
+        "title": "Profile Setup",
+        "category": "DBCode Wrapper"
+      },
+      {
+        "command": "dbcodeWrapper.startRuntimeSetup",
+        "title": "Set Up Pinned Runtime",
+        "category": "DBCode Wrapper"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dbcodeWrapper.startProfileMigration",
+          "when": "false"
+        },
+        {
+          "command": "dbcodeWrapper.startRuntimeSetup",
+          "when": "false"
+        }
+      ]
+    }
+  }
+}

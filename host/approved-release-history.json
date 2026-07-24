@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "approved_release_sets": [
+    {
+      "id": "code-oss-1.126.0-dbcode-1.36.1",
+      "compatibility_status": "approved",
+      "source_commit": "cc2b112cca02f41ef9853ccde60176a18f0852e0",
+      "target": {
+        "platform": "darwin",
+        "architecture": "arm64"
+      },
+      "profile": {
+        "schema_version": 1
+      },
+      "manifest": {
+        "schema_version": 2,
+        "build_manifest_sha256": "2c175a3854a692b217cdaf288d6f935a8f30563b239a3b34e1e2f7a795133857",
+        "artifact_sha256": "1935eb87137066617db61e9bd4e94aba7c6a1b8517724542261f4af2e93ae177",
+        "shell_patch_revision": "1a58c5ac45d78d1737edcbc4406e2e9732648242a4ecc414054507eaf199ab6b",
+        "overlay_sha256": "5945477dde26af87dffb014da16d4faf56400bda7b99393f5a1fd3050e434c53",
+        "packaging_status": "built-and-signed"
+      },
+      "host": {
+        "vscodium_tag": "1.126.04524",
+        "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+        "code_oss_tag": "1.126.0",
+        "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
+      },
+      "dbcode": {
+        "id": "dbcode.dbcode",
+        "version": "1.36.1",
+        "vsix_sha256": "e50554b0f83d105216216708202d39afd89878cdadf3b1d55eaad34b2338078c",
+        "signature_archive_sha256": "e12dcb3461cf3ed7c8f63af5233ff1f50e89f3e53d41e794581d8f98696343db"
+      },
+      "rollback": {
+        "kind": "source-rebuild",
+        "prepare_command": "./script/prepare_release_rollback.sh code-oss-1.126.0-dbcode-1.36.1",
+        "verify_command": "./script/verify_release_rollback.sh code-oss-1.126.0-dbcode-1.36.1",
+        "preview_command": "./script/preview_release_rollback.sh code-oss-1.126.0-dbcode-1.36.1 --clone-current-profile",
+        "instructions": "Build and retain the exact previous app, manifest, extension root, and isolated profile together. Verify every retained digest before previewing it from a disposable profile clone. The preview never replaces the current approved release; complete installed-set promotion and restoration remain ticket 07."
+      }
+    }
+  ]
+}

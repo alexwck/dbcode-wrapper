@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="background" x1="128" y1="96" x2="896" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#15233f"/>
+      <stop offset="0.55" stop-color="#24548d"/>
+      <stop offset="1" stop-color="#16a6a1"/>
+    </linearGradient>
+    <linearGradient id="database" x1="300" y1="286" x2="728" y2="744" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#bceef0"/>
+    </linearGradient>
+  </defs>
+  <rect x="72" y="72" width="880" height="880" rx="204" fill="url(#background)"/>
+  <path d="M276 354v316c0 66 106 120 236 120s236-54 236-120V354" fill="url(#database)" fill-opacity="0.2" stroke="#f8fbff" stroke-width="42" stroke-linejoin="round"/>
+  <ellipse cx="512" cy="354" rx="236" ry="120" fill="#f8fbff" fill-opacity="0.24" stroke="#f8fbff" stroke-width="42"/>
+  <path d="M276 512c0 66 106 120 236 120s236-54 236-120M276 670c0 66 106 120 236 120s236-54 236-120" fill="none" stroke="#f8fbff" stroke-width="42" stroke-linecap="round"/>
+  <path d="m392 448 82 70-82 70M524 588h116" fill="none" stroke="#66e3d6" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

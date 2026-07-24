@@ -1,0 +1,72 @@
+diff --git a/build/gulpfile.vscode.ts b/build/gulpfile.vscode.ts
+index f6f2209c..5fe35060 100644
+--- a/build/gulpfile.vscode.ts
++++ b/build/gulpfile.vscode.ts
+@@ -166,7 +166,10 @@ task.task(bundleVSCodeTask);
+ const sourceMappingURLBase = `https://github.com/VSCodium/sourcemaps/releases/download/${product.quality}-${commit}`;
+ const isCI = !!process.env['CI'] || !!process.env['BUILD_ARTIFACTSTAGINGDIRECTORY'] || !!process.env['GITHUB_WORKSPACE'];
+ const useCdnSourceMapsForPackagingTasks = isCI;
+-const stripSourceMapsInPackagingTasks = isCI;
++const stripSourceMapsInPackagingTasks = isCI || process.env['DBCODE_WRAPPER_STRIP_SOURCE_MAPS'] === 'yes';
++const dbcodeWrapperBuiltInExtensionAllowlist = new Set(
++	(process.env['DBCODE_WRAPPER_BUILTIN_EXTENSION_ALLOWLIST'] ?? '').split(',').map(name => name.trim()).filter(Boolean)
++);
+ const minifyVSCodeTask = task.define('minify-vscode', task.series(
+ 	bundleVSCodeTask,
+ 	util.rimraf('out-vscode-min'),
+@@ -268,10 +271,30 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
+ 			return !set.has(platform);
+ 		}).map(ext => `!.build/extensions/${ext.name}/**`);
+ 
+-		const extensions = gulp.src(['.build/extensions/**', ...platformSpecificBuiltInExtensionsExclusions], { base: '.build', dot: true });
++		const dbcodeWrapperBuiltInExtensionExclusions: string[] = [];
++		if (dbcodeWrapperBuiltInExtensionAllowlist.size > 0) {
++			const builtInExtensionRoot = path.join(import.meta.dirname, '..', '.build', 'extensions');
++			for (const extensionName of dbcodeWrapperBuiltInExtensionAllowlist) {
++				if (!fs.existsSync(path.join(builtInExtensionRoot, extensionName, 'package.json'))) {
++					throw new Error(`Allowlisted built-in extension is missing: ${extensionName}`);
++				}
++			}
++			dbcodeWrapperBuiltInExtensionExclusions.push(
++				...fs.readdirSync(builtInExtensionRoot, { withFileTypes: true })
++					.filter(entry => entry.isDirectory() && entry.name !== 'node_modules' && !dbcodeWrapperBuiltInExtensionAllowlist.has(entry.name))
++					.map(entry => `!.build/extensions/${entry.name}/**`),
++				'!.build/extensions/node_modules/**'
++			);
++		}
++
++		const extensions = gulp.src([
++			'.build/extensions/**',
++			...platformSpecificBuiltInExtensionsExclusions,
++			...dbcodeWrapperBuiltInExtensionExclusions
++		], { base: '.build', dot: true });
+ 
+ 		const sourceFilterPattern = stripSourceMapsInPackagingTasks
+-			? ['**', '!**/*.{js,css}.map']
++			? ['**', '!**/*.map']
+ 			: ['**'];
+ 		const sources = es.merge(src, extensions)
+ 			.pipe(filter(sourceFilterPattern, { dot: true }));
+@@ -313,6 +336,13 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
+ 				if (Object.keys(agentSdks).length > 0) {
+ 					json.agentSdks = agentSdks;
+ 				}
++					if (dbcodeWrapperBuiltInExtensionAllowlist.size > 0 && Array.isArray(json.builtInExtensions)) {
++						json.builtInExtensions = json.builtInExtensions.filter(extension =>
++							typeof extension === 'object' && extension !== null &&
++							typeof (extension as { name?: unknown }).name === 'string' &&
++							dbcodeWrapperBuiltInExtensionAllowlist.has((extension as { name: string }).name)
++						);
++					}
+ 				return json;
+ 			}))
+ 			.pipe(es.through(function (file) {
+@@ -334,7 +364,7 @@ function packageTask(platform: string, arch: string, sourceFolderName: string, d
+ 
+ 		const depFilterPattern = ['**', `!**/${config.version}/**`, '!**/bin/darwin-arm64-87/**', '!**/package-lock.json', '!**/yarn.lock'];
+ 		if (stripSourceMapsInPackagingTasks) {
+-			depFilterPattern.push('!**/*.{js,css}.map');
++			depFilterPattern.push('!**/*.map');
+ 		}
+ 
+ 		const cleanedDeps = gulp.src(dependenciesSrc, { base: '.', dot: true })

@@ -1,0 +1,96 @@
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100/
+.Trashes/
+
+# Private configuration
+.env
+.env.*
+!.env.example
+
+# Local DBCode profiles and throwaway proof profiles
+.dbcode-wrapper/
+.dbcode-wrapper-shared/
+.dbcode-proof-*/
+.personal-dbcode-*/
+
+# Dependencies and tool caches
+node_modules/
+.npm-cache/
+.vite/
+.playwright/
+.playwright-cli/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local editor and agent state
+.vscode/
+.idea/
+*.code-workspace
+.codex/environments/
+
+# Generated application and test output
+.build/
+dist/
+coverage/
+output/
+playwright-report/
+test-results/
+*.log
+*.tsbuildinfo
+*.app/
+*.pkg
+*.xcarchive/
+*.dSYM/
+
+# Public-repository release and signing material
+*.dmg
+*.db
+*.db3
+*.sqlite
+*.sqlite3
+*.vsix
+*.p12
+*.pfx
+*.key
+*.pem
+!host/keys/openvsx-14ccb407-4e79-41ed-be5a-6d608325c45a.pem
+*.cer
+*.crt
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+*.duckdb
+*.parquet
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.duckdb.wal
+*.bak
+*.backup
+*.dump
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Database client secrets
+.pgpass
+.pg_service.conf
+.my.cnf
+odbc.ini
+odbcinst.ini
+tnsnames.ora
+
+# Python runtime caches
+__pycache__/
+*.py[cod]

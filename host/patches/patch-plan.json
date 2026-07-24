@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "target": {
+    "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+    "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
+  },
+  "entries": [
+    {
+      "order": 10,
+      "stage": "vscodium",
+      "id": "wrapper-product-contract",
+      "patch": "vscodium/0001-dbcode-wrapper-identity.patch",
+      "purpose": "Bind the VSCodium preparation step to the release-specified DBCode Wrapper product identity and focused-shell settings.",
+      "touched_areas": [
+        "VSCodium product preparation"
+      ],
+      "files": [
+        "prepare_vscode.sh"
+      ],
+      "sha256": "7cfa5ccfe68ea9d64cbe283baa22bc2fe99208b00eea3198fd57c233079c747b"
+    },
+    {
+      "order": 20,
+      "stage": "vscodium",
+      "id": "optional-tunnel-cli",
+      "patch": "vscodium/0002-make-tunnel-cli-optional.patch",
+      "purpose": "Allow the private desktop build to omit the unrelated tunnel command-line product.",
+      "touched_areas": [
+        "VSCodium build orchestration"
+      ],
+      "files": [
+        "build.sh"
+      ],
+      "sha256": "592bcf66251fb13d7c8e434c2dad0331d8ae4450ac78489dafe6e457e8a9166e"
+    },
+    {
+      "order": 100,
+      "stage": "code-oss",
+      "id": "product-identity-and-macos-packaging",
+      "patch": "code-oss/100-product-identity-and-macos-packaging.patch",
+      "purpose": "Apply DBCode Wrapper ownership and SQL document metadata to the macOS Electron package.",
+      "touched_areas": [
+        "macOS Electron packaging"
+      ],
+      "files": [
+        "build/lib/electron.ts"
+      ],
+      "sha256": "6d56fac417364f52b1fe50fc0a59ff2d402cb5d1ba7abf5008eefd9fa3474fcc"
+    },
+    {
+      "order": 200,
+      "stage": "code-oss",
+      "id": "final-focused-dbcode-shell",
+      "patch": "code-oss/200-final-focused-dbcode-shell.patch",
+      "purpose": "Install the final database-only workbench, layout rules, title-bar integration, and focused DBCode styling in one patch.",
+      "touched_areas": [
+        "focused DBCode workbench",
+        "native and browser title bars",
+        "workbench registration"
+      ],
+      "files": [
+        "src/vs/base/common/product.ts",
+        "src/vs/workbench/browser/layout.ts",
+        "src/vs/workbench/browser/parts/titlebar/titlebarPart.ts",
+        "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
+        "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
+        "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
+        "src/vs/workbench/workbench.common.main.ts"
+      ],
+      "sha256": "f8fa5a272172d4bbee2f4e8da3acf057167eedc20f79124d4901344778000721"
+    },
+    {
+      "order": 300,
+      "stage": "code-oss",
+      "id": "host-slimming-policy",
+      "patch": "code-oss/300-host-slimming-policy.patch",
+      "purpose": "Apply the reviewed built-in extension and source-map packaging policy without narrowing DBCode connection support.",
+      "touched_areas": [
+        "Code OSS package assembly"
+      ],
+      "files": [
+        "build/gulpfile.vscode.ts"
+      ],
+      "sha256": "253049d6a9327eb106e725d584afaa6a89634d39e271016f09f6b842889c32ad"
+    },
+    {
+      "order": 400,
+      "stage": "code-oss",
+      "id": "release-profile-and-dbcode-integrations",
+      "patch": "code-oss/400-release-profile-and-dbcode-integrations.patch",
+      "purpose": "Keep the small native menu, context menu, DBCode tree, and focused quick-access integrations together.",
+      "touched_areas": [
+        "DBCode native menu",
+        "database context actions",
+        "focused quick access",
+        "DBCode tree actions"
+      ],
+      "files": [
+        "src/vs/editor/contrib/contextmenu/browser/contextmenu.ts",
+        "src/vs/platform/menubar/electron-main/menubar.ts",
+        "src/vs/workbench/browser/parts/views/treeView.ts",
+        "src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts"
+      ],
+      "sha256": "ff28b093621bdb2988699d13993399a105bf595fd4257fab37cfebec36f39ef9"
+    }
+  ],
+  "maintained_code_oss_paths": [
+    "build/gulpfile.vscode.ts",
+    "build/lib/electron.ts",
+    "src/vs/base/common/product.ts",
+    "src/vs/editor/contrib/contextmenu/browser/contextmenu.ts",
+    "src/vs/platform/menubar/electron-main/menubar.ts",
+    "src/vs/workbench/browser/layout.ts",
+    "src/vs/workbench/browser/parts/titlebar/titlebarPart.ts",
+    "src/vs/workbench/browser/parts/views/treeView.ts",
+    "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
+    "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
+    "src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts",
+    "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
+    "src/vs/workbench/workbench.common.main.ts"
+  ],
+  "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
+  "expected_maintained_tree_sha256": "6627882bd42b56deb7a19d41f53f9fd0eb9ff36e20839225e02b64f47f6fd56a",
+  "migration_proof": {
+    "baseline": "pinned Code OSS after the pinned VSCodium patch stage and before wrapper Code OSS patches",
+    "historical_patch_count": 13,
+    "historical_stack_sha256": "5ffa6f010fd3b6973de4acaa2341659765587107bec4075caa20c90777f416b2",
+    "historical_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
+    "semantic_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
+    "prepared_tree_sha256": "6627882bd42b56deb7a19d41f53f9fd0eb9ff36e20839225e02b64f47f6fd56a",
+    "equivalent": true
+  }
+}

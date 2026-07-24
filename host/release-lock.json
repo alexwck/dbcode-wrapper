@@ -1,0 +1,251 @@
+{
+  "schema_version": 4,
+  "target": {
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "upstream": {
+    "vscodium": {
+      "repository": "https://github.com/VSCodium/vscodium.git",
+      "tag": "1.126.04524",
+      "commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+      "published_at": "2026-07-07T13:01:09Z",
+      "release_notes_url": "https://github.com/VSCodium/vscodium/releases/tag/1.126.04524"
+    },
+    "code_oss": {
+      "repository": "https://github.com/microsoft/vscode.git",
+      "tag": "1.126.0",
+      "commit": "7e7950df89d055b5a378379db9ee14290772148a",
+      "published_at": "2026-06-24T12:49:34Z",
+      "release_notes_url": "https://github.com/microsoft/vscode/releases/tag/1.126.0"
+    }
+  },
+  "toolchain": {
+    "node": {
+      "version": "24.15.0",
+      "npm_version": "11.12.1",
+      "archive_url": "https://nodejs.org/download/release/v24.15.0/node-v24.15.0-darwin-arm64.tar.gz",
+      "archive_sha256": "372331b969779ab5d15b949884fc6eaf88d5afe87bde8ba881d6400b9100ffc4"
+    },
+    "python_version": "3.12.1",
+    "apple_clang_version": "21.0.0",
+    "macos_sdk_version": "26.5"
+  },
+  "runtime": {
+    "code_oss_version": "1.126.0",
+    "electron_version": "42.2.0"
+  },
+  "release": {
+    "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.2",
+    "compatibility_status": "candidate",
+    "profile_schema_version": 1,
+    "validation_issue": "24-open-official-release-pages-from-every-update-row"
+  },
+  "extension": {
+    "dbcode": {
+      "namespace": "dbcode",
+      "name": "dbcode",
+      "id": "dbcode.dbcode",
+      "publisher": "dbcode",
+      "version": "1.36.2",
+      "engine": "^1.95.0",
+      "target_platform": "universal",
+      "published_at": "2026-07-20T04:51:39.562360Z",
+      "release_notes_url": "https://dbcode.io/docs/changelog/1.36.2",
+      "verified_publisher": true,
+      "pre_release": false,
+      "deprecated": false,
+      "registry_api_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.2",
+      "download_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.2/file/dbcode.dbcode-1.36.2.vsix",
+      "signature_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.2/file/dbcode.dbcode-1.36.2.sigzip",
+      "sha256_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.2/file/dbcode.dbcode-1.36.2.sha256",
+      "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+      "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+      "sha256": "c9db33e12cae2e59b37d01593ea7c6748ba5c48b6d2efff50868061213508003",
+      "signature_archive_sha256": "5dc2c8c809223b77bb5f1d10e6096dfc9972aa6578940ae243ba77843db9b2c3",
+      "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+      "jq_sorted_compact_contributes_sha256": "8eb40f616f4d08b1a76a54bb60e0c8ea1b0b223a7128404c2d901034e4ed1307",
+      "package_size": 43297713
+    },
+    "python_notebooks": {
+      "required": true,
+      "user_installation_required": false,
+      "kernel_runtime": "user-selected",
+      "packages": [
+        {
+          "role": "jupyter-pack-keymap",
+          "namespace": "ms-toolsai",
+          "name": "jupyter-keymap",
+          "id": "ms-toolsai.jupyter-keymap",
+          "publisher": "ms-toolsai",
+          "version": "1.1.2",
+          "engine": "^1.79.0-insider",
+          "target_platform": "universal",
+          "published_at": "2023-06-06T04:36:05.867521Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-toolsai/jupyter-keymap/1.1.2",
+          "download_url": "https://open-vsx.org/api/ms-toolsai/jupyter-keymap/1.1.2/file/ms-toolsai.jupyter-keymap-1.1.2.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-toolsai/jupyter-keymap/1.1.2/file/ms-toolsai.jupyter-keymap-1.1.2.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-toolsai/jupyter-keymap/1.1.2/file/ms-toolsai.jupyter-keymap-1.1.2.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "3d2998929bb43156f3b428116aee290543c437875df616ec755692219b4afa17",
+          "signature_archive_sha256": "675944a5759ce0ad8df2ffae161b9d30a0a8a975cb429942220f2c0f69c75d01",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 80264
+        },
+        {
+          "role": "jupyter-pack-renderers",
+          "namespace": "ms-toolsai",
+          "name": "jupyter-renderers",
+          "id": "ms-toolsai.jupyter-renderers",
+          "publisher": "ms-toolsai",
+          "version": "1.3.0",
+          "engine": "^1.95.0",
+          "target_platform": "universal",
+          "published_at": "2025-07-09T03:58:11.238204Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-toolsai/jupyter-renderers/1.3.0",
+          "download_url": "https://open-vsx.org/api/ms-toolsai/jupyter-renderers/1.3.0/file/ms-toolsai.jupyter-renderers-1.3.0.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-toolsai/jupyter-renderers/1.3.0/file/ms-toolsai.jupyter-renderers-1.3.0.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-toolsai/jupyter-renderers/1.3.0/file/ms-toolsai.jupyter-renderers-1.3.0.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "d09f6c517a8090a932bb4e2c31bcb2de34ddb2a71133477f6c47f28f36eb76ae",
+          "signature_archive_sha256": "b2b7f77d28c65d8170605aee1c8c4595fe0d82e2a7b2e7d0d3b45be6a3672ba8",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 7679650
+        },
+        {
+          "role": "jupyter-pack-cell-tags",
+          "namespace": "ms-toolsai",
+          "name": "vscode-jupyter-cell-tags",
+          "id": "ms-toolsai.vscode-jupyter-cell-tags",
+          "publisher": "ms-toolsai",
+          "version": "0.1.9",
+          "engine": "^1.88.0",
+          "target_platform": "universal",
+          "published_at": "2024-04-03T04:11:47.132802Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-cell-tags/0.1.9",
+          "download_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-cell-tags/0.1.9/file/ms-toolsai.vscode-jupyter-cell-tags-0.1.9.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-cell-tags/0.1.9/file/ms-toolsai.vscode-jupyter-cell-tags-0.1.9.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-cell-tags/0.1.9/file/ms-toolsai.vscode-jupyter-cell-tags-0.1.9.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "7cd43af55cf562a001dc475e92d9f3fd4b7173011adca0c02da22fbf891c274b",
+          "signature_archive_sha256": "62f15bb62bd961cd89249d4e6d450a623dc9e59767a3458fca25495b85f87aa1",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 180458
+        },
+        {
+          "role": "jupyter-pack-slideshow",
+          "namespace": "ms-toolsai",
+          "name": "vscode-jupyter-slideshow",
+          "id": "ms-toolsai.vscode-jupyter-slideshow",
+          "publisher": "ms-toolsai",
+          "version": "0.1.6",
+          "engine": "^1.88.0",
+          "target_platform": "universal",
+          "published_at": "2024-04-03T04:12:35.200345Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-slideshow/0.1.6",
+          "download_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-slideshow/0.1.6/file/ms-toolsai.vscode-jupyter-slideshow-0.1.6.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-slideshow/0.1.6/file/ms-toolsai.vscode-jupyter-slideshow-0.1.6.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-toolsai/vscode-jupyter-slideshow/0.1.6/file/ms-toolsai.vscode-jupyter-slideshow-0.1.6.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "5b8dee0d569b7e0990bb4847c34748cdc0102078779351ed415d9d71cfa3e945",
+          "signature_archive_sha256": "8ecf54dcccf92235039bf22a3e7961a157783a697d3e06d6480efb98b77e58db",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 174914
+        },
+        {
+          "role": "jupyter-kernel-bridge",
+          "namespace": "ms-toolsai",
+          "name": "jupyter",
+          "id": "ms-toolsai.jupyter",
+          "publisher": "ms-toolsai",
+          "version": "2025.9.1",
+          "engine": "^1.105.0",
+          "target_platform": "universal",
+          "published_at": "2025-10-14T03:38:46.009152Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-toolsai/jupyter/2025.9.1",
+          "download_url": "https://open-vsx.org/api/ms-toolsai/jupyter/2025.9.1/file/ms-toolsai.jupyter-2025.9.1.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-toolsai/jupyter/2025.9.1/file/ms-toolsai.jupyter-2025.9.1.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-toolsai/jupyter/2025.9.1/file/ms-toolsai.jupyter-2025.9.1.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "110660656944c4ab0ff687db488c2e8c59c67ec121dcf09bcaa54b6edd9ce71f",
+          "signature_archive_sha256": "cf67a735fcdbfbaa7102e92d389b0e6523f1b135769a4404717f48dbf6e70040",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 12619012
+        },
+        {
+          "role": "python-environment-discovery",
+          "namespace": "ms-python",
+          "name": "python",
+          "id": "ms-python.python",
+          "publisher": "ms-python",
+          "version": "2026.4.0",
+          "engine": "^1.95.0",
+          "target_platform": "universal",
+          "published_at": "2026-03-13T04:21:53.228120Z",
+          "verified_publisher": true,
+          "pre_release": false,
+          "deprecated": false,
+          "registry_api_url": "https://open-vsx.org/api/ms-python/python/2026.4.0",
+          "download_url": "https://open-vsx.org/api/ms-python/python/2026.4.0/file/ms-python.python-2026.4.0.vsix",
+          "signature_url": "https://open-vsx.org/api/ms-python/python/2026.4.0/file/ms-python.python-2026.4.0.sigzip",
+          "sha256_url": "https://open-vsx.org/api/ms-python/python/2026.4.0/file/ms-python.python-2026.4.0.sha256",
+          "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
+          "sha256": "232aeafb01f069824fdd92d3e628c1c442bbcfa1d3cc945ff97076340bb2b4a6",
+          "signature_archive_sha256": "96b7f689215293b6e8cde31ab77806968ea8738c318ec474474906a60d9ad4b9",
+          "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
+          "package_size": 6826731
+        }
+      ]
+    }
+  },
+  "product": {
+    "app_name": "DBCode Wrapper",
+    "application_name": "dbcode-wrapper",
+    "bundle_identifier": "io.alexabelle.dbcodewrapper",
+    "url_scheme": "dbcode-wrapper",
+    "data_folder_name": ".dbcode-wrapper",
+    "shared_data_folder_name": ".dbcode-wrapper-shared",
+    "server_application_name": "dbcode-wrapper-server",
+    "server_data_folder_name": ".dbcode-wrapper-server",
+    "tunnel_application_name": "dbcode-wrapper-tunnel",
+    "signing": {
+      "mode": "local-certificate",
+      "identity_common_name": "DBCode Wrapper Local Signing",
+      "scope": "current-user-private-use"
+    },
+    "focused_shell": {
+      "enabled": true,
+      "automatic_result_layout": {
+        "wide": "beside",
+        "narrow": "below"
+      },
+      "narrow_breakpoint": 1050
+    },
+    "darwin_profile_uuid": "5E92251C-DB19-46DA-BA13-C1A9E6F9704B",
+    "darwin_profile_payload_uuid": "81F9A4D5-2FBA-4DE7-87D3-5F65BCDA21F2",
+    "document_extensions": [
+      "sql"
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+diff --git a/prepare_vscode.sh b/prepare_vscode.sh
+index 2d9ef12..5888c3d 100755
+--- a/prepare_vscode.sh
++++ b/prepare_vscode.sh
+@@ -122,6 +122,39 @@ else
+   setpath "product" "win32ContextMenu.arm64.clsid" "4852FC55-4A84-4EA1-9C86-D53BE3DF83C0"
+ fi
+ 
++if [[ "${DBCODE_WRAPPER_OVERLAY}" == "yes" ]]; then
++  : "${DBCODE_WRAPPER_APP_NAME:?}"
++  : "${DBCODE_WRAPPER_APPLICATION_NAME:?}"
++  : "${DBCODE_WRAPPER_BUNDLE_IDENTIFIER:?}"
++  : "${DBCODE_WRAPPER_DATA_FOLDER_NAME:?}"
++  : "${DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME:?}"
++  : "${DBCODE_WRAPPER_URL_SCHEME:?}"
++  : "${DBCODE_WRAPPER_SERVER_APPLICATION_NAME:?}"
++  : "${DBCODE_WRAPPER_SERVER_DATA_FOLDER_NAME:?}"
++  : "${DBCODE_WRAPPER_TUNNEL_APPLICATION_NAME:?}"
++  : "${DBCODE_WRAPPER_NARROW_BREAKPOINT:?}"
++  : "${DBCODE_WRAPPER_DARWIN_PROFILE_UUID:?}"
++  : "${DBCODE_WRAPPER_DARWIN_PROFILE_PAYLOAD_UUID:?}"
++
++  setpath "product" "nameShort" "${DBCODE_WRAPPER_APP_NAME}"
++  setpath "product" "nameLong" "${DBCODE_WRAPPER_APP_NAME}"
++  setpath "product" "applicationName" "${DBCODE_WRAPPER_APPLICATION_NAME}"
++  setpath "product" "dataFolderName" "${DBCODE_WRAPPER_DATA_FOLDER_NAME}"
++  setpath "product" "sharedDataFolderName" "${DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME}"
++  setpath_json "product" "dbcodeWrapperFocusedShell" 'true'
++  setpath_json "product" "dbcodeWrapperFocusedShellNarrowBreakpoint" "${DBCODE_WRAPPER_NARROW_BREAKPOINT}"
++  setpath "product" "urlProtocol" "${DBCODE_WRAPPER_URL_SCHEME}"
++  setpath "product" "serverApplicationName" "${DBCODE_WRAPPER_SERVER_APPLICATION_NAME}"
++  setpath "product" "serverDataFolderName" "${DBCODE_WRAPPER_SERVER_DATA_FOLDER_NAME}"
++  setpath "product" "tunnelApplicationName" "${DBCODE_WRAPPER_TUNNEL_APPLICATION_NAME}"
++  setpath "product" "darwinBundleIdentifier" "${DBCODE_WRAPPER_BUNDLE_IDENTIFIER}"
++  setpath "product" "darwinProfileUUID" "${DBCODE_WRAPPER_DARWIN_PROFILE_UUID}"
++  setpath "product" "darwinProfilePayloadUUID" "${DBCODE_WRAPPER_DARWIN_PROFILE_PAYLOAD_UUID}"
++  setpath_json "product" "darwinBundleDocumentTypes" '[
++    {"name":"SQL query file","role":"Editor","ostypes":["TEXT","utxt","TUTX","****"],"extensions":["sql"],"iconFile":"resources/darwin/sql.icns"}
++  ]'
++fi
++
+ setpath_json "product" "tunnelApplicationConfig" '{}'
+ 
+ jsonTmp=$( jq -s '.[0] * .[1]' product.json ../product.json )

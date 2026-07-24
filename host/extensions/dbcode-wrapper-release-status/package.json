@@ -1,0 +1,58 @@
+{
+  "name": "release-status",
+  "displayName": "DBCode Wrapper Release Status",
+  "description": "Reports tested host and DBCode updates without installing them.",
+  "publisher": "dbcode-wrapper",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.126.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onCommand:dbcodeWrapper.getUpdateStatus",
+    "onCommand:dbcodeWrapper.reviewUpdates",
+    "onCommand:dbcodeWrapper.checkForUpdates"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dbcodeWrapper.getUpdateStatus",
+        "title": "Get Update Status",
+        "category": "DBCode Wrapper"
+      },
+      {
+        "command": "dbcodeWrapper.reviewUpdates",
+        "title": "Review Updates",
+        "category": "DBCode Wrapper"
+      },
+      {
+        "command": "dbcodeWrapper.checkForUpdates",
+        "title": "Check for Updates",
+        "category": "DBCode Wrapper"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dbcodeWrapper.getUpdateStatus",
+          "when": "false"
+        },
+        {
+          "command": "dbcodeWrapper.reviewUpdates",
+          "when": "false"
+        },
+        {
+          "command": "dbcodeWrapper.checkForUpdates",
+          "when": "false"
+        }
+      ]
+    }
+  }
+}

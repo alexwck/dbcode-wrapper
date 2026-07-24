@@ -1,0 +1,38 @@
+{
+  "name": "python-kernel-bridge",
+  "displayName": "DBCode Wrapper Python Kernel",
+  "description": "Starts a user-selected Jupyter kernel for Python cells in DBCode notebooks.",
+  "publisher": "dbcode-wrapper",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.126.0"
+  },
+  "categories": [
+    "Notebooks"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onCommand:dbcodeWrapper.startPythonKernel"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dbcodeWrapper.startPythonKernel",
+        "title": "Start Python Kernel",
+        "category": "DBCode Wrapper"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dbcodeWrapper.startPythonKernel",
+          "when": "false"
+        }
+      ]
+    }
+  }
+}

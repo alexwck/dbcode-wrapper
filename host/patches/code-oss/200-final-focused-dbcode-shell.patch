@@ -1,0 +1,1380 @@
+diff --git a/src/vs/base/common/product.ts b/src/vs/base/common/product.ts
+index 85064c8c..c1834a1d 100644
+--- a/src/vs/base/common/product.ts
++++ b/src/vs/base/common/product.ts
+@@ -100,6 +100,8 @@ export interface IProductConfiguration {
+ 	readonly win32VersionedUpdate?: boolean;
+ 	readonly win32ContextMenu?: { readonly [arch: string]: { readonly clsid: string } };
+ 	readonly applicationName: string;
++	readonly dbcodeWrapperFocusedShell?: boolean;
++	readonly dbcodeWrapperFocusedShellNarrowBreakpoint?: number;
+ 	readonly embedderIdentifier?: string;
+ 	readonly agentsTelemetryAppName?: string;
+ 
+diff --git a/src/vs/workbench/browser/layout.ts b/src/vs/workbench/browser/layout.ts
+index f7701c39..5c89c3df 100644
+--- a/src/vs/workbench/browser/layout.ts
++++ b/src/vs/workbench/browser/layout.ts
+@@ -40,6 +40,7 @@ import { DiffEditorInput } from '../common/editor/diffEditorInput.js';
+ import { mark } from '../../base/common/performance.js';
+ import { IExtensionService } from '../services/extensions/common/extensions.js';
+ import { ILogService } from '../../platform/log/common/log.js';
++import product from '../../platform/product/common/product.js';
+ import { DeferredPromise, Promises } from '../../base/common/async.js';
+ import { IBannerService } from '../services/banner/browser/bannerService.js';
+ import { IPaneCompositePartService } from '../services/panecomposite/browser/panecomposite.js';
+@@ -804,6 +805,10 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
+ 			}
+ 		}
+ 
++		if (product.dbcodeWrapperFocusedShell) {
++			this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_HIDDEN, true);
++		}
++
+ 		// Panel View Container To Restore
+ 		if (this.isVisible(Parts.PANEL_PART)) {
+ 			const viewContainerToRestore = this.storageService.get(PanelPart.activePanelSettingsKey, StorageScope.WORKSPACE, this.viewDescriptorService.getDefaultViewContainer(ViewContainerLocation.Panel)?.id);
+diff --git a/src/vs/workbench/browser/parts/titlebar/titlebarPart.ts b/src/vs/workbench/browser/parts/titlebar/titlebarPart.ts
+index 4b7412d7..642690f6 100644
+--- a/src/vs/workbench/browser/parts/titlebar/titlebarPart.ts
++++ b/src/vs/workbench/browser/parts/titlebar/titlebarPart.ts
+@@ -17,6 +17,7 @@ import { IBrowserWorkbenchEnvironmentService } from '../../../services/environme
+ import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+ import { TITLE_BAR_ACTIVE_BACKGROUND, TITLE_BAR_ACTIVE_FOREGROUND, TITLE_BAR_INACTIVE_FOREGROUND, TITLE_BAR_INACTIVE_BACKGROUND, TITLE_BAR_BORDER, WORKBENCH_BACKGROUND } from '../../../common/theme.js';
+ import { isMacintosh, isWindows, isLinux, isWeb, isNative, platformLocale } from '../../../../base/common/platform.js';
++import product from '../../../../platform/product/common/product.js';
+ import { Color } from '../../../../base/common/color.js';
+ import { EventType, EventHelper, Dimension, append, $, addDisposableListener, prepend, reset, getWindow, getWindowId, isAncestor, getActiveDocument, isHTMLElement } from '../../../../base/browser/dom.js';
+ import { CustomMenubarControl } from './menubarControl.js';
+@@ -58,6 +59,8 @@ import { safeIntl } from '../../../../base/common/date.js';
+ import { IsCompactTitleBarContext, TitleBarVisibleContext } from '../../../common/contextkeys.js';
+ import { ServiceCollection } from '../../../../platform/instantiation/common/serviceCollection.js';
+ 
++const DBCODE_WRAPPER_TITLEBAR_HEIGHT = 82;
++
+ export interface ITitleVariable {
+ 	readonly name: string;
+ 	readonly contextKey: string;
+@@ -231,6 +234,10 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
+ 	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
+ 
+ 	get minimumHeight(): number {
++		if (product.dbcodeWrapperFocusedShell) {
++			return DBCODE_WRAPPER_TITLEBAR_HEIGHT;
++		}
++
+ 		const wcoEnabled = isWeb && isWCOEnabled();
+ 		let value = this.isCommandCenterVisible || wcoEnabled ? DEFAULT_CUSTOM_TITLEBAR_HEIGHT : 30;
+ 		if (wcoEnabled) {
+diff --git a/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
+new file mode 100644
+index 00000000..66f01dd3
+--- /dev/null
++++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
+@@ -0,0 +1,757 @@
++/*---------------------------------------------------------------------------------------------
++ *  Copyright (c) Microsoft Corporation. All rights reserved.
++ *  Licensed under the MIT License. See License.txt in the project root for license information.
++ *--------------------------------------------------------------------------------------------*/
++
++import './media/dbcodeWrapper.css';
++import { addDisposableListener, EventHelper } from '../../../../base/browser/dom.js';
++import { mainWindow } from '../../../../base/browser/window.js';
++import { Separator, toAction } from '../../../../base/common/actions.js';
++import { INativeHostService } from '../../../../platform/native/common/native.js';
++import { IPathService } from '../../../services/path/common/pathService.js';
++import { disposableTimeout } from '../../../../base/common/async.js';
++import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
++import { joinPath } from '../../../../base/common/resources.js';
++import { localize } from '../../../../nls.js';
++import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
++import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
++import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
++import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
++import { IFileService } from '../../../../platform/files/common/files.js';
++import { INotificationService } from '../../../../platform/notification/common/notification.js';
++import product from '../../../../platform/product/common/product.js';
++import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
++import { IViewDescriptorService, ViewContainerLocation } from '../../../common/views.js';
++import { GroupsOrder, IEditorGroup, IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
++import { IEditorService } from '../../../services/editor/common/editorService.js';
++import { IExtensionService } from '../../../services/extensions/common/extensions.js';
++import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
++import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
++import { IViewsService } from '../../../services/views/common/viewsService.js';
++
++const DBCODE_ACTIVITY_CONTAINER = 'workbench.view.extension.dbcodeActivitybarContainer';
++const DBCODE_CONNECTIONS_VIEW = 'dbcode.connections.view';
++const DBCODE_TUNNELS_VIEW = 'dbcode.tunnels.view';
++const DBCODE_AUTH_PROFILES_VIEW = 'dbcode.authProfiles.view';
++const DBCODE_STREAMS_VIEW = 'dbcode.streams.view';
++const DBCODE_HISTORY_VIEW = 'dbcode.history.view';
++const DBCODE_LIBRARY_VIEW = 'dbcode.library.view';
++const DBCODE_ACCOUNT_VIEW = 'dbcode.account.view';
++const DBCODE_PANEL_CONTAINER = 'workbench.view.extension.dbcodePanelContainer';
++const DBCODE_PANEL_VIEW = 'dbcode.panelView';
++const DBCODE_RESULT_LOCATION_SETTING = 'dbcode.resultLocation';
++const OPEN_SQL_FILE_COMMAND = 'dbcodeWrapper.openSqlFile';
++const OPEN_DBCODE_SETTINGS_COMMAND = 'dbcodeWrapper.openDbcodeSettings';
++const REVEAL_SCRATCH_FILES_COMMAND = 'dbcodeWrapper.revealScratchFiles';
++const GET_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.getUpdateStatus';
++const REVIEW_UPDATES_COMMAND = 'dbcodeWrapper.reviewUpdates';
++const CHECK_FOR_UPDATES_COMMAND = 'dbcodeWrapper.checkForUpdates';
++const APPLY_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.applyUpdateStatus';
++
++type ResultLocation = 'beside' | 'below';
++
++interface DbcodeWrapperReleaseStatus {
++	kind: 'current' | 'update-available' | 'offline' | 'invalid';
++	updatesAvailable: boolean;
++	readyToInstall: boolean;
++	vscodium?: { installedVersion: string };
++	codeOss?: { installedVersion: string };
++	dbcode?: { installedVersion: string };
++}
++
++if (product.dbcodeWrapperFocusedShell) {
++	CommandsRegistry.registerCommand(OPEN_SQL_FILE_COMMAND, async accessor => {
++		const fileDialogService = accessor.get(IFileDialogService);
++		const editorService = accessor.get(IEditorService);
++		const resources = await fileDialogService.showOpenDialog({
++			title: localize('dbcodeWrapper.openSqlFile', "Open SQL File"),
++			openLabel: localize('dbcodeWrapper.openSqlFileButton', "Open Query"),
++			canSelectFiles: true,
++			canSelectFolders: false,
++			canSelectMany: true,
++			filters: [{
++				name: localize('dbcodeWrapper.sqlFiles', "SQL query files"),
++				extensions: ['sql']
++			}]
++		});
++		if (resources?.length) {
++			await editorService.openEditors(resources.map(resource => ({
++				resource,
++				options: { pinned: true, preserveFocus: false }
++			})));
++		}
++	});
++
++	CommandsRegistry.registerCommand(OPEN_DBCODE_SETTINGS_COMMAND, accessor =>
++		accessor.get(ICommandService).executeCommand('workbench.action.openSettings', '@ext:dbcode.dbcode')
++	);
++
++	CommandsRegistry.registerCommand(REVEAL_SCRATCH_FILES_COMMAND, async accessor => {
++		const configurationService = accessor.get(IConfigurationService);
++		const fileService = accessor.get(IFileService);
++		const nativeHostService = accessor.get(INativeHostService);
++		const notificationService = accessor.get(INotificationService);
++		const pathService = accessor.get(IPathService);
++		const configuredPath = configurationService.getValue<string>('dbcode.scratchFiles.path')?.trim() || '~/.dbcode/scratch';
++		const userHome = pathService.userHome({ preferLocal: true });
++		let scratchFolder = userHome;
++		if (configuredPath.startsWith('~/')) {
++			scratchFolder = joinPath(userHome, configuredPath.slice(2));
++		} else if (configuredPath !== '~') {
++			const pathModule = await pathService.path;
++			if (!pathModule.isAbsolute(configuredPath)) {
++				notificationService.error(localize('dbcodeWrapper.scratchPathInvalid', "DBCode's Scratch Files path must be absolute or start with ~/ before it can be shown in Finder."));
++				return;
++			}
++			scratchFolder = await pathService.fileURI(configuredPath);
++		}
++		await fileService.createFolder(scratchFolder);
++		await nativeHostService.showItemInFolder(scratchFolder.fsPath);
++	});
++}
++
++export class DbcodeWrapperFocusedShellContribution extends Disposable implements IWorkbenchContribution {
++
++	static readonly ID = 'workbench.contrib.dbcodeWrapperFocusedShell';
++
++	private readonly root!: HTMLElement;
++	private readonly narrowBreakpoint = product.dbcodeWrapperFocusedShellNarrowBreakpoint ?? 1050;
++	private resultLocation: ResultLocation = 'beside';
++	private resultLocationUpdate: Promise<void> = Promise.resolve();
++	private resultLocationUpdateSequence = 0;
++	private isNarrow: boolean | undefined;
++	private surfaceOpeningCount = 0;
++	private connectionsHomeOpen = false;
++	private connectionsHomeTitle: HTMLElement | undefined;
++	private connectionsHomeCloseButton: HTMLButtonElement | undefined;
++	private connectionsButton: HTMLButtonElement | undefined;
++	private databaseExplorerButton: HTMLButtonElement | undefined;
++	private dbcodeExtensionStatus: HTMLElement | undefined;
++	private releaseStatusButton: HTMLButtonElement | undefined;
++	private readonly emptyGroupCleanup = this._register(new MutableDisposable());
++	private readonly emptyGroupsPendingCleanup = new Set<IEditorGroup>();
++	private cleanupAllEmptyGroups = false;
++
++	constructor(
++		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
++		@IViewDescriptorService private readonly viewDescriptorService: IViewDescriptorService,
++		@IViewsService private readonly viewsService: IViewsService,
++		@ICommandService private readonly commandService: ICommandService,
++		@IConfigurationService private readonly configurationService: IConfigurationService,
++		@IContextMenuService private readonly contextMenuService: IContextMenuService,
++		@IFileService private readonly fileService: IFileService,
++		@IExtensionService private readonly extensionService: IExtensionService,
++		@IUserDataProfileService private readonly userDataProfileService: IUserDataProfileService,
++		@INotificationService private readonly notificationService: INotificationService,
++		@IEditorGroupsService private readonly editorGroupsService: IEditorGroupsService,
++		@IEditorService private readonly editorService: IEditorService
++	) {
++		super();
++
++		if (!product.dbcodeWrapperFocusedShell) {
++			return;
++		}
++
++		this.root = this.layoutService.mainContainer;
++		this.root.classList.add('dbcode-wrapper-focused');
++		this._register(CommandsRegistry.registerCommand(APPLY_UPDATE_STATUS_COMMAND, (_accessor, status: DbcodeWrapperReleaseStatus | undefined) => this.applyReleaseStatus(status)));
++
++		this.root.dataset.dbcodeWrapperShell = 'focused';
++		this.root.dataset.dbcodeWrapperResultLocationState = 'waiting';
++
++		this.lockProductionPresentation();
++		this.installToolbar();
++		this.registerListeners();
++		this.registerEditorGroupCleanup();
++		this.applyResponsiveLayout(this.layoutService.mainContainerDimension.width);
++		this.updateControlState();
++		void this.restoreDbcodeSurface();
++	}
++
++	private lockProductionPresentation(): void {
++		for (const part of [Parts.ACTIVITYBAR_PART, Parts.AUXILIARYBAR_PART, Parts.BANNER_PART, Parts.PANEL_PART, Parts.STATUSBAR_PART]) {
++			this.layoutService.setPartHidden(true, part);
++		}
++
++		this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++
++		this.layoutService.setPanelAlignment('center');
++	}
++
++	private installToolbar(): void {
++		const titlebar = this.layoutService.getContainer(mainWindow, Parts.TITLEBAR_PART);
++		const center = titlebar?.querySelector<HTMLElement>('.titlebar-center');
++		if (!center || center.querySelector('.dbcode-wrapper-toolbar')) {
++			return;
++		}
++
++		const toolbar = mainWindow.document.createElement('nav');
++		toolbar.className = 'dbcode-wrapper-toolbar dbcode-wrapper-database-contextbar';
++		toolbar.setAttribute('aria-label', localize('dbcodeWrapper.toolbar', "DBCode workspace controls"));
++		center.append(toolbar);
++
++		const databaseActions = mainWindow.document.createElement('span');
++		databaseActions.className = 'dbcode-wrapper-toolbar-group database-actions';
++		toolbar.append(databaseActions);
++
++		this.connectionsButton = this.createButton('connections', localize('dbcodeWrapper.connections', "Connections"), 'database', true, () => this.toggleConnectionsHome());
++		databaseActions.append(this.connectionsButton);
++		databaseActions.append(this.createButton('connection-tools', localize('dbcodeWrapper.connectionTools', "Connection tools"), 'chevron-down', false, button => this.showConnectionsMenu(button)));
++		this.databaseExplorerButton = this.createButton('database-explorer', localize('dbcodeWrapper.databaseExplorer', "Database Explorer"), 'list-tree', false, () => this.toggleDrawer(DBCODE_CONNECTIONS_VIEW));
++		databaseActions.append(this.databaseExplorerButton);
++		databaseActions.append(this.createButton('open-sql', localize('dbcodeWrapper.openSqlFile', "Open SQL"), 'folder-opened', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand(OPEN_SQL_FILE_COMMAND))));
++		databaseActions.append(this.createButton('new-query', localize('dbcodeWrapper.newQuery', "New query"), 'new-file', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand('dbcode.connections.sqlFile'))));
++		databaseActions.append(this.createButton('queries', localize('dbcodeWrapper.queries', "Queries"), 'library', true, button => this.showQueriesMenu(button)));
++		databaseActions.append(this.createButton('tools', localize('dbcodeWrapper.dbcodeTools', "DBCode tools"), 'tools', true, button => this.showDbcodeToolsMenu(button)));
++
++		const divider = mainWindow.document.createElement('span');
++		divider.className = 'dbcode-wrapper-toolbar-divider';
++		divider.setAttribute('aria-hidden', 'true');
++		toolbar.append(divider);
++
++		const extensionState = mainWindow.document.createElement('span');
++		extensionState.className = 'dbcode-wrapper-extension-state starting';
++		extensionState.append(this.createIcon('circle-filled'));
++		this.dbcodeExtensionStatus = mainWindow.document.createElement('span');
++		this.dbcodeExtensionStatus.textContent = localize('dbcodeWrapper.starting', "DBCode starting");
++		extensionState.append(this.dbcodeExtensionStatus);
++		toolbar.append(extensionState);
++		this.releaseStatusButton = this.createButton('release-status', localize('dbcodeWrapper.checkingUpdates', "Checking for updates"), 'sync', false, () => this.commandService.executeCommand(REVIEW_UPDATES_COMMAND));
++		this.releaseStatusButton.dataset.dbcodeWrapperReleaseStatus = 'checking';
++		toolbar.append(this.releaseStatusButton);
++		this.root.dataset.dbcodeWrapperDbcodeState = 'starting';
++		this.updateActiveEditorState();
++		toolbar.append(this.createButton('account', localize('dbcodeWrapper.account', "Account"), 'account', false, () => this.openDrawerView(DBCODE_ACCOUNT_VIEW)));
++	}
++
++	private createIcon(name: string): HTMLElement {
++		const icon = mainWindow.document.createElement('span');
++		icon.className = `codicon codicon-${name}`;
++		icon.setAttribute('aria-hidden', 'true');
++		return icon;
++	}
++
++	private createButton(action: string, label: string, icon: string, showLabel: boolean, handler: (button: HTMLButtonElement) => void | Promise<unknown>): HTMLButtonElement {
++		const button = mainWindow.document.createElement('button');
++		button.className = 'dbcode-wrapper-toolbar-button';
++		button.type = 'button';
++		button.dataset.dbcodeWrapperAction = action;
++		button.title = label;
++		button.setAttribute('aria-label', label);
++		button.append(this.createIcon(icon));
++		if (showLabel) {
++			const text = mainWindow.document.createElement('span');
++			text.className = 'dbcode-wrapper-button-label';
++			text.textContent = label;
++			button.append(text);
++		}
++		this._register(addDisposableListener(button, 'click', event => {
++			EventHelper.stop(event, true);
++			void handler(button);
++		}));
++		return button;
++	}
++
++	private showConnectionsMenu(anchor: HTMLElement): void {
++		const actions = [
++			toAction({ id: 'dbcodeWrapper.connectionsHome', label: localize('dbcodeWrapper.connectionsHome', "Connections Home"), run: () => this.openConnectionsHome() }),
++			toAction({ id: 'dbcodeWrapper.tunnels', label: localize('dbcodeWrapper.tunnels', "Tunnels"), run: () => this.openDrawerView(DBCODE_TUNNELS_VIEW) }),
++			toAction({ id: 'dbcodeWrapper.authenticationProfiles', label: localize('dbcodeWrapper.authenticationProfiles', "Authentication Profiles"), run: () => this.openDrawerView(DBCODE_AUTH_PROFILES_VIEW) }),
++			new Separator(),
++			toAction({ id: 'dbcodeWrapper.profileSetup', label: localize('dbcodeWrapper.profileSetup', "Profile Setup…"), run: () => this.executeDbcodeCommand('dbcodeWrapper.startProfileMigration') })
++		];
++		const streamsViewContainer = this.viewDescriptorService.getViewContainerByViewId(DBCODE_STREAMS_VIEW);
++		if (streamsViewContainer && this.viewDescriptorService.getViewContainerModel(streamsViewContainer).activeViewDescriptors.some(descriptor => descriptor.id === DBCODE_STREAMS_VIEW)) {
++			actions.push(toAction({ id: 'dbcodeWrapper.activeStreams', label: localize('dbcodeWrapper.activeStreams', "Active Streams"), run: () => this.openDrawerView(DBCODE_STREAMS_VIEW) }));
++		}
++		this.contextMenuService.showContextMenu({
++			getAnchor: () => anchor,
++			getActions: () => actions
++		});
++	}
++
++	private showQueriesMenu(anchor: HTMLElement): void {
++		this.contextMenuService.showContextMenu({
++			getAnchor: () => anchor,
++			getActions: () => [
++				toAction({ id: 'dbcodeWrapper.history', label: localize('dbcodeWrapper.history', "History"), run: () => this.openDrawerView(DBCODE_HISTORY_VIEW) }),
++				toAction({ id: 'dbcodeWrapper.library', label: localize('dbcodeWrapper.library', "Library"), run: () => this.openDrawerView(DBCODE_LIBRARY_VIEW) })
++			]
++		});
++	}
++
++	private showDbcodeToolsMenu(anchor: HTMLElement): void {
++		this.contextMenuService.showContextMenu({
++			getAnchor: () => anchor,
++			getActions: () => [
++				toAction({ id: 'dbcodeWrapper.notebook', label: localize('dbcodeWrapper.notebook', "New DBCode Notebook"), run: () => this.executeDbcodeCommand('dbcode.notebook.new') }),
++				toAction({ id: 'dbcodeWrapper.pythonKernel', label: localize('dbcodeWrapper.pythonKernel', "Start Python Kernel…"), run: () => this.executeDbcodeCommand('dbcodeWrapper.startPythonKernel') }),
++				toAction({ id: 'dbcodeWrapper.queryBuilder', label: localize('dbcodeWrapper.queryBuilder', "Query Builder"), run: () => this.executeDbcodeCommand('dbcode.queryBuilder.open') }),
++				new Separator(),
++				toAction({ id: 'dbcodeWrapper.settings', label: localize('dbcodeWrapper.settings', "DBCode Settings…"), run: () => this.executeDbcodeCommand(OPEN_DBCODE_SETTINGS_COMMAND) }),
++				toAction({ id: 'dbcodeWrapper.checkForUpdates', label: localize('dbcodeWrapper.checkForUpdates', "Check for Updates…"), run: () => this.checkForUpdates() }),
++				new Separator(),
++				toAction({ id: 'dbcodeWrapper.aiProvider', label: localize('dbcodeWrapper.aiProvider', "AI: Choose Provider"), run: () => this.executeDbcodeCommand('dbcode.ai.chooseProvider') }),
++				toAction({ id: 'dbcodeWrapper.aiApiKey', label: localize('dbcodeWrapper.aiApiKey', "AI: Set API Key"), run: () => this.executeDbcodeCommand('dbcode.ai.setApiKey') }),
++				new Separator(),
++				toAction({ id: 'dbcodeWrapper.scratchFolder', label: localize('dbcodeWrapper.scratchFolder', "Show Scratch Files in Finder"), run: () => this.executeDbcodeCommand(REVEAL_SCRATCH_FILES_COMMAND) })
++			]
++		});
++	}
++
++	private executeDbcodeCommand(commandId: string): Promise<void> {
++		return this.runOutsideConnectionsHome(() => this.commandService.executeCommand(commandId));
++	}
++
++	private async checkForUpdates(): Promise<void> {
++		await this.runOutsideConnectionsHome(async () => {
++			const status = await this.commandService.executeCommand<DbcodeWrapperReleaseStatus>(CHECK_FOR_UPDATES_COMMAND);
++			this.applyReleaseStatus(status);
++		});
++	}
++
++	private async runOutsideConnectionsHome(action: () => void | Promise<unknown>): Promise<void> {
++		this.closeConnectionsHome();
++		await action();
++	}
++
++	private async runWhileOpeningSurface(action: () => Promise<void>): Promise<void> {
++		this.surfaceOpeningCount++;
++		try {
++			await action();
++		} finally {
++			this.surfaceOpeningCount--;
++			this.enforcePanelOwnership();
++		}
++	}
++
++	private isConnectionsHomePanelVisible(): boolean {
++		const visiblePanel = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Panel);
++		return this.layoutService.isVisible(Parts.PANEL_PART) &&
++			visiblePanel?.id === DBCODE_PANEL_CONTAINER &&
++			this.viewsService.isViewVisible(DBCODE_PANEL_VIEW);
++	}
++
++	private enforcePanelOwnership(): void {
++		if (this.surfaceOpeningCount > 0) {
++			return;
++		}
++
++		if (this.connectionsHomeOpen && this.isConnectionsHomePanelVisible()) {
++			return;
++		}
++
++		this.connectionsHomeOpen = false;
++		this.root.dataset.dbcodeWrapperConnectionsHome = 'closed';
++		if (this.layoutService.isVisible(Parts.PANEL_PART)) {
++			this.layoutService.setPartHidden(true, Parts.PANEL_PART);
++		}
++	}
++
++	private registerListeners(): void {
++		this._register(this.editorService.onDidActiveEditorChange(() => {
++			this.closeConnectionsHome();
++			this.updateActiveEditorState();
++			this.updateControlState();
++		}));
++		this._register(addDisposableListener(mainWindow.document, 'drop', event => {
++			const droppedFiles = Array.from(event.dataTransfer?.files ?? []);
++			if (droppedFiles.length > 0 && droppedFiles.some(file => !file.name.toLowerCase().endsWith('.sql'))) {
++				event.preventDefault();
++				event.stopImmediatePropagation();
++				this.notificationService.info(localize('dbcodeWrapper.sqlDropOnly', "Use Connections for database and data files. Only SQL query files can be dropped onto the query canvas."));
++			}
++		}, true));
++		this._register(this.layoutService.onDidLayoutMainContainer(dimension => {
++			this.applyResponsiveLayout(dimension.width);
++			this.ensureConnectionsHomeMaximized();
++		}));
++		this._register(this.layoutService.onDidChangePartVisibility(() => {
++			this.enforcePanelOwnership();
++			this.updateControlState();
++		}));
++		this._register(this.viewsService.onDidChangeViewContainerVisibility(event => {
++			if (this.surfaceOpeningCount > 0) {
++				this.updateControlState();
++				return;
++			}
++
++			if (!event.visible) {
++				this.updateControlState();
++				return;
++			}
++
++			if (event.location === ViewContainerLocation.Sidebar) {
++				this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++			}
++			if (event.location === ViewContainerLocation.Panel) {
++				this.enforcePanelOwnership();
++			}
++			this.updateControlState();
++		}));
++		this._register(addDisposableListener(mainWindow.document, 'keydown', event => this.handleKeydown(event), true));
++	}
++
++	private registerEditorGroupCleanup(): void {
++		for (const group of this.editorGroupsService.groups) {
++			this.registerEditorGroup(group);
++		}
++		this._register(this.editorGroupsService.onDidAddGroup(group => this.registerEditorGroup(group)));
++		void this.editorGroupsService.whenRestored.then(() => this.scheduleEmptyEditorGroupCleanup());
++	}
++
++	private registerEditorGroup(group: IEditorGroup): void {
++		this._register(group.onDidActiveEditorChange(() => this.updateEditorGroupPresentation()));
++		this._register(group.onDidCloseEditor(() => this.scheduleEmptyEditorGroupCleanup(group)));
++	}
++
++	private scheduleEmptyEditorGroupCleanup(group?: IEditorGroup): void {
++		if (group) {
++			this.emptyGroupsPendingCleanup.add(group);
++		} else {
++			this.cleanupAllEmptyGroups = true;
++		}
++
++		this.emptyGroupCleanup.value = disposableTimeout(() => {
++			const candidates = this.cleanupAllEmptyGroups ? undefined : [...this.emptyGroupsPendingCleanup];
++			this.emptyGroupsPendingCleanup.clear();
++			this.cleanupAllEmptyGroups = false;
++			this.cleanupEmptyEditorGroups(candidates);
++		}, 250);
++	}
++
++	private cleanupEmptyEditorGroups(candidates?: readonly IEditorGroup[]): void {
++		const existingGroups = this.editorGroupsService.getGroups(GroupsOrder.GRID_APPEARANCE);
++		for (const group of candidates ?? existingGroups) {
++			if (this.editorGroupsService.count <= 1) {
++				break;
++			}
++			if (existingGroups.includes(group) && group.isEmpty) {
++				this.editorGroupsService.removeGroup(group);
++			}
++		}
++		this.updateEditorGroupPresentation();
++	}
++
++	private updateActiveEditorState(): void {
++		const queryName = this.editorService.activeEditor?.getName() ?? localize('dbcodeWrapper.untitledSql', "Untitled SQL");
++		this.root.dataset.dbcodeWrapperQueryName = queryName;
++		this.updateEditorGroupPresentation();
++	}
++
++	private updateEditorGroupPresentation(): void {
++		const groups = this.editorGroupsService.getGroups(GroupsOrder.GRID_APPEARANCE);
++		const elements = this.root.querySelectorAll<HTMLElement>('.part.editor > .content .editor-group-container');
++		for (let index = 0; index < elements.length; index++) {
++			const group = groups[index];
++			const resourceIsSql = group?.activeEditor?.resource?.path.toLowerCase().endsWith('.sql') === true;
++			const activeTextEditorIsSql = group === this.editorGroupsService.activeGroup && this.editorService.activeTextEditorLanguageId === 'sql';
++			elements[index].classList.toggle('dbcode-wrapper-sql-editor-group', resourceIsSql || activeTextEditorIsSql);
++		}
++	}
++
++	private isSqlEditorActive(): boolean {
++		if (this.editorService.activeTextEditorLanguageId === 'sql') {
++			return true;
++		}
++
++		return this.editorService.activeEditor?.resource?.path.toLowerCase().endsWith('.sql') === true;
++	}
++
++	private activeDrawerView(): string | undefined {
++		const visibleContainer = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
++		if (!this.layoutService.isVisible(Parts.SIDEBAR_PART) || visibleContainer?.id !== DBCODE_ACTIVITY_CONTAINER) {
++			return undefined;
++		}
++		return this.root.dataset.dbcodeWrapperDrawerView;
++	}
++
++	private applyResponsiveLayout(width: number): void {
++		const nextNarrow = width < this.narrowBreakpoint;
++		this.root.classList.toggle('dbcode-wrapper-narrow', nextNarrow);
++		this.root.dataset.dbcodeWrapperNarrow = String(nextNarrow);
++		if (this.isNarrow !== nextNarrow) {
++			this.isNarrow = nextNarrow;
++			if (this.root.dataset.dbcodeWrapperDbcodeState === 'active') {
++				void this.applyAutomaticResultLocation(nextNarrow ? 'below' : 'beside');
++			}
++		}
++		this.updateControlState();
++	}
++
++	private async applyAutomaticResultLocation(location: ResultLocation): Promise<void> {
++		const updateSequence = ++this.resultLocationUpdateSequence;
++		this.root.dataset.dbcodeWrapperResultLocationState = 'updating';
++		const currentUpdate = this.resultLocationUpdate.then(async () => {
++			try {
++				await this.configurationService.updateValue(DBCODE_RESULT_LOCATION_SETTING, location, ConfigurationTarget.USER);
++			} catch {
++				if (updateSequence === this.resultLocationUpdateSequence) {
++					this.root.dataset.dbcodeWrapperResultLocationState = 'error';
++				}
++				return;
++			}
++
++			if (updateSequence === this.resultLocationUpdateSequence) {
++				this.resultLocation = location;
++				this.root.dataset.dbcodeWrapperResultLocationState = 'ready';
++				this.updateControlState();
++			}
++		});
++		this.resultLocationUpdate = currentUpdate;
++		await currentUpdate;
++	}
++
++	private async restoreDbcodeSurface(): Promise<void> {
++		await this.extensionService.whenInstalledExtensionsRegistered();
++		await this.applyAutomaticResultLocation(this.isNarrow ? 'below' : 'beside');
++		if (!this.editorService.activeEditor) {
++			await this.openScratchQuery();
++		}
++		await this.extensionService.activateByEvent('onLanguage:sql');
++		if (this.dbcodeExtensionStatus) {
++			this.dbcodeExtensionStatus.parentElement?.classList.remove('starting');
++			this.dbcodeExtensionStatus.textContent = localize('dbcodeWrapper.active', "DBCode active");
++		}
++		this.root.dataset.dbcodeWrapperDbcodeState = 'active';
++		void this.refreshReleaseStatus();
++		this.enforcePanelOwnership();
++		this.updateControlState();
++	}
++
++	private async refreshReleaseStatus(): Promise<void> {
++		try {
++			const status = await this.commandService.executeCommand<DbcodeWrapperReleaseStatus>(GET_UPDATE_STATUS_COMMAND);
++			this.applyReleaseStatus(status);
++		} catch {
++			this.applyReleaseStatus({ kind: 'offline', updatesAvailable: false, readyToInstall: false });
++		}
++	}
++
++	private applyReleaseStatus(status: DbcodeWrapperReleaseStatus | undefined): void {
++		const button = this.releaseStatusButton;
++		if (!button || !status || !['current', 'update-available', 'offline', 'invalid'].includes(status.kind)) {
++			return;
++		}
++		const presentation = status.kind === 'update-available'
++			? {
++				icon: status.readyToInstall ? 'verified-filled' : 'arrow-up',
++				label: status.readyToInstall
++					? localize('dbcodeWrapper.updateReady', "Ready to install")
++					: localize('dbcodeWrapper.updateNotTested', "Update available — Not tested")
++			}
++			: status.kind === 'current'
++				? {
++					icon: 'check',
++					label: status.codeOss && status.dbcode
++						? localize('dbcodeWrapper.currentVersions', "Code OSS {0}, DBCode {1}: current", status.codeOss.installedVersion, status.dbcode.installedVersion)
++						: localize('dbcodeWrapper.current', "Code OSS and DBCode are current")
++				}
++				: {
++					icon: 'warning',
++					label: localize('dbcodeWrapper.updateUnavailable', "Update check unavailable")
++				};
++		const icon = button.querySelector<HTMLElement>('.codicon');
++		if (icon) {
++			icon.className = `codicon codicon-${presentation.icon}`;
++		}
++		button.dataset.dbcodeWrapperReleaseStatus = status.readyToInstall ? 'ready' : status.kind;
++		button.title = presentation.label;
++		button.setAttribute('aria-label', presentation.label);
++		this.root.dataset.dbcodeWrapperReleaseStatus = button.dataset.dbcodeWrapperReleaseStatus;
++	}
++
++	private async openScratchQuery(): Promise<void> {
++		const queryFolder = joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries');
++		const queryResource = joinPath(queryFolder, 'scratch.sql');
++		await this.fileService.createFolder(queryFolder);
++		if (!(await this.fileService.exists(queryResource))) {
++			await this.fileService.createFile(queryResource);
++		}
++		await this.editorService.openEditor({ resource: queryResource, options: { pinned: true } });
++	}
++
++	private ensureConnectionsHomeMaximized(): void {
++		if (this.connectionsHomeOpen &&
++			this.isConnectionsHomePanelVisible() &&
++			!this.layoutService.isPanelMaximized()) {
++			this.layoutService.toggleMaximizedPanel();
++		}
++	}
++
++	private async openConnectionsHome(): Promise<void> {
++		this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++		await this.runWhileOpeningSurface(async () => {
++			const container = await this.viewsService.openViewContainer(DBCODE_PANEL_CONTAINER, true);
++			const view = await this.viewsService.openView(DBCODE_PANEL_VIEW, true);
++			this.connectionsHomeOpen = Boolean(container && view);
++			this.installConnectionsHomeChrome();
++		});
++		this.ensureConnectionsHomeMaximized();
++		this.updateControlState();
++	}
++
++	private installConnectionsHomeChrome(): void {
++		const titlebar = this.root.querySelector<HTMLElement>('.part.panel > .title');
++		if (!titlebar) {
++			return;
++		}
++
++		if (!this.connectionsHomeTitle?.isConnected) {
++			const title = mainWindow.document.createElement('span');
++			title.className = 'dbcode-wrapper-connections-home-title';
++			title.append(this.createIcon('database'));
++			const text = mainWindow.document.createElement('span');
++			text.textContent = localize('dbcodeWrapper.connectionsHome', "Connections");
++			title.append(text);
++			titlebar.prepend(title);
++			this.connectionsHomeTitle = title;
++		}
++
++		if (!this.connectionsHomeCloseButton?.isConnected) {
++			const closeButton = mainWindow.document.createElement('button');
++			closeButton.className = 'dbcode-wrapper-connections-home-close';
++			closeButton.type = 'button';
++			closeButton.title = localize('dbcodeWrapper.closeConnections', "Close Connections");
++			closeButton.setAttribute('aria-label', closeButton.title);
++			closeButton.append(this.createIcon('close'));
++			titlebar.append(closeButton);
++			this._register(addDisposableListener(closeButton, 'click', () => this.closeConnectionsHome()));
++			this.connectionsHomeCloseButton = closeButton;
++		}
++
++		if (!titlebar.classList.contains('dbcode-wrapper-connections-home-titlebar')) {
++			titlebar.classList.add('dbcode-wrapper-connections-home-titlebar');
++			this._register(addDisposableListener(titlebar, 'contextmenu', event => {
++				if (this.connectionsHomeOpen) {
++					event.preventDefault();
++					event.stopImmediatePropagation();
++				}
++			}, true));
++		}
++	}
++
++	private async toggleConnectionsHome(): Promise<void> {
++		if (this.connectionsHomeOpen && this.layoutService.isVisible(Parts.PANEL_PART)) {
++			this.closeConnectionsHome();
++			return;
++		}
++		await this.openConnectionsHome();
++	}
++
++	private closeConnectionsHome(): void {
++		this.connectionsHomeOpen = false;
++		this.root.dataset.dbcodeWrapperConnectionsHome = 'closed';
++		if (this.layoutService.isVisible(Parts.PANEL_PART) && this.layoutService.isPanelMaximized()) {
++			this.layoutService.toggleMaximizedPanel();
++		}
++		if (this.layoutService.isVisible(Parts.PANEL_PART)) {
++			this.layoutService.setPartHidden(true, Parts.PANEL_PART);
++		}
++		this.updateControlState();
++	}
++
++	private async toggleDrawer(viewId: string): Promise<void> {
++		this.closeConnectionsHome();
++		const visibleContainer = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
++		if (this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER && this.viewsService.isViewVisible(viewId)) {
++			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++		} else {
++			await this.openDrawerView(viewId);
++		}
++		this.updateControlState();
++	}
++
++	private configureDrawerViews(viewId: string): void {
++		const viewContainer = this.viewDescriptorService.getViewContainerById(DBCODE_ACTIVITY_CONTAINER);
++		if (!viewContainer) {
++			this.root.dataset.dbcodeWrapperDrawerViews = 'unavailable';
++			return;
++		}
++
++		const model = this.viewDescriptorService.getViewContainerModel(viewContainer);
++		for (const descriptor of model.allViewDescriptors) {
++			const visible = descriptor.id === viewId;
++			if (model.isVisible(descriptor.id) !== visible) {
++				model.setVisible(descriptor.id, visible);
++			}
++		}
++
++		this.root.dataset.dbcodeWrapperDrawerViews = model.visibleViewDescriptors.map(descriptor => descriptor.id).join(',');
++	}
++
++	private async openDrawerView(viewId: string): Promise<void> {
++		this.closeConnectionsHome();
++		await this.runWhileOpeningSurface(async () => {
++			this.configureDrawerViews(viewId);
++			const container = await this.viewsService.openViewContainer(DBCODE_ACTIVITY_CONTAINER, true);
++			const view = await this.viewsService.openView(viewId, true);
++			this.root.dataset.dbcodeWrapperDrawerView = container && view ? viewId : 'unavailable';
++		});
++		this.updateControlState();
++	}
++
++	private updateControlState(): void {
++		const visibleSidebar = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
++		const drawerOpen = this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleSidebar?.id === DBCODE_ACTIVITY_CONTAINER;
++		const drawerView = drawerOpen ? this.activeDrawerView() : undefined;
++
++		this.root.classList.toggle('dbcode-wrapper-drawer-open', drawerOpen);
++		this.root.dataset.dbcodeWrapperDrawer = drawerOpen ? 'open' : 'closed';
++		this.root.dataset.dbcodeWrapperConnectionsHome = this.connectionsHomeOpen ? 'open' : 'closed';
++		this.root.dataset.dbcodeWrapperResultLocation = this.resultLocation;
++		this.root.dataset.dbcodeWrapperActiveSurface = this.connectionsHomeOpen ? 'connections' :
++			drawerView === DBCODE_CONNECTIONS_VIEW ? 'explorer' :
++			drawerView ? 'dbcode' :
++			this.isSqlEditorActive() ? 'query' : 'data';
++		this.connectionsButton?.setAttribute('aria-expanded', String(this.connectionsHomeOpen));
++		this.connectionsButton?.classList.toggle('active', this.connectionsHomeOpen);
++		this.databaseExplorerButton?.setAttribute('aria-expanded', String(drawerView === DBCODE_CONNECTIONS_VIEW));
++		this.databaseExplorerButton?.classList.toggle('active', drawerView === DBCODE_CONNECTIONS_VIEW);
++	}
++
++	private handleKeydown(event: KeyboardEvent): void {
++		if (event.key === 'Escape' && this.connectionsHomeOpen) {
++			this.closeConnectionsHome();
++			event.preventDefault();
++			event.stopImmediatePropagation();
++			return;
++		}
++
++		if (event.key === 'Escape' && this.layoutService.isVisible(Parts.SIDEBAR_PART)) {
++			const visible = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
++			if (visible?.id === DBCODE_ACTIVITY_CONTAINER) {
++				this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++				this.updateControlState();
++				event.preventDefault();
++				event.stopImmediatePropagation();
++			}
++			return;
++		}
++
++		const key = event.key.toLowerCase();
++		if (event.metaKey && !event.shiftKey && key === 'b') {
++			void this.toggleDrawer('dbcode.connections.view');
++			this.blockKey(event);
++			return;
++		}
++
++		const commandPalette = event.key === 'F1' || (event.metaKey && event.shiftKey && key === 'p');
++		const quickOpen = event.metaKey && !event.shiftKey && key === 'p';
++		const settings = event.metaKey && key === ',';
++		const genericPanel = ((event.metaKey || event.ctrlKey) && !event.shiftKey && key === 'j') ||
++			((event.metaKey || event.ctrlKey) && event.shiftKey && ['m', 'u', 'y'].includes(key)) ||
++			(event.ctrlKey && key === '`');
++		const genericView = (event.metaKey || event.ctrlKey) && event.shiftKey && ['e', 'f', 'g', 'd', 'x'].includes(key);
++		if (commandPalette || quickOpen || settings || genericPanel || genericView) {
++			this.blockKey(event);
++		}
++	}
++
++	private blockKey(event: KeyboardEvent): void {
++		event.preventDefault();
++		event.stopImmediatePropagation();
++	}
++}
++
++registerWorkbenchContribution2(DbcodeWrapperFocusedShellContribution.ID, DbcodeWrapperFocusedShellContribution, WorkbenchPhase.AfterRestored);
+diff --git a/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css b/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css
+new file mode 100644
+index 00000000..905c5534
+--- /dev/null
++++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css
+@@ -0,0 +1,489 @@
++.monaco-workbench.dbcode-wrapper-focused {
++	--dbcode-wrapper-accent: #7655ff;
++	--dbcode-wrapper-accent-hover: #866aff;
++	--dbcode-wrapper-toolbar-border: color-mix(in srgb, var(--vscode-titleBar-activeForeground) 16%, transparent);
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.activitybar,
++.monaco-workbench.dbcode-wrapper-focused .part.auxiliarybar,
++.monaco-workbench.dbcode-wrapper-focused .part.statusbar,
++.monaco-workbench.dbcode-wrapper-focused .part.banner {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center {
++	flex: 1 1 auto;
++	width: auto;
++	max-width: none;
++	min-width: 0;
++	margin: 0 8px 0 76px;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center > .window-title,
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar .center-adjacent-toolbar-container,
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar .action-toolbar-container,
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar .menubar {
++	display: none !important;
++}
++
++.dbcode-wrapper-toolbar {
++	position: relative;
++	z-index: 2600;
++	display: flex;
++	width: 100%;
++	min-width: 0;
++	height: 100%;
++	align-items: center;
++	gap: 7px;
++	color: var(--vscode-titleBar-activeForeground);
++	-webkit-app-region: no-drag;
++}
++
++.dbcode-wrapper-brand,
++.dbcode-wrapper-toolbar-group {
++	display: inline-flex;
++	min-width: 0;
++	align-items: center;
++}
++
++.dbcode-wrapper-brand {
++	flex: 0 0 auto;
++	gap: 6px;
++	padding-right: 2px;
++	font-size: 12px;
++}
++
++.dbcode-wrapper-brand .codicon {
++	color: var(--dbcode-wrapper-accent-hover);
++}
++
++.dbcode-wrapper-toolbar-group {
++	gap: 3px;
++}
++
++.dbcode-wrapper-toolbar-group.database-actions {
++	flex: 1 1 auto;
++	overflow: hidden;
++}
++
++.dbcode-wrapper-toolbar-divider {
++	width: 1px;
++	height: 18px;
++	background: var(--dbcode-wrapper-toolbar-border);
++}
++
++.dbcode-wrapper-toolbar-button {
++	display: inline-flex;
++	height: 24px;
++	min-width: 26px;
++	align-items: center;
++	justify-content: center;
++	gap: 5px;
++	padding: 0 6px;
++	border: 1px solid transparent;
++	border-radius: 4px;
++	color: inherit;
++	background: transparent;
++	font: inherit;
++	cursor: default;
++}
++
++.dbcode-wrapper-toolbar-button:hover,
++.dbcode-wrapper-toolbar-button:focus-visible,
++.dbcode-wrapper-toolbar-button.active,
++.dbcode-wrapper-toolbar-button[aria-pressed='true'] {
++	border-color: var(--dbcode-wrapper-toolbar-border);
++	background: color-mix(in srgb, var(--vscode-titleBar-activeForeground) 10%, transparent);
++}
++
++.dbcode-wrapper-toolbar-button:focus-visible {
++	outline: 1px solid var(--vscode-focusBorder);
++	outline-offset: 1px;
++}
++
++.dbcode-wrapper-toolbar-button:disabled {
++	opacity: 0.38;
++}
++
++.dbcode-wrapper-button-label {
++	overflow: hidden;
++	text-overflow: ellipsis;
++	white-space: nowrap;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.panel > .title {
++	position: relative;
++	min-height: 30px;
++	visibility: visible !important;
++	pointer-events: auto;
++	user-select: none;
++}
++
++.monaco-workbench.dbcode-wrapper-focused[data-dbcode-wrapper-connections-home='open'] .part.panel > .title > :not(.dbcode-wrapper-connections-home-title):not(.dbcode-wrapper-connections-home-close) {
++	visibility: hidden !important;
++	pointer-events: none !important;
++}
++
++.dbcode-wrapper-connections-home-title {
++	position: absolute;
++	inset: 0 auto 0 12px;
++	z-index: 1;
++	display: inline-flex;
++	align-items: center;
++	gap: 6px;
++	visibility: visible;
++	color: var(--vscode-panelTitle-activeForeground);
++	font-size: 11px;
++	font-weight: 600;
++	pointer-events: none;
++}
++
++.dbcode-wrapper-connections-home-title .codicon {
++	color: var(--dbcode-wrapper-muted, var(--vscode-panelTitle-inactiveForeground));
++	font-size: 13px;
++}
++
++.dbcode-wrapper-connections-home-close {
++	position: absolute;
++	top: 3px;
++	right: 7px;
++	z-index: 2;
++	display: inline-flex;
++	width: 24px;
++	height: 24px;
++	align-items: center;
++	justify-content: center;
++	padding: 0;
++	border: 1px solid transparent;
++	border-radius: 3px;
++	visibility: visible !important;
++	color: var(--dbcode-wrapper-muted, var(--vscode-panelTitle-inactiveForeground));
++	background: transparent;
++	pointer-events: auto !important;
++}
++
++.dbcode-wrapper-connections-home-close:hover,
++.dbcode-wrapper-connections-home-close:focus-visible {
++	border-color: var(--dbcode-wrapper-border-strong, var(--vscode-focusBorder));
++	color: var(--dbcode-wrapper-text, var(--vscode-panelTitle-activeForeground));
++	background: var(--dbcode-wrapper-hover, transparent);
++}
++
++.dbcode-wrapper-connections-home-close:focus-visible {
++	outline: 1px solid var(--vscode-focusBorder);
++	outline-offset: 1px;
++}
++
++.dbcode-wrapper-toolbar-button[hidden] {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .composite-bar-container,
++.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .global-actions-left {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .title-actions .action-item:has(.action-label.codicon-toolbar-more) {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title {
++	border-bottom: 1px solid var(--vscode-sideBar-border, transparent);
++}
++
++@media (max-width: 1100px) {
++	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center {
++		margin-left: 72px;
++		margin-right: 2px;
++	}
++
++	.dbcode-wrapper-brand strong,
++	.dbcode-wrapper-toolbar-button .dbcode-wrapper-button-label {
++		display: none;
++	}
++
++	.dbcode-wrapper-toolbar,
++	.dbcode-wrapper-toolbar-group {
++		gap: 2px;
++	}
++}
++
++@media (max-width: 760px) {
++	.dbcode-wrapper-brand,
++	.dbcode-wrapper-toolbar-divider {
++		display: none;
++	}
++}
++
++/* The redesign uses a quiet macOS title row above a database context bar. */
++.monaco-workbench.dbcode-wrapper-focused {
++	--dbcode-wrapper-shell: #18191e;
++	--dbcode-wrapper-raised: #1e2026;
++	--dbcode-wrapper-hover: #272932;
++	--dbcode-wrapper-border: #30323a;
++	--dbcode-wrapper-border-strong: #424550;
++	--dbcode-wrapper-text: #e7e8ed;
++	--dbcode-wrapper-muted: #9da1ad;
++	--dbcode-wrapper-success: #57c28a;
++	background: #111216;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar {
++	box-shadow: none;
++	background: #202126;
++	border-bottom: 1px solid var(--dbcode-wrapper-border-strong);
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container {
++	position: relative;
++	align-items: flex-start;
++	background: #202126;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-left,
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-right {
++	position: relative;
++	z-index: 2;
++	height: 30px;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center,
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container.has-center > .titlebar-center {
++	position: absolute;
++	inset: 0;
++	display: block;
++	width: auto;
++	max-width: none;
++	height: 100%;
++	margin: 0;
++	pointer-events: none;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center > .window-title {
++	position: absolute;
++	top: 0;
++	left: 78px;
++	right: 78px;
++	display: flex !important;
++	height: 30px;
++	align-items: center;
++	justify-content: center;
++	margin: 0;
++	color: #cfd1d8;
++	font-size: 12px;
++	font-weight: 600;
++	pointer-events: none;
++}
++
++.dbcode-wrapper-toolbar.dbcode-wrapper-database-contextbar {
++	position: absolute;
++	left: 0;
++	right: 0;
++	bottom: 0;
++	display: flex;
++	width: auto;
++	height: 52px;
++	padding: 0 10px;
++	gap: 8px;
++	color: var(--dbcode-wrapper-text);
++	background: #1c1d22;
++	border-top: 1px solid var(--dbcode-wrapper-border);
++	pointer-events: auto;
++}
++
++.dbcode-wrapper-toolbar-group.database-actions {
++	flex: 1 1 auto;
++	gap: 4px;
++}
++
++.dbcode-wrapper-toolbar-divider {
++	height: 25px;
++	background: var(--dbcode-wrapper-border);
++}
++
++.dbcode-wrapper-toolbar-button {
++	height: 30px;
++	min-width: 30px;
++	padding: 0 8px;
++	gap: 7px;
++	border-radius: 3px;
++	color: var(--dbcode-wrapper-muted);
++	cursor: pointer;
++}
++
++.dbcode-wrapper-toolbar-button:hover,
++.dbcode-wrapper-toolbar-button:focus-visible,
++.dbcode-wrapper-toolbar-button.active,
++.dbcode-wrapper-toolbar-button[aria-pressed='true'] {
++	border-color: var(--dbcode-wrapper-border-strong);
++	color: var(--dbcode-wrapper-text);
++	background: var(--dbcode-wrapper-hover);
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='connections'] {
++	border-color: var(--dbcode-wrapper-border-strong);
++	color: var(--dbcode-wrapper-text);
++	background: var(--dbcode-wrapper-raised);
++	font-weight: 600;
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='connection-tools'] {
++	min-width: 22px;
++	margin-left: -4px;
++	padding: 0 3px;
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query'] {
++	border-color: var(--dbcode-wrapper-accent);
++	color: #fff;
++	background: var(--dbcode-wrapper-accent);
++	font-weight: 600;
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query']:hover,
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query']:focus-visible {
++	border-color: var(--dbcode-wrapper-accent-hover);
++	background: var(--dbcode-wrapper-accent-hover);
++}
++
++.dbcode-wrapper-extension-state {
++	flex: 0 0 auto;
++	display: inline-flex;
++	align-items: center;
++	gap: 6px;
++	color: var(--dbcode-wrapper-success);
++	font-size: 11px;
++}
++
++.dbcode-wrapper-extension-state .codicon {
++	font-size: 8px;
++}
++
++.dbcode-wrapper-extension-state.starting {
++	color: var(--dbcode-wrapper-muted);
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='release-status'] {
++	flex: 0 0 auto;
++	min-width: 26px;
++	padding: 0 5px;
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='update-available'] {
++	color: var(--dbcode-wrapper-accent-hover);
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='ready'] {
++	color: var(--dbcode-wrapper-success);
++}
++
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='offline'],
++.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='invalid'] {
++	color: var(--dbcode-wrapper-muted);
++}
++
++.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts {
++	right: 8px;
++	bottom: 8px;
++}
++
++.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast-container > .notification-toast {
++	margin: 6px;
++	overflow: hidden;
++	border: 1px solid var(--dbcode-wrapper-border-strong);
++	border-radius: 6px;
++	background: var(--dbcode-wrapper-raised);
++	box-shadow: 0 14px 34px rgb(0 0 0 / 42%);
++}
++
++.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notifications-list-container,
++.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast .monaco-scrollable-element,
++.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast .monaco-list-row {
++	border-radius: 5px;
++	background: var(--dbcode-wrapper-raised);
++}
++
++.monaco-workbench.dbcode-wrapper-focused .breadcrumbs-control {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title {
++	background: #1d1e23;
++	border-bottom: 1px solid var(--dbcode-wrapper-border);
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container.dbcode-wrapper-sql-editor-group > .title .editor-actions,
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-toolbar-more),
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-split-horizontal),
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-split-vertical) {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.editor > .content {
++	background: #14151a;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.sidebar {
++	background: var(--dbcode-wrapper-shell);
++	border-right: 1px solid var(--dbcode-wrapper-border-strong);
++}
++
++.monaco-workbench.dbcode-wrapper-focused .part.panel {
++	border-color: var(--dbcode-wrapper-border-strong);
++	background: #14151a;
++}
++
++/* Lock the only settings route to its DBCode filter and remove generic settings navigation. */
++.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-header {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .split-view-view:has(.settings-toc-wrapper) {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .split-view-view:has(.settings-tree-container) {
++	left: 0 !important;
++	width: 100% !important;
++	transform: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .settings-tree-container {
++	width: 100% !important;
++}
++
++/* The Jupyter notebook is kernel infrastructure for DBCode, not a second notebook product. */
++.monaco-workbench.dbcode-wrapper-focused .tab[aria-label*='dbcode-wrapper-python-kernel.ipynb'],
++.monaco-workbench.dbcode-wrapper-focused .tab:has(.label-name[title*='dbcode-wrapper-python-kernel.ipynb']) {
++	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .editor-instance:has(.notebook-editor[data-uri*='dbcode-wrapper-python-kernel.ipynb']) {
++	visibility: hidden !important;
++}
++
++/* Keep unchanged DBCode webviews visible if Code OSS creates a zero-sized clipping layer. */
++.monaco-workbench.dbcode-wrapper-focused > div:has(> div > iframe.webview[src*='extensionId=dbcode.dbcode'][src*='purpose=webviewView']) {
++	inset: 0 !important;
++	width: 100% !important;
++	height: 100% !important;
++	clip-path: none !important;
++}
++
++@media (max-width: 1100px) {
++	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center,
++	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container.has-center > .titlebar-center {
++		margin: 0;
++	}
++
++	.dbcode-wrapper-extension-state {
++		display: none;
++	}
++}
++
++@media (max-width: 760px) {
++	.dbcode-wrapper-toolbar.dbcode-wrapper-database-contextbar {
++		padding: 0 6px;
++		gap: 3px;
++	}
++}
+diff --git a/src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts b/src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts
+index 9fd23700..e1aba0c0 100644
+--- a/src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts
++++ b/src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts
+@@ -15,6 +15,7 @@ import { isMacintosh, isWindows, isLinux, isTahoeOrNewer } from '../../../../bas
+ import { IMenuService, MenuId } from '../../../../platform/actions/common/actions.js';
+ import { IActionViewItemService } from '../../../../platform/actions/browser/actionViewItemService.js';
+ import { BrowserTitlebarPart, BrowserTitleService, IAuxiliaryTitlebarPart } from '../../../browser/parts/titlebar/titlebarPart.js';
++import product from '../../../../platform/product/common/product.js';
+ import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
+ import { IThemeService } from '../../../../platform/theme/common/themeService.js';
+ import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
+@@ -30,11 +31,17 @@ import { IKeybindingService } from '../../../../platform/keybinding/common/keybi
+ import { CodeWindow, mainWindow } from '../../../../base/browser/window.js';
+ import { IsWindowAlwaysOnTopContext } from '../../../common/contextkeys.js';
+ 
++const DBCODE_WRAPPER_NATIVE_TITLE_ROW_HEIGHT = 30;
++
+ export class NativeTitlebarPart extends BrowserTitlebarPart {
+ 
+ 	//#region IView
+ 
+ 	override get minimumHeight(): number {
++		if (product.dbcodeWrapperFocusedShell) {
++			return super.minimumHeight;
++		}
++
+ 		if (!isMacintosh) {
+ 			return super.minimumHeight;
+ 		}
+@@ -274,7 +281,8 @@ export class NativeTitlebarPart extends BrowserTitlebarPart {
+ 		super.layout(width, height);
+ 
+ 		if (useWindowControlsOverlay(this.configurationService)) {
+-			const newHeight = Math.round(height * getZoomFactor(getWindow(this.element)));
++			const windowControlHeight = product.dbcodeWrapperFocusedShell ? DBCODE_WRAPPER_NATIVE_TITLE_ROW_HEIGHT : height;
++			const newHeight = Math.round(windowControlHeight * getZoomFactor(getWindow(this.element)));
+ 			if (newHeight !== this.cachedWindowControlHeight) {
+ 				this.cachedWindowControlHeight = newHeight;
+ 				this.nativeHostService.updateWindowControls({
+diff --git a/src/vs/workbench/workbench.common.main.ts b/src/vs/workbench/workbench.common.main.ts
+index e3a8ad35..ecf705b8 100644
+--- a/src/vs/workbench/workbench.common.main.ts
++++ b/src/vs/workbench/workbench.common.main.ts
+@@ -201,6 +201,9 @@ registerSingleton(IAllowedMcpServersService, AllowedMcpServersService, Instantia
+ // Default Account
+ import './services/accounts/browser/defaultAccount.js';
+ 
++// DBCode Wrapper focused shell
++import './contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.js';
++
+ // Account Policy Gate
+ import './services/policies/browser/accountPolicyGate.contribution.js';
+ 

@@ -1,0 +1,558 @@
+{
+  "schema_version": 2,
+  "approval_status": "approved",
+  "extension": {
+    "id": "dbcode.dbcode",
+    "version": "1.36.2",
+    "engine": "^1.95.0",
+    "source": "public-package-manifest"
+  },
+  "host": {
+    "code_oss": {
+      "version": "1.126.0",
+      "commit": "7e7950df89d055b5a378379db9ee14290772148a"
+    },
+    "vscodium": {
+      "version": "1.126.04524",
+      "commit": "4015f2d0191311733aa5dbb2abde8101dce63eef"
+    }
+  },
+  "boundary": "This independently authored matrix is checked against DBCode's public package manifest only after the official package is installed locally. Exact vendor manifest content stays outside this repository, and the wrapper does not inspect, modify, repackage, or reverse engineer DBCode implementation code.",
+  "connection_capability_contract": {
+    "owner": "unchanged-dbcode",
+    "supported_connection_scope": "every item exposed by the exact installed DBCode New Connection catalogue",
+    "preservation_mode": "complete-rendered-catalogue",
+    "wrapper_database_allowlist": false,
+    "wrapper_catalogue_transformations": [],
+    "entry_point": {
+      "command": "dbcode.connections.add",
+      "route": "Connections Home > New connection",
+      "ownership": "unchanged-dbcode",
+      "wrapper_arguments": []
+    },
+    "required_focused_routes": [
+      "Connections Home",
+      "Connections Home > New connection",
+      "Connections Home > Import connections",
+      "Connection tools > Tunnels",
+      "Connection tools > Authentication Profiles",
+      "Database Explorer",
+      "DBCode-owned connection and database-object actions"
+    ],
+    "catalogue_snapshot": {
+      "source": "rendered-new-connection-picker",
+      "extension": "dbcode.dbcode@1.36.2",
+      "normalization": "Unicode NFC, collapsed whitespace, case-sensitive code-point sort",
+      "section_count": 12,
+      "item_count": 88,
+      "declared_section_item_total": 88,
+      "sorted_label_sha256": "12660fb76f4cb48095ffd84ef239a71aa7c4245a3078d762131862b4468c178b",
+      "ordered_section_shape_sha256": "36ecc94561bcf7b31f8768ee4ee519d1fc0e2211a9ae2eeb261f81ccfda35327",
+      "raw_labels_committed": false
+    },
+    "change_policy": "Any changed extension version, public contribution digest, catalogue count, label digest, or section-shape digest creates a new candidate and requires complete release-pair review. A changed catalogue is never interpreted as an unsupported wrapper feature.",
+    "representative_acceptance_fixtures": [
+      "PostgreSQL",
+      "DuckDB",
+      "Parquet",
+      "SQLite sample",
+      "Python notebook"
+    ],
+    "runtime_boundaries": [
+      "database or service availability",
+      "network access",
+      "valid credentials and account permissions",
+      "operating-system support",
+      "optional native drivers or client tools",
+      "capabilities of the exact installed DBCode version"
+    ]
+  },
+  "excluded_optional_runtime_members": [
+    {
+      "id": "ms-python.debugpy",
+      "reason": "Python debugging is not used by DBCode notebook execution and the focused app does not expose a generic debugger."
+    },
+    {
+      "id": "ms-python.vscode-python-envs",
+      "reason": "The Open VSX package combination cannot start its expected pet binary, while DBCode Python cells work through the retained Jupyter and Python kernel path."
+    }
+  ],
+  "feature_groups": [
+    {
+      "id": "connections-and-schema",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.connections.add",
+        "dbcode.connections.import",
+        "dbcode.connections.view",
+        "dbcode.tunnels.view",
+        "dbcode.authProfiles.view",
+        "dbcode.streams.view",
+        "dbcode.panelView"
+      ],
+      "focused_routes": [
+        "Connections Home",
+        "Database Explorer",
+        "Connection tools menu",
+        "DBCode-owned tree context actions"
+      ],
+      "evidence": "The rendered shell test opens Connections Home, fingerprints every counted item in DBCode's unchanged New Connection catalogue without storing its labels, and keeps the isolated Database Explorer, import, Tunnels, Authentication Profiles, a real sample database, and DBCode-owned object actions reachable without generic IDE navigation."
+    },
+    {
+      "id": "profile-setup-and-connection-import",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.connections.import"
+      ],
+      "focused_routes": [
+        "First launch > Profile Setup",
+        "Connection tools > Profile Setup",
+        "Profile Setup > Open DBCode Import"
+      ],
+      "evidence": "The rendered proof reviews JSON input, stages only approved non-secret fields as an owner-only CSV, invokes DBCode's unchanged importer, removes temporary data on cancellation and completion, and keeps a hyphen-path DuckDB connection out of the batch for an exact-version read-only preflight."
+    },
+    {
+      "id": "sql-query-editor",
+      "status": "supported",
+      "declared_contributions": [
+        "sql language",
+        "dbcode.connections.sqlFile",
+        "dbcode.editor.execute",
+        "dbcode.editor.execute#selection",
+        "dbcode.editor.copyQuery",
+        "dbcode.editor.expandStar"
+      ],
+      "focused_routes": [
+        "New query",
+        "Open SQL",
+        "SQL editor context menu",
+        "DBCode SQL keybindings"
+      ],
+      "evidence": "The rendered and licensed proofs execute project SQL through unchanged DBCode and retain only DBCode and basic editing context actions."
+    },
+    {
+      "id": "results-and-table-editor",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.panelView",
+        "dbcode.table.open",
+        "dbcode.table.openLimit",
+        "dbcode.export",
+        "dbcode.editor.exportQuery"
+      ],
+      "focused_routes": [
+        "Automatic DBCode result editor",
+        "Database Explorer table actions",
+        "DBCode-owned grid toolbar and context actions"
+      ],
+      "evidence": "The rendered shell test opens a real table and query result grid beside and below the query while the generic workbench panel remains closed."
+    },
+    {
+      "id": "history",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.history.view",
+        "dbcode.history.loadQuery",
+        "dbcode.history.openAsTable"
+      ],
+      "focused_routes": [
+        "Queries > History",
+        "DBCode History tree actions"
+      ],
+      "evidence": "The rendered shell test opens only the DBCode History drawer and keeps its DBCode-owned actions available."
+    },
+    {
+      "id": "library",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.library.view",
+        "dbcode.library.addScript",
+        "dbcode.library.openItem"
+      ],
+      "focused_routes": [
+        "Queries > Library",
+        "SQL editor Add to DBCode Library action",
+        "DBCode Library tree actions"
+      ],
+      "evidence": "The rendered shell test opens only the DBCode Library drawer and verifies the SQL editor keeps Add to DBCode Library."
+    },
+    {
+      "id": "notebooks",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode-notebook",
+        "dbcode-notebook-renderer",
+        "dbcode.notebook.new",
+        "DBCode notebook toolbar and cell actions"
+      ],
+      "focused_routes": [
+        "DBCode tools > New DBCode Notebook",
+        "DBCode notebook toolbar and cell menus"
+      ],
+      "evidence": "The package retains the standard notebook host and renderer built-in. The DBCode 1.36.2 rendered proof opens a real DBCode notebook from the focused tools menu while the duplicate database-tree shortcut remains suppressed because its forwarded tree context was not a reliable host contract."
+    },
+    {
+      "id": "python-notebooks",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode-notebook Python cells",
+        "ms-toolsai.jupyter",
+        "ms-python.python",
+        "verified Jupyter notebook helpers"
+      ],
+      "focused_routes": [
+        "DBCode tools > New DBCode Notebook",
+        "DBCode notebook cell language selector > Python",
+        "DBCode notebook kernel picker"
+      ],
+      "evidence": "The complete Jupyter and Python runtime set is mandatory, pinned, verified, and installed into the private profile. The DBCode 1.36.2 rendered proof starts an isolated user-selected Python kernel, grants DBCode the normal first-use Jupyter permission, renders the deterministic output 42, and confirms that the permission is not requested again."
+    },
+    {
+      "id": "data-file-editor",
+      "status": "limited",
+      "declared_contributions": [
+        "dbcode.dataFileViewer",
+        "DBCode custom editor selectors"
+      ],
+      "focused_routes": [
+        "Connections Home > New connection",
+        "DBCode table data grid"
+      ],
+      "evidence": "DBCode 1.36.2 still declares the custom editor. The prior pair did not register its provider, so the wrapper continues to hide the guaranteed-failure route during the update-pair gate. Direct CSV, Excel, Parquet, and Avro opening remains a separate documented compatibility gate; Connections is usable but is not claimed as feature-equivalent.",
+      "prior_compatibility_failure": {
+        "extension": "dbcode.dbcode@1.36.1",
+        "host": "Code OSS 1.126.0",
+        "message": "The installed DBCode extension declares a data-file editor but did not register it with this Code OSS version. Use Connections to open data until a compatible DBCode or host update is available."
+      }
+    },
+    {
+      "id": "diagrams-and-query-builder",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.tables.diagram",
+        "dbcode.queryBuilder.open"
+      ],
+      "focused_routes": [
+        "Database Explorer table context action",
+        "DBCode tools > Query Builder"
+      ],
+      "evidence": "The DBCode 1.36.2 rendered proof opens the context-free Query Builder workflow and keeps the relationship-diagram action in Database Explorer without generic IDE actions. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
+    },
+    {
+      "id": "account-and-license",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.account.view",
+        "DBCode authentication and licence commands"
+      ],
+      "focused_routes": [
+        "Account toolbar action",
+        "DBCode Account view actions"
+      ],
+      "evidence": "The rendered shell test retains account actions, while the licensed quit-and-relaunch proof restores the user's lifetime entitlement through DBCode's own account surface."
+    },
+    {
+      "id": "ai",
+      "status": "supported",
+      "declared_contributions": [
+        "dbcode.ai.chooseProvider",
+        "dbcode.ai.changeModel",
+        "dbcode.ai.setApiKey",
+        "DBCode result-grid AI surface",
+        "12 language model tools"
+      ],
+      "focused_routes": [
+        "DBCode tools > Choose AI Provider",
+        "DBCode tools > Set AI API Key",
+        "DBCode Settings > AI",
+        "DBCode-owned result-grid AI tab"
+      ],
+      "evidence": "The DBCode 1.36.2 rendered proof opens DBCode's real provider and API-key workflows. Model selection remains available in DBCode's provider flow and filtered AI settings instead of a duplicate redirect. Generic Code OSS Chat remains intentionally absent; its language-model-tool integration is tracked separately from DBCode's native AI surfaces."
+    },
+    {
+      "id": "mcp",
+      "status": "limited",
+      "declared_contributions": [
+        "dbcode MCP server definition provider",
+        "dbcode.mcp.start",
+        "dbcode.mcp.stop",
+        "dbcode.mcp.oauth.revokeTokens"
+      ],
+      "focused_routes": [
+        "DBCode Settings > AI > MCP",
+        "DBCode-owned MCP provider registration"
+      ],
+      "evidence": "DBCode's provider auto-registers and its HTTP MCP settings remain available, but official documentation defines automatic registration and the HTTP server as separate capabilities. Manual HTTP Start, Stop, OAuth revoke, and one external client remain a separate focused compatibility gate and are not claimed as covered by automatic registration."
+    },
+    {
+      "id": "settings",
+      "status": "supported",
+      "declared_contributions": [
+        "11 DBCode configuration sections"
+      ],
+      "focused_routes": [
+        "DBCode tools > DBCode Settings"
+      ],
+      "evidence": "The wrapper opens the host settings editor with an exact DBCode extension filter, removes the editable settings search and generic category tree, and keeps the unrestricted settings shortcut blocked."
+    },
+    {
+      "id": "scratch-files",
+      "status": "supported",
+      "declared_contributions": [
+        "DBCode Scratch Files configuration",
+        "dbcode.scratchFiles.openFolder"
+      ],
+      "focused_routes": [
+        "DBCode tools > Show Scratch Files in Finder",
+        "DBCode Settings > Scratch Files"
+      ],
+      "evidence": "The focused menu resolves DBCode's configured local scratch path, creates it when needed, and asks the native host to reveal it in Finder. This avoids the prior DBCode external file-URL failure while leaving the extension unchanged. The filtered settings route exposes DBCode's path, rotation, and deletion controls."
+    }
+  ],
+  "public_contribution_contract": {
+    "jq_sorted_compact_contributes_sha256": "8eb40f616f4d08b1a76a54bb60e0c8ea1b0b223a7128404c2d901034e4ed1307",
+    "contribution_keys": [
+      "colors",
+      "commands",
+      "configuration",
+      "customEditors",
+      "icons",
+      "keybindings",
+      "languageModelTools",
+      "languages",
+      "mcpServerDefinitionProviders",
+      "menus",
+      "notebookRenderer",
+      "notebooks",
+      "submenus",
+      "views",
+      "viewsContainers",
+      "viewsWelcome"
+    ],
+    "commands": {
+      "count": 170,
+      "sorted_ids_sha256": "212ee458f451debf5c53a572c9256053cfddc59cf39203715eb0a02793d28039"
+    },
+    "views": [
+      "dbcode.connections.view",
+      "dbcode.tunnels.view",
+      "dbcode.authProfiles.view",
+      "dbcode.library.view",
+      "dbcode.history.view",
+      "dbcode.account.view",
+      "dbcode.streams.view",
+      "dbcode.panelView"
+    ],
+    "custom_editor": {
+      "view_type": "dbcode.dataFileViewer",
+      "selector_extensions": [
+        "db",
+        "duckdb",
+        "ddb",
+        "sqlite",
+        "sqlite3",
+        "csv",
+        "xlsx",
+        "parquet",
+        "avro",
+        "mdb",
+        "accdb"
+      ]
+    },
+    "notebook": {
+      "type": "dbcode-notebook",
+      "selector_extensions": [
+        "dbcnb",
+        "dbcode"
+      ],
+      "renderer": "dbcode-notebook-renderer"
+    },
+    "language_model_tools": [
+      "dbcode-get-connections",
+      "dbcode-workspace-connection",
+      "dbcode-get-databases",
+      "dbcode-get-schemas",
+      "dbcode-get-tables",
+      "dbcode-execute-query",
+      "dbcode-execute-dml",
+      "dbcode-execute-ddl",
+      "dbcode-disconnect",
+      "dbcode-set-inferred-relationships",
+      "dbcode-get-inferred-relationships",
+      "dbcode-copy-data"
+    ],
+    "mcp_server_definition_providers": [
+      "dbcode"
+    ],
+    "configuration_titles": [
+      "%General%",
+      "%Formatting%",
+      "%Results%",
+      "%Data Formats%",
+      "%AI%",
+      "%History%",
+      "%Connection Roles%",
+      "%Connection Color%",
+      "%Cloud Providers, Connections and Tunnels%",
+      "%Scratch Files%",
+      "%Transactions%"
+    ]
+  },
+  "focused_routes": {
+    "wrapper_commands": [
+      {
+        "id": "dbcodeWrapper.openDbcodeSettings",
+        "route": "DBCode tools",
+        "target": "@ext:dbcode.dbcode"
+      },
+      {
+        "id": "dbcodeWrapper.revealScratchFiles",
+        "route": "DBCode tools > Show Scratch Files in Finder",
+        "target": "the local path configured by dbcode.scratchFiles.path"
+      },
+      {
+        "id": "dbcodeWrapper.startProfileMigration",
+        "route": "First launch and Connection tools > Profile Setup",
+        "target": "reviewed non-secret connection details handed to DBCode's importer"
+      }
+    ],
+    "dbcode_commands": [
+      {
+        "id": "dbcode.notebook.new",
+        "route": "DBCode tools > New DBCode Notebook"
+      },
+      {
+        "id": "dbcode.queryBuilder.open",
+        "route": "DBCode tools > Query Builder"
+      },
+      {
+        "id": "dbcode.ai.chooseProvider",
+        "route": "DBCode tools > AI: Choose Provider"
+      },
+      {
+        "id": "dbcode.ai.setApiKey",
+        "route": "DBCode tools > AI: Set API Key"
+      },
+      {
+        "id": "dbcode.connections.import",
+        "route": "Profile Setup > Open DBCode Import"
+      }
+    ],
+    "contextual_commands": [
+      {
+        "id": "dbcode.editor.execute",
+        "route": "SQL editor context menu"
+      },
+      {
+        "id": "dbcode.editor.copyQuery",
+        "route": "SQL editor context menu"
+      },
+      {
+        "id": "dbcode.library.addScript",
+        "route": "SQL editor context menu"
+      },
+      {
+        "id": "dbcode.history.loadQuery",
+        "route": "DBCode History item context menu"
+      },
+      {
+        "id": "dbcode.export",
+        "route": "Database Explorer data context menu"
+      },
+      {
+        "id": "dbcode.tables.diagram",
+        "route": "Database Explorer tables context menu"
+      },
+      {
+        "id": "dbcode.notebook.export",
+        "route": "DBCode notebook toolbar"
+      },
+      {
+        "id": "dbcode.notebook.executeExplain",
+        "route": "DBCode notebook cell execute menu"
+      }
+    ],
+    "dbcode_owned_item_commands": [
+      {
+        "id": "dbcode.library.openItem",
+        "route": "DBCode Library item activation"
+      },
+      {
+        "id": "dbcode.table.open",
+        "route": "Database Explorer table activation"
+      },
+      {
+        "id": "dbcode.streams.reveal",
+        "route": "Active Streams item activation"
+      }
+    ]
+  },
+  "command_exposure_policy": {
+    "declared_command_count": 170,
+    "command_palette": "The generic Command Palette is unavailable in production, and the locally verified public package manifest proves which declared commands DBCode itself places in retained DBCode views, editors, notebooks, and webviews.",
+    "dbcode_owned_contexts": "Commands declared on DBCode-owned contexts remain governed by DBCode's public when clauses, except for the duplicate tree shortcuts explicitly suppressed below. The wrapper adds only the focused routes listed above.",
+    "suppressed_duplicates": [
+      {
+        "id": "dbcode.notebook.new",
+        "retained_route": "DBCode tools > New DBCode Notebook",
+        "suppressed_route": "Database Explorer database inline and context actions",
+        "reason": "The direct command opens a real notebook, while the DBCode tree-context invocation has not proved a reliable forwarded-context contract in this host."
+      },
+      {
+        "id": "dbcode.queryBuilder.open",
+        "retained_route": "DBCode tools > Query Builder",
+        "suppressed_route": "Database Explorer database inline and context actions",
+        "reason": "The focused route can run the command without a forwarded tree argument, avoiding a duplicate DBCode tree shortcut that has not proved a reliable host contract."
+      }
+    ],
+    "explicitly_unavailable": [
+      {
+        "id": "dbcode.library.revealFile",
+        "enforcement": "filtered from DBCode tree context actions",
+        "reason": "It crosses from DBCode Library into the generic Code OSS Explorer."
+      },
+      {
+        "id": "dbcode.watchedFolders.add",
+        "enforcement": "its only declared route is explorer/context, while generic Explorer is unavailable",
+        "reason": "DBCode does not declare a context-free folder picker for this command."
+      },
+      {
+        "id": "dbcode.connections.bindFolder",
+        "enforcement": "its only declared route is explorer/context, while generic Explorer is unavailable",
+        "reason": "DBCode does not declare a DBCode-owned context route for binding a workspace folder."
+      }
+    ]
+  },
+  "intentional_limits": [
+    {
+      "contribution": "dbcode.library.revealFile",
+      "reason": "This action opens the generic Code OSS file Explorer, which is outside the DBCode-focused product and would make hidden IDE navigation visible.",
+      "fallback": "Open or save the library query through DBCode, then reveal the saved file from Finder when filesystem navigation is needed."
+    },
+    {
+      "contribution": "dbcode.watchedFolders.add",
+      "reason": "The public manifest declares this action only on the generic Explorer folder context and does not declare a context-free folder-selection command contract.",
+      "fallback": "Existing watched folders remain manageable in DBCode Connections; the wrapper needs a focused folder picker before it can claim the documented add workflow."
+    },
+    {
+      "contribution": "dbcode.connections.bindFolder",
+      "reason": "The public manifest declares this action only on the generic Explorer folder context, which the focused production shell does not expose.",
+      "fallback": "Per-query selection remains available but is not equivalent; the wrapper needs a focused query-folder binding route."
+    },
+    {
+      "contribution": "languageModelTools",
+      "reason": "These twelve tools integrate with the generic Code OSS chat surface, which is intentionally absent from DBCode Wrapper and cannot be exposed without reopening IDE navigation.",
+      "fallback": "Keep generic Chat absent and prove the same documented database tools through DBCode's separate HTTP MCP server."
+    },
+    {
+      "contribution": "dbcode.mcp.start, dbcode.mcp.stop, dbcode.mcp.oauth.revokeTokens",
+      "reason": "The isolated 1.36.1 audit did not open the configured HTTP port or report an outcome, so that pair could not present the controls as working.",
+      "fallback": "Automatic registration is not equivalent. Retest the focused HTTP lifecycle controls with 1.36.2 before deciding their route."
+    },
+    {
+      "contribution": "dbcode.dataFileViewer",
+      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the 1.36.2 update-pair gate does not claim direct-file compatibility.",
+      "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until the separate 1.36.2 direct-file gate proves a focused replacement."
+    }
+  ]
+}
