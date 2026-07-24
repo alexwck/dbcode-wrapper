@@ -494,15 +494,32 @@ printf '%s\n' \
   'esac' \
   > "${stub_bin}/hdiutil"
 
+package_source_arguments=(
+  --manifest "${manifest_file}"
+  --release-lock "${release_lock}"
+  --acceptance "${acceptance_file}"
+  --source-repository "${fixture_repository}"
+  --source-tag "${source_tag}"
+)
+
 package_output="${test_root}/package-output"
 PATH="${stub_bin}:${PATH}" bash "${packager}" \
   --app "${fixture_app}" \
-  --manifest "${manifest_file}" \
-  --release-lock "${release_lock}" \
-  --acceptance "${acceptance_file}" \
-  --source-repository "${fixture_repository}" \
-  --source-tag "${source_tag}" \
+  "${package_source_arguments[@]}" \
   --output-dir "${package_output}" >/dev/null
+
+relative_package_output="${test_root}/relative-package-output"
+if ! relative_package_result="$(
+  cd "${test_root}"
+  PATH="${stub_bin}:${PATH}" bash "${packager}" \
+    --app "DBCode Wrapper.app" \
+    "${package_source_arguments[@]}" \
+    --output-dir "${relative_package_output}" 2>&1
+)"; then
+  echo "The task-level packager rejected a valid relative application path." >&2
+  printf '%s\n' "${relative_package_result}" >&2
+  exit 1
+fi
 
 dmg_file="$(find "${package_output}" -maxdepth 1 -type f -name '*.dmg' -print -quit)"
 checksum_file="${dmg_file}.sha256"

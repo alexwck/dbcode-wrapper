@@ -2,7 +2,7 @@
 
 ## Destination
 
-Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, and same-Mac acceptance are complete. The remaining path prepares the Public Source Repository and the owned-device Private Personal Release.
+Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, same-Mac acceptance, public source, and verified host-only package are complete. The remaining path uses an authenticated GitHub draft for private transfer and validates the package on another owned Mac.
 
 ## Notes
 
@@ -13,7 +13,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - Releases use the current-user self-signed identity and a documented macOS `Open Anyway` step on each owned Mac. The project does not depend on a paid Apple developer membership, Developer ID, or Apple notarization.
 - Code OSS is the current extension-host and workbench runtime. VSCodium is its reproducible macOS build and packaging layer, not a second runtime.
 - The current signed application is the accepted database-client checkpoint: Connections Home, Database Explorer, automatic DBCode result layout, focused query routes, and no generic Code OSS bottom panel.
-- That accepted same-Mac artifact predates the focused first-run runtime installer. The Private Personal Release gate now rejects it; source publication, a rebuild from the exact public source tag, and renewed full acceptance are required before a final DMG.
+- The exact `v0.1.0` source was rebuilt after the focused first-run runtime installer landed, passed renewed full acceptance, and produced a verified host-only DMG without moving the annotated source tag.
 - Open work lives in child tickets and is found from their `Status`, `Blocked by`, and `Type` fields rather than being repeated on this map.
 
 ## Decisions so far

@@ -173,8 +173,9 @@ private_release_validate_sources() {
   node_binary="${NODE_BIN_DIR}/node"
   "${node_binary}" -e '
     const fs = require("node:fs");
+    const path = require("node:path");
     const [logic, record] = process.argv.slice(1);
-    require(logic).validateRuntimeConfiguration(JSON.parse(fs.readFileSync(record, "utf8")));
+    require(path.resolve(logic)).validateRuntimeConfiguration(JSON.parse(fs.readFileSync(record, "utf8")));
   ' "${runtime_setup_logic}" "${runtime_setup_manifest}" || {
     echo "The focused first-run runtime setup manifest is invalid." >&2
     return 1
