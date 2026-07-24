@@ -7,8 +7,8 @@ repo_root="$(cd "${script_root}/.." && pwd)"
 
 "${script_root}/test_host_contract.sh" --source-only
 "${script_root}/test_patch_plan.sh"
+"${script_root}/test_development_gate_contract.sh"
 "${script_root}/test_release_specification.sh"
-node --test "${script_root}/test_approved_release_set.mjs"
 "${script_root}/test_host_slimming_contract.sh" --source-only
 "${script_root}/test_dbcode_contract.sh"
 "${script_root}/test_runtime_extensions_contract.sh"
@@ -18,8 +18,6 @@ node --test "${script_root}/test_approved_release_set.mjs"
 node --test "${script_root}/test_connection_catalogue_contract.mjs"
 "${script_root}/test_dbcode_feature_contract.sh" --source-only
 "${script_root}/test_profile_paths.sh"
-node --test "${script_root}/test_profile_layout.mjs"
-node --test "${script_root}/test_host_session.mjs"
 "${script_root}/test_host_session_contract.sh"
 "${script_root}/test_profile_settings.sh"
 "${script_root}/test_proof_state.sh"
