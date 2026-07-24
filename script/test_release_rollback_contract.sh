@@ -58,6 +58,14 @@ rg -Fq 'ln -s "${worktree_root}" "${short_smoke_root}/repo"' "${prepare_script}"
   echo "Rollback smoke must expose the exact detached worktree through the short path." >&2
   exit 1
 }
+if rg -Fq 'ln -s "${shared_target}"' "${prepare_script}"; then
+  echo "Rollback builds must not bypass generated-path validation through shared cache links." >&2
+  exit 1
+fi
+rg -Fq 'rm "${legacy_shared_link}"' "${prepare_script}" || {
+  echo "Rollback preparation must remove only its known legacy shared-cache links." >&2
+  exit 1
+}
 
 rg -Fq 'codesign --verify --deep --strict' "${verify_script}" || {
   echo "Rollback verification must validate the retained app signature." >&2

@@ -7,6 +7,7 @@ script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/local_signing_identity.sh"
+source "${script_root}/lib/generated_workspace.sh"
 
 usage() {
   cat >&2 <<'EOF'
@@ -58,6 +59,12 @@ done
 [[ -n "${proof}" && -n "${continuity}" && -n "${matrix}" && -n "${health}" ]] || usage
 [[ -n "${rollback}" && -n "${rendered_report}" && -n "${development_log}" ]] || usage
 [[ -n "${smoke_log}" && -n "${output_file}" ]] || usage
+output_file="$(
+  generated_workspace_resolve_path \
+    "acceptance-evidence" \
+    "${output_file}" \
+    allow-temporary
+)"
 
 require_plain_file() {
   local path_value="$1"

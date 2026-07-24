@@ -6,6 +6,7 @@ umask 077
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/profile_paths.sh"
 source "${REPO_ROOT}/script/lib/profile_settings.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 profile_name="default"
 allow_candidate="no"
@@ -44,7 +45,11 @@ case "${approval_status}" in
 esac
 
 managed_settings="${REPO_ROOT}/host/profile/settings.json"
-runtime_cache_root="${CACHE_ROOT}/runtime-extensions"
+runtime_cache_root="$(
+  generated_workspace_resolve_path \
+    "build-cache" \
+    "${CACHE_ROOT}/runtime-extensions"
+)"
 
 if [[ ! -d "${APP_BUNDLE}" ]]; then
   echo "Build the host first with ./script/build_host.sh" >&2

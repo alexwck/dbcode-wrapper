@@ -6,6 +6,7 @@ umask 077
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/approved_release_set.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 release_id="${1:-}"
 [[ -n "${release_id}" && "${release_id}" =~ ^[a-z0-9][a-z0-9._-]+$ ]] || {
@@ -16,9 +17,12 @@ release_id="${1:-}"
 history_file="${REPO_ROOT}/host/approved-release-history.json"
 history_entry="$(approved_release_history_record "${history_file}" "${release_id}")"
 source_commit="$(jq -er '.source_commit' <<<"${history_entry}")"
-snapshot_parent="${BUILD_ROOT}/approved-release-backups"
+snapshot_parent="$(generated_workspace_path "rollback-evidence")"
 snapshot_root="${snapshot_parent}/${release_id}"
-worktree_root="${BUILD_ROOT}/rollback-worktrees/${release_id}"
+worktree_parent="$(generated_workspace_path "rollback-worktrees")"
+worktree_root="${worktree_parent}/${release_id}"
+generated_workspace_assert_path "rollback-evidence" "${snapshot_root}"
+generated_workspace_assert_path "rollback-worktrees" "${worktree_root}"
 
 if [[ -d "${snapshot_root}" ]]; then
   "${REPO_ROOT}/script/verify_release_rollback.sh" "${release_id}"
@@ -48,20 +52,16 @@ cleanup_worktree() {
 }
 trap cleanup_worktree EXIT INT TERM
 
-mkdir -p "${worktree_root}/.build"
-for shared_build_directory in cache toolchains; do
-  shared_link="${worktree_root}/.build/${shared_build_directory}"
-  shared_target="${BUILD_ROOT}/${shared_build_directory}"
-  if [[ -L "${shared_link}" ]]; then
-    [[ "$(readlink "${shared_link}")" == "${shared_target}" ]] || {
-      echo "Rollback worktree has an unexpected ${shared_build_directory} link." >&2
+for legacy_shared_directory in cache toolchains; do
+  legacy_shared_link="${worktree_root}/.build/${legacy_shared_directory}"
+  legacy_shared_target="${BUILD_ROOT}/${legacy_shared_directory}"
+  if [[ -L "${legacy_shared_link}" ]]; then
+    [[ "$(readlink "${legacy_shared_link}")" == "${legacy_shared_target}" ]] || {
+      echo "Rollback worktree has an unexpected ${legacy_shared_directory} link." >&2
       exit 1
     }
-  elif [[ -e "${shared_link}" ]]; then
-    echo "Rollback worktree has an unexpected ${shared_build_directory} path." >&2
-    exit 1
-  else
-    ln -s "${shared_target}" "${shared_link}"
+    rm "${legacy_shared_link}"
+    echo "Removed the legacy shared rollback ${legacy_shared_directory} link."
   fi
 done
 

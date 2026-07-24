@@ -4,6 +4,7 @@ set -euo pipefail
 umask 077
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 release_id="${1:-}"
 profile_source="${2:---snapshot-profile}"
@@ -22,7 +23,9 @@ if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
   exit 1
 fi
 
-snapshot_root="${BUILD_ROOT}/approved-release-backups/${release_id}"
+snapshot_parent="$(generated_workspace_path "rollback-evidence")"
+snapshot_root="${snapshot_parent}/${release_id}"
+generated_workspace_assert_path "rollback-evidence" "${snapshot_root}"
 snapshot_app="${snapshot_root}/${APP_NAME}.app"
 preview_root="$(mktemp -d /private/tmp/dbcode-rollback-preview.XXXXXX)"
 cleanup_preview() {

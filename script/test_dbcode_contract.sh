@@ -103,7 +103,12 @@ rg -Fq 'dbcodeWrapperFocusedShell' "${REPO_ROOT}/script/proof_dbcode.sh" || {
   echo "The DBCode proof must bind evidence to the focused-shell product state." >&2
   exit 1
 }
-rg -Fq 'proof/dbcode-wrapper' "${REPO_ROOT}/script/proof_dbcode.sh" || {
+rg -Fq 'proof_parent="$(generated_workspace_path "proof-evidence")"' \
+  "${REPO_ROOT}/script/proof_dbcode.sh" || {
+  echo "The current wrapper proof must use the registered proof-evidence root." >&2
+  exit 1
+}
+rg -Fq 'proof_root="${proof_parent}/dbcode-wrapper"' "${REPO_ROOT}/script/proof_dbcode.sh" || {
   echo "The current wrapper proof must not reuse historical Ticket 02 evidence." >&2
   exit 1
 }

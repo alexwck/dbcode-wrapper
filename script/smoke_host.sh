@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/profile_guard.sh"
 source "${REPO_ROOT}/script/lib/source_digest.sh"
@@ -174,9 +175,11 @@ jq -e '
   const [logic, record] = process.argv.slice(1);
   require(logic).validateRuntimeConfiguration(JSON.parse(fs.readFileSync(record, "utf8")));
 ' "${runtime_setup_logic}" "${runtime_setup_manifest}"
-mkdir -p "${BUILD_ROOT}"
-expected_runtime_setup_manifest="${BUILD_ROOT}/expected-runtime-extension-set.$$.json"
-assert_generated_path "${expected_runtime_setup_manifest}"
+smoke_root="$(generated_workspace_path "smoke-evidence")"
+generated_workspace_assert_path "smoke-evidence" "${smoke_root}"
+mkdir -p "${smoke_root}"
+expected_runtime_setup_manifest="${smoke_root}/expected-runtime-extension-set.$$.json"
+generated_workspace_assert_path "smoke-evidence" "${expected_runtime_setup_manifest}"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" "${expected_runtime_setup_manifest}" >/dev/null
 cmp -s "${runtime_setup_manifest}" "${expected_runtime_setup_manifest}" || {
   rm -f "${expected_runtime_setup_manifest}"
@@ -212,9 +215,7 @@ else
 fi
 
 normal_profile_before="$(normal_profile_fingerprint)"
-smoke_root="${BUILD_ROOT}/smoke"
 query_file="${REPO_ROOT}/host/qa/project-query.sql"
-assert_generated_path "${smoke_root}"
 rm -rf "${smoke_root}"
 mkdir -p "${smoke_root}"
 resolve_isolated_profile_paths "${smoke_root}"

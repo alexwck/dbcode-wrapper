@@ -10,6 +10,7 @@ inspector="${script_root}/inspect_private_release_tree.sh"
 packager="${script_root}/package_private_release.sh"
 verifier="${script_root}/verify_private_release.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-private-release-test.XXXXXX")"
+export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
 
 cleanup() {
   rm -rf "${test_root}"

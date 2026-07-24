@@ -7,6 +7,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/approved_release_set.sh"
 source "${REPO_ROOT}/script/lib/proof_state.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 usage() {
   cat >&2 <<'EOF'
@@ -89,6 +90,12 @@ prepare_set_command() {
   [[ -n "${source_app}" && -n "${source_manifest}" && -n "${source_lock}" ]] || usage
   [[ -n "${source_user_data}" && -n "${source_extensions}" && -n "${source_shared_data}" ]] || usage
   [[ -n "${output_dir}" ]] || usage
+  output_dir="$(
+    generated_workspace_resolve_path \
+      "controlled-upgrade-evidence" \
+      "${output_dir}" \
+      allow-temporary
+  )"
   if [[ "${role}" == "candidate" && -z "${source_proof}" ]]; then
     echo "A candidate release set requires its completed proof evidence." >&2
     exit 1
@@ -1369,6 +1376,12 @@ matrix_command() {
   done
 
   [[ -n "${current_set}" && -n "${candidate_set}" && -n "${output_file}" ]] || usage
+  output_file="$(
+    generated_workspace_resolve_path \
+      "controlled-upgrade-evidence" \
+      "${output_file}" \
+      allow-temporary
+  )"
   require_release_set "${current_set}" "Current"
   require_release_set "${candidate_set}" "Candidate"
   [[ ! -L "${output_file}" ]] || {

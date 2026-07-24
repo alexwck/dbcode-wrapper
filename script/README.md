@@ -5,6 +5,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 ## Development
 
 - `check_development.sh` runs the complete fast source contract suite.
+- `generated_workspace.sh inventory` reports every registered ignored root with its size status, retention class, owner, reason, and current cleanup eligibility. Only deliberately expired output is measured. `cleanup --class CLASS` and `cleanup --path PATH` validate an explicit eligible selection and return a dry-run plan only; there is no delete or apply mode.
 - `build_host.sh` prepares pinned sources, applies the patch plan, builds, packages, signs, and writes the manifest.
 - `run_host.sh` launches the last signed host through the normal Standalone DBCode Profile.
 - `smoke_host.sh` validates the signed bundle and an isolated independent launch.
@@ -35,3 +36,5 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 - Personal package and public-push commands keep DBCode, profiles, credentials, databases, and signing secrets outside Git and outside the host-only package.
 
 Files under `script/lib/` are internal module implementations or compatibility adapters. `private_release.sh` owns source, acceptance, compatibility, and metadata validation; `private_release_guide.sh` owns the user-facing install and rollback text. Their interfaces are documented in `docs/architecture/overview.md` and tested through the task-level commands.
+
+Generated-output workflows resolve or validate their roots through `generated-workspace-retention.js`. Callers use the normalized absolute path returned by the contract, so a relative CLI path cannot be validated in the repository and then used against another working directory. Maintained tests have an explicit temporary-fixture gate; production acceptance, upgrade, and package evidence must stay under its registered root. Never clean `.build/`, `dist/`, or `output/` by guessing from a directory name. Run the inventory first; caches, worktrees, and unknown entries remain protected until their owner explicitly records expiry.

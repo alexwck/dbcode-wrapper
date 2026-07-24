@@ -48,6 +48,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - [Canonicalize proof extension inventory](./issues/27-canonicalize-proof-extension-inventory.md) — Record the exact external extension set in canonical ID order so host CLI display ordering cannot make current acceptance evidence look stale.
 - [Establish the learning wiki and repository hygiene](./issues/28-establish-the-learning-wiki-and-repository-hygiene.md) — Keep the public source and local issue tracker authoritative, add a source-anchored public OpenKnowledge wiki for learning, retain only local ignored OpenKnowledge state, and protect release evidence while later cleanup waits for its retention contract.
 - [Run each development test through one owner](./issues/29-remove-duplicate-development-test-executions.md) — Keep the complete development gate while letting the update-status, profile-migration, and Host Session adapters run their pinned Node tests exactly once.
+- [Put generated state behind one retention contract](./issues/30-add-a-generated-workspace-retention-contract.md) — Register ignored build, test, acceptance, rollback, cache, and package roots in one inspectable module; protect current release evidence and private profiles; and limit cleanup to explicit dry-run plans.
 
 ## Not yet specified
 

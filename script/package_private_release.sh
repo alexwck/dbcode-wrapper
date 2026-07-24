@@ -8,6 +8,7 @@ source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/private_release.sh"
 source "${script_root}/lib/private_release_guide.sh"
+source "${script_root}/lib/generated_workspace.sh"
 
 app_path=""
 manifest_file=""
@@ -47,6 +48,12 @@ done
 [[ -n "${app_path}" && -n "${manifest_file}" && -n "${release_lock}" && \
   -n "${acceptance_file}" && -n "${source_repository}" && -n "${source_tag}" && \
   -n "${output_dir}" ]] || usage
+output_dir="$(
+  generated_workspace_resolve_path \
+    "private-release-assets" \
+    "${output_dir}" \
+    allow-temporary
+)"
 
 for command in cmp codesign ditto git hdiutil jq lipo plutil rg shasum stat; do
   require_command "${command}"
@@ -106,12 +113,17 @@ for output_name in \
   }
 done
 
-temporary_root="$(mktemp -d "${TMPDIR:-/private/tmp}/dbcode-private-release.XXXXXX")"
+temporary_root="$(mktemp -d "${output_dir}/.staging.XXXXXX")"
 cleanup_temporary_root() {
+  [[ -n "${temporary_root:-}" ]] || return 0
   case "${temporary_root}" in
-    "${TMPDIR:-/private/tmp}"/dbcode-private-release.*) rm -rf "${temporary_root}" ;;
-    *) echo "Refusing to remove unexpected private-release path: ${temporary_root}" >&2 ;;
+    "${output_dir}/.staging."*) rm -rf "${temporary_root}" ;;
+    *)
+      echo "Refusing to remove unexpected private-release path: ${temporary_root}" >&2
+      return 1
+      ;;
   esac
+  temporary_root=""
 }
 trap cleanup_temporary_root EXIT INT TERM
 
@@ -202,6 +214,8 @@ for output_name in \
   mv "${temporary_root}/${output_name}" "${output_dir}/${output_name}"
   chmod 600 "${output_dir}/${output_name}"
 done
+cleanup_temporary_root
+trap - EXIT INT TERM
 
 expected_output_entries="$(
   printf '%s\n' \

@@ -35,8 +35,39 @@ if [[ "${sdk_actual}" != "${MACOS_SDK_VERSION}" ]]; then
   exit 1
 fi
 
-mkdir -p "${TOOLCHAIN_ROOT}" "${BUILD_ROOT}/downloads"
+assert_bootstrap_generated_path() {
+  local candidate="$1"
+  local relative current component
+  local -a components=()
+
+  case "${candidate}" in
+    "${BUILD_ROOT}"|"${BUILD_ROOT}/"*) ;;
+    *)
+      echo "Bootstrap refuses a path outside generated output: ${candidate}" >&2
+      return 1
+      ;;
+  esac
+
+  relative="${candidate#"${REPO_ROOT}/"}"
+  current="${REPO_ROOT}"
+  IFS='/' read -r -a components <<<"${relative}"
+  for component in "${components[@]}"; do
+    [[ -n "${component}" ]] || continue
+    current="${current}/${component}"
+    if [[ -L "${current}" ]]; then
+      echo "Bootstrap refuses a generated path containing a symbolic link: ${current}" >&2
+      return 1
+    fi
+  done
+}
+
 node_archive="${BUILD_ROOT}/downloads/node-v${NODE_VERSION}-darwin-${TARGET_ARCH}.tar.gz"
+assert_bootstrap_generated_path "${BUILD_ROOT}"
+assert_bootstrap_generated_path "${TOOLCHAIN_ROOT}"
+assert_bootstrap_generated_path "${BUILD_ROOT}/downloads"
+assert_bootstrap_generated_path "${NODE_ROOT}"
+assert_bootstrap_generated_path "${node_archive}"
+mkdir -p "${TOOLCHAIN_ROOT}" "${BUILD_ROOT}/downloads"
 
 if [[ ! -x "${NODE_BIN_DIR}/node" ]]; then
   if [[ ! -f "${node_archive}" ]] || [[ "$(shasum -a 256 "${node_archive}" | awk '{print $1}')" != "${NODE_ARCHIVE_SHA256}" ]]; then

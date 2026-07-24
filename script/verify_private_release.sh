@@ -7,6 +7,7 @@ script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/private_release.sh"
+source "${script_root}/lib/generated_workspace.sh"
 
 dmg_file=""
 checksum_file=""
@@ -56,6 +57,12 @@ done
   -n "${release_lock}" && -n "${acceptance_file}" && -n "${compatibility_file}" && \
   -n "${notes_file}" && -n "${output_file}" && -n "${source_repository}" && \
   -n "${source_tag}" ]] || usage
+output_file="$(
+  generated_workspace_resolve_path \
+    "private-release-assets" \
+    "${output_file}" \
+    allow-temporary
+)"
 
 for command in cmp codesign diskutil git hdiutil jq lipo plutil rg shasum stat; do
   require_command "${command}"

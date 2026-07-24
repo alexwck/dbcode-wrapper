@@ -7,6 +7,7 @@ source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 
 upgrade_script="${REPO_ROOT}/script/controlled_upgrade.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-controlled-upgrade.XXXXXX")"
+export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
 
 cleanup_test_root() {
   rm -rf "${test_root}"

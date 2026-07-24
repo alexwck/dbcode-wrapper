@@ -3,10 +3,15 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 "${REPO_ROOT}/script/bootstrap_toolchain.sh"
 export PATH="${NODE_BIN_DIR}:${PATH}"
 
+generated_workspace_assert_path "toolchain-cache" "${TOOLCHAIN_ROOT}"
+generated_workspace_assert_path "download-cache" "${BUILD_ROOT}/downloads"
+generated_workspace_assert_path "build-work" "${WORK_ROOT}"
+generated_workspace_assert_path "accepted-host" "${APP_BUNDLE}"
 "${REPO_ROOT}/script/prepare_source.sh"
 
 slimming_policy_file="${REPO_ROOT}/host/slimming-policy.json"
@@ -82,7 +87,6 @@ if [[ ! -d "${built_app}" ]]; then
 fi
 
 mkdir -p "${DIST_ROOT}"
-assert_generated_path "${APP_BUNDLE}"
 rm -rf "${APP_BUNDLE}"
 ditto "${built_app}" "${APP_BUNDLE}"
 

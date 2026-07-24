@@ -64,7 +64,8 @@ DBCODE_DEVELOPMENT_TRACE="${trace_file}" \
 for adapter in \
   test_update_status_contract.sh \
   test_profile_migration_contract.sh \
-  test_host_session_contract.sh; do
+  test_host_session_contract.sh \
+  test_generated_workspace_contract.sh; do
   require_line_once \
     "${trace_file}" \
     "script:${adapter}" \
@@ -76,7 +77,8 @@ for owned_node_test in \
   test_update_status.mjs \
   test_profile_layout.mjs \
   test_profile_migration.mjs \
-  test_host_session.mjs; do
+  test_host_session.mjs \
+  test_generated_workspace_retention.mjs; do
   if rg -Fq "${owned_node_test}" "${trace_file}"; then
     echo "The development gate must leave ${owned_node_test} to its focused contract adapter." >&2
     exit 1
@@ -103,5 +105,9 @@ require_line_once \
   "${script_root}/test_host_session_contract.sh" \
   '"${NODE_BIN_DIR}/node" --test "${REPO_ROOT}/script/test_host_session.mjs"' \
   "The Host Session adapter must run its Node tests with pinned Node"
+require_line_once \
+  "${script_root}/test_generated_workspace_contract.sh" \
+  '"${NODE_BIN_DIR}/node" --test "${REPO_ROOT}/script/test_generated_workspace_retention.mjs"' \
+  "The generated workspace adapter must run its Node tests with pinned Node"
 
 echo "Development gate execution contracts passed."

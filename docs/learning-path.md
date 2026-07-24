@@ -38,6 +38,10 @@ Explain which failure each level can see that the previous level cannot.
 
 Open DBCode's current supported-databases documentation, then inspect `host/dbcode-feature-policy.json`, `host/qa/connection-catalogue-contract.cjs`, and the rendered connection-capability check. Confirm that the wrapper does not copy that vendor catalogue into an allowlist. Run `./script/test_focused_shell_rendered.sh --connection-catalogue-only` after a signed build and compare its digest-only result with the policy. PostgreSQL, DuckDB, Parquet, and SQLite are representative fixtures; the installed unchanged DBCode catalogue remains authoritative.
 
-## 8. Make one safe change
+## 8. Trace generated state
+
+Run `./script/generated_workspace.sh inventory`, then trace one registered root from `script/lib/generated-workspace-retention.js` into its owning build, proof, rendered, upgrade, rollback, or private-release workflow. Explain why unknown output, caches, and worktrees stay protected until their owner records expiry, and why the cleanup command produces a plan without deleting anything. Confirm that protected artifacts and private profile contents are not traversed for size.
+
+## 9. Make one safe change
 
 Pick a documentation or source-contract improvement. Identify its owning module and test seam, make the smallest change, run the narrow test, then run `./script/check_development.sh`. Record the evidence in the local Markdown issue before resolving it.

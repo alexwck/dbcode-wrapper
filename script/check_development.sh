@@ -19,6 +19,7 @@ node --test "${script_root}/test_connection_catalogue_contract.mjs"
 "${script_root}/test_dbcode_feature_contract.sh" --source-only
 "${script_root}/test_profile_paths.sh"
 "${script_root}/test_host_session_contract.sh"
+"${script_root}/test_generated_workspace_contract.sh"
 "${script_root}/test_profile_settings.sh"
 "${script_root}/test_proof_state.sh"
 "${script_root}/test_release_rollback_contract.sh"

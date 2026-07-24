@@ -39,7 +39,7 @@ A fresh owned Mac does not need the source repository or an extension screen. Th
 - `script/` contains build, verification, profile, release, upgrade, rollback, and private-package commands.
 - `docs/` contains architecture, design, learning, and agent guidance.
 - `.scratch/` is the local Markdown issue tracker and implementation history.
-- `.build/`, `dist/`, and `output/` are generated locally and never belong in the public source repository.
+- `.build/`, `dist/`, and `output/` are generated locally and never belong in the public source repository. Inspect or plan cleanup through `./script/generated_workspace.sh`; do not remove these paths ad hoc.
 
 The project currently pins DBCode `1.36.2`, Code OSS `1.126.0`, and VSCodium packaging `1.126.04524` for Apple silicon. This is a compatibility statement for one Approved Release Set, not a permanent promise about future upstream versions. PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are representative acceptance fixtures. The wrapper does not restrict DBCode to those targets: every connection type contributed by the installed unchanged DBCode version must remain available.
 
@@ -75,6 +75,21 @@ Run the source contract suite with:
 ```sh
 ./script/check_development.sh
 ```
+
+Inspect ignored build, test, acceptance, rollback, cache, and package state with:
+
+```sh
+./script/generated_workspace.sh inventory
+```
+
+The inventory reports each registered path, size status, retention class, owner, reason, and current cleanup eligibility. It measures only deliberately expired output. Protected release artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed or measured. Cleanup commands are deliberately dry-run only:
+
+```sh
+./script/generated_workspace.sh cleanup --class expired-output
+./script/generated_workspace.sh cleanup --path ".build/expired/example with spaces"
+```
+
+Only an explicit eligible class or exact validated path produces a plan. Unknown paths, symbolic links, repository and home roots, active evidence, caches, worktrees, the accepted app, current profile, final transfer assets, acceptance receipts, controlled-upgrade evidence, and rollback backups remain refused until their owning workflow explicitly records expiry.
 
 Before any public push, inspect the exact ref that will be published rather than only the current files:
 

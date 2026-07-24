@@ -31,7 +31,7 @@ macOS build machinery       identity, patches, policy, tests
 
 ## Deep modules
 
-The maintained architecture concentrates cross-cutting rules behind seven seams:
+The maintained architecture concentrates cross-cutting rules behind eight seams:
 
 1. **Release Specification** validates `host/release-lock.json` and returns purpose-level build, extension, profile/product, and identity records. New candidates use the current strict schema. A separate read-only adapter can interpret supported frozen schema-2 and schema-4 records only when the retained build manifest binds their exact lock digest; it never turns historical state into a new candidate or invents approval.
 2. **Approved Release Set** owns canonical source and artifact identity, approval records, safe member resolution, promotion, and rollback compatibility.
@@ -40,8 +40,11 @@ The maintained architecture concentrates cross-cutting rules behind seven seams:
 5. **Patch Plan** applies the maintained Code OSS and VSCodium overlay by semantic seam and verifies the resulting source tree.
 6. **Focused Runtime Setup** derives one public package-and-key record from the Release Specification. On a fresh Finder launch it downloads only that exact DBCode and Python/Jupyter set, verifies every acquisition boundary, installs outside the app with extension-pack dependencies disabled, and reloads only after the managed inventory matches.
 7. **Private Personal Release** binds one annotated source tag, approved release lock, signed host manifest, complete same-Mac acceptance report, and host-only DMG. Its task-level packager and independent verifier share one compatibility-record constructor, while the install-guide renderer remains separate user-facing policy.
+8. **Generated Workspace Retention** registers build, smoke, rendered, proof, controlled-upgrade, rollback, cache, acceptance, and private-release roots in one inspectable policy. It measures only deliberately expired output, reports protected and unregistered output without traversing it, and produces only explicit dry-run cleanup plans.
 
 Tests cross the same interfaces as production callers. Compatibility adapters keep established command-line workflows stable while implementation details move behind the seams.
+
+Build and verification workflows resolve or assert their ignored output roots through the Generated Workspace Retention module. The task command reports path, size status, class, reason, owner, and deletion eligibility. Only output deliberately placed under the expired root can be selected for a plan. Rebuildable work, reusable caches, active evidence, private profiles, unknown paths, symlinked paths, broad roots, rollback backups, and final transfer assets remain protected until an owning workflow explicitly records expiry. Protected artifacts are not traversed for size. Callers use the module's normalized absolute path, bootstrap uses a small shell guard before pinned Node exists, and production evidence cannot use the test-only temporary-output gate. Rollback worktrees keep their own validated build directories instead of linking to the main checkout's caches. The first implementation has no mutation mode.
 
 ## Connection capability
 

@@ -4,21 +4,25 @@ set -euo pipefail
 umask 077
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 ipykernel_version="7.3.0"
-qa_python_root="${BUILD_ROOT}/qa/python-kernel-ipykernel-${ipykernel_version}"
-qa_jupyter_prefix="${BUILD_ROOT}/qa/jupyter"
+qa_root="$(generated_workspace_path "rendered-evidence")"
+qa_python_root="${qa_root}/python-kernel-ipykernel-${ipykernel_version}"
+qa_jupyter_prefix="${qa_root}/jupyter"
 qa_jupyter_path="${qa_jupyter_prefix}/share/jupyter"
 
-for private_directory in "${BUILD_ROOT}/qa" "${qa_python_root}" "${qa_jupyter_prefix}"; do
+generated_workspace_assert_path "rendered-evidence" "${qa_python_root}"
+generated_workspace_assert_path "rendered-evidence" "${qa_jupyter_prefix}"
+for private_directory in "${qa_root}" "${qa_python_root}" "${qa_jupyter_prefix}"; do
   if [[ -L "${private_directory}" ]]; then
     echo "Refusing a symlinked QA Python path: ${private_directory}" >&2
     exit 1
   fi
 done
 
-mkdir -p "${BUILD_ROOT}/qa"
-chmod 700 "${BUILD_ROOT}/qa"
+mkdir -p "${qa_root}"
+chmod 700 "${qa_root}"
 
 if [[ ! -x "${qa_python_root}/bin/python" ]]; then
   python3 -m venv "${qa_python_root}"

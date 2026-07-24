@@ -3,19 +3,22 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 require_command clang
 require_command sips
 require_command python3
 
 icon_renderer_source="${REPO_ROOT}/host/icon/render_icon.m"
-generated_root="${BUILD_ROOT}/generated/icon"
+generated_parent="$(generated_workspace_path "generated-source")"
+generated_root="${generated_parent}/icon"
 iconset_root="${generated_root}/DBCodeWrapper.iconset"
 base_png="${generated_root}/DBCodeWrapper-1024.png"
 output_icns="${generated_root}/DBCodeWrapper.icns"
 icon_renderer="${generated_root}/render-icon"
 
-assert_generated_path "${generated_root}"
+generated_workspace_assert_path "generated-source" "${generated_root}"
+generated_workspace_assert_path "build-cache" "${CACHE_ROOT}/clang-modules"
 rm -rf "${generated_root}"
 mkdir -p "${iconset_root}"
 

@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/patch_plan.sh"
 
 require_command git
@@ -13,6 +14,8 @@ patch_plan_validate
 vscodium_cache="${CACHE_ROOT}/vscodium.git"
 code_oss_cache="${CACHE_ROOT}/code-oss.git"
 
+generated_workspace_assert_path "build-cache" "${CACHE_ROOT}"
+generated_workspace_assert_path "build-work" "${WORK_ROOT}"
 mkdir -p "${CACHE_ROOT}" "${BUILD_ROOT}/work"
 
 prepare_bare_cache() {
@@ -45,7 +48,6 @@ if [[ "${code_oss_actual}" != "${CODE_OSS_COMMIT}" ]]; then
   exit 1
 fi
 
-assert_generated_path "${WORK_ROOT}"
 rm -rf "${WORK_ROOT}"
 git clone --quiet --no-checkout "${vscodium_cache}" "${WORK_ROOT}"
 git -C "${WORK_ROOT}" checkout --quiet --detach "${VSCODIUM_COMMIT}"

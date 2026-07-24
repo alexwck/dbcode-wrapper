@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/approved_release_set.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 release_id="${1:-}"
 [[ -n "${release_id}" && "${release_id}" =~ ^[a-z0-9][a-z0-9._-]+$ ]] || {
@@ -13,7 +14,9 @@ release_id="${1:-}"
 }
 
 history_file="${REPO_ROOT}/host/approved-release-history.json"
-snapshot_root="${BUILD_ROOT}/approved-release-backups/${release_id}"
+snapshot_parent="$(generated_workspace_path "rollback-evidence")"
+snapshot_root="${snapshot_parent}/${release_id}"
+generated_workspace_assert_path "rollback-evidence" "${snapshot_root}"
 snapshot_manifest="${snapshot_root}/rollback-manifest.json"
 
 history_entry="$(approved_release_history_record "${history_file}" "${release_id}")"

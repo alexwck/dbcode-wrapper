@@ -25,6 +25,10 @@ assert.ok(qaExtensions && path.isAbsolute(qaExtensions), 'DBCODE_WRAPPER_QA_EXTE
 const qaJupyterPath = process.env.DBCODE_WRAPPER_QA_JUPYTER_PATH;
 assert.ok(qaJupyterPath && path.isAbsolute(qaJupyterPath), 'DBCODE_WRAPPER_QA_JUPYTER_PATH must name the isolated QA Jupyter data directory.');
 assert.ok(fs.existsSync(path.join(qaJupyterPath, 'kernels/dbcode-wrapper-qa/kernel.json')), 'The isolated DBCode Python kernel is missing.');
+const qaRoot = process.env.DBCODE_WRAPPER_QA_ROOT;
+assert.ok(qaRoot && path.isAbsolute(qaRoot), 'DBCODE_WRAPPER_QA_ROOT must name the registered rendered-evidence root.');
+const outputRoot = process.env.DBCODE_WRAPPER_RENDERED_OUTPUT_ROOT;
+assert.ok(outputRoot && path.isAbsolute(outputRoot), 'DBCODE_WRAPPER_RENDERED_OUTPUT_ROOT must name the registered rendered-screenshot root.');
 const obsoleteExtensionDirectories = fs.existsSync(path.join(qaExtensions, '.obsolete'))
 	? JSON.parse(fs.readFileSync(path.join(qaExtensions, '.obsolete'), 'utf8'))
 	: {};
@@ -50,14 +54,12 @@ assert.ok(dbcodeExtensionDirectory, 'The isolated QA extension directory does no
 const dbcodeManifest = JSON.parse(fs.readFileSync(path.join(qaExtensions, dbcodeExtensionDirectory, 'package.json'), 'utf8'));
 const streamsView = dbcodeManifest.contributes.views.dbcodeActivitybarContainer.find(view => view.id === 'dbcode.streams.view');
 assert.equal(streamsView?.when, 'dbcode.hasActiveStreams', 'The pinned DBCode package no longer exposes Streams only while a stream is active.');
-const qaRoot = path.join(repoRoot, '.build/qa');
 const workspacePath = path.join(qaRoot, 'workspace');
 const persistentProfileRoot = path.join(qaRoot, 'rendered');
 const externalReleaseLinkCapturePath = path.join(
 	persistentProfileRoot,
 	'user-data/User/globalStorage/dbcode-wrapper.release-status/rendered-release-link-capture.jsonl'
 );
-const outputRoot = path.join(repoRoot, 'output/playwright');
 const connectionCatalogueOnly = process.env.DBCODE_WRAPPER_CONNECTION_CATALOGUE_ONLY === 'yes';
 const reportPath = path.join(
 	outputRoot,
