@@ -9,7 +9,7 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 ---
 ## Summary
 
@@ -24,21 +24,22 @@ A Private Personal Release is a locally produced, owner-only package. The public
 - Package the app and the minimum private installation material.
 - Verify the mounted or extracted release before installation.
 - Preserve enough identity and evidence for later health checks and rollback.
+- Resolve staging, final assets, and the independent verification receipt through [Generated Workspace Retention](generated-workspace-retention.md), keeping them protected until this workflow releases them.
 
 ## Public API / entry points
 
-[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/package_private_release.sh) is the packaging command. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/verify_private_release.sh) verifies a package. Shared validation and manifest functions live in `script/lib/private_release.sh`.
+[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/package_private_release.sh) is the packaging command. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_private_release.sh) verifies a package. Shared validation and manifest functions live in `script/lib/private_release.sh`.
 
 ## Key files
 
-- [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/private_release.sh) — source, app, manifest, signing, and sanitization checks.
-- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/package_private_release.sh) — release builder.
-- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/verify_private_release.sh) — release verifier.
-- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/verify_same_mac_release.sh) — owner-machine continuity checks.
+- [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/private_release.sh) — source, app, manifest, signing, and sanitization checks.
+- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/package_private_release.sh) — release builder.
+- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_private_release.sh) — release verifier.
+- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_same_mac_release.sh) — owner-machine continuity checks.
 
 ## Dependencies
 
-The module consumes [Release Specification](release-specification.md), [Approved Release Set](approved-release-set.md), the signed app, the controlled profile layout, macOS packaging tools, and completed acceptance evidence.
+The module consumes [Release Specification](release-specification.md), [Approved Release Set](approved-release-set.md), [Generated Workspace Retention](generated-workspace-retention.md), the signed app, the controlled profile layout, macOS packaging tools, and completed acceptance evidence.
 
 ## Participates in
 

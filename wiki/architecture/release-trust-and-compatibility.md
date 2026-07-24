@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 ---
 ## Summary
 
@@ -37,9 +37,10 @@ flowchart LR
 - [Approved Release Set](../modules/approved-release-set.md) validates prepared and approved records and binds them to evidence digests.
 - [Verification Harness](../modules/verification-harness.md) supplies layered static, contract, rendered, database, persistence, and release checks.
 - [Private Personal Release](../modules/private-personal-release.md) verifies signed packaging and sanitized metadata.
+- [Generated Workspace Retention](../modules/generated-workspace-retention.md) protects active evidence, rollback backups, and final transfer assets until their owning workflow releases them.
 - [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md) stages and switches the whole app/profile set.
 
-The core schemas and transition checks are in [`release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/release_specification.sh), [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-release-status/approved-release-set.js), and [`controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/controlled_upgrade.sh).
+The core schemas and transition checks are in [`release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/release_specification.sh), [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/extensions/dbcode-wrapper-release-status/approved-release-set.js), and [`controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/controlled_upgrade.sh).
 
 ## Design decisions
 
@@ -49,6 +50,7 @@ The core schemas and transition checks are in [`release_specification.sh`](https
 - Promotion and rollback cover the app, manifest, user data, extensions, and shared data as one set.
 - Legacy records may be readable for continuity, while new approvals use the deeper current schema.
 - The strongest confidence comes from a real signed app, a real standalone profile, full quit/relaunch, and representative database workflows.
+- Evidence retention is owner-driven. Age alone never makes an accepted app, active receipt, rollback backup, or final transfer asset safe to remove.
 
 ## Related
 

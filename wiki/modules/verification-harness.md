@@ -9,7 +9,7 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 ---
 ## Summary
 
@@ -24,23 +24,24 @@ Verification is layered because no single test can prove the product goal. Fast 
 - Exercise representative PostgreSQL, SQLite, DuckDB, Parquet, and Python notebook paths.
 - Confirm DBCode activation, licence persistence, saved credentials, query results, quit, and relaunch.
 - Verify candidate preparation, promotion, health, rollback, and private packaging.
+- Resolve smoke, rendered, proof, acceptance, rollback, and package evidence through [Generated Workspace Retention](generated-workspace-retention.md), and test that protected roots stay uninspected.
 
 Representative fixtures do not narrow product support. The approved DBCode extension remains responsible for every database connection type it supports.
 
 ## Public API / entry points
 
-[`check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/check_development.sh) is the broad fast-development entry point. Narrow `test_*` scripts protect individual contracts. `verify_*` scripts inspect built or prepared release artifacts. Manual acceptance steps cover macOS prompts and real external services that cannot be honestly simulated.
+[`check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/check_development.sh) is the broad fast-development entry point. Narrow `test_*` scripts protect individual contracts. `verify_*` scripts inspect built or prepared release artifacts. Manual acceptance steps cover macOS prompts and real external services that cannot be honestly simulated.
 
 ## Key files
 
-- [`script/check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/check_development.sh) — aggregate development checks.
-- [`script/verify_release_set_static.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/verify_release_set_static.sh) — prepared-set inspection.
-- [`script/test_focused_shell_rendered.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_focused_shell_rendered.sh) — rendered shell checks.
-- [`host/proof`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146/host/proof) and [`host/qa`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146/host/qa) — representative fixtures and policies.
+- [`script/check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/check_development.sh) — aggregate development checks.
+- [`script/verify_release_set_static.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_release_set_static.sh) — prepared-set inspection.
+- [`script/test_focused_shell_rendered.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/test_focused_shell_rendered.sh) — rendered shell checks.
+- [`host/proof`](https://github.com/alexwck/dbcode-wrapper/tree/fbf29827376fd0ea5867082b78e38862878f42b6/host/proof) and [`host/qa`](https://github.com/alexwck/dbcode-wrapper/tree/fbf29827376fd0ea5867082b78e38862878f42b6/host/qa) — representative fixtures and policies.
 
 ## Dependencies
 
-Different levels require different tools: Node, shell, `jq`, built app bundles, macOS signing tools, local databases, and the owner's real standalone profile. Tests that need private state must write only to ignored evidence locations.
+Different levels require different tools: Node, shell, `jq`, built app bundles, macOS signing tools, local databases, and the owner's real standalone profile. Tests that need private state must write only to ignored locations registered by [Generated Workspace Retention](generated-workspace-retention.md); the inventory records ownership without inspecting the private profile.
 
 ## Participates in
 

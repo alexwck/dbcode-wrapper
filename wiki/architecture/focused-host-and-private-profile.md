@@ -9,7 +9,7 @@ tags:
   - shell
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 ---
 ## Summary
 
@@ -48,8 +48,9 @@ flowchart TB
 - [Focused Runtime Setup](../modules/focused-runtime-setup.md) verifies pinned packages before installing them into the external extension root.
 - [Focused shell extensions](../modules/focused-shell-extensions.md) render the database-oriented top bar and supporting controls.
 - [Approved Release Set](../modules/approved-release-set.md) binds the app and profile contents to the compatibility decision.
+- [Generated Workspace Retention](../modules/generated-workspace-retention.md) classifies repository output while marking profile paths as private and uninspected.
 
-The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). The launch contract is implemented by [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/host-session.js) and its shell adapter.
+The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). The launch contract is implemented by [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/host-session.js) and its shell adapter.
 
 ## Design decisions
 
@@ -59,6 +60,7 @@ The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbc
 - Normal VS Code profiles are outside the wrapper's ownership boundary.
 - Secure-storage prompts are part of macOS identity and signing continuity. Changing app identity or signing material can make the OS treat a launch as a different application.
 - Recovery is explicit and conservative: it backs up owned profile data and relaunches with a verified argument set.
+- Repository inventory may report that profile roots exist as protected categories, but it never traverses, measures, or cleans their contents.
 
 ## Related
 

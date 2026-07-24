@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, compatibility model, build, verification, and personal release flow.
 profile: public/standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 tags:
   - wiki
   - overview
@@ -12,7 +12,7 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused database shell, isolated profile, compatibility contracts, build patches, verification, and owner-only release process. DBCode continues to own database connectivity and its feature surfaces.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`efe247f`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146). When the repository moves beyond that commit, use the source links as historical anchors and refresh the wiki before relying on fine details.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`fbf2982`](https://github.com/alexwck/dbcode-wrapper/tree/fbf29827376fd0ea5867082b78e38862878f42b6). When the repository moves beyond that commit, use the source links as historical anchors and refresh the wiki before relying on fine details.
 
 > [!NOTE]
 > The public wiki excludes licence material, credentials, private profiles, generated app bundles, raw local evidence, and proprietary DBCode implementation. PostgreSQL, SQLite, DuckDB, Parquet, and notebooks are representative acceptance paths; they do not limit the database connections supported by the approved DBCode extension.
@@ -32,6 +32,9 @@ flowchart LR
   F --> Q[Connections queries grids and notebooks]
   A --> R[Candidate approval promotion and rollback]
   P --> R
+  B --> G[Generated output retention]
+  R --> G
+  P --> G
 ```
 
 The main idea is a deliberate split: the app bundle is a slim, replaceable host; the private profile is the durable owner-controlled state. A release is trusted only when the host, profile schema, external packages, signing identity, and evidence agree as one [Approved Release Set](concepts/approved-release-set.md).
@@ -44,7 +47,8 @@ The main idea is a deliberate split: the app bundle is a slim, replaceable host;
 4. Study [Release trust and compatibility](architecture/release-trust-and-compatibility.md).
 5. Use [Trace a DBCode feature](guides/trace-a-dbcode-feature.md) when investigating the UI or an upstream contribution.
 6. Use [Choose a verification level](guides/choose-a-verification-level.md) before changing a boundary.
-7. Use [Review an upstream update](guides/review-an-upstream-update.md) when any pinned component changes.
+7. Read [Generated Workspace Retention](modules/generated-workspace-retention.md) before inspecting or cleaning build and test output.
+8. Use [Review an upstream update](guides/review-an-upstream-update.md) when any pinned component changes.
 
 ## Architecture
 
@@ -62,6 +66,7 @@ The main idea is a deliberate split: the app bundle is a slim, replaceable host;
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — verified DBCode and notebook package installation.
 - [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
 - [Private Personal Release](modules/private-personal-release.md) — owner-only packaging and transfer safeguards.
+- [Generated Workspace Retention](modules/generated-workspace-retention.md) — classified ownership, protected inventory, and explicit dry-run cleanup planning.
 - [Verification Harness](modules/verification-harness.md) — layered source, rendered, profile, database, and release checks.
 
 ## Flows

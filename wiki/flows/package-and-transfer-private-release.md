@@ -9,7 +9,7 @@ tags:
   - transfer
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
 ---
 ## Summary
 
@@ -44,8 +44,8 @@ sequenceDiagram
 2. Confirm the build manifest, app identity, extension policy, profile schema, and approved set agree.
 3. Verify the app and helper signatures before packaging.
 4. Generate sanitized compatibility metadata. It must say that licence and profile contents are not included.
-5. Build the private release artifact and a separate checksum.
-6. Place it only in the owner's private transfer location. A public GitHub repository does not make the private binary suitable for general distribution.
+5. Resolve the registered private-release root, then build the private release artifact, checksum, and independent verification receipt within it.
+6. Keep these final transfer assets protected until the private-release workflow explicitly releases them, and place them only in the owner's private transfer location. A public GitHub repository does not make the private binary suitable for general distribution.
 7. On the target Mac, download the artifact and checksum through the owner's account, verify them, and inspect the mounted package.
 8. Install the app, create the target machine's standalone profile, install verified packages, and perform the [first-run flow](first-run-activate-and-query.md).
 9. Fully quit and relaunch to confirm app identity, secure storage, licence, credentials, and profile persistence.
@@ -58,9 +58,11 @@ sequenceDiagram
 - The target Mac treats the locally signed app as a different identity, causing new Keychain prompts.
 - A private package is mistaken for a notarized public distribution. This project intentionally does not claim that distribution model.
 - The app launches but the target profile or installed package set is incomplete.
+- Packaging or verification tries to stage output outside the registered private-release root.
 
 ## Related
 
 - [Private Personal Release](../modules/private-personal-release.md)
+- [Generated Workspace Retention](../modules/generated-workspace-retention.md)
 - [Focused host and private profile](../architecture/focused-host-and-private-profile.md)
 - [Choose a verification level](../guides/choose-a-verification-level.md)
