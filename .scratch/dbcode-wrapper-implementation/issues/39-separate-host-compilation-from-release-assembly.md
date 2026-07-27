@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** in progress
+**Status:** resolved
 
 - [x] Define the exact inputs that affect upstream host compilation and the separate inputs that affect release assembly.
 - [x] Accepted release builds read every wrapper input from one clean immutable source ref, never from a mutable working tree.
@@ -16,7 +16,7 @@
 - [x] The source tag, release lock, manifest, app digest, and acceptance report still identify one auditable release set.
 - [x] A cache miss, damaged cached host, changed patch, changed upstream revision, changed compile-time slimming choice, or changed compile-time wrapper code falls back to a complete build.
 - [x] Focused tests prove cache hits and misses without downloading upstream source or launching the app.
-- [ ] Record before-and-after times for a DBCode-only bump and a full host change.
+- [x] Record before-and-after times for a DBCode-only bump and a full host change.
 
 ## Comments
 
@@ -29,3 +29,10 @@
 - 2026-07-27: The normalized-path launcher reached final acceptance, which then exposed one stale release-lock lookup. The current lock records the VSCodium packaging version at `upstream.vscodium.tag`, while the verifier still checked the removed `runtime.vscodium_version` field. The exact-release contract now requires the current field and rejects the obsolete one.
 - 2026-07-27: Final accepted-source evidence kept the same Compiled Host ID, `compiled-host-81d4697c4fd04941de5097e37a0cf6f765bcf8e6787389bfbc45ec7edf9f288e`, across test-only source fixes. The corrected full compile took 617.11 seconds. Exact cache-hit assemblies took 93.19 to 101.25 seconds, saving 515.86 to 523.92 seconds per candidate: about 6.1 to 6.6 times faster, or 83.6% to 84.9% less wall time. The final source `db6e2bf14ed29a609fb4bc5d36e3dfaa01217c17` then passed static smoke in 4.83 seconds, all 13 rendered checks in 14.88 seconds, and exact-source prompt-free acceptance in 47.44 seconds. These live cache-hit runs used the same DBCode `1.36.4` candidate rather than a literal transition between two DBCode versions, so the last timing checkbox remains open for the next real DBCode-only bump.
 - 2026-07-27: The normal cached deployment path now takes about 229.49 seconds, or 3 minutes 49.49 seconds, from assembly through verified private packaging: 101.25 seconds to assemble and sign, 14.88 seconds for the single rendered profile, 47.44 seconds for exact-source acceptance, and 65.92 seconds for packaging with mounted DMG verification. Acceptance already owns static smoke, and packaging already owns final DMG verification, so separate repetitions are diagnostic checks rather than default deployment steps. The extra 27.70-second verifier run above was used once to confirm the final moved assets and should not become a permanent release requirement.
+- 2026-07-27: The timed DBCode `1.36.4` cache-hit candidate is now approved as private release `v0.1.1`. Its approved-history record carries the same Compiled Host ID, `compiled-host-81d4697c4fd04941de5097e37a0cf6f765bcf8e6787389bfbc45ec7edf9f288e`, used by the live timing run. This closes the final timing criterion without repeating a build or package workflow.
+
+## Answer
+
+Host compilation and release assembly are separate. A full host compile took 617.11 seconds. Reusing its exact verified Compiled Host reduced assembly and signing to 93.19–101.25 seconds, saving 515.86–523.92 seconds, or about 84% of that stage.
+
+The complete cached deployment path for approved DBCode `1.36.4` took about 229.49 seconds from assembly through one-profile rendered smoke, exact-source acceptance, packaging, and mounted verification. Documentation, tests, historical readers, and DBCode-only changes still receive a new auditable source and final manifest, but they do not recompile Code OSS unless a real compilation input changes.
