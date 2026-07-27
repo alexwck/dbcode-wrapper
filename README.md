@@ -84,7 +84,7 @@ Build a release candidate only from a clean committed source tree:
 ./script/build_host.sh
 ```
 
-The command copies the exact commit to a temporary release-source checkout before it reads build inputs. The first run compiles the pinned Code OSS host. Later runs reuse that verified Compiled Host when its exact compilation inputs have not changed. A cache hit also skips compiler-only tool checks. A DBCode-only version bump still gets new wrapper records, signing, a manifest, and acceptance evidence without compiling Code OSS again.
+The command copies the exact commit to a temporary release-source checkout before it reads build inputs. The first run compiles the pinned Code OSS host. Later runs reuse that verified Compiled Host when its exact compilation inputs have not changed. The cache key records whether a source file is executable, but ignores local permission differences that Git does not track. A cache hit also skips compiler-only tool checks. A DBCode-only version bump still gets new wrapper records, signing, a manifest, and acceptance evidence without compiling Code OSS again.
 
 Run the source contract suite with:
 

@@ -10,7 +10,7 @@ Commit the complete release input so the working tree is clean. On the approved 
 ./script/build_host.sh
 ```
 
-That command records the checked-out Git commit as the immutable Release Source Snapshot, copies that commit to a temporary clean checkout, and reads all build and assembly inputs there. It then calculates a Compiled Host input ID from the exact Code OSS, VSCodium, toolchain, patch, product, icon, and slimming inputs.
+That command records the checked-out Git commit as the immutable Release Source Snapshot, copies that commit to a temporary clean checkout, and reads all build and assembly inputs there. It then calculates a Compiled Host input ID from the exact Code OSS, VSCodium, toolchain, patch, product, icon, and slimming inputs. It keeps Git's executable-file distinction but ignores local read and write permission differences.
 
 On a cache miss, it checks the compiler toolchain, prepares the pinned upstream sources, and compiles `darwin-arm64`. On a cache hit, including a DBCode-only version bump, it reuses the verified unchanged host without rerunning compiler-only preflights. It then adds the current wrapper extensions and release records, signs nested code from the inside out with the current user's persistent private signing identity, and writes:
 

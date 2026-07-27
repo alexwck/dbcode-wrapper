@@ -19,8 +19,11 @@ compiled_host_sha256_text() {
 compiled_host_file_mode() {
   local file_path="$1"
 
-  stat -f '%Lp' "${file_path}" 2>/dev/null ||
-    stat -c '%a' "${file_path}"
+  if [[ -x "${file_path}" ]]; then
+    printf '755\n'
+  else
+    printf '644\n'
+  fi
 }
 
 compiled_host_digest_source_files() {
@@ -171,7 +174,7 @@ compiled_host_input_payload() {
     --arg release_specification_sha256 "${release_specification_sha}" \
     --arg slimming_sha256 "${slimming_sha}" \
     '{
-      schema_version: 1,
+      schema_version: 2,
       release: $release,
       source: {
         patches_sha256: $patch_sha256,

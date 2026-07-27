@@ -92,7 +92,7 @@ prompt-free acceptance report
 annotated source tag → host-only DMG → independent mounted verification
 ```
 
-Code OSS runtime, VSCodium packaging, and DBCode updates are discovered separately but packaged as one exact release set. Every release commit creates a new audited source snapshot. Only compilation inputs create a new Compiled Host ID, so a DBCode-only bump can reuse the unchanged host and still receive a new signed artifact, manifest, and acceptance report.
+Code OSS runtime, VSCodium packaging, and DBCode updates are discovered separately but packaged as one exact release set. Every release commit creates a new audited source snapshot. Only compilation inputs create a new Compiled Host ID, so a DBCode-only bump can reuse the unchanged host and still receive a new signed artifact, manifest, and acceptance report. Source permissions are reduced to Git's regular-or-executable distinction, so the same clean commit keeps the same ID under a private build umask.
 
 Rendered automation uses one persistent generated QA profile. It does not run first-use migration, profile recovery, Python kernels, SQL execution, model calls, secret entry, or other work that can open a person-controlled prompt. macOS permissions and DBCode sign-in or licence choices remain part of normal app use, outside automated deployment checks.
 

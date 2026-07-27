@@ -66,6 +66,23 @@ host_changed_id="$(compiled_host_input_id "${host_changed_lock}" "${fixture_sour
   exit 1
 }
 
+fixture_icon="${fixture_source}/host/icon/dbcode-wrapper.svg"
+fixture_build_script="${fixture_source}/script/bootstrap_toolchain.sh"
+chmod 600 "${fixture_icon}"
+chmod 700 "${fixture_build_script}"
+[[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" == "${baseline_id}" ]] || {
+  echo "Ambient checkout permissions invalidated the compiled host." >&2
+  exit 1
+}
+chmod 644 "${fixture_icon}"
+chmod 755 "${fixture_build_script}"
+chmod 644 "${fixture_build_script}"
+[[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" != "${baseline_id}" ]] || {
+  echo "A tracked executable-mode change reused the compiled host." >&2
+  exit 1
+}
+chmod 755 "${fixture_build_script}"
+
 printf '\n<!-- release-assembly-only fixture -->\n' >> \
   "${fixture_source}/host/extensions/dbcode-wrapper-release-status/package.json"
 [[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" == "${baseline_id}" ]] || {
