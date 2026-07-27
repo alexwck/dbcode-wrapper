@@ -42,10 +42,14 @@ for caller in \
 done
 
 source "${shell_adapter}"
+if rg -n '\$\{REPO_ROOT\}/\.build' "${REPO_ROOT}/script" --glob 'test_*'; then
+  echo "A test targets generated output under its source checkout instead of BUILD_ROOT." >&2
+  exit 1
+fi
 temporary_fixture="/private/tmp/dbcode-wrapper-retention-contract-fixture"
 generated_workspace_resolve_path \
   "acceptance-evidence" \
-  "${REPO_ROOT}/.build/acceptance/managed-fixture" \
+  "${BUILD_ROOT}/acceptance/managed-fixture" \
   allow-temporary >/dev/null
 if generated_workspace_resolve_path \
   "acceptance-evidence" \
