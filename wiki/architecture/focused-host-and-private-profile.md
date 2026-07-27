@@ -9,7 +9,7 @@ tags:
   - shell
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: e20a9a13c697b331902ce83a84cbb7505c0dc3fc
 ---
 ## Summary
 
@@ -44,13 +44,13 @@ flowchart TB
 ## Key components
 
 - [Host Session](../modules/host-session.md) launches the bundle with exact profile arguments and observes its lifecycle.
-- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) validates every owned path before setup, migration, or recovery.
+- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) validates every owned path and keeps setup, migration, cleanup, and recovery order behind one tested workflow.
 - [Focused Runtime Setup](../modules/focused-runtime-setup.md) verifies pinned packages before installing them externally.
 - [Focused shell and wrapper extensions](../modules/focused-shell-extensions.md) render the database-oriented shell.
 - [Verification Harness](../modules/verification-harness.md) owns the persistent prompt-free QA profile.
 - [Approved Release Set](../modules/approved-release-set.md) binds app and profile contents to compatibility evidence.
 
-The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). Launch policy lives in [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/host-session.js).
+The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). Profile Setup ordering lives in [`profileSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js). Launch policy lives in [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/script/lib/host-session.js).
 
 ## Design decisions
 

@@ -86,3 +86,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: d06cd2a (was c72b801)
 - Coverage: zero unknown generated roots; protected historical controlled-upgrade evidence; explicit dry-run targets for Finder metadata, the retired catalogue profile, and the abandoned smoke-backup root; retained caches and worktrees for fast deployment
 - Pages: [Overview](./OVERVIEW.md) and [Generated Workspace Retention](./modules/generated-workspace-retention.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: e20a9a1 (was d06cd2a)
+- Coverage: one testable Profile Setup workflow; thin VS Code and DBCode host adapter; prompt-free action-order, cleanup, persistence, DuckDB preflight, and recovery-handoff checks
+- Pages: [Overview](./OVERVIEW.md), [Focused host and private profile](./architecture/focused-host-and-private-profile.md), and [Profile Layout and Setup](./modules/profile-layout-and-setup.md)

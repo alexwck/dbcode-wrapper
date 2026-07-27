@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: d06cd2a317dd76df152327b00ad361f485e3afa9
+source_commit: e20a9a13c697b331902ce83a84cbb7505c0dc3fc
 tags:
   - wiki
   - overview
@@ -12,7 +12,7 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`d06cd2a`](https://github.com/alexwck/dbcode-wrapper/tree/d06cd2a317dd76df152327b00ad361f485e3afa9). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`e20a9a1`](https://github.com/alexwck/dbcode-wrapper/tree/e20a9a13c697b331902ce83a84cbb7505c0dc3fc). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
@@ -67,7 +67,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Release Source Snapshot](modules/release-source-snapshot.md) — one clean immutable source record per build.
 - [Compiled Host Cache](modules/compiled-host-cache.md) — safe reuse of unchanged Code OSS compilation.
 - [Approved Release Set](modules/approved-release-set.md) — approved history, exact update matching, prompt-free approval, and installed identity.
-- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths, setup, migration, and recovery.
+- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths and one testable setup, migration, and recovery workflow.
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — verified DBCode and notebook package installation.
