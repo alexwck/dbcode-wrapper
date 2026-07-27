@@ -36,3 +36,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 8e15736 (was 2008ff4)
 - Coverage: stable Compiled Host identity across normal and private-permission checkouts
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Compiled Host Cache](./modules/compiled-host-cache.md), and [Build sign and launch](./flows/build-sign-and-launch.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: f18e06e (was 8e15736)
+- Coverage: normalized materialized-source paths for exact release acceptance
+- Pages: [Overview](./OVERVIEW.md), [Release Source Snapshot](./modules/release-source-snapshot.md), [Verification Harness](./modules/verification-harness.md), and [Build sign and launch](./flows/build-sign-and-launch.md)

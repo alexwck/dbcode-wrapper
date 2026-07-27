@@ -9,20 +9,20 @@ tags:
   - source
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f
 ---
 ## Summary
 
 Release Source Snapshot makes each build start from one clean immutable Git commit. The launcher records the commit, tree, wrapper-source digest, and release-lock digest, then materializes that exact commit in a temporary checkout. Compilation, assembly, final verification, and private packaging all use or verify the same record.
 
-This prevents an uncommitted file or a later working-tree edit from quietly changing the app after review.
+This prevents an uncommitted file or a later working-tree edit from quietly changing the app after review. Materialization returns the checkout's normalized physical path, and callers use that value so macOS path aliases cannot split one source identity into two strings.
 
 ## Responsibilities
 
 - Resolve a release ref to one Git commit and tree.
 - Refuse dirty source when the selected release commit is the current checkout.
 - Record the release-lock digest and the digest of host and script inputs.
-- Materialize the exact commit in a narrow temporary directory.
+- Materialize the exact commit in a narrow temporary directory and return its normalized absolute path.
 - Recheck the record before and after expensive build stages.
 - Bind the snapshot to the signed manifest, acceptance report, source tag, and private package.
 
@@ -40,13 +40,13 @@ flowchart LR
 
 ## Public API / entry points
 
-[`build_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/build_host.sh) creates and materializes the record before it delegates to assembly. [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/release_source_snapshot.sh) exposes the task-level record command.
+[`build_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f/script/build_host.sh) creates and materializes the record before it delegates to assembly. [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f/script/release_source_snapshot.sh) exposes the task-level record command.
 
 ## Key files
 
-- [`script/lib/release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/release_source_snapshot.sh) — record, verification, digest, and materialization logic.
-- [`script/test_release_source_snapshot_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_release_source_snapshot_contract.sh) — clean-source, path, and tamper checks.
-- [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generate_manifest.sh) — copies the verified snapshot into the signed build manifest.
+- [`script/lib/release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f/script/lib/release_source_snapshot.sh) — record, verification, digest, and normalized materialization logic.
+- [`script/test_release_source_snapshot_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f/script/test_release_source_snapshot_contract.sh) — clean-source, normalized path, and tamper checks.
+- [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f/script/generate_manifest.sh) — copies the verified snapshot into the signed build manifest.
 
 ## Dependencies
 

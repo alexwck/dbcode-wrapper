@@ -9,7 +9,7 @@ tags:
   - launch
 wiki_profile: public
 wiki_depth: standard
-source_commit: 8e1573615fc360d2de9d69a4f2d237c6ef336822
+source_commit: f18e06ebeffa3620c76d5da3ca36ffc1697f7d9f
 ---
 ## Summary
 
@@ -55,7 +55,7 @@ sequenceDiagram
 7. Sign the app and generate a manifest containing source, compiled-host, app, and release identities.
 8. Run static smoke against the exact signed app.
 9. Run or reuse the one-profile rendered smoke only when its release-set ID matches.
-10. Run final acceptance from the manifest's materialized source.
+10. Run final acceptance from the manifest's materialized source, using the normalized path returned by materialization.
 
 ## Failure modes
 
