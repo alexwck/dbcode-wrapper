@@ -48,6 +48,18 @@ function makeFixture(t) {
 
   mkdirSync(join(repoRoot, '.build/expired/session one'), { recursive: true });
   writeFileSync(join(repoRoot, '.build/expired/session one/old.log'), 'expired evidence');
+  writeFileSync(join(repoRoot, '.build/.DS_Store'), 'finder metadata');
+  mkdirSync(join(repoRoot, '.build/q/old catalogue profile'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, '.build/q/old catalogue profile/settings.json'),
+    '{"retired":true}'
+  );
+  mkdirSync(join(repoRoot, '.build/u/r/x'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, '.build/u/r/x/rollback-transaction.json'),
+    '{"historical":true}'
+  );
+  mkdirSync(join(repoRoot, '.build/smoke-backups'), { recursive: true });
   mkdirSync(join(repoRoot, '.build/mystery'), { recursive: true });
   writeFileSync(join(repoRoot, '.build/mystery/unknown.txt'), 'unknown output');
   mkdirSync(join(repoRoot, 'dist/DBCode Wrapper.app'), { recursive: true });
@@ -110,6 +122,44 @@ test('inventory explains known, protected, private, expired, and unknown roots w
   assert.ok(expired.size_bytes > 0);
   assert.match(expired.reason, /expired/i);
 
+  const retiredCatalogueProfile = result.entries.find(
+    entry => entry.id === 'retired-catalogue-profile'
+  );
+  assert.equal(retiredCatalogueProfile.path, join(repoRoot, '.build/q'));
+  assert.equal(retiredCatalogueProfile.classification, 'expired-output');
+  assert.equal(retiredCatalogueProfile.owner, 'focused-shell-rendered');
+  assert.equal(retiredCatalogueProfile.deletion_allowed, true);
+  assert.ok(retiredCatalogueProfile.size_bytes > 0);
+
+  const historicalUpgradeEvidence = result.entries.find(
+    entry => entry.id === 'historical-controlled-upgrade-evidence'
+  );
+  assert.equal(historicalUpgradeEvidence.path, join(repoRoot, '.build/u'));
+  assert.equal(historicalUpgradeEvidence.classification, 'active-evidence');
+  assert.equal(historicalUpgradeEvidence.owner, 'controlled-upgrade');
+  assert.equal(historicalUpgradeEvidence.deletion_allowed, false);
+  assert.equal(historicalUpgradeEvidence.size_bytes, null);
+  assert.equal(
+    historicalUpgradeEvidence.size_status,
+    'protected-artifact-not-inspected'
+  );
+
+  const retiredSmokeBackups = result.entries.find(
+    entry => entry.id === 'retired-smoke-backups'
+  );
+  assert.equal(retiredSmokeBackups.path, join(repoRoot, '.build/smoke-backups'));
+  assert.equal(retiredSmokeBackups.classification, 'expired-output');
+  assert.equal(retiredSmokeBackups.owner, 'host-smoke');
+  assert.equal(retiredSmokeBackups.deletion_allowed, true);
+
+  const finderMetadata = result.entries.find(
+    entry => entry.id === 'finder-metadata'
+  );
+  assert.equal(finderMetadata.path, join(repoRoot, '.build/.DS_Store'));
+  assert.equal(finderMetadata.classification, 'expired-output');
+  assert.equal(finderMetadata.owner, 'macos-finder');
+  assert.equal(finderMetadata.deletion_allowed, true);
+
   const acceptedHost = result.entries.find(entry => entry.id === 'accepted-host');
   assert.equal(acceptedHost.classification, 'active-evidence');
   assert.equal(acceptedHost.deletion_allowed, false);
@@ -153,7 +203,12 @@ test('cleanup plans are dry-run only and accept a class or an exact relative or 
   assert.equal(byClass.mutation_performed, false);
   assert.deepEqual(
     byClass.items.map(item => item.path),
-    [join(repoRoot, '.build/expired')]
+    [
+      join(repoRoot, '.build/expired'),
+      join(repoRoot, '.build/q'),
+      join(repoRoot, '.build/smoke-backups'),
+      join(repoRoot, '.build/.DS_Store')
+    ]
   );
 
   for (const selectedPath of [

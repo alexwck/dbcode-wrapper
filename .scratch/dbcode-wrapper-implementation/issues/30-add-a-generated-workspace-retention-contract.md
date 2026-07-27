@@ -18,9 +18,9 @@
 
 ## Answer
 
-Generated state now has one maintained Retention Contract and one public task command. `./script/generated_workspace.sh inventory` reports registered and unknown paths without changing them. Only deliberately expired output is measured; protected artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed. `cleanup --class` and `cleanup --path` validate only explicit eligible selections and return a dry-run plan; this implementation has no delete or apply mode.
+Generated state now has one maintained Retention Contract and one public task command. `./script/generated_workspace.sh inventory` reports registered and unknown paths without changing them. Only explicitly registered expired output is measured; protected artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed. `cleanup --class` and `cleanup --path` validate only explicit eligible selections and return a dry-run plan; this implementation has no delete or apply mode.
 
-Build, smoke, rendered, proof, controlled-upgrade, same-Mac acceptance, rollback, private packaging, and independent package-verification callers now resolve their normalized output roots through the same contract. Current release evidence, caches, worktrees, rollback backups, transfer assets, the accepted host, and the private profile remain protected. The live inventory found three unregistered generated entries and kept all three classified as unknown and ineligible for cleanup.
+Build, smoke, rendered, proof, controlled-upgrade, same-Mac acceptance, rollback, private packaging, and independent package-verification callers now resolve their normalized output roots through the same contract. Current release evidence, caches, worktrees, rollback backups, transfer assets, the accepted host, and the private profile remain protected. The current inventory has no unknown root: it protects the historical short-path controlled-upgrade receipts and limits the dry-run plan to Finder metadata, an obsolete short-path catalogue profile, and an abandoned smoke-backup root.
 
 ## Comments
 

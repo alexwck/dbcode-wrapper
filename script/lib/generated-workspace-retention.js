@@ -219,12 +219,42 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
+      'retired-catalogue-profile',
+      '.build/q',
+      'expired-output',
+      'focused-shell-rendered',
+      'The old short-path connection-catalogue profile was replaced by the persistent generated QA profile.',
+      true,
+      true
+    ),
+    managedRoot(
+      checkedRepoRoot,
       'smoke-evidence',
       '.build/smoke',
       'active-evidence',
       'host-smoke',
       'The latest static and runtime host smoke evidence remains active acceptance evidence.',
       false
+    ),
+    managedRoot(
+      checkedRepoRoot,
+      'retired-smoke-backups',
+      '.build/smoke-backups',
+      'expired-output',
+      'host-smoke',
+      'The abandoned smoke-backup root is not used by the maintained static smoke workflow.',
+      true,
+      true
+    ),
+    managedRoot(
+      checkedRepoRoot,
+      'finder-metadata',
+      '.build/.DS_Store',
+      'expired-output',
+      'macos-finder',
+      'Finder metadata is ignored and does not contain wrapper evidence or reusable build state.',
+      true,
+      true
     ),
     managedRoot(
       checkedRepoRoot,
@@ -260,6 +290,15 @@ function createRetentionContract({
       'active-evidence',
       'controlled-upgrade',
       'Controlled-upgrade matrices, receipts, health checks, and rollback evidence remain active.',
+      false
+    ),
+    managedRoot(
+      checkedRepoRoot,
+      'historical-controlled-upgrade-evidence',
+      '.build/u',
+      'active-evidence',
+      'controlled-upgrade',
+      'The short-path promotion, rollback, installed-set, and restart-health receipts remain protected historical evidence.',
       false
     ),
     managedRoot(
