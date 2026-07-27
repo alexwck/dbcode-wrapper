@@ -43,7 +43,7 @@ The module uses [Release Specification](release-specification.md) for identity a
 ## Participates in
 
 - [First run, activation, and query](../flows/first-run-activate-and-query.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 
 ## Related
 

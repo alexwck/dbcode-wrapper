@@ -9,11 +9,11 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Summary
 
-Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts, one static signed-host smoke, and one persistent-profile rendered smoke. Deeper live checks run only when a changed feature needs them.
+Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts, one static signed-host smoke, and one persistent-profile rendered smoke. Optional deeper diagnostics are separate developer work and never block deployment.
 
 ## Responsibilities
 
@@ -27,6 +27,8 @@ Verification protects wrapper-owned seams without retesting the whole DBCode pro
 - Bind final acceptance to the exact source snapshot, app digest, manifest, signature, extension inventory, and release-set ID, using the normalized path returned by source materialization.
 
 Representative fixtures do not narrow DBCode support. Live databases, kernels, models, accounts, OAuth, secrets, mutation, and macOS prompts stay outside the normal deployment path.
+
+The manual proof recorder, same-Mac generator, debugger fixture, four-pair runner, controlled promotion, and real-profile health harness are removed. Their accepted generated output remains protected under the retention policy.
 
 ## Public API / entry points
 
@@ -46,7 +48,7 @@ Source checks need shell, the pinned Node runtime, and local fixtures. Built che
 ## Participates in
 
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
 
 ## Related

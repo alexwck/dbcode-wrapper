@@ -9,7 +9,7 @@ tags:
   - verification
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Definition
 
@@ -26,7 +26,7 @@ Capability status is separate from evidence depth. `supported` means the wrapper
 
 ## Why it matters
 
-The wrapper should preserve DBCode without copying it or running slow tests against the whole product. Broad declared and reachable checks protect feature breadth. A small rendered smoke protects the shell. Live checks are reserved for new, changed, limited, or high-risk features.
+The wrapper should preserve DBCode without copying it or running slow tests against the whole product. Broad declared and reachable checks protect feature breadth. A small rendered smoke protects the shell. Optional live diagnostics are reserved for new, changed, limited, or high-risk features and do not block deployment.
 
 The exact New Connection catalogue remains authoritative. PostgreSQL, SQLite, DuckDB, Parquet, and notebooks are representative checks, not a wrapper database allowlist.
 

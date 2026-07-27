@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 tags:
   - wiki
   - overview
@@ -12,9 +12,11 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`ea09161`](https://github.com/alexwck/dbcode-wrapper/tree/ea091613c180550d6e6df9120b2a9b4fe66ffcc2). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`03b41f3`](https://github.com/alexwck/dbcode-wrapper/tree/03b41f3106f00d64fffa5307ddd2084981972818). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
+
+The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
 
 > [!NOTE]
 > The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.
@@ -55,7 +57,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 
 - [Product and upstream boundaries](architecture/product-and-upstream-boundaries.md) — what the wrapper owns and what stays upstream.
 - [Focused host and private profile](architecture/focused-host-and-private-profile.md) — how the app bundle and isolated state combine.
-- [Release trust and compatibility](architecture/release-trust-and-compatibility.md) — how source, artifacts, evidence, promotion, and rollback stay aligned.
+- [Release trust and compatibility](architecture/release-trust-and-compatibility.md) — how source, artifacts, evidence, approval, and rollback stay aligned.
 
 ## Modules
 
@@ -76,7 +78,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 
 - [Build, sign, and launch](flows/build-sign-and-launch.md) — from immutable source to an observed signed session.
 - [First run, activation, and query](flows/first-run-activate-and-query.md) — from an empty profile to persisted real results.
-- [Controlled upgrade and rollback](flows/controlled-upgrade-and-rollback.md) — prepare, verify, approve, promote, health-check, and restore.
+- [Approval and guarded rollback](flows/approval-and-guarded-rollback.md) — approve without installing, then prepare, verify, or preview a known-good rollback set when needed.
 - [Package and transfer a private release](flows/package-and-transfer-private-release.md) — safely move an owner-only build to another personal Mac.
 
 ## Concepts

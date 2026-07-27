@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Goal
 
@@ -26,7 +26,7 @@ Turn independently published upstream versions into one reviewed wrapper candida
 7. **Finish release work, then build once.** Preserve the current accepted app and rollback material.
 8. **Run static and one-profile rendered checks.** Confirm the full New Connection catalogue and changed DBCode routes. Do not activate prompts, accounts, kernels, models, mutation, or external services.
 9. **Add one focused proof only when needed.** New, changed, limited, or high-risk features can receive a separate safe rendered or live check.
-10. **Run final exact-release acceptance.** Approve, package, or promote only matching source, app, manifest, signature, extension, and rendered evidence.
+10. **Run final exact-release acceptance.** Package and approve only matching source, app, manifest, signature, extension, rendered, and mounted-image evidence. Installation remains separate.
 
 ## Relevant code
 
@@ -45,9 +45,10 @@ Turn independently published upstream versions into one reviewed wrapper candida
 - Automatic MCP registration and the HTTP MCP server require separate evidence.
 - Re-signing can cause a new macOS prompt even when code is unchanged.
 - Representative database checks do not prove or limit the complete connection catalogue.
+- Do not restore the retired manual-proof, four-pair, controlled-promotion, or real-profile health harnesses.
 
 ## Related
 
 - [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Choose a verification level](choose-a-verification-level.md)

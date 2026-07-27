@@ -55,7 +55,7 @@ The module depends on Git, the canonical [Release Specification](release-specifi
 ## Participates in
 
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
 
 ## Related

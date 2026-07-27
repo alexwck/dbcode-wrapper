@@ -9,7 +9,7 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Summary
 
@@ -40,7 +40,7 @@ A Private Personal Release is a locally produced host-only package for Macs owne
 - [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_private_release.sh) — independent mounted-image verifier.
 - [`script/private_release_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/private_release_contract.sh) — read-only schema-3 acceptance adapter for the approval writer.
 - [`script/approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/approve_private_release.sh) — prompt-free approval evidence writer.
-- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_same_mac_release.sh) — optional owner-machine continuity checks outside normal deployment.
+- The retired same-Mac generator is not a current entry point. Historical generated evidence remains protected, while new releases use schema-3 prompt-free acceptance.
 
 ## Dependencies
 
@@ -49,7 +49,7 @@ The module consumes [Release Source Snapshot](release-source-snapshot.md), [Comp
 ## Participates in
 
 - [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 
 ## Related
 

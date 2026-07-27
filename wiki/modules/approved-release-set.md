@@ -9,7 +9,7 @@ tags:
   - approval
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Summary
 
@@ -48,7 +48,7 @@ The module consumes [Release Specification](release-specification.md), [Release 
 
 ## Participates in
 
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
 
 ## Related

@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Definition
 
@@ -21,7 +21,7 @@ A candidate becomes approved only when these identities and digests match one an
 
 DBCode can work on one host and fail on another. A cached host can be corrupt even when its name looks right. A rebuilt app can carry different wrapper code or trigger a new macOS identity. Binding immutable source, verified compilation, final app, and evidence prevents those pieces from drifting apart.
 
-The set is also the rollback unit. Restoring only the app while keeping newer profile or extension state would create an untested combination.
+The set is also the rollback reference. Rollback preparation keeps the app, manifest, extensions, and profile evidence together for digest verification and a disposable preview. Installing or restoring the verified set remains an owner-controlled action.
 
 ## Where it lives
 
@@ -29,7 +29,7 @@ The set is also the rollback unit. Restoring only the app while keeping newer pr
 - Validation and record creation: [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status/approved-release-set.js)
 - Signed source and artifact facts: [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generate_manifest.sh)
 - Final exact-release evidence: [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_fast_release.sh)
-- Promotion and rollback: [`script/controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/controlled_upgrade.sh)
+- Guarded rollback: [`prepare_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/prepare_release_rollback.sh), [`verify_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/verify_release_rollback.sh), and [`preview_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/preview_release_rollback.sh)
 
 ## Related
 

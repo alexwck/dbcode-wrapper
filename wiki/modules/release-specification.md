@@ -8,11 +8,11 @@ tags:
   - release
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Summary
 
-Release Specification is the main read boundary around `host/release-lock.json`. It validates the full lock before projecting smaller records for build, compiled-host identity, extensions, profile, release status, upgrade, and packaging. Each consumer receives only the facts it owns.
+Release Specification is the main read boundary around `host/release-lock.json`. It validates the full lock before projecting smaller records for build, compiled-host identity, extensions, profile, release status, approval, packaging, and rollback. Each consumer receives only the facts it owns.
 
 ## Responsibilities
 
@@ -37,12 +37,12 @@ Consumers source the library and request a named record such as `build`, `compil
 
 ## Dependencies
 
-The module is shell plus `jq`. Build, source snapshot, cache, runtime setup, update status, controlled upgrade, and private release consume its projections.
+The module is shell plus `jq`. Build, source snapshot, cache, runtime setup, update status, prompt-free approval, private release, and rollback readers consume its projections.
 
 ## Participates in
 
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)
+- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
 
 ## Related

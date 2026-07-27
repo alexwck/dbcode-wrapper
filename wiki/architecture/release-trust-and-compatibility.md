@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
 ---
 ## Summary
 
@@ -52,11 +52,12 @@ Core transition checks live in [`release_source_snapshot.sh`](https://github.com
 - Final acceptance re-enters the manifest's materialized source and reruns development and static checks. Detached success logs are not enough.
 - The rendered report is reusable only for the same exact release-set ID.
 - Human prompts and external services are normal app-use gates, not deployment tests.
+- One persistent generated `qa` profile owns automated GUI checks. The retired manual-proof, four-pair, controlled-promotion, and real-profile health harnesses are historical evidence, not executable release paths.
 - Release Specification and Private Personal Release remain the only owners of their full input schemas. Approval consumes their validated purpose records and binds the resulting digests to the package receipt.
 - Packaging and mounted verification own live app signature checks. Approval consumes the final mounted-package receipt and does not recheck a build-app path or local certificate trust.
 - Prompt-free approval writes generated evidence only. It never installs the app or writes the production profile.
 - A capability policy becomes approved only when exact host and DBCode package digests match maintained approved history. Features outside the prompt-free evidence are marked limited, not left pending or presented as tested.
-- The previous complete set stays protected for rollback.
+- The previous complete set stays protected for rollback. Preparation, digest verification, and disposable preview are maintained; installation or restoration is an owner-controlled action.
 
 ## Related
 
