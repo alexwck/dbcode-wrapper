@@ -29,7 +29,6 @@ for caller in \
   "${REPO_ROOT}/script/build_icon.sh" \
   "${REPO_ROOT}/script/smoke_host.sh" \
   "${REPO_ROOT}/script/test_focused_shell_rendered.sh" \
-  "${REPO_ROOT}/script/controlled_upgrade.sh" \
   "${REPO_ROOT}/script/prepare_release_rollback.sh" \
   "${REPO_ROOT}/script/verify_release_rollback.sh" \
   "${REPO_ROOT}/script/preview_release_rollback.sh" \
@@ -97,9 +96,6 @@ rg -Fq "process.env.DBCODE_WRAPPER_QA_ROOT" \
   "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
 rg -Fq "process.env.DBCODE_WRAPPER_RENDERED_OUTPUT_ROOT" \
   "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
-[[ "$(rg -c 'generated_workspace_resolve_path' "${REPO_ROOT}/script/controlled_upgrade.sh")" -eq 2 ]]
-rg -Fq '"controlled-upgrade-evidence"' \
-  "${REPO_ROOT}/script/controlled_upgrade.sh"
 rg -Fq 'snapshot_parent="$(generated_workspace_path "rollback-evidence")"' \
   "${REPO_ROOT}/script/prepare_release_rollback.sh"
 rg -Fq 'worktree_parent="$(generated_workspace_path "rollback-worktrees")"' \

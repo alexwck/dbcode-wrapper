@@ -9,7 +9,6 @@ source "${REPO_ROOT}/script/lib/profile_guard.sh"
 source "${REPO_ROOT}/script/lib/host_session.sh"
 
 launch_style="monitored"
-readiness_mode="automatic"
 workspace_path=""
 launch_timeout_seconds="${DBCODE_WRAPPER_LAUNCH_TIMEOUT_SECONDS:-30}"
 
@@ -24,9 +23,6 @@ while [[ $# -gt 0 ]]; do
     --debug)
       launch_style="foreground-debug"
       ;;
-    --manual-proof)
-      readiness_mode="manual-proof"
-      ;;
     --workspace)
       [[ $# -ge 2 ]] || { echo "--workspace requires a directory." >&2; exit 2; }
       workspace_path="$2"
@@ -39,11 +35,6 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
-
-if [[ "${launch_style}" == "foreground-debug" && "${readiness_mode}" == "manual-proof" ]]; then
-  echo "--manual-proof cannot be combined with --debug." >&2
-  exit 2
-fi
 
 if [[ ! -d "${APP_BUNDLE}" ]]; then
   echo "Build the host first with ./script/build_host.sh" >&2
@@ -117,7 +108,7 @@ app_executable="${APP_BUNDLE}/Contents/MacOS/${bundle_executable}"
 
 if [[ "${launch_style}" == "foreground-debug" ]]; then
   # Foreground debugging deliberately streams the application directly to the developer.
-  # Production readiness and proof paths always use the Host Session module below.
+  # Normal monitored launches always use the Host Session module below.
   ELECTRON_ENABLE_LOGGING=1 "${app_executable}" "${launch_args[@]}" 2>&1 | tee "${log_root}/host-debug.log"
 else
   host_log="${log_root}/proof-host.log"
@@ -145,10 +136,6 @@ else
     ')"
   dbcode_required="true"
   require_dbcode_before_exit="false"
-  if [[ "${readiness_mode}" == "manual-proof" ]]; then
-    dbcode_required="false"
-    require_dbcode_before_exit="true"
-  fi
   dbcode_patterns_json='[{"kind":"literal","value":"DBCode starting..."}]'
   host_session_write_policy \
     "${session_policy_file}" \

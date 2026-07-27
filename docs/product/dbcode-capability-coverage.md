@@ -102,14 +102,14 @@ The wrapper keeps DBCode's provider, model, API-key, AI settings, Query Builder,
 Current gaps:
 
 - Generic Code OSS Chat is intentionally absent, so DBCode's Copilot language-model tools do not currently have a focused route.
-- Automatic MCP registration is retained as its own supported wrapper route. The separate HTTP Start, Stop, OAuth revoke, and external-client workflow still needs a focused compatibility proof.
-- Inline completion, Query Builder AI, Grid AI, Explore AI, and plan analysis still need their own rendered evidence. One working AI settings route is not proof of those workflows.
+- Automatic MCP registration is retained as its own supported wrapper route. The separate HTTP Start, Stop, OAuth revoke, and external-client workflow is limited and may receive an optional focused check when needed.
+- Inline completion, Query Builder AI, Grid AI, Explore AI, and plan analysis are retained with declared or reachable evidence. They are limited because the prompt-free gate does not claim their rendered or live model behaviour.
 - Query explanations are named by DBCode team policy, but the current official feature pages do not identify a distinct route.
 - Team controls are declared upstream but are not rendered or exercised through a signed-in team account.
 
 See [AI data sharing](../security/ai-data-sharing.md) for payload and privacy details.
 
-Coverage: mixed. Provider and API-key routes are reachable from the rendered DBCode Tools menu, but the smoke does not activate them. The individual AI work surfaces above require route-specific validation. Automatic MCP registration is supported and reachable. HTTP MCP, Copilot tool access, inferred-relationship writes, query explanations, and team controls are limited. Live AI is not a deployment test.
+Coverage: mixed. Provider and API-key routes are reachable from the rendered DBCode Tools menu, but the smoke does not activate them. Automatic MCP registration is supported and reachable. Inline completion, Query Builder AI, Grid AI, Explore AI, plan analysis, HTTP MCP, Copilot tool access, inferred-relationship writes, query explanations, and team controls are limited at their recorded evidence level. Optional deeper checks do not block deployment. Live AI is not a deployment test.
 
 ### Accounts, security, and deployment
 

@@ -25,7 +25,7 @@ The fast source gate should stay comfortably below one minute on the normal deve
 - Test public script interfaces when path handling or command behaviour is the contract.
 - Keep fixtures local, deterministic, small, and free of private data.
 - Do not add a full rendered test for behaviour already proved by a source contract unless rendering is the risk.
-- Run gate-composition, public-push, private-package, deep rollback, controlled-upgrade, debugger-fixture, or historical-acceptance tests only when a change owns that workflow.
+- Run gate-composition, public-push, private-package, or deep rollback tests only when a change owns that workflow.
 
 ## Prompts and external services
 
@@ -53,6 +53,8 @@ DBCode is unchanged upstream software. A version bump should verify the wrapper 
 10. Package only after the automated release identity and package checks pass.
 
 Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion.
+
+The old manual proof recorder, same-Mac acceptance generator, PostgreSQL debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are not maintained release paths. Their accepted generated evidence remains protected, but new releases must use the prompt-free schema-3 path.
 
 `build_host.sh` requires one clean immutable release commit and materializes it before reading build inputs. It reuses the Compiled Host when its exact compilation input ID and mode-sensitive app digest match, then performs the smaller extension, release-record, signing, and manifest assembly. A cache hit uses the compiler environment stored in the receipt and skips compiler-only preflights. A documentation, test, historical-adapter, or DBCode-only change still receives a new auditable source snapshot and final manifest, but it does not recompile Code OSS unless a real compilation input changed.
 

@@ -81,6 +81,7 @@ Before changing behaviour, read:
 - Static smoke must not launch the app. The one-profile rendered smoke owns the only automated GUI launch and checks prompt-gated DBCode routes for reachability without activating them.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - Prompt-free approval accepts only the schema-3 acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
+- The old manual proof recorder, same-Mac acceptance generator, debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are retired. Keep their generated historical evidence protected, but do not restore a person-driven release system.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
 - For an authenticated GitHub draft transfer, verify `draft: true`, no publication timestamp, exact uploaded sizes and digests, authenticated owner access, anonymous denial, and the absence of any workflow that can publish it.
 
@@ -111,7 +112,7 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 - Follow `docs/agents/verification-policy.md` when choosing the smallest useful gate.
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
 - Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
-- Gate-composition, public-push, private-package, deep rollback, controlled-upgrade, debugger-fixture, and historical-acceptance tests are change-owned checks, not part of the default development or deployment path.
+- Gate-composition, public-push, private-package, and deep rollback tests are change-owned checks, not part of the default development or deployment path.
 - Built-host changes: run the static host smoke and the one-profile rendered focused-shell smoke.
 - Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
 - Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.

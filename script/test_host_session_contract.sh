@@ -19,28 +19,20 @@ for required_file in \
   }
 done
 
-for caller in \
-  "${REPO_ROOT}/script/run_host.sh" \
-  "${REPO_ROOT}/script/smoke_release_pair.sh" \
-  "${REPO_ROOT}/script/check_installed_release_health.sh"; do
-  rg -Fq 'host_session_write_policy' "${caller}" || {
-    echo "A production launch path does not declare a Host Session policy: ${caller}" >&2
-    exit 1
-  }
-  rg -Fq 'host_session_run' "${caller}" || {
-    echo "A production launch path does not use the Host Session lifecycle: ${caller}" >&2
-    exit 1
-  }
-done
+rg -Fq 'host_session_write_policy' "${REPO_ROOT}/script/run_host.sh" || {
+  echo "The normal launch path does not declare a Host Session policy." >&2
+  exit 1
+}
+rg -Fq 'host_session_run' "${REPO_ROOT}/script/run_host.sh" || {
+  echo "The normal launch path does not use the Host Session lifecycle." >&2
+  exit 1
+}
 
 for removed_loop in \
   'pgrep -P "${app_pid}"' \
   'kill -TERM "${app_pid}"' \
   'kill -KILL "${app_pid}"'; do
-  if rg -Fq "${removed_loop}" \
-    "${REPO_ROOT}/script/run_host.sh" \
-    "${REPO_ROOT}/script/smoke_release_pair.sh" \
-    "${REPO_ROOT}/script/check_installed_release_health.sh"; then
+  if rg -Fq "${removed_loop}" "${REPO_ROOT}/script/run_host.sh"; then
     echo "A removed launch or quit loop returned: ${removed_loop}" >&2
     exit 1
   fi

@@ -26,3 +26,5 @@
 Supported frozen release locks are readable again without weakening new candidates. The historical interface validates schema 2 and schema 4 separately, returns normalized purpose records without editing the retained files, and can be selected only for a current set whose original build manifest contains the exact lock digest.
 
 The real ticket 08 matrix passed all four pairings using the retained pre-final host as the current baseline. The exact candidate was promoted into a disposable installation, passed two restart-health launches with the real Keychain, and rolled back as one complete app, manifest, extension, user-data, and shared-data set.
+
+That matrix and restart-health result remain historical evidence. Their executable controlled-upgrade harnesses were retired after prompt-free schema-3 approval became the maintained release path. Frozen records remain readable, and the guarded rollback preparation, verification, and preview tools remain.

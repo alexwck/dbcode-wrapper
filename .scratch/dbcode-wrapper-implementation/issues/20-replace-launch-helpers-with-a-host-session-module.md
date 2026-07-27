@@ -24,4 +24,4 @@
 
 ## Answer
 
-There is now one place that starts DBCode Wrapper, decides when it is ready, finds its logs, and proves it has stopped. The surrounding scripts state what evidence they need, but no longer each implement their own version of process control.
+There is one maintained normal launch path. `run_host.sh` states its readiness and completion policy, while the Host Session module starts DBCode Wrapper, finds its logs, and tracks the process lifecycle. The retired compatibility and real-profile health harnesses no longer duplicate this work.

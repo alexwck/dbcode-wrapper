@@ -79,11 +79,7 @@ for change_owned_adapter in \
   test_development_gate_contract.sh \
   test_public_push_readiness.sh \
   test_private_release_contract.sh \
-  test_postgres_debugger_fixture_contract.sh \
-  test_proof_state.sh \
-  test_release_rollback_contract.sh \
-  test_same_mac_release_contract.sh \
-  test_controlled_upgrade.sh; do
+  test_release_rollback_contract.sh; do
   if rg -Fq "script:${change_owned_adapter}" "${trace_file}"; then
     echo "The fast development gate must leave ${change_owned_adapter} to changes that own that workflow." >&2
     exit 1

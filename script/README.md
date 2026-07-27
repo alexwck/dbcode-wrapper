@@ -4,7 +4,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 
 ## Development
 
-- `check_development.sh` runs the fast default source contract suite. Gate-composition, public-push, private-package, deep rollback, controlled-upgrade, debugger-fixture, and historical acceptance tests run only when a change owns those workflows.
+- `check_development.sh` runs the fast default source contract suite. Gate-composition, public-push, private-package, and deep rollback tests run only when a change owns those workflows.
 - `generated_workspace.sh inventory` reports every registered ignored root with its size status, retention class, owner, reason, and current cleanup eligibility. Only deliberately expired output is measured. `cleanup --class CLASS` and `cleanup --path PATH` validate an explicit eligible selection and return a dry-run plan only; there is no delete or apply mode.
 - `build_host.sh [--release-ref REF]` requires a clean checked-out Git commit, materializes that commit in a temporary checkout, and runs compilation and assembly from that immutable source.
 - `assemble_host.sh` is the internal materialized-source task. It reuses the exact content-addressed Compiled Host when possible, adds wrapper extensions and release records, signs the app, and writes the manifest.
@@ -24,9 +24,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 
 - `release_specification.sh` exposes strict build, Compiled Host, extension, profile, and identity records for new candidates, plus an explicit historical read mode for manifest-bound frozen rollback records. Historical schema 2 maps its pre-versioned profile to baseline profile schema 1; the adapter does not edit the archive or invent approval.
 - The Compiled Host input ID covers only compilation inputs, including the active Release Specification functions. DBCode package metadata, release-status content, documentation, tests, and historical readers do not force an unchanged Code OSS host to compile again. Cache validation includes executable modes, and a hit uses the stored compiler environment instead of rerunning compiler-only preflights.
-- `check_release_combination.sh` and `smoke_release_pair.sh` evaluate one isolated host and DBCode combination.
-- `controlled_upgrade.sh` retains the older complete-set promotion and rollback workflow for existing records. It is not part of the normal prompt-free package path.
-- `check_installed_release_health.sh` verifies the promoted application and private profile after restart.
+- The superseded manual proof, same-Mac acceptance, debugger fixture, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed. Their accepted generated evidence remains protected and readable where compatibility requires it.
 - `prepare_release_rollback.sh`, `verify_release_rollback.sh`, and `preview_release_rollback.sh` retain and inspect the known-good rollback set.
 
 ## Personal release

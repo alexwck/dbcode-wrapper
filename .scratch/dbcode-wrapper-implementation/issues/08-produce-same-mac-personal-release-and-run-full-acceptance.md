@@ -38,3 +38,5 @@
 ## Answer
 
 The same-Mac DBCode Wrapper release is accepted. It runs the unchanged licensed DBCode `1.36.2` extension and the exact core Python/Jupyter set on Code OSS `1.126.0` as a focused database application. Its signed app, isolated profile, lifetime activation, protected credentials, representative database workflows, update controls, restart health, rollback, and private-use limits all passed the final acceptance gate.
+
+That evidence remains historical. Current releases use the prompt-free schema-3 gate and one generated `qa` profile. The manual proof recorder, same-Mac acceptance generator, and debugger fixture were removed after `v0.1.1` approval; their retained evidence was not deleted.
