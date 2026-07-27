@@ -279,15 +279,22 @@ test('the production runtime controls a disposable fake host without touching th
   const root = mkdtempSync(join(realpathSync(tmpdir()), 'dbcode-host-session-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const executable = join(root, 'fake-host.sh');
+  const rendererScript = join(root, 'fake-renderer.mjs');
   const logRoot = join(root, 'logs');
   const dbcodeLog = join(logRoot, 'run/dbcode.dbcode/DBCode.log');
+  writeFileSync(rendererScript, `process.on('SIGTERM', () => process.exit(0));
+process.on('SIGINT', () => process.exit(0));
+setInterval(() => {}, 1_000);
+`, { mode: 0o600 });
   writeFileSync(executable, `#!/bin/sh
 set -eu
 fixture_log="$1"
+node_executable="$2"
+renderer_script="$3"
 mkdir -p "$(dirname "$fixture_log")"
 printf '%s\n' 'DBCode started' > "$fixture_log"
 printf '%s\n' 'fake host ready'
-/bin/sh -c 'sleep 30' 'DBCode Wrapper Helper (Renderer).app --type=renderer' &
+"$node_executable" "$renderer_script" --type=renderer &
 renderer_pid=$!
 stop_fixture() {
   kill -TERM "$renderer_pid" 2>/dev/null || true
@@ -301,13 +308,16 @@ wait "$renderer_pid"
   const integrationPolicy = policy({
     session_id: 'production-runtime-fixture',
     executable,
-    arguments: [dbcodeLog],
+    arguments: [dbcodeLog, process.execPath, rendererScript],
     host_log: join(root, 'host.log'),
     log_root: logRoot,
     readiness: {
       timeout_seconds: 5,
       poll_interval_ms: 100,
-      renderer: { stable_observations: 1 }
+      renderer: {
+        command_contains: [rendererScript, '--type=renderer'],
+        stable_observations: 1
+      }
     }
   });
   const result = await runHostSession(integrationPolicy, createNodeRuntime());
@@ -315,7 +325,7 @@ wait "$renderer_pid"
     t.skip('The current sandbox does not permit the fixture process-table check.');
     return;
   }
-  assert.equal(result.status, 'complete');
+  assert.equal(result.status, 'complete', serializeSessionResult(result));
   assert.equal(result.readiness.renderer_ready, true);
   assert.equal(result.readiness.dbcode_ready, true);
   assert.equal(result.quit.complete, true);
