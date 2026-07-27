@@ -504,6 +504,7 @@ done
 printf '%s\n' \
   '#!/usr/bin/env bash' \
   'set -euo pipefail' \
+  '[[ "${DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS:-}" != "yes" ]] || exit 97' \
   'if [[ "$*" == *"-d -r-"* ]]; then' \
   '  echo "designated => fixture requirement" >&2' \
   'elif [[ "$*" == *"-dvvv"* ]]; then' \
@@ -518,6 +519,7 @@ printf '%s\n' \
 printf '%s\n' \
   '#!/usr/bin/env bash' \
   'set -euo pipefail' \
+  '[[ "${DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS:-}" != "yes" ]] || exit 97' \
   'echo arm64' \
   > "${stub_bin}/lipo"
 printf '%s\n' \
@@ -819,8 +821,7 @@ base_approved_history="${test_root}/base-approved-release-sets.json"
 printf '%s\n' '{"schema_version":2,"approved_release_sets":[]}' > "${base_approved_history}"
 approval_output="${test_root}/prompt-free-approval"
 release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
-PATH="${stub_bin}:${PATH}" bash "${approver}" \
-  --app "${fixture_app}" \
+DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
   --acceptance "${fast_acceptance_file}" \
@@ -875,8 +876,7 @@ while IFS= read -r approval_file; do
 done < <(find "${approval_output}" -mindepth 1 -maxdepth 1 -type f -print)
 
 wrong_confirmation_output="${test_root}/wrong-confirmation-approval"
-if PATH="${stub_bin}:${PATH}" bash "${approver}" \
-  --app "${fixture_app}" \
+if DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
   --acceptance "${fast_acceptance_file}" \
@@ -897,8 +897,7 @@ fi
 }
 
 legacy_acceptance_output="${test_root}/legacy-acceptance-approval"
-if PATH="${stub_bin}:${PATH}" bash "${approver}" \
-  --app "${fixture_app}" \
+if DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
   --acceptance "${acceptance_file}" \
@@ -922,8 +921,7 @@ tampered_verification="${test_root}/tampered-verification.json"
 jq '.checks.private_data_absent = "failed"' \
   "${packaged_verification}" > "${tampered_verification}"
 tampered_approval_output="${test_root}/tampered-approval"
-if PATH="${stub_bin}:${PATH}" bash "${approver}" \
-  --app "${fixture_app}" \
+if DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
   --acceptance "${fast_acceptance_file}" \
@@ -949,8 +947,7 @@ relative_dmg="${dmg_file#"${test_root}/"}"
 relative_approval_output="${test_root}/relative approval path"
 if ! relative_approval_result="$(
   cd "${test_root}"
-  PATH="${stub_bin}:${PATH}" bash "${approver}" \
-    --app "DBCode Wrapper.app" \
+  DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
     --manifest "build-manifest.json" \
     --release-lock "source/host/release-lock.json" \
     --acceptance "prompt-free-final-acceptance.json" \

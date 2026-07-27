@@ -150,7 +150,6 @@ After the mounted package verification passes, record the exact package as appro
 
 ```sh
 ./script/approve_private_release.sh \
-  --app "dist/DBCode Wrapper.app" \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
   --acceptance .build/acceptance/fast-release/final-acceptance-report.json \

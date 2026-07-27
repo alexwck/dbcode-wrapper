@@ -5,12 +5,10 @@ umask 077
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
-source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/private_release.sh"
 source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/generated_workspace.sh"
 
-app_path=""
 manifest_file=""
 release_lock=""
 acceptance_file=""
@@ -26,7 +24,6 @@ output_dir=""
 usage() {
   cat >&2 <<'EOF'
 Usage: ./script/approve_private_release.sh \
-  --app PATH \
   --manifest FILE \
   --release-lock FILE \
   --acceptance FILE \
@@ -44,7 +41,6 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --app) [[ $# -ge 2 ]] || usage; app_path="$2"; shift ;;
     --manifest) [[ $# -ge 2 ]] || usage; manifest_file="$2"; shift ;;
     --release-lock) [[ $# -ge 2 ]] || usage; release_lock="$2"; shift ;;
     --acceptance) [[ $# -ge 2 ]] || usage; acceptance_file="$2"; shift ;;
@@ -61,8 +57,8 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-[[ -n "${app_path}" && -n "${manifest_file}" && -n "${release_lock}" && \
-  -n "${acceptance_file}" && -n "${dmg_file}" && -n "${compatibility_file}" && \
+[[ -n "${manifest_file}" && -n "${release_lock}" && -n "${acceptance_file}" && \
+  -n "${dmg_file}" && -n "${compatibility_file}" && \
   -n "${verification_file}" && -n "${source_repository}" && -n "${source_tag}" && \
   -n "${history_file}" && -n "${confirmation}" && -n "${output_dir}" ]] || usage
 
@@ -73,7 +69,7 @@ output_dir="$(
     allow-temporary
 )"
 
-for command in cmp codesign git jq lipo plutil rg shasum stat; do
+for command in git jq rg shasum stat; do
   require_command "${command}"
 done
 
@@ -98,11 +94,6 @@ release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
   exit 1
 }
 
-private_release_validate_sources \
-  "${app_path}" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}"
 private_release_validate_source_tag \
   "${source_repository}" \
   "${source_tag}" \
