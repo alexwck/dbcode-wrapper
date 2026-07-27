@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
+source_commit: c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8
 ---
 ## Summary
 
@@ -37,11 +37,11 @@ flowchart LR
 - [Release Specification](../modules/release-specification.md) validates and projects the canonical lock.
 - [Release Source Snapshot](../modules/release-source-snapshot.md) binds one clean commit to the release.
 - [Compiled Host Cache](../modules/compiled-host-cache.md) reuses unchanged compilation safely.
-- [Approved Release Set](../modules/approved-release-set.md) validates candidate and approval identities.
+- [Approved Release Set](../modules/approved-release-set.md) validates approved history, exact update matches, and prompt-free approval identities.
 - [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
 - [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
 
-Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/compiled_host_cache.sh), [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/private_release.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
+Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/lib/compiled_host_cache.sh), [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/lib/private_release.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
 
 ## Design decisions
 
@@ -54,6 +54,7 @@ Core transition checks live in [`release_source_snapshot.sh`](https://github.com
 - Human prompts and external services are normal app-use gates, not deployment tests.
 - One persistent generated `qa` profile owns automated GUI checks. The retired manual-proof, four-pair, controlled-promotion, and real-profile health harnesses are historical evidence, not executable release paths.
 - Release Specification and Private Personal Release remain the only owners of their full input schemas. Approval consumes their validated purpose records and binds the resulting digests to the package receipt.
+- Prompt-free package approval is the single maintained approval writer. The retired prepared-directory validator, member resolver, and proof-based writer are no longer public workflow surfaces.
 - Packaging and mounted verification own live app signature checks. Approval consumes the final mounted-package receipt and does not recheck a build-app path or local certificate trust.
 - Prompt-free approval writes generated evidence only. It never installs the app or writes the production profile.
 - A capability policy becomes approved only when exact host and DBCode package digests match maintained approved history. Features outside the prompt-free evidence are marked limited, not left pending or presented as tested.

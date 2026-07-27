@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
+source_commit: c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8
 tags:
   - wiki
   - overview
@@ -12,7 +12,7 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`03b41f3`](https://github.com/alexwck/dbcode-wrapper/tree/03b41f3106f00d64fffa5307ddd2084981972818). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`c72b801`](https://github.com/alexwck/dbcode-wrapper/tree/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
@@ -64,7 +64,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Release Specification](modules/release-specification.md) — canonical release-lock validation and projections.
 - [Release Source Snapshot](modules/release-source-snapshot.md) — one clean immutable source record per build.
 - [Compiled Host Cache](modules/compiled-host-cache.md) — safe reuse of unchanged Code OSS compilation.
-- [Approved Release Set](modules/approved-release-set.md) — candidate, approval, installed, and history records.
+- [Approved Release Set](modules/approved-release-set.md) — approved history, exact update matching, prompt-free approval, and installed identity.
 - [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths, setup, migration, and recovery.
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.

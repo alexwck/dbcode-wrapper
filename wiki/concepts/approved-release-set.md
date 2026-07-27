@@ -9,13 +9,15 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
+source_commit: c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8
 ---
 ## Definition
 
 An Approved Release Set is one exact combination of immutable wrapper source, Code OSS and VSCodium inputs, compiled-host identity, signed DBCode Wrapper app, official DBCode package, pinned notebook packages, profile schema, wrapper extensions, signing identity, and acceptance evidence.
 
 A candidate becomes approved only when these identities and digests match one another. An update notice, matching version label, successful old log, or rendered report from another artifact is not approval.
+
+The maintained implementation does not promote a prepared directory. It creates a record only from validated prompt-free acceptance and mounted-package evidence, then keeps installation as a separate owner action.
 
 ## Why it matters
 
@@ -25,11 +27,11 @@ The set is also the rollback reference. Rollback preparation keeps the app, mani
 
 ## Where it lives
 
-- Canonical release facts: [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/release-lock.json)
-- Validation and record creation: [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status/approved-release-set.js)
-- Signed source and artifact facts: [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generate_manifest.sh)
-- Final exact-release evidence: [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_fast_release.sh)
-- Guarded rollback: [`prepare_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/prepare_release_rollback.sh), [`verify_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/verify_release_rollback.sh), and [`preview_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/03b41f3106f00d64fffa5307ddd2084981972818/script/preview_release_rollback.sh)
+- Canonical release facts: [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/release-lock.json)
+- Validation and record creation: [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/extensions/dbcode-wrapper-release-status/approved-release-set.js)
+- Signed source and artifact facts: [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/generate_manifest.sh)
+- Final exact-release evidence: [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/verify_fast_release.sh)
+- Guarded rollback: [`prepare_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/prepare_release_rollback.sh), [`verify_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/verify_release_rollback.sh), and [`preview_release_rollback.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/preview_release_rollback.sh)
 
 ## Related
 

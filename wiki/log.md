@@ -72,3 +72,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - Coverage: one persistent automated `qa` profile; prompt-free schema-3 acceptance; retired manual proof, debugger fixture, four-pair compatibility, controlled-promotion, and real-profile health harnesses; protected historical evidence; guarded rollback preparation, verification, and preview
 - Renamed: `controlled-upgrade-and-rollback.md` to [Approval and guarded rollback](./flows/approval-and-guarded-rollback.md)
 - Updated: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set concept](./concepts/approved-release-set.md), [DBCode capability evidence](./concepts/dbcode-capability-evidence.md), [Approved Release Set module](./modules/approved-release-set.md), [Private Personal Release](./modules/private-personal-release.md), [Release Specification](./modules/release-specification.md), [Verification Harness](./modules/verification-harness.md), and [Review an upstream update](./guides/review-an-upstream-update.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: c72b801 (was 03b41f3)
+- Coverage: one maintained prompt-free approval writer; retired prepared-set validator, member resolver, and proof-based writer; unchanged approved-history, update-matching, and guarded-rollback paths
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set concept](./concepts/approved-release-set.md), and [Approved Release Set module](./modules/approved-release-set.md)
