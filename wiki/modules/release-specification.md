@@ -8,35 +8,36 @@ tags:
   - release
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-Release Specification is the main read boundary around `host/release-lock.json`. It validates the whole lock before projecting smaller records for build, extension, profile, release-status, upgrade, and packaging consumers. This prevents each script from interpreting the same release facts differently.
+Release Specification is the main read boundary around `host/release-lock.json`. It validates the full lock before projecting smaller records for build, compiled-host identity, extensions, profile, release status, upgrade, and packaging. Each consumer receives only the facts it owns.
 
 ## Responsibilities
 
 - Reject incomplete or malformed current release locks.
-- Read older supported lock shapes through a separate historical path.
-- Produce purpose-specific JSON records without exposing unrelated fields.
-- Compare whether two specifications carry the same DBCode payload or the same host build contract.
-- Keep product identity, upstream versions, package digests, profile schema, and release-set identity connected.
+- Read supported frozen lock shapes through a separate historical adapter.
+- Produce purpose-specific JSON records without duplicating `jq` interpretations across scripts.
+- Compare DBCode payload identity separately from the host compilation contract.
+- Keep product identity, upstream commits, package digests, profile schema, target, toolchain, and release-set base identity connected.
+- Expose the exact compile-time record used by [Compiled Host Cache](compiled-host-cache.md).
 
 ## Public API / entry points
 
-The shell functions include `release_specification_validate`, `release_specification_record`, `release_specification_historical_validate`, `release_specification_historical_record`, `release_specification_same_dbcode_payload`, and `release_specification_same_host_build_contract`.
+The shell API includes `release_specification_validate`, `release_specification_record`, historical validation and projection, `release_specification_same_dbcode_payload`, and `release_specification_same_host_build_contract`.
 
-Consumers source the library and request a named record instead of querying the lock directly. New consumers should follow that pattern.
+Consumers source the library and request a named record such as `build`, `compiled-host`, `extensions`, or `profile` instead of reading the lock directly.
 
 ## Key files
 
-- [`script/lib/release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/release_specification.sh) — validation, projection, and comparison logic.
-- [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/release-lock.json) — the canonical release declaration.
-- [`script/test_release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_release_specification.sh) — contract tests for accepted and rejected shapes.
+- [`script/lib/release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/release_specification.sh) — validation, projection, and comparison logic.
+- [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/release-lock.json) — canonical release declaration.
+- [`script/test_release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_release_specification.sh) — current and historical contract tests.
 
 ## Dependencies
 
-The module is shell plus `jq`. Its output is consumed by the build, runtime setup, update status, controlled-upgrade, and private-release paths.
+The module is shell plus `jq`. Build, source snapshot, cache, runtime setup, update status, controlled upgrade, and private release consume its projections.
 
 ## Participates in
 
@@ -46,6 +47,7 @@ The module is shell plus `jq`. Its output is consumed by the build, runtime setu
 
 ## Related
 
-- [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
+- [Release Source Snapshot](release-source-snapshot.md)
+- [Compiled Host Cache](compiled-host-cache.md)
 - [Approved Release Set](approved-release-set.md)
 - [Review an upstream update](../guides/review-an-upstream-update.md)

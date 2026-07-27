@@ -1,6 +1,6 @@
 ---
 title: Profile Layout and Setup
-description: The path, migration, recovery, and first-run module for the isolated Standalone DBCode Profile.
+description: The safe path, normal setup, import, and recovery module for Standalone DBCode Profiles.
 type: module
 tags:
   - wiki
@@ -9,35 +9,36 @@ tags:
   - setup
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-Profile Layout defines where each Standalone DBCode Profile is allowed to live. Profile Setup uses that contract to prepare a fresh profile, review an import, install verified runtime packages, recover owned state, and open DBCode connections without touching unrelated editor profiles.
+Profile Layout defines where each Standalone DBCode Profile may live. Profile Setup uses that contract for normal first use, reviewed import, verified runtime installation, and explicit recovery without touching unrelated editor profiles.
 
 ## Responsibilities
 
-- Derive the `default`, `qa`, and `isolated` layouts from explicit owner roots.
-- Validate serialized layouts and reject unknown or escaped paths.
+- Derive `default`, `qa`, and `isolated` layouts from explicit owner roots.
+- Keep one stable generated `qa` layout for rendered deployment checks.
+- Validate serialized layouts and reject unknown, broad, escaped, or linked paths.
 - Check mutation targets before setup, migration, backup, or recovery.
-- Keep user data, extension data, shared data, cache, logs, and backups in one owned layout.
-- Guide first-run setup and optional connection import.
-- Recreate only the wrapper-owned profile when recovery is explicitly confirmed.
+- Keep user data, extensions, shared data, cache, logs, and backups in one owned layout.
+- Guide normal first-run setup and optional connection import.
+- Recreate only wrapper-owned state after explicit user confirmation.
 
 ## Public API / entry points
 
-`createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the path API. The extension activates the Profile Setup controller and commands. Migration, staging, runtime setup, and recovery helpers handle narrower operations behind that controller.
+`createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the path API. The wrapper extension provides setup, import, runtime, and recovery controllers behind that boundary.
 
 ## Key files
 
-- [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — path derivation and validation.
-- [`extension.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/extension.js) — first-run, import, and recovery orchestration.
-- [`migration.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/migration.js) and [`profileRecovery.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — safe state movement.
-- [`managed-settings.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration/managed-settings.json) — focused default settings.
+- [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — path derivation and validation.
+- [`extension.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/extension.js) — setup, import, and recovery orchestration.
+- [`migration.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/migration.js) and [`profileRecovery.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — safe state movement.
+- [`managed-settings.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/managed-settings.json) — focused defaults.
 
 ## Dependencies
 
-The module depends on [Release Specification](release-specification.md) for identity and profile schema, [Focused Runtime Setup](focused-runtime-setup.md) for package installation, and Code OSS extension APIs for commands, storage, and relaunch.
+The module uses [Release Specification](release-specification.md) for identity and schema, [Focused Runtime Setup](focused-runtime-setup.md) for packages, and Code OSS APIs for commands, storage, and relaunch. First-launch and recovery work are normal user flows, not repeated deployment tests.
 
 ## Participates in
 

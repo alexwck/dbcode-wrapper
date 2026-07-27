@@ -1,6 +1,6 @@
 ---
 title: Choose a verification level
-description: How to match the cost and realism of DBCode Wrapper checks to the risk of a change.
+description: How to use the smallest prompt-free check that protects a DBCode Wrapper change.
 type: guide
 tags:
   - wiki
@@ -9,53 +9,53 @@ tags:
   - risk
 wiki_profile: public
 wiki_depth: standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Goal
 
-Run enough evidence to protect the changed boundary without rebuilding and manually exercising the entire app for every edit.
+Protect the changed wrapper seam without rebuilding or manually exercising the whole DBCode product on every edit.
 
 ## Steps
 
-1. **Classify the change.** Identify whether it affects only prose, a source contract, the built host, a real profile, an external database, or release switching.
-2. **Start narrow.** Run the closest unit or shell contract while developing.
-3. **Add the aggregate gate.** Run `./script/check_development.sh` before handing off a source change unless the issue defines a stronger gate.
-4. **Add a built-app gate when needed.** Build and inspect the app after patch, extension inventory, product identity, signing, or packaging changes.
-5. **Add a rendered gate for UI work.** Check real pixels and interactions after focused-shell, editor, panel, context-menu, notification, or window-layout changes.
-6. **Add a real-profile gate for stateful work.** Use the private standalone profile for licence activation, Keychain, credentials, external extensions, first-run, recovery, and relaunch behavior.
-7. **Add representative workflows.** Exercise PostgreSQL, SQLite, DuckDB/Parquet, or notebooks according to the boundary changed. Add another supported database when the change touches general connection routing.
-8. **Use the full release gate before promotion.** Verify the prepared set, signing, full quit/relaunch, required database matrix, persistence, package sanitization, installed health, and rollback.
-9. **Inspect generated output safely.** Use `./script/generated_workspace.sh inventory`; do not measure or clean ignored directories by guessing from their names.
-10. **Record honest evidence.** Do not convert a skipped external dependency or manual macOS prompt into a fake pass.
+1. **Classify the change.** Is it prose, one source contract, a compiled-host input, assembly-only content, focused UI, DBCode version, or packaging?
+2. **Start narrow.** Run the owning focused test while editing.
+3. **Run the source aggregate once.** Use `./script/check_development.sh` before resolving a source change. It must stay below one minute and never launch, use the network, ask a question, or wait for a person.
+4. **Build once when needed.** Finish release-bound changes first. Reuse the compiled host when its exact input ID is unchanged.
+5. **Inspect the signed app.** Run static smoke for host, identity, inventory, signing, update, or package changes.
+6. **Use one rendered profile.** Run the persistent `qa` profile smoke for shell or DBCode version changes. Do not reset it or create disposable profiles.
+7. **Add only changed-feature depth.** Use an optional database, file, debugger, notebook, AI, or MCP proof when that exact boundary changed and the proof can be run safely.
+8. **Run final exact-release acceptance.** Re-enter the manifest's source, rerun development and static checks, and use only a rendered report with the same release-set ID.
+9. **Keep human gates out of deployment.** Keychain, Kernel, Gatekeeper, licence, sign-in, OAuth, secrets, mutation, and external services are normal user actions.
+10. **Record honest evidence.** A skipped or unrun live workflow is not a pass.
 
-| Change | Minimum useful level |
+| Change | Minimum useful check |
 | --- | --- |
-| Wiki or prose only | Link, lint, and source-anchor checks |
-| JSON schema or shell/JS helper | Narrow tests plus development aggregate |
-| Generated output or retention rule | Retention contract tests, inventory, and a dry-run refusal check |
-| Patch or wrapper extension | Development aggregate plus built-app inspection |
-| Focused UI | Built app plus rendered interaction check |
-| Profile, licence, Keychain, connection, notebook | Real standalone profile plus quit/relaunch |
-| Release, signing, promotion, rollback | Full private release and rollback gates |
+| Wiki or prose | Link, lint, source anchors, and `git diff --check` |
+| Policy, helper, or patch source | Focused test, then development aggregate |
+| Compilation input | Development aggregate, one build, static smoke |
+| Assembly-only or DBCode-only release input | Reuse verified host, assemble, static smoke |
+| Focused shell or DBCode version | Static smoke plus one-profile rendered smoke |
+| Private package | Exact-release acceptance plus package checks |
+| Live database, notebook, AI, MCP, or mutation | Separate focused proof only when the changed boundary requires it |
 
 ## Relevant code
 
 - [Verification Harness](../modules/verification-harness.md)
-- [Generated Workspace Retention](../modules/generated-workspace-retention.md)
-- [`script/check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/check_development.sh)
-- [`script/verify_release_set_static.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_release_set_static.sh)
-- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_private_release.sh)
+- [Compiled Host Cache](../modules/compiled-host-cache.md)
+- [`docs/agents/verification-policy.md`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/docs/agents/verification-policy.md)
+- [`script/check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/check_development.sh)
+- [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_fast_release.sh)
 
 ## Gotchas
 
-- A source test cannot prove a patched Code OSS UI rendered correctly.
-- A successful first launch cannot prove secure-storage or profile persistence after a full quit.
-- A sample SQLite query cannot prove a stopped PostgreSQL service is reachable.
-- The strongest gates use ignored private state and may require the owner to answer macOS permission prompts.
-- An ignored directory is not automatically disposable. Cleanup planning must use the maintained retention classification and exact path checks.
+- Source tests cannot prove a patched UI rendered.
+- Route visibility does not prove a live DBCode workflow.
+- Old smoke logs do not prove the current app.
+- A rendered report from another release-set ID cannot be reused.
+- An ignored directory is not automatically disposable; use [Generated Workspace Retention](../modules/generated-workspace-retention.md).
 
 ## Related
 
+- [DBCode capability evidence](../concepts/dbcode-capability-evidence.md)
 - [Representative acceptance fixtures](../concepts/representative-acceptance-fixtures.md)
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)

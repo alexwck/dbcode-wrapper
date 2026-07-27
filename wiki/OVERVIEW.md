@@ -1,8 +1,8 @@
 ---
 title: DBCode Wrapper codebase wiki
-description: A public, source-grounded guide to the focused host, standalone profile, compatibility model, build, verification, and personal release flow.
+description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 tags:
   - wiki
   - overview
@@ -10,89 +10,89 @@ tags:
 ---
 # DBCode Wrapper codebase wiki
 
-DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused database shell, isolated profile, compatibility contracts, build patches, verification, and owner-only release process. DBCode continues to own database connectivity and its feature surfaces.
+DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`fbf2982`](https://github.com/alexwck/dbcode-wrapper/tree/fbf29827376fd0ea5867082b78e38862878f42b6). When the repository moves beyond that commit, use the source links as historical anchors and refresh the wiki before relying on fine details.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`2008ff4`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29). Check source and tests when details disagree.
 
 > [!NOTE]
-> The public wiki excludes licence material, credentials, private profiles, generated app bundles, raw local evidence, and proprietary DBCode implementation. PostgreSQL, SQLite, DuckDB, Parquet, and notebooks are representative acceptance paths; they do not limit the database connections supported by the approved DBCode extension.
+> The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.
 
 ## Architecture at a glance
 
 ```mermaid
 flowchart LR
-  U[Public wrapper source] --> B[Patch and build pipeline]
-  V[Pinned VSCodium and Code OSS] --> B
-  B --> A[Signed DBCode Wrapper app]
+  U[Reviewed wrapper commit] --> S[Release Source Snapshot]
+  S --> C{Compiled Host cache}
+  C -->|miss| B[Compile Code OSS]
+  B --> A[Assemble and sign]
+  C -->|hit| A
+  D[Verified DBCode package] --> A
   A --> P[Standalone DBCode Profile]
-  D[Verified DBCode package] --> P
-  N[Verified notebook packages] --> P
   A --> F[Focused database shell]
   P --> F
-  F --> Q[Connections queries grids and notebooks]
-  A --> R[Candidate approval promotion and rollback]
-  P --> R
-  B --> G[Generated output retention]
-  R --> G
-  P --> G
+  F --> Q[DBCode features]
+  A --> V[Prompt-free acceptance]
+  V --> R[Private release and rollback]
 ```
 
-The main idea is a deliberate split: the app bundle is a slim, replaceable host; the private profile is the durable owner-controlled state. A release is trusted only when the host, profile schema, external packages, signing identity, and evidence agree as one [Approved Release Set](concepts/approved-release-set.md).
+The app bundle is a replaceable host and the private profile is durable owner-controlled state. A release is trusted only when its immutable source, compiled host, signed app, external packages, profile schema, and acceptance evidence identify the same [Approved Release Set](concepts/approved-release-set.md).
 
 ## Suggested learning path
 
 1. Start with [Product and upstream boundaries](architecture/product-and-upstream-boundaries.md).
-2. Learn why state lives in the [Focused host and private profile](architecture/focused-host-and-private-profile.md).
-3. Follow [First run, activation, and query](flows/first-run-activate-and-query.md).
-4. Study [Release trust and compatibility](architecture/release-trust-and-compatibility.md).
-5. Use [Trace a DBCode feature](guides/trace-a-dbcode-feature.md) when investigating the UI or an upstream contribution.
+2. Learn the [Focused host and private profile](architecture/focused-host-and-private-profile.md).
+3. Understand [DBCode capability evidence](concepts/dbcode-capability-evidence.md) and [AI and MCP data boundaries](concepts/ai-and-mcp-data-boundaries.md).
+4. Follow [First run, activation, and query](flows/first-run-activate-and-query.md).
+5. Study [Release trust and compatibility](architecture/release-trust-and-compatibility.md).
 6. Use [Choose a verification level](guides/choose-a-verification-level.md) before changing a boundary.
-7. Read [Generated Workspace Retention](modules/generated-workspace-retention.md) before inspecting or cleaning build and test output.
-8. Use [Review an upstream update](guides/review-an-upstream-update.md) when any pinned component changes.
+7. Use [Review an upstream update](guides/review-an-upstream-update.md) when a pinned component changes.
 
 ## Architecture
 
 - [Product and upstream boundaries](architecture/product-and-upstream-boundaries.md) — what the wrapper owns and what stays upstream.
 - [Focused host and private profile](architecture/focused-host-and-private-profile.md) — how the app bundle and isolated state combine.
-- [Release trust and compatibility](architecture/release-trust-and-compatibility.md) — why versions, evidence, promotion, and rollback form one system.
+- [Release trust and compatibility](architecture/release-trust-and-compatibility.md) — how source, artifacts, evidence, promotion, and rollback stay aligned.
 
 ## Modules
 
-- [Release Specification](modules/release-specification.md) — canonical validation and projections from the release lock.
-- [Approved Release Set](modules/approved-release-set.md) — prepared, approved, installed, and history record logic.
-- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths, first run, migration, and recovery.
+- [Release Specification](modules/release-specification.md) — canonical release-lock validation and projections.
+- [Release Source Snapshot](modules/release-source-snapshot.md) — one clean immutable source record per build.
+- [Compiled Host Cache](modules/compiled-host-cache.md) — safe reuse of unchanged Code OSS compilation.
+- [Approved Release Set](modules/approved-release-set.md) — candidate, approval, installed, and history records.
+- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths, setup, migration, and recovery.
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
-- [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches and host construction.
+- [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — verified DBCode and notebook package installation.
 - [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
 - [Private Personal Release](modules/private-personal-release.md) — owner-only packaging and transfer safeguards.
-- [Generated Workspace Retention](modules/generated-workspace-retention.md) — classified ownership, protected inventory, and explicit dry-run cleanup planning.
-- [Verification Harness](modules/verification-harness.md) — layered source, rendered, profile, database, and release checks.
+- [Generated Workspace Retention](modules/generated-workspace-retention.md) — protected output ownership and dry-run cleanup planning.
+- [Verification Harness](modules/verification-harness.md) — fast source, static host, one-profile rendered, and release checks.
 
 ## Flows
 
-- [Build, sign, and launch](flows/build-sign-and-launch.md) — from pinned inputs to an observed signed session.
+- [Build, sign, and launch](flows/build-sign-and-launch.md) — from immutable source to an observed signed session.
 - [First run, activation, and query](flows/first-run-activate-and-query.md) — from an empty profile to persisted real results.
 - [Controlled upgrade and rollback](flows/controlled-upgrade-and-rollback.md) — prepare, verify, approve, promote, health-check, and restore.
 - [Package and transfer a private release](flows/package-and-transfer-private-release.md) — safely move an owner-only build to another personal Mac.
 
 ## Concepts
 
-- [Approved Release Set](concepts/approved-release-set.md) — the actual compatibility and rollback unit.
+- [Approved Release Set](concepts/approved-release-set.md) — the compatibility and rollback unit.
 - [Standalone DBCode Profile](concepts/standalone-dbcode-profile.md) — the owned external state boundary.
 - [Unmodified Extension Boundary](concepts/unmodified-extension-boundary.md) — why integration stays around the official DBCode package.
-- [Representative acceptance fixtures](concepts/representative-acceptance-fixtures.md) — how a small real matrix proves varied boundaries without narrowing support.
+- [DBCode capability evidence](concepts/dbcode-capability-evidence.md) — declared, reachable, rendered, and live proof.
+- [AI and MCP data boundaries](concepts/ai-and-mcp-data-boundaries.md) — provider, payload, client, and test boundaries.
+- [Representative acceptance fixtures](concepts/representative-acceptance-fixtures.md) — small useful checks without narrowing support.
 
 ## Guides
 
-- [Trace a DBCode feature](guides/trace-a-dbcode-feature.md) — find whether behavior belongs to DBCode, the host, or wrapper code.
+- [Trace a DBCode feature](guides/trace-a-dbcode-feature.md) — find whether behaviour belongs to DBCode, the host, or wrapper code.
 - [Choose a verification level](guides/choose-a-verification-level.md) — match evidence cost to change risk.
 - [Review an upstream update](guides/review-an-upstream-update.md) — evaluate independent releases as one candidate set.
 
 ## Keeping this wiki useful
 
-- Check the `source_commit` above before relying on implementation detail.
-- Follow immutable GitHub source links from each page when reading code.
-- Treat repository contracts and tests as authoritative when prose and source disagree.
-- Refresh affected pages after meaningful architecture, profile, release, shell, or verification changes.
-- Keep the graph free of dead links and record each generation or refresh in the [Wiki Log](log.md).
+- Check `source_commit` before relying on implementation detail.
+- Treat repository contracts and tests as authoritative.
+- Refresh affected pages after meaningful architecture, feature-policy, profile, release, shell, or verification changes.
+- Keep the graph free of dead links and record each refresh in the [Wiki Log](log.md).

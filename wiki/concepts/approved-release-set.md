@@ -1,6 +1,6 @@
 ---
 title: Approved Release Set
-description: The complete versioned and evidenced compatibility unit that may be installed or restored.
+description: The exact sourced, built, signed, and evidenced compatibility unit that may be installed or restored.
 type: concept
 tags:
   - wiki
@@ -9,29 +9,31 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Definition
 
-An Approved Release Set is one exact combination of DBCode Wrapper host, Code OSS version, VSCodium source, DBCode extension, pinned notebook packages, profile schema, wrapper extensions, signing identity, and acceptance evidence. It is the unit the project can promote, report as current, package, or restore.
+An Approved Release Set is one exact combination of immutable wrapper source, Code OSS and VSCodium inputs, compiled-host identity, signed DBCode Wrapper app, official DBCode package, pinned notebook packages, profile schema, wrapper extensions, signing identity, and acceptance evidence.
 
-A candidate becomes approved only after its declared files and digests match the evidence and an approval record is written. Seeing a newer version in update discovery does not make it approved.
+A candidate becomes approved only when these identities and digests match one another. An update notice, matching version label, successful old log, or rendered report from another artifact is not approval.
 
 ## Why it matters
 
-DBCode can work on one Code OSS version and fail subtly on another. A notebook package can install but lose its kernel bridge. A rebuilt app can look identical but trigger a new Keychain identity. Treating all of these as a set prevents independent version changes from bypassing compatibility checks.
+DBCode can work on one host and fail on another. A cached host can be corrupt even when its name looks right. A rebuilt app can carry different wrapper code or trigger a new macOS identity. Binding immutable source, verified compilation, final app, and evidence prevents those pieces from drifting apart.
 
-The set also gives rollback a complete target. Restoring only the app while keeping a newer profile or extension directory would produce an untested combination.
+The set is also the rollback unit. Restoring only the app while keeping newer profile or extension state would create an untested combination.
 
 ## Where it lives
 
-- Canonical release facts: [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/release-lock.json)
-- Validation and record creation: [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-release-status/approved-release-set.js)
-- Public approved history: [`host/approved-release-history.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/approved-release-history.json)
-- Prepare, promote, health, and rollback: [`script/controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/controlled_upgrade.sh)
+- Canonical release facts: [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/release-lock.json)
+- Validation and record creation: [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status/approved-release-set.js)
+- Signed source and artifact facts: [`script/generate_manifest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generate_manifest.sh)
+- Final exact-release evidence: [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_fast_release.sh)
+- Promotion and rollback: [`script/controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/controlled_upgrade.sh)
 
 ## Related
 
 - [Approved Release Set module](../modules/approved-release-set.md)
+- [Release Source Snapshot](../modules/release-source-snapshot.md)
+- [Compiled Host Cache](../modules/compiled-host-cache.md)
 - [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md)

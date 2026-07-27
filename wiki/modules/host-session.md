@@ -1,6 +1,6 @@
 ---
 title: Host Session
-description: The reusable lifecycle module that starts, observes, validates, and stops a DBCode Wrapper process tree.
+description: The reusable lifecycle module that starts, observes, validates, and stops one DBCode Wrapper process tree.
 type: module
 tags:
   - wiki
@@ -9,36 +9,37 @@ tags:
   - lifecycle
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-Host Session replaces scattered launch helpers with one policy-driven lifecycle boundary. It starts the app with explicit profile paths, finds the expected process tree, observes readiness and fatal logs, records structured evidence, and performs a bounded shutdown.
+Host Session is the policy-driven boundary for one application lifecycle. It starts the app with explicit profile paths, finds the expected process tree, observes renderer and DBCode readiness, rejects fatal logs, records structured evidence, and performs bounded shutdown.
 
 ## Responsibilities
 
-- Validate a session policy before any process or filesystem action.
-- Prepare only absolute, approved runtime paths without symlink escapes.
-- Start the app and identify its live renderer and extension-host processes.
-- Observe DBCode readiness and configured fatal patterns.
-- Stop the matching process tree and confirm it exited within the timeout.
-- Serialize and validate a stable session result for shell and test consumers.
-- Clean up a partially started session after failure.
+- Validate policy before process or filesystem work.
+- Prepare only absolute approved paths without symbolic-link escapes.
+- Start the app and identify its renderer and extension-host processes.
+- Observe stable renderer, DBCode log, and host-log readiness.
+- Reject configured fatal patterns.
+- Stop only the matching process tree and confirm exit within timeouts.
+- Preserve the original failure when cleanup also fails.
+- Serialize one stable result for shell and rendered-test consumers.
 
 ## Public API / entry points
 
-The JavaScript surface includes policy validation, `runHostSession`, `stopHostSession`, result validation and serialization, runtime-path preparation, and a Node runtime adapter. [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/host_session.sh) supplies shell commands for policy creation, run, and stop.
+The JavaScript API includes policy validation, `runHostSession`, `stopHostSession`, result parsing and validation, path preparation, and the Node runtime adapter. [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/host_session.sh) provides shell policy, run, and stop commands.
 
 ## Key files
 
-- [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/host-session.js) — core lifecycle state machine.
-- [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/lib/host_session.sh) — shell adapter.
-- [`test_host_session.mjs`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_host_session.mjs) — unit tests with injected runtime behavior.
-- [`test_host_session_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_host_session_contract.sh) — integration contract.
+- [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/host-session.js) — lifecycle state machine.
+- [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/host_session.sh) — shell adapter.
+- [`host/qa/rendered-session-support.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/qa/rendered-session-support.cjs) — rendered smoke integration.
+- [`script/test_host_session_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_host_session_contract.sh) — public integration contract.
 
 ## Dependencies
 
-The core accepts an injected runtime, which keeps process discovery, clocks, spawning, filesystem work, and logging testable. Higher-level proof and release scripts supply the policy and interpret the result.
+The core receives an injected runtime so process discovery, time, spawning, files, and logs remain testable. Higher-level run, proof, and rendered scripts supply policy and interpret the result.
 
 ## Participates in
 

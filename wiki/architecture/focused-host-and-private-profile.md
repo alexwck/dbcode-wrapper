@@ -9,13 +9,13 @@ tags:
   - shell
 wiki_profile: public
 wiki_depth: standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-The application has two cooperating halves. The app bundle provides a slim Code OSS runtime and small first-party wrapper extensions. A separate Standalone DBCode Profile provides the user's settings, secure-storage identity, installed DBCode package, pinned notebook packages, caches, logs, and recovery state.
+The application has two cooperating halves. The app bundle provides a slim Code OSS runtime and small wrapper extensions. A separate Standalone DBCode Profile holds settings, secure-storage identity, installed DBCode and notebook packages, caches, logs, and recovery state.
 
-This split keeps the wrapper source suitable for the public repository while the built app, licensed DBCode package, credentials, and private profile remain owner-only. It also allows the profile to survive app replacement when a compatible host is installed.
+The production profile survives compatible app replacement. Automated rendered checks use one separate persistent generated `qa` profile with Chromium's mock Keychain. They do not reset the profile or exercise first-use, licence, kernel, model, OAuth, or macOS permission prompts during deployment.
 
 ## Diagram
 
@@ -43,28 +43,28 @@ flowchart TB
 
 ## Key components
 
-- [Host Session](../modules/host-session.md) launches the bundle with the exact profile arguments and observes its lifecycle.
-- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) derives and validates every owned path before setup, migration, or recovery.
-- [Focused Runtime Setup](../modules/focused-runtime-setup.md) verifies pinned packages before installing them into the external extension root.
-- [Focused shell extensions](../modules/focused-shell-extensions.md) render the database-oriented top bar and supporting controls.
-- [Approved Release Set](../modules/approved-release-set.md) binds the app and profile contents to the compatibility decision.
-- [Generated Workspace Retention](../modules/generated-workspace-retention.md) classifies repository output while marking profile paths as private and uninspected.
+- [Host Session](../modules/host-session.md) launches the bundle with exact profile arguments and observes its lifecycle.
+- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) validates every owned path before setup, migration, or recovery.
+- [Focused Runtime Setup](../modules/focused-runtime-setup.md) verifies pinned packages before installing them externally.
+- [Focused shell and wrapper extensions](../modules/focused-shell-extensions.md) render the database-oriented shell.
+- [Verification Harness](../modules/verification-harness.md) owns the persistent prompt-free QA profile.
+- [Approved Release Set](../modules/approved-release-set.md) binds app and profile contents to compatibility evidence.
 
-The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). The launch contract is implemented by [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/host-session.js) and its shell adapter.
+The path contract starts in [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js). Launch policy lives in [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/host-session.js).
 
 ## Design decisions
 
-- The default personal profile uses stable natural macOS paths; QA and isolated profiles use separate owned roots.
-- Mutating operations must prove that every target is inside the expected owner root.
-- The app bundle does not contain the licensed DBCode package or the user's profile.
-- Normal VS Code profiles are outside the wrapper's ownership boundary.
-- Secure-storage prompts are part of macOS identity and signing continuity. Changing app identity or signing material can make the OS treat a launch as a different application.
-- Recovery is explicit and conservative: it backs up owned profile data and relaunches with a verified argument set.
-- Repository inventory may report that profile roots exist as protected categories, but it never traverses, measures, or cleans their contents.
+- The normal personal profile and generated QA profile have separate owned roots.
+- Mutating operations must prove every target is inside its expected owner root.
+- The app bundle does not contain the licensed DBCode package or user profile.
+- Normal VS Code profiles are outside wrapper ownership.
+- Keychain and macOS prompts remain user choices. Automation uses a mock Keychain and never approves a real prompt.
+- Recovery is explicit and conservative. It is not part of the default deployment path.
+- Generated-state inventory can report protected profile roots but never traverses or cleans their contents.
 
 ## Related
 
 - [Standalone DBCode Profile](../concepts/standalone-dbcode-profile.md)
 - [First run, activation, and query](../flows/first-run-activate-and-query.md)
-- [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
 - [Choose a verification level](../guides/choose-a-verification-level.md)
+- [AI and MCP data boundaries](../concepts/ai-and-mcp-data-boundaries.md)

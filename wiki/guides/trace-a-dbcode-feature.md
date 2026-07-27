@@ -1,6 +1,6 @@
 ---
 title: Trace a DBCode feature
-description: A practical method for finding whether a visible database feature belongs to DBCode, the focused host, or wrapper integration.
+description: A practical method for finding DBCode feature ownership, route, evidence level, and privacy boundary.
 type: guide
 tags:
   - wiki
@@ -9,36 +9,40 @@ tags:
   - debugging
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Goal
 
-Find the real owner and integration path of a visible DBCode feature before changing the wrapper. This avoids removing an upstream capability, duplicating DBCode behavior, or patching the wrong layer.
+Find the real owner, route, evidence level, and data boundary of a DBCode feature before changing the wrapper. This avoids deleting upstream capability, duplicating DBCode, or claiming more proof than exists.
 
 ## Steps
 
-1. **Name the user action.** Describe what the owner clicks, what data it needs, and what successful output looks like. Avoid vague names such as “the results panel.”
-2. **Check the capability policy.** Find the feature or its section in [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/dbcode-feature-policy.json). This tells you whether it is a tracked DBCode contribution or a wrapper route.
-3. **Inspect the approved extension locally.** In the ignored standalone extension directory, inspect the installed package manifest for contributed commands, views, editors, notebooks, menus, and configuration. Do not copy proprietary implementation into the public repository or wiki.
-4. **Trace host routing.** Search the focused shell patch and wrapper extension manifests for the command or view ID. The shell should expose a route only when it improves the standalone database workflow.
-5. **Identify the boundary.** Classify the behavior as DBCode-owned, host-owned, or wrapper-owned. Database drivers, grids, and DBCode webviews normally remain DBCode-owned. Profile safety and release status are wrapper-owned.
-6. **Prefer one route.** If DBCode already provides the stronger UI, route the focused shell to it and remove a weaker duplicate wrapper surface.
-7. **Choose evidence.** Run the narrow source contract, a rendered check when layout changes, and a real workflow when activation, secure storage, data files, connections, or notebooks are involved.
-8. **Recheck broad support.** Ensure the change does not turn representative PostgreSQL, DuckDB, or Parquet checks into a database allowlist.
+1. **Name the user action.** State what the person opens, what input it needs, and what success looks like.
+2. **Check official orientation.** Find the feature family in [`docs/product/dbcode-capability-coverage.md`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/docs/product/dbcode-capability-coverage.md).
+3. **Check maintained policy.** Find its group, route, evidence, and limit in [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/dbcode-feature-policy.json).
+4. **Inspect public package contributions locally.** Check the exact installed package manifest for commands, views, editors, menus, settings, and tools. Do not publish the package or proprietary code.
+5. **Trace shell routing.** Search the focused patch and wrapper manifests for the contribution ID.
+6. **Name the owner.** Classify it as DBCode-owned, host-owned, or wrapper-owned.
+7. **Keep one working route.** Remove only a duplicate or proven-broken wrapper route, never the last DBCode-owned route.
+8. **Choose the evidence level.** Use `declared`, `reachable`, `rendered`, or `live` precisely.
+9. **Check privacy and mutation.** For AI, Copilot, MCP, query execution, data copy, DML, DDL, or workspace writes, identify the payload and require explicit user action where needed.
+10. **Recheck breadth.** Do not turn representative fixtures into a database allowlist.
 
 ## Relevant code
 
 - [Focused shell and wrapper extensions](../modules/focused-shell-extensions.md)
-- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/patches/code-oss/200-final-focused-dbcode-shell.patch)
-- [`script/test_dbcode_feature_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_dbcode_feature_contract.sh)
-- [`script/test_focused_shell_rendered.sh`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/script/test_focused_shell_rendered.sh)
+- [DBCode capability evidence](../concepts/dbcode-capability-evidence.md)
+- [AI and MCP data boundaries](../concepts/ai-and-mcp-data-boundaries.md)
+- [`script/test_dbcode_feature_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_dbcode_feature_contract.sh)
+- [`script/test_focused_shell_rendered.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_focused_shell_rendered.sh)
 
 ## Gotchas
 
-- A command can exist in a manifest but still fail to register on a particular host version.
-- A hidden Code OSS surface can remain reachable through context menus or keyboard shortcuts unless both presentation and command routing are checked.
-- DBCode may render results in its own editor grid; adding a separate generic Results pane can create overlapping responsibilities.
-- Local inspection of the licensed package is appropriate for compatibility work, but publishing its source or bundled package is outside the project boundary.
+- A declared command can still fail to register on a host version.
+- A visible settings route does not prove inline completion, Query Builder AI, Grid AI, Explore AI, or plan analysis.
+- Automatic MCP registration does not prove the optional HTTP MCP server.
+- A hidden Code OSS surface may remain reachable through a context menu or shortcut.
+- A DBCode result grid should not be duplicated with a generic wrapper Results pane.
 
 ## Related
 

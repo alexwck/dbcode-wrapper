@@ -1,6 +1,6 @@
 ---
 title: Focused shell and wrapper extensions
-description: The host UI and small first-party extensions that make Code OSS behave as a DBCode desktop application.
+description: The host UI and small wrapper extensions that present DBCode as a standalone database application.
 type: module
 tags:
   - wiki
@@ -9,37 +9,37 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-The focused shell removes general IDE navigation and presents database work as the product's main workflow. It retains the Code OSS extension host because DBCode depends on it, then adds only three small wrapper-owned extensions for profile setup, Python-kernel bridging, and release status.
+The focused shell removes general IDE navigation and makes DBCode the product surface. It retains the extension-host APIs DBCode needs and adds only narrow wrapper extensions for profile setup, the Python kernel bridge, and release status.
 
 ## Responsibilities
 
-- Present Connections, SQL files, new queries, saved queries, and DBCode tools as the primary navigation.
-- Keep DBCode's own editor, connection tree, grids, notebooks, exports, diagrams, history, and other database features available.
-- Suppress general workbench surfaces that conflict with the standalone database-app goal.
-- Provide profile setup and recovery without modifying DBCode.
-- Bridge notebook kernel execution through an explicit host permission.
-- Show installed and available upstream versions and link to official release notes.
-- Avoid duplicate wrapper actions where DBCode already provides the better workflow.
+- Present Connections, Database Explorer, SQL files, queries, history, library, scratch files, notebooks, Query Builder, settings, AI, and MCP routes through the focused shell.
+- Keep DBCode-owned editors, grids, context actions, diagrams, exports, and account surfaces available.
+- Keep Database Explorer persistent during editor, canvas, grid, and Escape interactions.
+- Dismiss other temporary DBCode drawers consistently when their owning interaction ends.
+- Hide unrelated IDE surfaces and duplicate wrapper actions.
+- Provide profile safety, kernel permission, and release status without modifying DBCode.
+- Show prompt-prone AI, MCP, notebook, and account routes in smoke checks without activating them.
 
 ## Public API / entry points
 
-Most shell behavior is applied through the focused Code OSS patch. The first-party extensions register a narrow command surface under the `dbcodeWrapper` namespace. DBCode remains a separately installed upstream extension and owns its database commands and webviews.
+Most shell behaviour comes from the focused Code OSS patch. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately installed upstream extension and owns its commands, views, webviews, editors, AI providers, and MCP tools.
 
 ## Key files
 
-- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench UI.
-- [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-profile-migration) — setup, import, runtime installation, and recovery.
-- [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/efe247fc701a9b529e3e6368b6571a44541fc146/host/extensions/dbcode-wrapper-release-status) — update discovery and approved-set status.
-- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/dbcode-feature-policy.json) — tracked DBCode capability catalogue.
+- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing and dismissal behaviour.
+- [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration) — setup, import, runtime installation, and recovery.
+- [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
+- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status) — discovery and approved-set status.
+- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/dbcode-feature-policy.json) — DBCode capability and route policy.
 
 ## Dependencies
 
-The shell depends on the pinned Code OSS workbench structure and DBCode's public extension contributions. This is the most visually sensitive part of an upstream update, so rendered checks matter in addition to source contracts.
+The shell depends on the pinned Code OSS workbench structure and DBCode's public contributions. Source contracts protect routing; the single persistent-profile rendered smoke protects real presentation.
 
 ## Participates in
 
@@ -50,5 +50,6 @@ The shell depends on the pinned Code OSS workbench structure and DBCode's public
 ## Related
 
 - [Product and upstream boundaries](../architecture/product-and-upstream-boundaries.md)
-- [Unmodified Extension Boundary](../concepts/unmodified-extension-boundary.md)
+- [DBCode capability evidence](../concepts/dbcode-capability-evidence.md)
+- [AI and MCP data boundaries](../concepts/ai-and-mcp-data-boundaries.md)
 - [Verification Harness](verification-harness.md)

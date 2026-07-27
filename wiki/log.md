@@ -21,3 +21,11 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - Coverage: generated workspace retention; build output ownership; protected profile state; verification evidence; controlled upgrade, rollback, and private-release artifacts
 - Created: [Generated Workspace Retention](./modules/generated-workspace-retention.md)
 - Updated: [Overview](./OVERVIEW.md), [Focused host and private profile](./architecture/focused-host-and-private-profile.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Private Personal Release](./modules/private-personal-release.md), [Verification Harness](./modules/verification-harness.md), [Build sign and launch](./flows/build-sign-and-launch.md), [Controlled upgrade and rollback](./flows/controlled-upgrade-and-rollback.md), [Package and transfer a private release](./flows/package-and-transfer-private-release.md), and [Choose a verification level](./guides/choose-a-verification-level.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: 2008ff4 (was fbf2982)
+- Coverage: immutable release source; compiled-host reuse; fast prompt-free verification; DBCode feature evidence; AI and MCP privacy; focused-shell routes; exact private packaging
+- Created: [Release Source Snapshot](./modules/release-source-snapshot.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [DBCode capability evidence](./concepts/dbcode-capability-evidence.md), and [AI and MCP data boundaries](./concepts/ai-and-mcp-data-boundaries.md)
+- Updated: [Overview](./OVERVIEW.md), all [architecture pages](./architecture/product-and-upstream-boundaries.md), the affected [release modules](./modules/release-specification.md), [focused shell](./modules/focused-shell-extensions.md), [verification](./modules/verification-harness.md), [build and release flows](./flows/build-sign-and-launch.md), and [update and feature guides](./guides/review-an-upstream-update.md)

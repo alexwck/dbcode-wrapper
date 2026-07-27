@@ -1,6 +1,6 @@
 ---
 title: Private Personal Release
-description: The owner-only packaging and verification path for moving a signed DBCode Wrapper build to another personal Mac.
+description: The owner-only packaging and verification path for one exact accepted DBCode Wrapper build.
 type: module
 tags:
   - wiki
@@ -9,37 +9,37 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-A Private Personal Release is a locally produced, owner-only package. The public repository supplies the build and verification logic; the owner's machine supplies the built app, local signing continuity, approved profile contents, and private release evidence. The package is designed for installation on Macs owned by the same person, without requiring public distribution or Apple notarization.
+A Private Personal Release is a locally produced host-only package for Macs owned by the same person. The public repository supplies build and verification logic. The owner's machine supplies the signed app and private release output. DBCode, notebook packages, licences, credentials, and profile state are installed separately and are not placed in the DMG.
 
 ## Responsibilities
 
-- Confirm the source tag, release lock, build manifest, and built app agree.
-- Verify app signing and the expected bundle identity.
-- Confirm DBCode and notebook packages live in the external profile, not inside the app bundle.
-- Generate a sanitized compatibility manifest without credentials, licences, or machine-specific profile contents.
-- Package the app and the minimum private installation material.
-- Verify the mounted or extracted release before installation.
-- Preserve enough identity and evidence for later health checks and rollback.
-- Resolve staging, final assets, and the independent verification receipt through [Generated Workspace Retention](generated-workspace-retention.md), keeping them protected until this workflow releases them.
+- Require an annotated source tag at the exact immutable source commit that built the app.
+- Match the tag's release lock, source snapshot, compiled-host receipt, signed app, manifest, and prompt-free acceptance report.
+- Verify bundle identity and nested signatures.
+- Require an acceptance report for the same release-set ID and app digest.
+- Generate sanitized compatibility metadata without credentials, licences, profile contents, or local paths.
+- Build the host-only DMG and external checksum.
+- Mount and verify the final image independently before transfer.
+- Keep final assets protected until the owning workflow releases them.
 
 ## Public API / entry points
 
-[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/package_private_release.sh) is the packaging command. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_private_release.sh) verifies a package. Shared validation and manifest functions live in `script/lib/private_release.sh`.
+[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/package_private_release.sh) builds the package. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_private_release.sh) mounts and verifies it. Shared checks and compatibility-record construction live in [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/private_release.sh).
 
 ## Key files
 
-- [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/private_release.sh) — source, app, manifest, signing, and sanitization checks.
-- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/package_private_release.sh) — release builder.
-- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_private_release.sh) — release verifier.
-- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/verify_same_mac_release.sh) — owner-machine continuity checks.
+- [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_fast_release.sh) — exact-source and exact-app acceptance.
+- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/package_private_release.sh) — task-level packager.
+- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_private_release.sh) — independent mounted-image verifier.
+- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_same_mac_release.sh) — owner-machine continuity checks.
 
 ## Dependencies
 
-The module consumes [Release Specification](release-specification.md), [Approved Release Set](approved-release-set.md), [Generated Workspace Retention](generated-workspace-retention.md), the signed app, the controlled profile layout, macOS packaging tools, and completed acceptance evidence.
+The module consumes [Release Source Snapshot](release-source-snapshot.md), [Compiled Host Cache](compiled-host-cache.md), [Approved Release Set](approved-release-set.md), [Verification Harness](verification-harness.md), the signed app, macOS packaging tools, and [Generated Workspace Retention](generated-workspace-retention.md).
 
 ## Participates in
 

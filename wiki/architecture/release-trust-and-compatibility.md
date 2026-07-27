@@ -1,6 +1,6 @@
 ---
 title: Release trust and compatibility
-description: How pinned inputs, evidence, approval, promotion, and rollback protect a DBCode Wrapper release.
+description: How immutable source, cached compilation, exact evidence, approval, and rollback protect a release.
 type: architecture
 tags:
   - wiki
@@ -9,48 +9,49 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-A working version number is not enough to approve a release. DBCode Wrapper treats the Code OSS host, VSCodium source and patches, DBCode extension, notebook packages, profile schema, wrapper code, and acceptance evidence as one compatibility unit.
+A version number is not enough to approve a release. DBCode Wrapper treats the immutable wrapper source, Code OSS and VSCodium inputs, compiled host, DBCode and notebook packages, profile schema, signed app, and acceptance evidence as one compatibility unit.
 
-The trust model is staged: declare the expected inputs, build a candidate, verify its identity and behavior, record approval, promote the complete set, and retain a complete prior set for rollback.
+The design keeps deployment fast. Every release gets a new auditable source snapshot and final artifact, but unchanged Code OSS compilation can come from a verified content-addressed cache. The default acceptance path is automated and prompt-free.
 
 ## Diagram
 
 ```mermaid
 flowchart LR
-  L[Release lock] --> S[Release Specification]
-  S --> B[Built candidate]
-  B --> E[Static and runtime evidence]
-  E --> A[Approved Release Set]
-  A --> P[Atomic promotion]
-  P --> H[Health check]
-  H -->|pass| C[Current set]
-  H -->|fail| R[Rollback set]
+  L[Release lock] --> S[Release Source Snapshot]
+  S --> C[Compiled Host Cache]
+  C --> A[Assemble and sign]
+  A --> E[Exact-source and exact-app checks]
+  E --> R[Prompt-free rendered report]
+  R --> P[Approved Release Set]
+  P --> I[Promote or package]
+  I --> H[Health or rollback]
 ```
 
 ## Key components
 
-- [Release Specification](../modules/release-specification.md) validates and projects the canonical release lock.
-- [Approved Release Set](../modules/approved-release-set.md) validates prepared and approved records and binds them to evidence digests.
-- [Verification Harness](../modules/verification-harness.md) supplies layered static, contract, rendered, database, persistence, and release checks.
-- [Private Personal Release](../modules/private-personal-release.md) verifies signed packaging and sanitized metadata.
-- [Generated Workspace Retention](../modules/generated-workspace-retention.md) protects active evidence, rollback backups, and final transfer assets until their owning workflow releases them.
-- [Controlled upgrade and rollback](../flows/controlled-upgrade-and-rollback.md) stages and switches the whole app/profile set.
+- [Release Specification](../modules/release-specification.md) validates and projects the canonical lock.
+- [Release Source Snapshot](../modules/release-source-snapshot.md) binds one clean commit to the release.
+- [Compiled Host Cache](../modules/compiled-host-cache.md) reuses unchanged compilation safely.
+- [Approved Release Set](../modules/approved-release-set.md) validates candidate and approval identities.
+- [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
+- [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
 
-The core schemas and transition checks are in [`release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/lib/release_specification.sh), [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/extensions/dbcode-wrapper-release-status/approved-release-set.js), and [`controlled_upgrade.sh`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/script/controlled_upgrade.sh).
+Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/compiled_host_cache.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
 
 ## Design decisions
 
-- Update discovery is advisory. It can point to newer upstream releases, but it cannot approve or install them.
-- Candidate preparation is separate from promotion. This gives the owner time to run representative checks before changing the active app.
-- Approval records contain identities and digests, not secrets or mutable local paths.
-- Promotion and rollback cover the app, manifest, user data, extensions, and shared data as one set.
-- Legacy records may be readable for continuity, while new approvals use the deeper current schema.
-- The strongest confidence comes from a real signed app, a real standalone profile, full quit/relaunch, and representative database workflows.
-- Evidence retention is owner-driven. Age alone never makes an accepted app, active receipt, rollback backup, or final transfer asset safe to remove.
+- Update discovery is advisory. It cannot approve or install a release.
+- Accepted source tags are immutable and must identify the commit that built the app.
+- The compiled-host ID changes only when real compilation inputs change.
+- Assembly always creates fresh wrapper records, signature, manifest, and release identity.
+- Final acceptance re-enters the manifest's materialized source and reruns development and static checks. Detached success logs are not enough.
+- The rendered report is reusable only for the same exact release-set ID.
+- Human prompts and external services are normal app-use gates, not deployment tests.
+- The previous complete set stays protected for rollback.
 
 ## Related
 

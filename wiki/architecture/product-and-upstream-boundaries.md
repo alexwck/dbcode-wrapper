@@ -1,6 +1,6 @@
 ---
 title: Product and upstream boundaries
-description: How DBCode Wrapper turns upstream Code OSS and DBCode into a focused desktop database application without owning their code.
+description: How DBCode Wrapper provides a focused desktop host without owning or recreating DBCode.
 type: architecture
 tags:
   - wiki
@@ -8,48 +8,51 @@ tags:
   - boundaries
 wiki_profile: public
 wiki_depth: standard
-source_commit: efe247fc701a9b529e3e6368b6571a44541fc146
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-DBCode Wrapper is a focused macOS host for the unmodified DBCode extension. It is not a new database engine and it is not meant to expose a general-purpose IDE. The project owns the desktop identity, focused shell, private profile, release contracts, build patches, and verification. Code OSS, the VSCodium build machinery, DBCode, and the pinned notebook runtime remain upstream components.
+DBCode Wrapper is a focused macOS host for the official unmodified DBCode extension. It is not a database engine, a replacement database client, or a general-purpose IDE. The wrapper owns the desktop identity, focused navigation, isolated profile, build and release contracts, and checks around the integration.
 
-The public repository contains the wrapper source and reproducible contracts. A Private Personal Release remains host-only; first run obtains verified DBCode and notebook packages into the owner's separate private profile.
+DBCode owns connections, dialects, object browsing, SQL editing, results, data work, notebooks, AI, MCP, accounts, and licences. Code OSS supplies the extension-host runtime, and VSCodium supplies reproducible macOS build machinery.
 
 ## Diagram
 
 ```mermaid
 flowchart LR
-  V[VSCodium build inputs] --> B[Wrapper build]
-  C[Code OSS runtime] --> B
-  B --> A[DBCode Wrapper app]
+  V[VSCodium build inputs] --> W[Wrapper build and policy]
+  C[Code OSS runtime] --> W
+  W --> A[DBCode Wrapper app]
   A --> P[Private standalone profile]
-  D[Unmodified DBCode package] --> P
+  D[Official DBCode package] --> P
   N[Pinned notebook packages] --> P
   A --> U[Focused database UI]
+  P --> U
 ```
 
 ## Key components
 
 - [Release Specification](../modules/release-specification.md) gives every consumer the same product and dependency facts.
-- [Patch Plan and build](../modules/patch-plan-and-build.md) applies the small, ordered wrapper patch stack to an upstream host.
-- [Focused shell extensions](../modules/focused-shell-extensions.md) keep database actions visible while hiding unrelated IDE surfaces.
-- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) keeps licensed packages and user state outside the app bundle.
-- [Private Personal Release](../modules/private-personal-release.md) packages only material safe for the owner's devices.
+- [Patch Plan and build](../modules/patch-plan-and-build.md) applies the small ordered wrapper patch stack.
+- [Focused shell and wrapper extensions](../modules/focused-shell-extensions.md) keep DBCode routes visible while hiding unrelated IDE surfaces.
+- [DBCode capability evidence](../concepts/dbcode-capability-evidence.md) records feature breadth without recreating the product.
+- [AI and MCP data boundaries](../concepts/ai-and-mcp-data-boundaries.md) keep provider and payload claims precise.
+- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) keeps packages and user state outside the app.
 
-The policy boundaries are executable data in [`host/slimming-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/slimming-policy.json), [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/dbcode-feature-policy.json), and [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/efe247fc701a9b529e3e6368b6571a44541fc146/host/release-lock.json).
+The main executable policies are [`host/slimming-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/slimming-policy.json), [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/dbcode-feature-policy.json), and [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/release-lock.json).
 
 ## Design decisions
 
-- DBCode remains unmodified. The wrapper integrates through public extension and host behavior rather than copying proprietary implementation.
-- The shell removes general IDE affordances, but the feature contract does not restrict DBCode to the databases used by smoke tests. All connection types supported by the approved DBCode package remain in scope.
-- PostgreSQL, DuckDB, Parquet, SQLite, and notebooks are representative acceptance paths, not the product's complete database list.
-- Upstream versions are treated as one compatibility set. Independent updates are discovered, then built and verified together before approval.
-- The public source tree excludes licence keys, credentials, installed extensions, private profiles, release packages, and raw local evidence.
+- DBCode remains unmodified. The wrapper uses public extension and host behaviour instead of copying proprietary implementation.
+- Every retained capability keeps at least one DBCode-owned route. A proven-broken wrapper shortcut may be hidden without hiding the underlying feature.
+- Feature evidence stays honest: `declared`, `reachable`, `rendered`, and `live` mean different things.
+- The complete New Connection catalogue is authoritative. Representative checks are not an allowlist.
+- AI and MCP are preserved as DBCode features. The wrapper does not make model calls or external data sharing part of deployment.
+- Public source excludes packages, licences, credentials, profiles, apps, DMGs, signing secrets, and raw private evidence.
 
 ## Related
 
 - [Focused host and private profile](focused-host-and-private-profile.md)
 - [Release trust and compatibility](release-trust-and-compatibility.md)
 - [Unmodified Extension Boundary](../concepts/unmodified-extension-boundary.md)
-- [Build, sign, and launch](../flows/build-sign-and-launch.md)
+- [Trace a DBCode feature](../guides/trace-a-dbcode-feature.md)

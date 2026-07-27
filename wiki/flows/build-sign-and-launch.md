@@ -1,6 +1,6 @@
 ---
 title: Build, sign, and launch
-description: The path from a pinned release lock and upstream sources to a signed, observable DBCode Wrapper session.
+description: The path from one immutable source commit to a signed, verified DBCode Wrapper session.
 type: flow
 tags:
   - wiki
@@ -9,65 +9,67 @@ tags:
   - launch
 wiki_profile: public
 wiki_depth: standard
-source_commit: fbf29827376fd0ea5867082b78e38862878f42b6
+source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
 ---
 ## Summary
 
-This flow creates the app without permanently vendoring the upstream source trees. The release lock selects the compatible inputs; the patch plan turns them into the focused host; signing preserves the macOS identity; Host Session launches the app with the intended profile and records a structured result.
+This flow creates a fresh auditable release without recompiling an unchanged host. The build records and materializes one clean source commit, reuses or creates the exact compiled-host cache entry, assembles wrapper records and extensions, signs the app, and generates the manifest. Static and rendered checks then verify the exact release.
 
 ## Trigger
 
-Run this flow when creating the first local build or when any approved host input, patch, product identity, wrapper extension, or signing material changes.
+Run this flow when creating a release candidate after all release-bound source changes are complete. A real compilation happens only when compilation inputs changed.
 
 ## Sequence diagram
 
 ```mermaid
 sequenceDiagram
   participant Owner
-  participant Spec as Release Specification
-  participant Build
-  participant Upstream
-  participant App
+  participant Snapshot as Source Snapshot
+  participant Cache as Compiled Host Cache
+  participant Assemble
   participant Sign
-  participant Session as Host Session
-  Owner->>Spec: Validate release lock
-  Spec-->>Build: Build and profile records
-  Build->>Upstream: Apply ordered patch plan
-  Upstream-->>Build: Focused host output
-  Build->>App: Copy wrapper extensions and metadata
-  App->>Sign: Sign app and helpers
-  Sign-->>Session: Verified bundle
-  Session->>App: Launch with standalone profile
-  App-->>Session: Readiness logs and process state
-  Session-->>Owner: Structured result
+  participant Verify
+  Owner->>Snapshot: Select clean release commit
+  Snapshot-->>Cache: Materialized exact source
+  alt valid cache hit
+    Cache-->>Assemble: Verified compiled host
+  else cache miss
+    Cache->>Cache: Prepare and compile once
+    Cache-->>Assemble: Publish verified host and receipt
+  end
+  Assemble->>Sign: Fresh wrapper records and app
+  Sign-->>Verify: Signed app and manifest
+  Verify->>Verify: Exact-source contracts and static smoke
+  Verify->>Verify: Matching one-profile rendered report
+  Verify-->>Owner: Prompt-free acceptance result
 ```
 
 ## Steps
 
-1. Validate [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/release-lock.json) through [Release Specification](../modules/release-specification.md).
-2. Resolve and validate the ordered plan from [`patch-plan.json`](https://github.com/alexwck/dbcode-wrapper/blob/fbf29827376fd0ea5867082b78e38862878f42b6/host/patches/patch-plan.json).
-3. Resolve worktrees, generated source, caches, and toolchains through [Generated Workspace Retention](../modules/generated-workspace-retention.md).
-4. Build the pinned VSCodium and Code OSS sources with the slimming policy and focused-shell patches.
-5. Copy the wrapper-owned extensions and generated runtime/release records into the bundle.
-6. Sign the main app and required helpers with one stable local identity.
-7. Inspect the bundle, signing, and expected extension inventory.
-8. Launch through [Host Session](../modules/host-session.md) using a validated profile layout.
-9. Record readiness, fatal-log, process-tree, and shutdown evidence under its registered evidence root.
+1. Resolve a clean release ref and create a [Release Source Snapshot](../modules/release-source-snapshot.md).
+2. Materialize that commit in a narrow temporary checkout.
+3. Validate [Release Specification](../modules/release-specification.md) and the ordered patch plan.
+4. Calculate the [Compiled Host Cache](../modules/compiled-host-cache.md) input ID.
+5. Reuse a verified cache entry, or prepare and compile the pinned upstream host once.
+6. Copy wrapper extensions and generate runtime and release-status records.
+7. Sign the app and generate a manifest containing source, compiled-host, app, and release identities.
+8. Run static smoke against the exact signed app.
+9. Run or reuse the one-profile rendered smoke only when its release-set ID matches.
+10. Run final acceptance from the manifest's materialized source.
 
 ## Failure modes
 
-- A patch no longer applies after an upstream source change.
-- A source or generated record disagrees with the release lock.
-- A removed built-in extension reappears or a required one is missing.
-- App and helper signatures do not form the expected identity.
-- macOS secure storage prompts again because the bundle or signing identity changed.
-- The renderer starts but DBCode activation or the extension host reports a fatal error.
-- A stale process makes the lifecycle check observe the wrong app instance.
-- A caller writes generated output outside its registered root or attempts to reuse a path through a symbolic link.
+- The selected release source is dirty or changes during the build.
+- A patch no longer applies after an upstream change.
+- A cache receipt or app digest does not match the current compilation ID.
+- The release lock, generated records, app, and manifest identify different sets.
+- Signing identity or helper signatures drift.
+- The rendered report belongs to another release-set ID.
+- A prompt-prone action enters the automated deployment path.
 
 ## Related
 
 - [Patch Plan and build](../modules/patch-plan-and-build.md)
+- [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
+- [Verification Harness](../modules/verification-harness.md)
 - [Generated Workspace Retention](../modules/generated-workspace-retention.md)
-- [Focused host and private profile](../architecture/focused-host-and-private-profile.md)
-- [Choose a verification level](../guides/choose-a-verification-level.md)
