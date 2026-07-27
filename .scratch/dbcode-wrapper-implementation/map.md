@@ -2,7 +2,7 @@
 
 ## Destination
 
-Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, same-Mac acceptance, public source, verified host-only package, authenticated draft transfer, anonymous privacy checks, and fresh installation on another owned Mac are complete. Further work improves the focused shell and evaluates new upstream release candidates without changing the accepted `v0.1.0` release.
+Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent personal signing, architecture modules, complete connection-catalogue boundary, same-Mac acceptance, public source, verified host-only package, authenticated draft transfer, anonymous privacy checks, and fresh installation on another owned Mac are complete. Further work improves the focused shell and evaluates new upstream release candidates without changing the approved `v0.1.1` release.
 
 ## Notes
 
@@ -14,6 +14,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - Code OSS is the current extension-host and workbench runtime. VSCodium is its reproducible macOS build and packaging layer, not a second runtime.
 - The current signed application is the accepted database-client checkpoint: Connections Home, Database Explorer, automatic DBCode result layout, focused query routes, and no generic Code OSS bottom panel.
 - The exact `v0.1.0` source was rebuilt after the focused first-run runtime installer landed, passed renewed full acceptance, and produced a verified host-only DMG without moving the annotated source tag.
+- The exact `v0.1.1` package approves unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not replace the installed app or write the production profile.
 - Open work lives in child tickets and is found from their `Status`, `Blocked by`, and `Type` fields rather than being repeated on this map.
 - This implementation map carries execution as well as decisions. Work one ticket at a time, record focused and full verification before resolution, and commit each dependency-complete slice separately.
 - The other-owned-Mac acceptance is complete. Generated-artifact cleanup still follows the retention contract, and new release candidates must preserve the retained `v0.1.0` evidence and rollback path.

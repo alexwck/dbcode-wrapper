@@ -39,6 +39,56 @@
         "preview_command": "./script/preview_release_rollback.sh code-oss-1.126.0-dbcode-1.36.1 --clone-current-profile",
         "instructions": "Build and retain the exact previous app, manifest, extension root, and isolated profile together. Verify every retained digest before previewing it from a disposable profile clone. The preview never replaces the current approved release; complete installed-set promotion and restoration remain ticket 07."
       }
+    },
+    {
+      "schema_version": 2,
+      "id": "code-oss-1.126.0-dbcode-1.36.4-source-3a1d52e8c4b7beec22d865a54f5e675a618ca7c67add6ba86e922e236ecb4f3d-artifact-0136b228242c886d0d4010f273d9d0c21eb17dccc6411a7d0379317cf2cbb8cd",
+      "source_set_id": "code-oss-1.126.0-dbcode-1.36.4-source-3a1d52e8c4b7beec22d865a54f5e675a618ca7c67add6ba86e922e236ecb4f3d",
+      "compatibility_status": "approved",
+      "source_commit": "db6e2bf14ed29a609fb4bc5d36e3dfaa01217c17",
+      "target": {
+        "platform": "darwin",
+        "architecture": "arm64"
+      },
+      "profile": {
+        "schema_version": 1
+      },
+      "manifest": {
+        "schema_version": 6,
+        "build_manifest_sha256": "c06f0d92f977ca4696aba5ab4df0c8b1f4ff0a0f456a694a0c280ab377bc6882",
+        "candidate_manifest_sha256": "c06f0d92f977ca4696aba5ab4df0c8b1f4ff0a0f456a694a0c280ab377bc6882",
+        "approval_attestation_sha256": "bbb0c12d544af5e101da731bfd0f99628a0d859fb037b4b16401f4aedb037221",
+        "artifact_sha256": "0136b228242c886d0d4010f273d9d0c21eb17dccc6411a7d0379317cf2cbb8cd",
+        "shell_patch_revision": "dddad34271d8ca8c5d07431836142b8c6ffa578004241b84f353320849291a94",
+        "overlay_sha256": "a3c3a31df9afed8b4be9d546e8ac31ca2a4f3edb54f870fbc27fe6f1a0d03aaa",
+        "source_snapshot_sha256": "f8dfd504d621ff53cc0116553e2060c87f9de651d72662603ed9f429bc1bd615",
+        "compiled_host_input_id": "compiled-host-81d4697c4fd04941de5097e37a0cf6f765bcf8e6787389bfbc45ec7edf9f288e",
+        "packaging_status": "built-and-signed"
+      },
+      "host": {
+        "vscodium_tag": "1.126.04524",
+        "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+        "code_oss_tag": "1.126.0",
+        "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
+      },
+      "dbcode": {
+        "id": "dbcode.dbcode",
+        "version": "1.36.4",
+        "vsix_sha256": "d6264560667a25de8344ba6a2ffe3b1964ffe20bffa758f4415d5269bbdbabf1",
+        "signature_archive_sha256": "64b4cdbc24e9d18c40a546d1e9316e8c8a45c25906f6bd6e1ca5d13ce071d2f6"
+      },
+      "approval": {
+        "approved_at": "2026-07-27T17:07:14Z",
+        "validation_issue": "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130",
+        "proof_sha256": "1ff897df1b5e1791b17b0ad14cd059b88bd4ffa7a1e217b9ee9927bbe9489b9f",
+        "gate_receipt_sha256": "53778941bf03646dc0c61911b63c519a52e0b94347c0c3c7450accd1b77869e4",
+        "mode": "prompt-free-private-release",
+        "source_tag": "v0.1.1",
+        "compatibility_manifest_sha256": "e824cb8dc4dc2aa83f6f623b01104bf17e8a15e931cbcfff7704307716e4d961",
+        "release_lock_sha256": "d7ed7404953190464211bde12d0398f65ae88fdb10157387b21a2ed7efddc8db",
+        "production_profile_written": false,
+        "installed_app_changed": false
+      }
     }
   ]
 }

@@ -79,13 +79,33 @@ rg -Fq -- '--allow-candidate' "${runtime_preparer}" || {
   exit 1
 }
 jq -e \
-  --arg approval_status "${RELEASE_COMPATIBILITY_STATUS}" \
-  --arg dbcode_version "${DBCODE_VERSION}" '
-  .approval_status == $approval_status
-  and .extension.id == "dbcode.dbcode"
-  and .extension.version == $dbcode_version
-' "${feature_policy}" >/dev/null || {
-  echo "The DBCode feature policy must match the selected release-set status and version." >&2
+  --slurpfile policy "${feature_policy}" \
+  --arg dbcode_version "${DBCODE_VERSION}" \
+  --arg dbcode_sha256 "${DBCODE_SHA256}" \
+  --arg signature_sha256 "${DBCODE_SIGNATURE_ARCHIVE_SHA256}" \
+  --arg release_status "${RELEASE_COMPATIBILITY_STATUS}" \
+  --arg code_oss_version "${CODE_OSS_VERSION}" \
+  --arg code_oss_commit "${CODE_OSS_COMMIT}" \
+  --arg vscodium_version "${VSCODIUM_TAG}" \
+  --arg vscodium_commit "${VSCODIUM_COMMIT}" '
+  (any(.approved_release_sets[];
+    .compatibility_status == "approved"
+    and .dbcode.id == "dbcode.dbcode"
+    and .dbcode.version == $dbcode_version
+    and .dbcode.vsix_sha256 == $dbcode_sha256
+    and .dbcode.signature_archive_sha256 == $signature_sha256
+    and .host.code_oss_tag == $code_oss_version
+    and .host.code_oss_commit == $code_oss_commit
+    and .host.vscodium_tag == $vscodium_version
+    and .host.vscodium_commit == $vscodium_commit
+  )) as $has_approved_set
+  | ($policy[0] |
+      .approval_status == (if $has_approved_set then "approved" else $release_status end)
+      and .extension.id == "dbcode.dbcode"
+      and .extension.version == $dbcode_version
+    )
+' "${approved_history}" >/dev/null || {
+  echo "The DBCode feature policy must match the exact approved history or candidate Release Specification." >&2
   exit 1
 }
 jq -e '

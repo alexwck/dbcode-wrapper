@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "approval_status": "candidate",
+  "approval_status": "approved",
   "extension": {
     "id": "dbcode.dbcode",
     "version": "1.36.4",
@@ -227,7 +227,7 @@
         "Connections Home > New connection",
         "DBCode table data grid"
       ],
-      "evidence": "DBCode 1.36.4 still declares the custom editor. The prior pair did not register its provider, so the wrapper continues to hide the guaranteed-failure route until the new update pair proves it works. Direct CSV, Excel, Parquet, and Avro opening remains a separate compatibility gate; Connections is usable but is not claimed as feature-equivalent.",
+      "evidence": "DBCode 1.36.4 still declares the custom editor. The prior pair did not register its provider, and the approved prompt-free release did not activate this route. The wrapper therefore keeps the guaranteed-failure shortcut hidden. Direct CSV, Excel, Parquet, and Avro opening remains an optional focused check; Connections is usable but is not claimed as feature-equivalent.",
       "prior_compatibility_failure": {
         "extension": "dbcode.dbcode@1.36.1",
         "host": "Code OSS 1.126.0",
@@ -246,11 +246,11 @@
         "Database Explorer table context action",
         "DBCode tools > Query Builder"
       ],
-      "evidence": "The DBCode 1.36.2 rendered proof opens the context-free Query Builder workflow and keeps the relationship-diagram action in Database Explorer without generic IDE actions. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
+      "evidence": "The DBCode 1.36.4 one-profile smoke confirms that the context-free Query Builder route remains visible and keeps the relationship-diagram action in Database Explorer without generic IDE actions. It does not accept terms or start a live model. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
     },
     {
       "id": "stored-routine-debugger",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared"],
       "declared_contributions": [
         "dbcode.debug.routine",
@@ -263,7 +263,7 @@
         "contextual DBCode debugger session"
       ],
       "validation_boundary": "A real PostgreSQL PL/pgSQL debugging session is optional user validation, not a deployment gate.",
-      "evidence": "DBCode 1.36.4 declares its database-routine debugger, SQL breakpoints, and DBCode-owned Debug actions. These routes remain covered by policy, but automated deployment does not start a database or debugger session."
+      "evidence": "DBCode 1.36.4 declares its database-routine debugger, SQL breakpoints, and DBCode-owned Debug actions. The wrapper retains those DBCode-owned routes. Prompt-free deployment does not start a database or debugger, so rendered and live debugger behaviour are not claimed."
     },
     {
       "id": "account-and-license",
@@ -300,7 +300,7 @@
     },
     {
       "id": "ai-inline-completion",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode.ai.inlineCompletion",
@@ -312,11 +312,11 @@
         "DBCode notebook SQL cells",
         "DBCode Settings > AI > Inline Completion"
       ],
-      "evidence": "The exact package declares the inline-completion setting, and the focused wrapper renders the owning SQL and notebook editors. The candidate has not yet produced a separate inline suggestion with synthetic schema and SQL, so rendered and live evidence are not claimed. A focused check must not send private SQL or require a live model in default CI."
+      "evidence": "The exact package declares the inline-completion setting, and the focused wrapper renders the owning SQL and notebook editors. The approved prompt-free release does not claim a rendered suggestion or live model response. Any optional check must use synthetic SQL and must not send private data."
     },
     {
       "id": "ai-query-builder",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode.queryBuilder.open",
@@ -327,11 +327,11 @@
         "DBCode tools > Query Builder",
         "DBCode Query Builder > AI input"
       ],
-      "evidence": "The one-profile smoke confirms that Query Builder remains visible in DBCode Tools without activating the terms-gated command. The candidate has not separately rendered its AI input, structured model validation, or undo flow. Any deeper check must use a synthetic schema and must not require a provider, account, or live model response."
+      "evidence": "The one-profile smoke confirms that Query Builder remains visible in DBCode Tools without activating the terms-gated command. The approved prompt-free release does not claim the AI input, structured model validation, undo flow, or a live model response. Any optional check must use a synthetic schema."
     },
     {
       "id": "ai-grid",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "DBCode result-grid AI surface",
@@ -345,7 +345,7 @@
     },
     {
       "id": "ai-explore",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "DBCode Explore AI insights",
@@ -354,11 +354,11 @@
       "focused_routes": [
         "DBCode data grid > Explore > AI insights"
       ],
-      "evidence": "The focused wrapper retains DBCode's data-grid owner, but the candidate does not yet have separate rendered evidence for Explore AI or its Summary Data disclosure. A focused route check must use synthetic values and keep live model calls outside default CI."
+      "evidence": "The focused wrapper retains DBCode's data-grid owner, but the approved prompt-free release does not claim separate rendered evidence for Explore AI or its Summary Data disclosure. Any optional route check must use synthetic values and keep live model calls outside default CI."
     },
     {
       "id": "ai-plan-analysis",
-      "status": "requires-validation",
+      "status": "limited",
       "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "DBCode execution-plan AI analysis",
@@ -368,7 +368,7 @@
         "DBCode execution plan > AI analysis",
         "DBCode notebook cell execute menu"
       ],
-      "evidence": "The exact package declares the notebook explain action and the wrapper retains DBCode's execution-plan owner. The candidate has not yet rendered the AI analysis panel separately. A focused check may use synthetic schema and plain EXPLAIN; live model calls and EXPLAIN ANALYZE stay outside default CI."
+      "evidence": "The exact package declares the notebook explain action and the wrapper retains DBCode's execution-plan owner. The approved prompt-free release does not claim a separately rendered AI analysis panel. Any optional check may use synthetic schema and plain EXPLAIN; live model calls and EXPLAIN ANALYZE stay outside default CI."
     },
     {
       "id": "ai-query-explanations",
@@ -750,12 +750,12 @@
     {
       "contribution": "dbcode.mcp.start, dbcode.mcp.stop, dbcode.mcp.oauth.revokeTokens",
       "reason": "The isolated 1.36.1 audit did not open the configured HTTP port or report an outcome, so that pair could not present the controls as working.",
-      "fallback": "Automatic registration is not equivalent. Retest the focused HTTP lifecycle controls with 1.36.4 before deciding their route."
+      "fallback": "Automatic registration is not equivalent. The approved prompt-free 1.36.4 release leaves the HTTP lifecycle limited; validate it separately only when that workflow is needed."
     },
     {
       "contribution": "dbcode.dataFileViewer",
-      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the 1.36.4 update-pair gate does not assume direct-file compatibility.",
-      "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until the separate 1.36.4 direct-file gate proves a focused replacement."
+      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the approved prompt-free 1.36.4 release does not claim direct-file compatibility.",
+      "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until an optional focused direct-file check proves a working replacement."
     }
   ]
 }

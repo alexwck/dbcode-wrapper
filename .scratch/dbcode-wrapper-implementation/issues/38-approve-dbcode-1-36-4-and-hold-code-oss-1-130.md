@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 - [x] Official stable metadata is captured from Microsoft's Code OSS GitHub release, VSCodium's GitHub release, DBCode's official changelog, and DBCode's verified stable Open VSX record.
 - [x] The Release Specification pins exact immutable tags, commits, publication dates, release-note routes, runtime versions, package metadata, sizes, SHA-256 values, public-key identity, signature archive digest, and public contribution digest.
@@ -15,7 +15,7 @@
 - [x] The semantic Code OSS patch plan applies cleanly to the retained `1.126.0` host, and focused shell, profile, release-status, slimming, package-verification, and first-run setup contracts pass before a full build starts.
 - [x] The rebuilt candidate app passes static host smoke, the one-profile prompt-free rendered smoke, exact extension inventory, package signatures, size, signing, and prompt-free release acceptance.
 - [x] No second-Mac upgrade or rollback repetition is required. A second-Mac install is needed again only if the device-install contract itself changes.
-- [ ] Only the fully accepted release set can enter approved history or replace the installed app. Failure at any gate leaves the current approved set and rollback evidence intact.
+- [x] Only the fully accepted release set can enter approved history or replace the installed app. Failure at any gate leaves the current approved set and rollback evidence intact.
 
 ## Comments
 
@@ -35,3 +35,10 @@
 - 2026-07-27: The public `main` branch now ends at `477da857cfb57126890263779e9dc7dc4513b9cb`, and the remote annotated `v0.1.1` tag peels to the accepted source `db6e2bf14ed29a609fb4bc5d36e3dfaa01217c17`. Both exact refs passed the public-push readiness gate before transfer. The authenticated owner created an unpublished GitHub draft with `draft: true`, no publication timestamp, and exactly the five verified assets. GitHub's recorded sizes and SHA-256 digests match the local files, and an authenticated download matched all five files byte for byte. Without credentials, the public release list omits `v0.1.1`, tag lookup and direct DMG download both return `404`, and the repository reports zero Actions workflows. Nothing was published or installed, and approved history is unchanged, so the final promotion criterion remains open.
 - 2026-07-27: Prompt-free approval now has one central writer. Its adapter uses the existing Release Specification and Private Personal Release validators for the complete lock and schema-3 acceptance report, then the writer binds their purpose records to the runtime inventories, compatibility record, final package receipt, exact confirmation, and no-install attestation. The package verifier reads the same canonical check list. Public-writer rejection tests cover incomplete acceptance, incomplete signing policy, mismatched versions, writable media, stale evidence, missing checks, and any attestation that claims installation. The full development gate passed in about 18 seconds without rebuilding or launching the app; its only skip was the existing sandbox-only process-table fixture. This validates the promotion mechanism but does not yet promote the real candidate, so the final criterion remains open.
 - 2026-07-27: Prompt-free approval now consumes the final mounted-package verification receipt instead of repeating live `codesign` and `lipo` checks against the build app. The focused contract passed while those signature tools were forced to fail if approval invoked them, proving that packaging and mounted verification remain the only live signature gates. The full development gate passed in about 17 seconds, with only the existing sandbox-only process-table fixture skipped; the public source-tree contract and whitespace check also passed. No app was built, launched, installed, or written into the production profile.
+- 2026-07-27: The exact `v0.1.1` release set entered maintained approved history through the prompt-free approval bundle created at `2026-07-27T17:07:14Z`. Its record binds source `db6e2bf14ed29a609fb4bc5d36e3dfaa01217c17`, app SHA-256 `0136b228242c886d0d4010f273d9d0c21eb17dccc6411a7d0379317cf2cbb8cd`, the accepted package evidence, and DBCode `1.36.4` on Code OSS `1.126.0`. The maintained feature policy is now approved and has no pending `requires-validation` state: capabilities outside the prompt-free evidence are recorded as limited instead of being falsely presented as tested. The focused policy and runtime contracts passed, and the final full development gate passed in about 21 seconds with only the existing sandbox-only process-table fixture skipped; its public source-tree check also passed. Approval did not install the app or write the production profile. Code OSS `1.130.0` remains separate and **Not tested**.
+
+## Answer
+
+DBCode `1.36.4` is approved on the retained Code OSS `1.126.0` and VSCodium `1.126.04524` host as exact private release `v0.1.1`. The approved record comes from the accepted source, signed app, prompt-free acceptance report, read-only DMG, and independent mounted-package verification.
+
+Approval and installation remain separate. This task added the exact release set to maintained approved history without replacing the installed app, changing the production profile, accepting a macOS prompt, or running a database, kernel, debugger, or AI model. Code OSS `1.130.0` remains visible as **Not tested** until compatible VSCodium packaging exists.

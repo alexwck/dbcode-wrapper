@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
 policy_file="${REPO_ROOT}/host/dbcode-feature-policy.json"
+approved_history_file="${REPO_ROOT}/host/approved-release-history.json"
 focused_feature_patches=(
   "${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
@@ -20,6 +21,30 @@ code_oss_version="${CODE_OSS_VERSION}"
 code_oss_commit="${CODE_OSS_COMMIT}"
 vscodium_version="${VSCODIUM_TAG}"
 vscodium_commit="${VSCODIUM_COMMIT}"
+policy_approval_status="$(
+  jq -er \
+    --arg release_status "${RELEASE_COMPATIBILITY_STATUS}" \
+    --arg extension_id "${dbcode_id}" \
+    --arg extension_version "${dbcode_version}" \
+    --arg dbcode_sha256 "${DBCODE_SHA256}" \
+    --arg signature_sha256 "${DBCODE_SIGNATURE_ARCHIVE_SHA256}" \
+    --arg code_oss_version "${code_oss_version}" \
+    --arg code_oss_commit "${code_oss_commit}" \
+    --arg vscodium_version "${vscodium_version}" \
+    --arg vscodium_commit "${vscodium_commit}" '
+    if any(.approved_release_sets[];
+      .compatibility_status == "approved" and
+      .dbcode.id == $extension_id and
+      .dbcode.version == $extension_version and
+      .dbcode.vsix_sha256 == $dbcode_sha256 and
+      .dbcode.signature_archive_sha256 == $signature_sha256 and
+      .host.code_oss_tag == $code_oss_version and
+      .host.code_oss_commit == $code_oss_commit and
+      .host.vscodium_tag == $vscodium_version and
+      .host.vscodium_commit == $vscodium_commit
+    ) then "approved" else $release_status end
+  ' "${approved_history_file}"
+)"
 
 if [[ $# -eq 1 && "${1}" == "--source-only" ]]; then
   :
@@ -45,7 +70,7 @@ jq -e \
   --arg code_oss_commit "${code_oss_commit}" \
   --arg vscodium_version "${vscodium_version}" \
   --arg vscodium_commit "${vscodium_commit}" \
-  --arg approval_status "${RELEASE_COMPATIBILITY_STATUS}" \
+  --arg approval_status "${policy_approval_status}" \
   --arg contributions_sha256 "${expected_contributions_sha256}" '
   .schema_version == 2 and
   .approval_status == $approval_status and
@@ -115,8 +140,12 @@ jq -e \
     (.focused_routes | length) > 0 and
     (.evidence | length) > 0
   ) and
+  (if .approval_status == "approved"
+    then all(.feature_groups[]; .status != "requires-validation")
+    else true
+  end) and
   ((.feature_groups[] | select(.id == "stored-routine-debugger")) as $debugger |
-    $debugger.status == "requires-validation" and
+    $debugger.status == "limited" and
     ($debugger | has("release_gate") | not) and
     ($debugger.validation_boundary | contains("not a deployment gate"))
   ) and
@@ -142,7 +171,7 @@ jq -e \
     ($ai.evidence | contains("live model calls"))
   ) and
   ((.feature_groups[] | select(.id == "ai-inline-completion")) as $completion |
-    $completion.status == "requires-validation" and
+    $completion.status == "limited" and
     ($completion.evidence_levels | index("live")) == null
   ) and
   ((.feature_groups[] | select(.id == "copilot-tools")) as $copilot |
