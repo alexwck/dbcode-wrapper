@@ -140,11 +140,31 @@ After an annotated source tag, its exact signed app, and that automated acceptan
   --release-lock host/release-lock.json \
   --acceptance .build/acceptance/fast-release/final-acceptance-report.json \
   --source-repository . \
-  --source-tag <approved-source-tag> \
+  --source-tag <accepted-source-tag> \
   --output-dir .build/private-release/final
 ```
 
 The package command produces one read-only DMG, its SHA-256 file, a compatibility manifest, install and rollback notes, and an independent verification receipt. It refuses a source tag that does not identify the manifest's exact source revision, incomplete automated evidence, an app without focused first-run runtime setup, a DMG at or above GitHub's 2 GiB asset limit, or any bundled DBCode package, profile, extension cache, licence state, credential, database, Keychain export, or signing secret. These generated assets stay outside Git and may be uploaded only to an authenticated GitHub draft release that is never published.
+
+After the mounted package verification passes, record the exact package as approved:
+
+```sh
+./script/approve_private_release.sh \
+  --app "dist/DBCode Wrapper.app" \
+  --manifest dist/build-manifest.json \
+  --release-lock host/release-lock.json \
+  --acceptance .build/acceptance/fast-release/final-acceptance-report.json \
+  --dmg <private-release.dmg> \
+  --compatibility <compatibility-manifest.json> \
+  --verification <verification-receipt.json> \
+  --source-repository . \
+  --source-tag <accepted-source-tag> \
+  --history host/approved-release-history.json \
+  --confirm-release-set <exact-release-set-id> \
+  --output-dir .build/acceptance/fast-release/approval
+```
+
+Approval writes an attestation, one Approved Release Set record, and the merged approved history under ignored generated output. It does not launch or install the app, approve a macOS prompt, or write the Standalone DBCode Profile. Installation remains a separate user-controlled step.
 
 ## Rights and third-party software
 

@@ -33,3 +33,5 @@
 DBCode Wrapper now has a controlled upgrade and rollback path for complete Approved Release Sets. Host and DBCode updates are still discovered separately, but all four current/candidate combinations must pass before one exact, confirmed app-plus-profile set can be promoted. There is no silent or privileged updater.
 
 The previous working set remains private and complete until the promoted set passes two restart health checks. A failed promotion or rollback restores the active complete set, and a successful rollback restores the previous app, manifest, extensions, user data, and shared data together. The final real rehearsal passed with the lifetime account, PostgreSQL, DuckDB, Parquet, persistence, hyphenated DuckDB path, real Keychain, clean quits, and unchanged signed artifacts.
+
+This deep real-profile transaction remains available for changes that own installation or rollback. It is not the normal approval gate. The normal path accepts schema-3 prompt-free evidence and independent package verification, then writes generated approval records without launching or installing the app and without changing the production profile.

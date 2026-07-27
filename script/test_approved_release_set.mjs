@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -55,6 +64,41 @@ function preparedSet(overrides = {}) {
       proof: 'evidence/proof-state.json'
     },
     ...overrides
+  };
+}
+
+function candidateManifest() {
+  return {
+    schema_version: 6,
+    release: {
+      release_set_id: releaseSetId,
+      source_set_id: sourceSetId,
+      validation_issue: '18-deepen-the-approved-release-set-contract'
+    },
+    source: {
+      repository_revision: commit('c'),
+      release_lock_sha256: sha('1'),
+      shell_patch_revision: sha('6'),
+      overlay_sha256: sha('7'),
+      snapshot: {
+        schema_version: 1,
+        mode: 'immutable-git-commit',
+        repository_revision: commit('c'),
+        tree_oid: commit('a'),
+        snapshot_sha256: sha('8'),
+        host_script_sha256: sha('7'),
+        release_lock_sha256: sha('1')
+      },
+      compiled_host: {
+        schema_version: 2,
+        input_id: `compiled-host-${sha('9')}`,
+        app_digest_algorithm: 'sha256-files-modes-links-v1'
+      },
+      vscodium: { tag: '1.127.0', commit: commit('8') },
+      code_oss: { tag: '1.127.0', commit: commit('9') }
+    },
+    packaging: { status: 'built-and-signed' },
+    artifact: { sha256: artifactSha, architecture: 'arm64' }
   };
 }
 
@@ -130,6 +174,10 @@ function installedIdentity() {
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function fileSha256(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
 function cliAccepts(command, path) {
@@ -276,37 +324,7 @@ test('installed identity accepts only official release-note locations', () => {
 
 test('approval construction binds the candidate, manifest, proof, gate, and attestation', () => {
   const candidate = preparedSet();
-  const manifest = {
-    schema_version: 6,
-    release: {
-      release_set_id: releaseSetId,
-      source_set_id: sourceSetId,
-      validation_issue: '18-deepen-the-approved-release-set-contract'
-    },
-    source: {
-      repository_revision: commit('c'),
-      release_lock_sha256: sha('1'),
-      shell_patch_revision: sha('6'), overlay_sha256: sha('7'),
-      snapshot: {
-        schema_version: 1,
-        mode: 'immutable-git-commit',
-        repository_revision: commit('c'),
-        tree_oid: commit('a'),
-        snapshot_sha256: sha('8'),
-        host_script_sha256: sha('7'),
-        release_lock_sha256: sha('1')
-      },
-      compiled_host: {
-        schema_version: 2,
-        input_id: `compiled-host-${sha('9')}`,
-        app_digest_algorithm: 'sha256-files-modes-links-v1'
-      },
-      vscodium: { tag: '1.127.0', commit: commit('8') },
-      code_oss: { tag: '1.127.0', commit: commit('9') }
-    },
-    packaging: { status: 'built-and-signed' },
-    artifact: { sha256: artifactSha }
-  };
+  const manifest = candidateManifest();
   const attestation = {
     schema_version: 1,
     approved_at: '2026-07-23T00:05:00Z',
@@ -334,4 +352,312 @@ test('approval construction binds the candidate, manifest, proof, gate, and atte
   assert.equal(record.manifest.source_snapshot_sha256, sha('8'));
   assert.equal(record.manifest.compiled_host_input_id, `compiled-host-${sha('9')}`);
   assert.equal(record.approval.gate_receipt_sha256, sha('0'));
+});
+
+test('prompt-free approval binds accepted package evidence without installing it', t => {
+  const manifest = candidateManifest();
+  const releaseLock = {
+    schema_version: 4,
+    release: {
+      compatibility_status: 'candidate',
+      profile_schema_version: 2,
+      validation_issue: manifest.release.validation_issue
+    }
+  };
+  const compatibility = {
+    schema_version: 1,
+    scope: 'private-personal-release',
+    transfer: {
+      channel: 'authenticated-github-draft-only',
+      draft_required: true,
+      public_download: false,
+      owned_devices_only: true
+    },
+    source: {
+      tag: 'v0.2.0',
+      repository_revision: manifest.source.repository_revision,
+      tree_oid: manifest.source.snapshot.tree_oid,
+      snapshot_sha256: manifest.source.snapshot.snapshot_sha256,
+      release_lock_sha256: sha('1'),
+      compiled_host_input_id: manifest.source.compiled_host.input_id
+    },
+    release: {
+      release_set_id: releaseSetId,
+      source_set_id: sourceSetId,
+      code_oss_version: '1.127.0',
+      vscodium_version: '1.127.0',
+      dbcode_version: '1.37.0',
+      architecture: 'arm64',
+      minimum_macos: '12.0'
+    },
+    app: {
+      filename: 'DBCode Wrapper.app',
+      sha256: artifactSha,
+      bundle_identifier: 'io.alexabelle.dbcodewrapper',
+      signature: {
+        kind: 'current-user-self-signed-certificate',
+        designated_requirement: 'designated => fixture',
+        developer_id: false,
+        notarized: false
+      }
+    },
+    disk_image: {
+      filename: 'DBCode-Wrapper-fixture.dmg',
+      sha256: sha('b'),
+      size_bytes: 1024,
+      read_only: true
+    },
+    external_runtime: {
+      bundled: false,
+      setup: 'focused-pinned-official-sources',
+      source: 'official-open-vsx',
+      packages: [{
+        id: 'dbcode.dbcode',
+        version: '1.37.0',
+        vsix_sha256: sha('e'),
+        signature_archive_sha256: sha('f')
+      }]
+    },
+    evidence: {
+      build_manifest_sha256: sha('d'),
+      release_lock_sha256: sha('1'),
+      final_acceptance_sha256: sha('4'),
+      final_acceptance_status: 'passed'
+    },
+    claims: {
+      unofficial_wrapper: true,
+      dbcode_included: false,
+      licence_or_profile_included: false,
+      public_application_release: false,
+      apple_identified_or_notarized: false
+    }
+  };
+  const acceptance = {
+    schema_version: 3,
+    status: 'passed',
+    source: {
+      repository_revision: manifest.source.repository_revision,
+      tree_oid: manifest.source.snapshot.tree_oid,
+      snapshot_sha256: manifest.source.snapshot.snapshot_sha256,
+      compiled_host_input_id: manifest.source.compiled_host.input_id
+    },
+    release: {
+      release_set_id: releaseSetId,
+      app_sha256: artifactSha
+    },
+    failures: [],
+    waivers: []
+  };
+  const verification = {
+    schema_version: 1,
+    status: 'passed',
+    release_set_id: releaseSetId,
+    source: {
+      tag: compatibility.source.tag,
+      repository_revision: compatibility.source.repository_revision,
+      tree_oid: compatibility.source.tree_oid,
+      snapshot_sha256: compatibility.source.snapshot_sha256,
+      compiled_host_input_id: compatibility.source.compiled_host_input_id
+    },
+    disk_image: {
+      filename: compatibility.disk_image.filename,
+      sha256: compatibility.disk_image.sha256
+    },
+    evidence: {
+      build_manifest_sha256: sha('d'),
+      release_lock_sha256: sha('1'),
+      final_acceptance_sha256: sha('4'),
+      checksum_sha256: sha('2'),
+      compatibility_manifest_sha256: sha('a'),
+      install_and_rollback_sha256: sha('3')
+    },
+    checks: {
+      source_tag: 'passed',
+      complete_same_mac_acceptance: 'passed',
+      disk_image_integrity: 'passed',
+      mounted_read_only: 'passed',
+      exact_top_level_contents: 'passed',
+      host_only_content_scan: 'passed',
+      app_artifact_digest: 'passed',
+      nested_code_signatures: 'passed',
+      designated_requirement: 'passed',
+      apple_silicon_only: 'passed',
+      upstream_notices: 'passed',
+      install_guide: 'passed',
+      external_runtime_not_bundled: 'passed',
+      private_data_absent: 'passed'
+    },
+    failures: []
+  };
+  const attestation = {
+    schema_version: 2,
+    approved_at: '2026-07-27T16:00:00Z',
+    release_set_id: releaseSetId,
+    source_tag: compatibility.source.tag,
+    compatibility_manifest_sha256: sha('a'),
+    candidate_manifest_sha256: sha('d'),
+    release_lock_sha256: sha('1'),
+    acceptance_sha256: sha('4'),
+    verification_sha256: sha('0'),
+    confirmation: 'exact-release-set-id',
+    approval_mode: 'prompt-free-private-release',
+    automatic_install: false,
+    privileged_install: false,
+    production_profile_written: false,
+    installed_app_changed: false
+  };
+
+  const inputs = {
+    compatibility,
+    manifest,
+    releaseLock,
+    acceptance,
+    verification,
+    attestation,
+    compatibilitySha256: sha('a'),
+    manifestSha256: sha('d'),
+    releaseLockSha256: sha('1'),
+    acceptanceSha256: sha('4'),
+    verificationSha256: sha('0'),
+    attestationSha256: sha('5')
+  };
+  const record = approvedReleaseSet.createPromptFreeApprovedRecord(inputs);
+
+  assert.equal(record.id, releaseSetId);
+  assert.equal(record.profile.schema_version, 2);
+  assert.equal(record.approval.mode, 'prompt-free-private-release');
+  assert.equal(record.approval.source_tag, 'v0.2.0');
+  assert.equal(record.approval.proof_sha256, sha('4'));
+  assert.equal(record.approval.gate_receipt_sha256, sha('0'));
+  assert.equal(record.approval.production_profile_written, false);
+  assert.equal(record.approval.installed_app_changed, false);
+
+  const mismatchedHost = structuredClone(compatibility);
+  mismatchedHost.release.code_oss_version = '9.9.9';
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      compatibility: mismatchedHost
+    }),
+    /exact candidate release set/i
+  );
+
+  const mismatchedDbcode = structuredClone(compatibility);
+  mismatchedDbcode.release.dbcode_version = '9.9.9';
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      compatibility: mismatchedDbcode
+    }),
+    /external runtime/i
+  );
+
+  const writablePackage = structuredClone(compatibility);
+  writablePackage.disk_image.read_only = false;
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      compatibility: writablePackage
+    }),
+    /disk-image/i
+  );
+
+  const staleAcceptance = structuredClone(acceptance);
+  staleAcceptance.source.snapshot_sha256 = sha('f');
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      acceptance: staleAcceptance
+    }),
+    /acceptance/i
+  );
+
+  const incompleteVerification = structuredClone(verification);
+  delete incompleteVerification.checks.private_data_absent;
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      verification: incompleteVerification
+    }),
+    /verification/i
+  );
+
+  const installingAttestation = {
+    ...attestation,
+    installed_app_changed: true
+  };
+  assert.throws(
+    () => approvedReleaseSet.createPromptFreeApprovedRecord({
+      ...inputs,
+      attestation: installingAttestation
+    }),
+    /attestation/i
+  );
+
+  const root = mkdtempSync(join(tmpdir(), 'dbcode-prompt-free-approval-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const lockPath = join(root, 'release-lock.json');
+  const manifestPath = join(root, 'build-manifest.json');
+  const acceptancePath = join(root, 'acceptance.json');
+  const compatibilityPath = join(root, 'compatibility.json');
+  const verificationPath = join(root, 'verification.json');
+  const attestationPath = join(root, 'attestation.json');
+  const historyPath = join(root, 'base-history.json');
+  const recordPath = join(root, 'approved-release-set.json');
+  const outputHistoryPath = join(root, 'approved-release-sets.json');
+
+  writeJson(lockPath, releaseLock);
+  const cliLockSha = fileSha256(lockPath);
+  const cliManifest = structuredClone(manifest);
+  cliManifest.source.release_lock_sha256 = cliLockSha;
+  cliManifest.source.snapshot.release_lock_sha256 = cliLockSha;
+  writeJson(manifestPath, cliManifest);
+  const cliManifestSha = fileSha256(manifestPath);
+  const cliAcceptance = structuredClone(acceptance);
+  writeJson(acceptancePath, cliAcceptance);
+  const cliAcceptanceSha = fileSha256(acceptancePath);
+  const cliCompatibility = structuredClone(compatibility);
+  cliCompatibility.source.release_lock_sha256 = cliLockSha;
+  cliCompatibility.evidence.build_manifest_sha256 = cliManifestSha;
+  cliCompatibility.evidence.release_lock_sha256 = cliLockSha;
+  cliCompatibility.evidence.final_acceptance_sha256 = cliAcceptanceSha;
+  writeJson(compatibilityPath, cliCompatibility);
+  const cliCompatibilitySha = fileSha256(compatibilityPath);
+  const cliVerification = structuredClone(verification);
+  cliVerification.evidence.build_manifest_sha256 = cliManifestSha;
+  cliVerification.evidence.release_lock_sha256 = cliLockSha;
+  cliVerification.evidence.final_acceptance_sha256 = cliAcceptanceSha;
+  cliVerification.evidence.compatibility_manifest_sha256 = cliCompatibilitySha;
+  writeJson(verificationPath, cliVerification);
+  const cliVerificationSha = fileSha256(verificationPath);
+  const cliAttestation = {
+    ...attestation,
+    compatibility_manifest_sha256: cliCompatibilitySha,
+    candidate_manifest_sha256: cliManifestSha,
+    release_lock_sha256: cliLockSha,
+    acceptance_sha256: cliAcceptanceSha,
+    verification_sha256: cliVerificationSha
+  };
+  writeJson(attestationPath, cliAttestation);
+  writeJson(historyPath, { schema_version: 2, approved_release_sets: [] });
+
+  execFileSync(process.execPath, [
+    contractCli,
+    'write-prompt-free-approval',
+    compatibilityPath,
+    manifestPath,
+    lockPath,
+    attestationPath,
+    acceptancePath,
+    verificationPath,
+    historyPath,
+    recordPath,
+    outputHistoryPath
+  ]);
+
+  const writtenRecord = JSON.parse(readFileSync(recordPath, 'utf8'));
+  const writtenHistory = JSON.parse(readFileSync(outputHistoryPath, 'utf8'));
+  assert.equal(writtenRecord.id, releaseSetId);
+  assert.equal(writtenRecord.approval.mode, 'prompt-free-private-release');
+  assert.deepEqual(writtenHistory.approved_release_sets, [writtenRecord]);
 });

@@ -9,6 +9,7 @@ source "${script_root}/lib/artifact_digest.sh"
 inspector="${script_root}/inspect_private_release_tree.sh"
 packager="${script_root}/package_private_release.sh"
 verifier="${script_root}/verify_private_release.sh"
+approver="${script_root}/approve_private_release.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-private-release-test.XXXXXX")"
 export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
 
@@ -270,6 +271,7 @@ fixture_installed_extensions="$(
 )"
 fixture_dbcode_version="$(jq -er '.version' <<<"${DBCODE_PACKAGE_SPEC}")"
 fixture_dbcode_sha256="$(jq -er '.sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
+fixture_source_set_id="code-oss-${CODE_OSS_VERSION}-dbcode-${fixture_dbcode_version}-source-${source_snapshot_sha256}"
 
 manifest_file="${test_root}/build-manifest.json"
 jq -n \
@@ -285,12 +287,17 @@ jq -n \
   --arg app_sha256 "${app_sha256}" \
   --arg code_oss_version "${CODE_OSS_VERSION}" \
   --arg vscodium_version "${VSCODIUM_TAG}" \
+  --arg vscodium_commit "$(jq -er '.upstream.vscodium.commit' "${release_lock}")" \
+  --arg code_oss_commit "$(jq -er '.upstream.code_oss.commit' "${release_lock}")" \
+  --arg fixture_source_set_id "${fixture_source_set_id}" \
+  --arg validation_issue "$(jq -er '.release.validation_issue' "${release_lock}")" \
   --argjson runtime_extensions "${fixture_runtime_extensions}" '
     {
       schema_version: 6,
       source: {
         repository_revision: $source_commit,
         release_lock_sha256: $release_lock_sha256,
+        shell_patch_revision: $source_host_script_sha256,
         overlay_sha256: $source_host_script_sha256,
         snapshot: {
           schema_version: 1,
@@ -318,12 +325,21 @@ jq -n \
             macos: "15.5"
           },
           cache_status: "hit"
+        },
+        vscodium: {
+          tag: $vscodium_version,
+          commit: $vscodium_commit
+        },
+        code_oss: {
+          tag: $code_oss_version,
+          commit: $code_oss_commit
         }
       },
       release: {
         compatibility_status: "candidate",
-        source_set_id: "fixture-source-set",
-        release_set_id: ("fixture-source-set-artifact-" + $app_sha256)
+        validation_issue: $validation_issue,
+        source_set_id: $fixture_source_set_id,
+        release_set_id: ($fixture_source_set_id + "-artifact-" + $app_sha256)
       },
       runtime: {
         code_oss: $code_oss_version,
@@ -550,14 +566,6 @@ printf '%s\n' \
   'esac' \
   > "${stub_bin}/hdiutil"
 
-package_source_arguments=(
-  --manifest "${manifest_file}"
-  --release-lock "${release_lock}"
-  --acceptance "${acceptance_file}"
-  --source-repository "${fixture_repository}"
-  --source-tag "${source_tag}"
-)
-
 legacy_acceptance_file="${test_root}/historical-final-acceptance.json"
 jq '
   .schema_version = 1
@@ -634,6 +642,14 @@ PATH="${stub_bin}:${PATH}" private_release_validate_sources \
   "${manifest_file}" \
   "${release_lock}" \
   "${fast_acceptance_file}"
+
+package_source_arguments=(
+  --manifest "${manifest_file}"
+  --release-lock "${release_lock}"
+  --acceptance "${fast_acceptance_file}"
+  --source-repository "${fixture_repository}"
+  --source-tag "${source_tag}"
+)
 
 stale_gate_acceptance_file="${test_root}/stale-gate-final-acceptance.json"
 jq '.gate_execution.source_snapshot_sha256 = ("f" * 64)' \
@@ -778,7 +794,7 @@ PATH="${stub_bin}:${PATH}" bash "${verifier}" \
   --checksum "${checksum_file}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
-  --acceptance "${acceptance_file}" \
+  --acceptance "${fast_acceptance_file}" \
   --source-repository "${fixture_repository}" \
   --source-tag "${source_tag}" \
   --compatibility "${compatibility_file}" \
@@ -790,6 +806,163 @@ jq -e '
   and .checks.complete_same_mac_acceptance == "passed"
   and .failures == []
 ' "${independent_receipt}" >/dev/null
+
+base_approved_history="${test_root}/base-approved-release-sets.json"
+printf '%s\n' '{"schema_version":2,"approved_release_sets":[]}' > "${base_approved_history}"
+approval_output="${test_root}/prompt-free-approval"
+release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
+PATH="${stub_bin}:${PATH}" bash "${approver}" \
+  --app "${fixture_app}" \
+  --manifest "${manifest_file}" \
+  --release-lock "${release_lock}" \
+  --acceptance "${fast_acceptance_file}" \
+  --dmg "${dmg_file}" \
+  --compatibility "${compatibility_file}" \
+  --verification "${packaged_verification}" \
+  --source-repository "${fixture_repository}" \
+  --source-tag "${source_tag}" \
+  --history "${base_approved_history}" \
+  --confirm-release-set "${release_set_id}" \
+  --output-dir "${approval_output}" >/dev/null
+
+expected_approval_entries="$(
+  printf '%s\n' \
+    approval-attestation.json \
+    approved-release-set.json \
+    approved-release-sets.json |
+    LC_ALL=C sort
+)"
+actual_approval_entries="$(
+  find "${approval_output}" -mindepth 1 -maxdepth 1 -type f -print |
+    sed 's#^.*/##' |
+    LC_ALL=C sort
+)"
+[[ "${actual_approval_entries}" == "${expected_approval_entries}" ]] || {
+  echo "Prompt-free approval did not produce the exact three-record bundle." >&2
+  exit 1
+}
+jq -e \
+  --arg release_set_id "${release_set_id}" '
+    .schema_version == 2
+    and .id == $release_set_id
+    and .compatibility_status == "approved"
+    and .approval.mode == "prompt-free-private-release"
+    and .approval.production_profile_written == false
+    and .approval.installed_app_changed == false
+  ' "${approval_output}/approved-release-set.json" >/dev/null
+jq -e \
+  --arg release_set_id "${release_set_id}" '
+    .schema_version == 2
+    and ([.approved_release_sets[] | select(.id == $release_set_id)] | length) == 1
+  ' "${approval_output}/approved-release-sets.json" >/dev/null
+[[ "$(stat -f '%Lp' "${approval_output}")" == "700" ]] || {
+  echo "Prompt-free approval did not protect its output directory." >&2
+  exit 1
+}
+while IFS= read -r approval_file; do
+  [[ "$(stat -f '%Lp' "${approval_file}")" == "600" ]] || {
+    echo "Prompt-free approval did not protect ${approval_file}." >&2
+    exit 1
+  }
+done < <(find "${approval_output}" -mindepth 1 -maxdepth 1 -type f -print)
+
+wrong_confirmation_output="${test_root}/wrong-confirmation-approval"
+if PATH="${stub_bin}:${PATH}" bash "${approver}" \
+  --app "${fixture_app}" \
+  --manifest "${manifest_file}" \
+  --release-lock "${release_lock}" \
+  --acceptance "${fast_acceptance_file}" \
+  --dmg "${dmg_file}" \
+  --compatibility "${compatibility_file}" \
+  --verification "${packaged_verification}" \
+  --source-repository "${fixture_repository}" \
+  --source-tag "${source_tag}" \
+  --history "${base_approved_history}" \
+  --confirm-release-set "wrong-release-set" \
+  --output-dir "${wrong_confirmation_output}" >/dev/null 2>&1; then
+  echo "Prompt-free approval accepted the wrong release-set confirmation." >&2
+  exit 1
+fi
+[[ ! -e "${wrong_confirmation_output}" ]] || {
+  echo "Rejected approval left output behind." >&2
+  exit 1
+}
+
+legacy_acceptance_output="${test_root}/legacy-acceptance-approval"
+if PATH="${stub_bin}:${PATH}" bash "${approver}" \
+  --app "${fixture_app}" \
+  --manifest "${manifest_file}" \
+  --release-lock "${release_lock}" \
+  --acceptance "${acceptance_file}" \
+  --dmg "${dmg_file}" \
+  --compatibility "${compatibility_file}" \
+  --verification "${packaged_verification}" \
+  --source-repository "${fixture_repository}" \
+  --source-tag "${source_tag}" \
+  --history "${base_approved_history}" \
+  --confirm-release-set "${release_set_id}" \
+  --output-dir "${legacy_acceptance_output}" >/dev/null 2>&1; then
+  echo "Prompt-free approval accepted a legacy human-evidence report." >&2
+  exit 1
+fi
+[[ ! -e "${legacy_acceptance_output}" ]] || {
+  echo "Rejected legacy acceptance left approval output behind." >&2
+  exit 1
+}
+
+tampered_verification="${test_root}/tampered-verification.json"
+jq '.checks.private_data_absent = "failed"' \
+  "${packaged_verification}" > "${tampered_verification}"
+tampered_approval_output="${test_root}/tampered-approval"
+if PATH="${stub_bin}:${PATH}" bash "${approver}" \
+  --app "${fixture_app}" \
+  --manifest "${manifest_file}" \
+  --release-lock "${release_lock}" \
+  --acceptance "${fast_acceptance_file}" \
+  --dmg "${dmg_file}" \
+  --compatibility "${compatibility_file}" \
+  --verification "${tampered_verification}" \
+  --source-repository "${fixture_repository}" \
+  --source-tag "${source_tag}" \
+  --history "${base_approved_history}" \
+  --confirm-release-set "${release_set_id}" \
+  --output-dir "${tampered_approval_output}" >/dev/null 2>&1; then
+  echo "Prompt-free approval accepted a failed package verification check." >&2
+  exit 1
+fi
+[[ ! -e "${tampered_approval_output}" ]] || {
+  echo "Rejected verification left approval output behind." >&2
+  exit 1
+}
+
+relative_compatibility="${compatibility_file#"${test_root}/"}"
+relative_verification="${packaged_verification#"${test_root}/"}"
+relative_dmg="${dmg_file#"${test_root}/"}"
+relative_approval_output="${test_root}/relative approval path"
+if ! relative_approval_result="$(
+  cd "${test_root}"
+  PATH="${stub_bin}:${PATH}" bash "${approver}" \
+    --app "DBCode Wrapper.app" \
+    --manifest "build-manifest.json" \
+    --release-lock "source/host/release-lock.json" \
+    --acceptance "prompt-free-final-acceptance.json" \
+    --dmg "${relative_dmg}" \
+    --compatibility "${relative_compatibility}" \
+    --verification "${relative_verification}" \
+    --source-repository "source" \
+    --source-tag "${source_tag}" \
+    --history "base-approved-release-sets.json" \
+    --confirm-release-set "${release_set_id}" \
+    --output-dir "${relative_approval_output}" 2>&1
+)"; then
+  echo "Prompt-free approval rejected valid relative inputs or an output path with spaces." >&2
+  printf '%s\n' "${relative_approval_result}" >&2
+  exit 1
+fi
+[[ -f "${relative_approval_output}/approved-release-set.json" ]] || {
+  echo "Prompt-free approval did not write the relative output path." >&2
+  exit 1
+}
 
 incomplete_acceptance="${test_root}/incomplete-acceptance.json"
 jq 'del(.gates)' "${acceptance_file}" > "${incomplete_acceptance}"

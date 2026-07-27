@@ -80,6 +80,7 @@ Before changing behaviour, read:
 - The generated `qa` profile and the user's Standalone DBCode Profile are separate. "One profile" means one automated GUI profile, never the real personal profile.
 - Static smoke must not launch the app. The one-profile rendered smoke owns the only automated GUI launch and checks prompt-gated DBCode routes for reachability without activating them.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
+- Prompt-free approval accepts only the schema-3 acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
 - For an authenticated GitHub draft transfer, verify `draft: true`, no publication timestamp, exact uploaded sizes and digests, authenticated owner access, anonymous denial, and the absence of any workflow that can publish it.
 

@@ -33,7 +33,7 @@ An intentional move to a newer Approved Release Set after Code OSS, VSCodium pac
 _Avoid_: silent extension update, irreversible upgrade
 
 **Approved Release Set**:
-One exact wrapper build with its Code OSS runtime and VSCodium packaging revisions, one exact unchanged DBCode version, and their compatible Standalone DBCode Profile version after the Prompt-Free Release Gate passes. The set is installed and rolled back together even though Code OSS, VSCodium, and DBCode releases are discovered separately.
+One exact wrapper build with its Code OSS runtime and VSCodium packaging revisions, one exact unchanged DBCode version, and their compatible Standalone DBCode Profile version after the Prompt-Free Release Gate passes. Approval records the exact accepted package without installing it or changing the profile. A later install and any rollback still move the complete set together even though Code OSS, VSCodium, and DBCode releases are discovered separately.
 _Avoid_: independently promoted versions, assumed compatibility, always-latest pairing
 
 **Release Source Snapshot**:

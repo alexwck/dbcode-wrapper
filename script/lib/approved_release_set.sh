@@ -29,3 +29,7 @@ approved_release_history_record() {
 approved_release_set_write_approval() {
   approved_release_set_cli write-approval "$@"
 }
+
+approved_release_set_write_prompt_free_approval() {
+  approved_release_set_cli write-prompt-free-approval "$@"
+}
