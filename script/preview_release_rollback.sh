@@ -26,7 +26,18 @@ fi
 snapshot_parent="$(generated_workspace_path "rollback-evidence")"
 snapshot_root="${snapshot_parent}/${release_id}"
 generated_workspace_assert_path "rollback-evidence" "${snapshot_root}"
-snapshot_app="${snapshot_root}/${APP_NAME}.app"
+snapshot_lock="${snapshot_root}/release-lock.json"
+if snapshot_profile_spec="$(
+  release_specification_record profile "${snapshot_lock}" 2>/dev/null
+)"; then
+  :
+else
+  snapshot_profile_spec="$(
+    release_specification_historical_record profile "${snapshot_lock}"
+  )"
+fi
+snapshot_app_name="$(jq -er '.product.app_name' <<<"${snapshot_profile_spec}")"
+snapshot_app="${snapshot_root}/${snapshot_app_name}.app"
 preview_root="$(mktemp -d /private/tmp/dbcode-rollback-preview.XXXXXX)"
 cleanup_preview() {
   case "${preview_root}" in
@@ -38,7 +49,7 @@ trap cleanup_preview EXIT INT TERM
 
 if [[ "${profile_source}" == "--clone-current-profile" ]]; then
   user_home_dir="$(current_user_home)"
-  current_user_data="${user_home_dir}/Library/Application Support/${APP_NAME}"
+  current_user_data="${user_home_dir}/Library/Application Support/${USER_DATA_FOLDER_NAME}"
   current_shared_data="${user_home_dir}/${SHARED_DATA_FOLDER_NAME}"
   [[ -d "${current_user_data}" ]] || { echo "Current DBCode Wrapper profile is missing." >&2; exit 1; }
   ditto "${current_user_data}" "${preview_root}/user-data"

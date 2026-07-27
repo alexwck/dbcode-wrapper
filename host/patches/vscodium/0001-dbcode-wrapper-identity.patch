@@ -2,7 +2,7 @@ diff --git a/prepare_vscode.sh b/prepare_vscode.sh
 index 2d9ef12..5888c3d 100755
 --- a/prepare_vscode.sh
 +++ b/prepare_vscode.sh
-@@ -122,6 +122,39 @@ else
+@@ -122,6 +122,43 @@ else
    setpath "product" "win32ContextMenu.arm64.clsid" "4852FC55-4A84-4EA1-9C86-D53BE3DF83C0"
  fi
  
@@ -12,6 +12,8 @@ index 2d9ef12..5888c3d 100755
 +  : "${DBCODE_WRAPPER_BUNDLE_IDENTIFIER:?}"
 +  : "${DBCODE_WRAPPER_DATA_FOLDER_NAME:?}"
 +  : "${DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME:?}"
++  : "${DBCODE_WRAPPER_STORAGE_NAMESPACE:?}"
++  : "${DBCODE_WRAPPER_QUERY_FOLDER_NAME:?}"
 +  : "${DBCODE_WRAPPER_URL_SCHEME:?}"
 +  : "${DBCODE_WRAPPER_SERVER_APPLICATION_NAME:?}"
 +  : "${DBCODE_WRAPPER_SERVER_DATA_FOLDER_NAME:?}"
@@ -25,6 +27,8 @@ index 2d9ef12..5888c3d 100755
 +  setpath "product" "applicationName" "${DBCODE_WRAPPER_APPLICATION_NAME}"
 +  setpath "product" "dataFolderName" "${DBCODE_WRAPPER_DATA_FOLDER_NAME}"
 +  setpath "product" "sharedDataFolderName" "${DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME}"
++  setpath "product" "dbcodeWrapperStorageNamespace" "${DBCODE_WRAPPER_STORAGE_NAMESPACE}"
++  setpath "product" "dbcodeWrapperQueryFolderName" "${DBCODE_WRAPPER_QUERY_FOLDER_NAME}"
 +  setpath_json "product" "dbcodeWrapperFocusedShell" 'true'
 +  setpath_json "product" "dbcodeWrapperFocusedShellNarrowBreakpoint" "${DBCODE_WRAPPER_NARROW_BREAKPOINT}"
 +  setpath "product" "urlProtocol" "${DBCODE_WRAPPER_URL_SCHEME}"

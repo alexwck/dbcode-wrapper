@@ -17,7 +17,7 @@
       "files": [
         "prepare_vscode.sh"
       ],
-      "sha256": "7cfa5ccfe68ea9d64cbe283baa22bc2fe99208b00eea3198fd57c233079c747b"
+      "sha256": "680ca650f78b35835fd9310c7e432202d3e974a15fa251f6031a4fc69a97c83d"
     },
     {
       "order": 20,
@@ -67,7 +67,7 @@
         "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
         "src/vs/workbench/workbench.common.main.ts"
       ],
-      "sha256": "43834a33235afc004513731c2244e9478360023293c7b790bb67026703b6974a"
+      "sha256": "b532c893568552a7d301a13f565427e396d5470bb61181aae89ac8fdc2dc9d1d"
     },
     {
       "order": 300,

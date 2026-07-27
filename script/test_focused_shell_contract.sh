@@ -67,6 +67,8 @@ for required_shell_simplification in \
   'onDidCloseEditor(() => this.scheduleEmptyEditorGroupCleanup(group))' \
   'emptyGroupsPendingCleanup.add(group)' \
   'cleanupAllEmptyGroups' \
+  'dbcodeWrapperStorageNamespace' \
+  'dbcodeWrapperQueryFolderName' \
   'candidates ?? existingGroups' \
   'existingGroups.includes(group)' \
   'group.isEmpty' \
@@ -91,6 +93,11 @@ for required_shell_simplification in \
     exit 1
   }
 done
+
+if rg -Fq "joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries')" "${focused_shell_patch}"; then
+  echo "The focused shell must not duplicate the Release Specification query storage identity." >&2
+  exit 1
+fi
 
 for required_quick_input_regression in \
   'assertExpandedQuickInputAboveDatabaseToolbar' \

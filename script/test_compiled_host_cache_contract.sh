@@ -43,6 +43,8 @@ jq -n '{
 baseline_lock="${fixture_source}/host/release-lock.json"
 dbcode_only_lock="${test_root}/dbcode-only-release-lock.json"
 host_changed_lock="${test_root}/host-changed-release-lock.json"
+profile_only_lock="${test_root}/profile-only-release-lock.json"
+query_storage_lock="${test_root}/query-storage-release-lock.json"
 
 jq '
   .extension.dbcode.version = "9.9.9"
@@ -51,10 +53,20 @@ jq '
 ' "${baseline_lock}" > "${dbcode_only_lock}"
 jq '.product.app_name = "Different Wrapper Name"' \
   "${baseline_lock}" > "${host_changed_lock}"
+jq '
+  .product.user_data_folder_name = "Alternate Profile Data"
+  | .product.extensions_folder_name = "alternate-extensions"
+  | .product.backup_folder_name = "Alternate Profile Backups"
+  | .release.profile_schema_version += 1
+' "${baseline_lock}" > "${profile_only_lock}"
+jq '.product.storage_namespace = "alternate-storage"' \
+  "${baseline_lock}" > "${query_storage_lock}"
 
 baseline_id="$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")"
 dbcode_only_id="$(compiled_host_input_id "${dbcode_only_lock}" "${fixture_source}")"
 host_changed_id="$(compiled_host_input_id "${host_changed_lock}" "${fixture_source}")"
+profile_only_id="$(compiled_host_input_id "${profile_only_lock}" "${fixture_source}")"
+query_storage_id="$(compiled_host_input_id "${query_storage_lock}" "${fixture_source}")"
 
 [[ "${baseline_id}" =~ ^compiled-host-[0-9a-f]{64}$ ]]
 [[ "${baseline_id}" == "${dbcode_only_id}" ]] || {
@@ -63,6 +75,14 @@ host_changed_id="$(compiled_host_input_id "${host_changed_lock}" "${fixture_sour
 }
 [[ "${baseline_id}" != "${host_changed_id}" ]] || {
   echo "A host product change reused the compiled host." >&2
+  exit 1
+}
+[[ "${baseline_id}" == "${profile_only_id}" ]] || {
+  echo "A profile-only identity change invalidated the compiled host." >&2
+  exit 1
+}
+[[ "${baseline_id}" != "${query_storage_id}" ]] || {
+  echo "A compiled query identity change reused the compiled host." >&2
   exit 1
 }
 

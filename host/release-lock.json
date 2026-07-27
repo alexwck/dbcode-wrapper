@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "target": {
     "platform": "darwin",
     "architecture": "arm64"
@@ -225,7 +225,12 @@
     "bundle_identifier": "io.alexabelle.dbcodewrapper",
     "url_scheme": "dbcode-wrapper",
     "data_folder_name": ".dbcode-wrapper",
+    "user_data_folder_name": "DBCode Wrapper",
+    "extensions_folder_name": "extensions",
     "shared_data_folder_name": ".dbcode-wrapper-shared",
+    "backup_folder_name": "DBCode Wrapper Profile Backups",
+    "storage_namespace": "dbcode-wrapper",
+    "query_folder_name": "queries",
     "server_application_name": "dbcode-wrapper-server",
     "server_data_folder_name": ".dbcode-wrapper-server",
     "tunnel_application_name": "dbcode-wrapper-tunnel",

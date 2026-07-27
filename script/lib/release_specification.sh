@@ -12,6 +12,18 @@ release_specification_validate() {
 
   jq -e '
     def nonempty: type == "string" and length > 0;
+    def folder_name:
+      nonempty
+      and . != "."
+      and . != ".."
+      and (test("[/\\\\]") | not)
+      and (explode | all(. >= 32));
+    def executable_name:
+      type == "string" and test("^[a-z0-9][a-z0-9._-]*$");
+    def bundle_identifier:
+      type == "string" and test("^[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z0-9.-]+$");
+    def url_scheme:
+      type == "string" and test("^[a-z][a-z0-9+.-]*$");
     def timestamp: type == "string" and (try (fromdateiso8601 | type == "number") catch false);
     def version: nonempty and test("^[0-9]+(?:\\.[0-9]+)*(?:[-+][0-9A-Za-z.-]+)?$");
     def git_commit: type == "string" and test("^[0-9a-f]{40}$");
@@ -40,7 +52,7 @@ release_specification_validate() {
       and (.public_key_sha256 | sha256)
       and (.package_size | type == "number" and . > 0);
 
-    .schema_version == 4
+    .schema_version == 5
     and .target == {platform: "darwin", architecture: "arm64"}
     and (.upstream.vscodium.repository | https_url)
     and (.upstream.vscodium.tag | version)
@@ -77,15 +89,20 @@ release_specification_validate() {
     and all(.extension.python_notebooks.packages[]; extension_package)
     and (([.extension.dbcode.id] + [.extension.python_notebooks.packages[].id]) as $package_ids
       | ($package_ids | unique | length) == ($package_ids | length))
-    and (.product.app_name | nonempty)
-    and (.product.application_name | nonempty)
-    and (.product.bundle_identifier | nonempty)
-    and (.product.url_scheme | nonempty)
-    and (.product.data_folder_name | nonempty)
-    and (.product.shared_data_folder_name | nonempty)
-    and (.product.server_application_name | nonempty)
-    and (.product.server_data_folder_name | nonempty)
-    and (.product.tunnel_application_name | nonempty)
+    and (.product.app_name | folder_name)
+    and (.product.application_name | executable_name)
+    and (.product.bundle_identifier | bundle_identifier)
+    and (.product.url_scheme | url_scheme)
+    and (.product.data_folder_name | folder_name)
+    and (.product.user_data_folder_name | folder_name)
+    and (.product.extensions_folder_name | folder_name)
+    and (.product.shared_data_folder_name | folder_name)
+    and (.product.backup_folder_name | folder_name)
+    and (.product.storage_namespace | folder_name)
+    and (.product.query_folder_name | folder_name)
+    and (.product.server_application_name | executable_name)
+    and (.product.server_data_folder_name | folder_name)
+    and (.product.tunnel_application_name | executable_name)
     and (.product.signing.mode == "local-certificate")
     and (.product.signing.identity_common_name | nonempty)
     and (.product.signing.scope == "current-user-private-use")
@@ -293,6 +310,8 @@ release_specification_record() {
           url_scheme: .product.url_scheme,
           data_folder_name: .product.data_folder_name,
           shared_data_folder_name: .product.shared_data_folder_name,
+          storage_namespace: .product.storage_namespace,
+          query_folder_name: .product.query_folder_name,
           server_application_name: .product.server_application_name,
           server_data_folder_name: .product.server_data_folder_name,
           tunnel_application_name: .product.tunnel_application_name,
@@ -534,6 +553,8 @@ release_specification_same_host_build_contract() {
             url_scheme: .product.url_scheme,
             data_folder_name: .product.data_folder_name,
             shared_data_folder_name: .product.shared_data_folder_name,
+            storage_namespace: .product.storage_namespace,
+            query_folder_name: .product.query_folder_name,
             server_application_name: .product.server_application_name,
             server_data_folder_name: .product.server_data_folder_name,
             tunnel_application_name: .product.tunnel_application_name,

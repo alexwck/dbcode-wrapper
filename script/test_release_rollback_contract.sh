@@ -83,6 +83,16 @@ rg -Fq '.source.release_lock_sha256 == $release_lock_sha' "${verify_script}" || 
   echo "Rollback verification must bind the original build manifest to the retained release lock." >&2
   exit 1
 }
+for rollback_script in "${verify_script}" "${preview_script}"; do
+  rg -Fq 'release_specification_historical_record profile "${snapshot_lock}"' "${rollback_script}" || {
+    echo "Rollback must derive the retained app identity from its Release Specification: ${rollback_script}" >&2
+    exit 1
+  }
+done
+if rg -Fq 'io.alexabelle.dbcodewrapper' "${verify_script}"; then
+  echo "Rollback verification must not duplicate the production bundle identifier." >&2
+  exit 1
+fi
 rg -Fq -- '--clone-current-profile' "${preview_script}" || {
   echo "Rollback preview must support a disposable clone of the current DBCode profile." >&2
   exit 1

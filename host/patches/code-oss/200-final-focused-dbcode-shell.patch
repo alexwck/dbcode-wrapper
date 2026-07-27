@@ -2,12 +2,14 @@ diff --git a/src/vs/base/common/product.ts b/src/vs/base/common/product.ts
 index 85064c8c..c1834a1d 100644
 --- a/src/vs/base/common/product.ts
 +++ b/src/vs/base/common/product.ts
-@@ -100,6 +100,8 @@ export interface IProductConfiguration {
+@@ -100,6 +100,10 @@ export interface IProductConfiguration {
  	readonly win32VersionedUpdate?: boolean;
  	readonly win32ContextMenu?: { readonly [arch: string]: { readonly clsid: string } };
  	readonly applicationName: string;
 +	readonly dbcodeWrapperFocusedShell?: boolean;
 +	readonly dbcodeWrapperFocusedShellNarrowBreakpoint?: number;
++	readonly dbcodeWrapperStorageNamespace?: string;
++	readonly dbcodeWrapperQueryFolderName?: string;
  	readonly embedderIdentifier?: string;
  	readonly agentsTelemetryAppName?: string;
  
@@ -71,7 +73,7 @@ new file mode 100644
 index 00000000..66f01dd3
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
-@@ -0,0 +1,906 @@
+@@ -0,0 +1,911 @@
 +/*---------------------------------------------------------------------------------------------
 + *  Copyright (c) Microsoft Corporation. All rights reserved.
 + *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -772,7 +774,12 @@ index 00000000..66f01dd3
 +	}
 +
 +	private async openScratchQuery(): Promise<void> {
-+		const queryFolder = joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries');
++		const storageNamespace = product.dbcodeWrapperStorageNamespace;
++		const queryFolderName = product.dbcodeWrapperQueryFolderName;
++		if (!storageNamespace || !queryFolderName) {
++			throw new Error('DBCode Wrapper query storage identity is missing.');
++		}
++		const queryFolder = joinPath(this.userDataProfileService.currentProfile.globalStorageHome, storageNamespace, queryFolderName);
 +		const queryResource = joinPath(queryFolder, 'scratch.sql');
 +		await this.fileService.createFolder(queryFolder);
 +		if (!(await this.fileService.exists(queryResource))) {

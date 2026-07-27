@@ -10,27 +10,41 @@ user_home_dir="$(current_user_home)"
 resolve_profile_paths default
 jq -e \
   --arg app_name "${APP_NAME}" \
+  --arg application_name "${APPLICATION_NAME}" \
+  --arg bundle_identifier "${BUNDLE_IDENTIFIER}" \
   --arg data_folder_name "${DATA_FOLDER_NAME}" \
+  --arg user_data_folder_name "${USER_DATA_FOLDER_NAME}" \
+  --arg extensions_folder_name "${EXTENSIONS_FOLDER_NAME}" \
   --arg shared_data_folder_name "${SHARED_DATA_FOLDER_NAME}" \
+  --arg backup_folder_name "${BACKUP_FOLDER_NAME}" \
+  --arg storage_namespace "${STORAGE_NAMESPACE}" \
+  --arg query_folder_name "${QUERY_FOLDER_NAME}" \
   --argjson profile_schema_version "${PROFILE_SCHEMA_VERSION}" '
-    .schema_version == 1
+    .schema_version == 2
     and .profile_schema_version == $profile_schema_version
     and .profile_name == "default"
     and .product == {
       app_name: $app_name,
+      application_name: $application_name,
+      bundle_identifier: $bundle_identifier,
       data_folder_name: $data_folder_name,
-      shared_data_folder_name: $shared_data_folder_name
+      user_data_folder_name: $user_data_folder_name,
+      extensions_folder_name: $extensions_folder_name,
+      shared_data_folder_name: $shared_data_folder_name,
+      backup_folder_name: $backup_folder_name,
+      storage_namespace: $storage_namespace,
+      query_folder_name: $query_folder_name
     }
     and .permissions == {directory_mode: "0700", file_mode: "0600"}
   ' <<<"${PROFILE_LAYOUT}" >/dev/null || {
   echo "The default profile layout does not match the Release Specification." >&2
   exit 1
 }
-[[ "${PROFILE_USER_DATA_ROOT}" == "${user_home_dir}/Library/Application Support/${APP_NAME}" ]] || {
+[[ "${PROFILE_USER_DATA_ROOT}" == "${user_home_dir}/Library/Application Support/${USER_DATA_FOLDER_NAME}" ]] || {
   echo "The default user-data path does not match a normal self-launch." >&2
   exit 1
 }
-[[ "${PROFILE_EXTENSIONS_ROOT}" == "${user_home_dir}/${DATA_FOLDER_NAME}/extensions" ]] || {
+[[ "${PROFILE_EXTENSIONS_ROOT}" == "${user_home_dir}/${DATA_FOLDER_NAME}/${EXTENSIONS_FOLDER_NAME}" ]] || {
   echo "The default extension path does not match a normal self-launch." >&2
   exit 1
 }
@@ -38,8 +52,12 @@ jq -e \
   echo "The default shared-data path does not match a normal self-launch." >&2
   exit 1
 }
-[[ "${PROFILE_BACKUP_ROOT}" == "${user_home_dir}/Library/Application Support/${APP_NAME} Profile Backups" ]] || {
+[[ "${PROFILE_BACKUP_ROOT}" == "${user_home_dir}/Library/Application Support/${BACKUP_FOLDER_NAME}" ]] || {
   echo "The default profile-backup path does not match a normal self-launch." >&2
+  exit 1
+}
+[[ "${PROFILE_QUERY_ROOT}" == "${PROFILE_USER_DATA_ROOT}/User/globalStorage/${STORAGE_NAMESPACE}/${QUERY_FOLDER_NAME}" ]] || {
+  echo "The default query path does not match the generated profile identity." >&2
   exit 1
 }
 [[ "${PROFILE_USES_NATURAL_PATHS}" == "yes" ]] || {
@@ -56,7 +74,7 @@ resolve_profile_paths qa
   echo "The QA profile must stay inside generated build output." >&2
   exit 1
 }
-[[ "${PROFILE_EXTENSIONS_ROOT}" == "${BUILD_ROOT}/qa/profile/extensions" ]] || {
+[[ "${PROFILE_EXTENSIONS_ROOT}" == "${BUILD_ROOT}/qa/profile/${EXTENSIONS_FOLDER_NAME}" ]] || {
   echo "The QA extension path is not isolated." >&2
   exit 1
 }

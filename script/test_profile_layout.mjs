@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,21 +25,19 @@ function cliRecord(profileName, ...profileArgs) {
 }
 
 test('shell and JavaScript adapters return the same complete default layout', () => {
+  const identity = profileLayout.loadProfileIdentity();
   const expected = profileLayout.createProfileLayout({
     profileName: 'default',
     homeDirectory,
     buildRoot
   });
+  assert.equal('PRODUCT' in profileLayout, false);
   assert.deepEqual(cliRecord('default'), expected);
   assert.deepEqual(expected, {
-    schema_version: 1,
+    schema_version: 2,
     profile_schema_version: 1,
     profile_name: 'default',
-    product: {
-      app_name: 'DBCode Wrapper',
-      data_folder_name: '.dbcode-wrapper',
-      shared_data_folder_name: '.dbcode-wrapper-shared'
-    },
+    product: identity.product,
     owner: { kind: 'current-user-home', root: homeDirectory },
     permissions: { directory_mode: '0700', file_mode: '0600' },
     uses_natural_paths: true,
@@ -50,9 +48,70 @@ test('shell and JavaScript adapters return the same complete default layout', ()
       shared_data: '/Users/alex/.dbcode-wrapper-shared',
       backup: '/Users/alex/Library/Application Support/DBCode Wrapper Profile Backups',
       cache: '/Users/alex/Library/Application Support/DBCode Wrapper/Cache',
-      logs: '/Users/alex/Library/Application Support/DBCode Wrapper/logs'
+      logs: '/Users/alex/Library/Application Support/DBCode Wrapper/logs',
+      queries: '/Users/alex/Library/Application Support/DBCode Wrapper/User/globalStorage/dbcode-wrapper/queries'
     }
   });
+});
+
+test('a fixture identity changes profile and query paths without production literals', () => {
+  const identity = structuredClone(profileLayout.loadProfileIdentity());
+  identity.profile_schema_version = 3;
+  identity.product = {
+    app_name: 'Data Shell',
+    application_name: 'data-shell',
+    bundle_identifier: 'com.example.datashell',
+    data_folder_name: '.data-shell',
+    user_data_folder_name: 'Data Shell Data',
+    extensions_folder_name: 'addons',
+    shared_data_folder_name: '.data-shell-shared',
+    backup_folder_name: 'Data Shell Backups',
+    storage_namespace: 'data-shell',
+    query_folder_name: 'saved-queries'
+  };
+
+  const layout = profileLayout.createProfileLayout({
+    identity,
+    profileName: 'default',
+    homeDirectory,
+    buildRoot
+  });
+
+  assert.equal(layout.profile_schema_version, 3);
+  assert.deepEqual(layout.product, identity.product);
+  assert.equal(layout.paths.user_data, '/Users/alex/Library/Application Support/Data Shell Data');
+  assert.equal(layout.paths.extensions, '/Users/alex/.data-shell/addons');
+  assert.equal(layout.paths.shared_data, '/Users/alex/.data-shell-shared');
+  assert.equal(layout.paths.backup, '/Users/alex/Library/Application Support/Data Shell Backups');
+  assert.equal(layout.paths.queries, '/Users/alex/Library/Application Support/Data Shell Data/User/globalStorage/data-shell/saved-queries');
+  assert.equal(profileLayout.validateProfileLayout(layout, { identity, homeDirectory, buildRoot }), layout);
+  assert.throws(
+    () => profileLayout.validateProfileLayout(layout, { homeDirectory, buildRoot }),
+    /identity|approved layout/i
+  );
+});
+
+test('missing, linked, malformed, or unsafe generated identity fails closed', t => {
+  const root = mkdtempSync(join(tmpdir(), 'dbcode-profile-identity-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const missing = join(root, 'missing.json');
+  const malformed = join(root, 'malformed.json');
+  const unsafe = join(root, 'unsafe.json');
+  const linked = join(root, 'linked.json');
+  writeFileSync(malformed, '{');
+  writeFileSync(unsafe, JSON.stringify({
+    ...profileLayout.loadProfileIdentity(),
+    product: {
+      ...profileLayout.loadProfileIdentity().product,
+      data_folder_name: '../escape'
+    }
+  }));
+  symlinkSync(unsafe, linked);
+
+  assert.throws(() => profileLayout.loadProfileIdentity(missing), /missing|identity/i);
+  assert.throws(() => profileLayout.loadProfileIdentity(linked), /symbolic link|identity/i);
+  assert.throws(() => profileLayout.loadProfileIdentity(malformed), /JSON|identity/i);
+  assert.throws(() => profileLayout.loadProfileIdentity(unsafe), /folder|identity/i);
 });
 
 test('QA layout is complete, private, and isolated inside generated output', () => {
@@ -72,6 +131,7 @@ test('QA layout is complete, private, and isolated inside generated output', () 
   assert.equal(layout.paths.backup, `${buildRoot}/qa/profile-backups`);
   assert.equal(layout.paths.cache, `${buildRoot}/qa/profile/cache`);
   assert.equal(layout.paths.logs, `${buildRoot}/qa/profile/logs`);
+  assert.equal(layout.paths.queries, `${buildRoot}/qa/profile/user-data/User/globalStorage/dbcode-wrapper/queries`);
   profileLayout.validateProfileLayout(layout, { homeDirectory, buildRoot });
 });
 

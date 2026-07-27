@@ -66,6 +66,8 @@ app_executable="${APP_BUNDLE}/Contents/MacOS/${bundle_executable}"
 [[ "$(jq -er '.darwinProfilePayloadUUID' "${product_json}")" == "${DARWIN_PROFILE_PAYLOAD_UUID}" ]] || { echo "Unexpected macOS profile payload UUID." >&2; exit 1; }
 [[ "$(jq -er '.dbcodeWrapperFocusedShell' "${product_json}")" == "true" ]] || { echo "Production must enable the focused DBCode shell." >&2; exit 1; }
 [[ "$(jq -er '.dbcodeWrapperFocusedShellNarrowBreakpoint' "${product_json}")" == "${FOCUSED_SHELL_NARROW_BREAKPOINT}" ]] || { echo "Unexpected focused-shell narrow breakpoint." >&2; exit 1; }
+[[ "$(jq -er '.dbcodeWrapperStorageNamespace' "${product_json}")" == "${STORAGE_NAMESPACE}" ]] || { echo "Unexpected focused-shell storage namespace." >&2; exit 1; }
+[[ "$(jq -er '.dbcodeWrapperQueryFolderName' "${product_json}")" == "${QUERY_FOLDER_NAME}" ]] || { echo "Unexpected focused-shell query folder." >&2; exit 1; }
 
 architecture_list="$(lipo -archs "${app_executable}")"
 [[ " ${architecture_list} " == *" ${TARGET_ARCH} "* ]] || { echo "The app is not ${TARGET_ARCH}: ${architecture_list}" >&2; exit 1; }
@@ -176,9 +178,12 @@ jq -e '
 runtime_setup_root="${APP_BUNDLE}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
 runtime_setup_manifest="${runtime_setup_root}/runtime-extension-set.json"
 runtime_setup_logic="${runtime_setup_root}/runtimeSetup.js"
+profile_identity="${runtime_setup_root}/profile-identity.json"
+profile_layout_logic="${runtime_setup_root}/profile-layout.js"
 runtime_setup_zip_library="${APP_BUNDLE}/Contents/Resources/app/node_modules/yauzl/package.json"
 [[ -f "${runtime_setup_manifest}" && ! -L "${runtime_setup_manifest}" && \
-  -f "${runtime_setup_logic}" && -f "${runtime_setup_zip_library}" && \
+  -f "${runtime_setup_logic}" && -f "${profile_identity}" && ! -L "${profile_identity}" && \
+  -f "${profile_layout_logic}" && -f "${runtime_setup_zip_library}" && \
   ! -L "${runtime_setup_zip_library}" ]] || {
   echo "The focused first-run runtime setup is missing from the signed app." >&2
   exit 1
@@ -200,18 +205,30 @@ jq -e '
   const [logic, record] = process.argv.slice(1);
   require(logic).validateRuntimeConfiguration(JSON.parse(fs.readFileSync(record, "utf8")));
 ' "${runtime_setup_logic}" "${runtime_setup_manifest}"
+"${NODE_BIN_DIR}/node" -e '
+  const [logic, record] = process.argv.slice(1);
+  require(logic).loadProfileIdentity(record);
+' "${profile_layout_logic}" "${profile_identity}"
 smoke_root="$(generated_workspace_path "smoke-evidence")"
 generated_workspace_assert_path "smoke-evidence" "${smoke_root}"
 mkdir -p "${smoke_root}"
 expected_runtime_setup_manifest="${smoke_root}/expected-runtime-extension-set.$$.json"
+expected_profile_identity="${smoke_root}/expected-profile-identity.$$.json"
 generated_workspace_assert_path "smoke-evidence" "${expected_runtime_setup_manifest}"
+generated_workspace_assert_path "smoke-evidence" "${expected_profile_identity}"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" "${expected_runtime_setup_manifest}" >/dev/null
+"${REPO_ROOT}/script/generate_profile_identity.sh" "${expected_profile_identity}" >/dev/null
 cmp -s "${runtime_setup_manifest}" "${expected_runtime_setup_manifest}" || {
-  rm -f "${expected_runtime_setup_manifest}"
+  rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"
   echo "The focused first-run setup does not match the exact Release Specification package set." >&2
   exit 1
 }
-rm -f "${expected_runtime_setup_manifest}"
+cmp -s "${profile_identity}" "${expected_profile_identity}" || {
+  rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"
+  echo "The packaged profile identity does not match the exact Release Specification." >&2
+  exit 1
+}
+rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"
 [[ "$(jq -er '.source.vscodium.commit' "${BUILD_MANIFEST}")" == "${VSCODIUM_COMMIT}" ]] || { echo "Manifest VSCodium commit mismatch." >&2; exit 1; }
 [[ "$(jq -er '.source.code_oss.commit' "${BUILD_MANIFEST}")" == "${CODE_OSS_COMMIT}" ]] || { echo "Manifest Code OSS commit mismatch." >&2; exit 1; }
 [[ "$(jq -er '.runtime.electron' "${BUILD_MANIFEST}")" == "${ELECTRON_VERSION}" ]] || { echo "Manifest Electron version mismatch." >&2; exit 1; }

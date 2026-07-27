@@ -10,6 +10,7 @@ load_profile_layout_record() {
   PROFILE_BACKUP_ROOT="$(jq -er '.paths.backup' <<<"${PROFILE_LAYOUT}")"
   PROFILE_CACHE_ROOT="$(jq -er '.paths.cache' <<<"${PROFILE_LAYOUT}")"
   PROFILE_LOG_ROOT="$(jq -er '.paths.logs' <<<"${PROFILE_LAYOUT}")"
+  PROFILE_QUERY_ROOT="$(jq -er '.paths.queries' <<<"${PROFILE_LAYOUT}")"
   PROFILE_DIRECTORY_MODE="$(jq -er '.permissions.directory_mode' <<<"${PROFILE_LAYOUT}")"
   PROFILE_FILE_MODE="$(jq -er '.permissions.file_mode' <<<"${PROFILE_LAYOUT}")"
   if [[ "$(jq -er '.uses_natural_paths' <<<"${PROFILE_LAYOUT}")" == "true" ]]; then

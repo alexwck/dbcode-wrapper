@@ -94,6 +94,8 @@ copy_first_party_extensions() {
 copy_first_party_extensions
 
 runtime_setup_extension="${APP_BUNDLE}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
+"${REPO_ROOT}/script/generate_profile_identity.sh" \
+  "${runtime_setup_extension}/profile-identity.json"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" \
   "${runtime_setup_extension}/runtime-extension-set.json"
 

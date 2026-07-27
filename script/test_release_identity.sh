@@ -6,11 +6,17 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/source_digest.sh"
 
 identity_library="${REPO_ROOT}/script/lib/release_identity.sh"
+source_digest_library="${REPO_ROOT}/script/lib/source_digest.sh"
 [[ -f "${identity_library}" ]] || {
   echo "Missing release identity library: ${identity_library}" >&2
   exit 1
 }
 source "${identity_library}"
+
+rg -Fq 'script/generate_profile_identity.sh' "${source_digest_library}" || {
+  echo "Profile identity generation must be part of the immutable wrapper source digest." >&2
+  exit 1
+}
 
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-release-identity.XXXXXX")"
 trap 'rm -rf "${test_root}"' EXIT

@@ -30,7 +30,6 @@ app_relative="$(jq -er '.artifact.app_path' "${snapshot_manifest}")"
 build_manifest_relative="$(jq -er '.artifact.build_manifest_path' "${snapshot_manifest}")"
 profile_relative="$(jq -er '.runtime.profile_path' "${snapshot_manifest}")"
 release_lock_relative="$(jq -er '.source.release_lock_path' "${snapshot_manifest}")"
-case "${app_relative}" in "${APP_NAME}.app") ;; *) echo "Unexpected rollback app path." >&2; exit 1;; esac
 case "${build_manifest_relative}" in build-manifest.json) ;; *) echo "Unexpected rollback manifest path." >&2; exit 1;; esac
 case "${profile_relative}" in profile) ;; *) echo "Unexpected rollback profile path." >&2; exit 1;; esac
 case "${release_lock_relative}" in release-lock.json) ;; *) echo "Unexpected rollback release-lock path." >&2; exit 1;; esac
@@ -45,6 +44,24 @@ snapshot_lock="${snapshot_root}/${release_lock_relative}"
 [[ -f "${snapshot_build_manifest}" && ! -L "${snapshot_build_manifest}" ]] || { echo "Rollback build manifest is missing." >&2; exit 1; }
 [[ -d "${snapshot_extensions}" && ! -L "${snapshot_extensions}" ]] || { echo "Rollback extension root is missing." >&2; exit 1; }
 [[ -f "${snapshot_lock}" && ! -L "${snapshot_lock}" ]] || { echo "Rollback release lock is missing." >&2; exit 1; }
+
+if snapshot_profile_spec="$(
+  release_specification_record profile "${snapshot_lock}" 2>/dev/null
+)"; then
+  :
+else
+  snapshot_profile_spec="$(
+    release_specification_historical_record profile "${snapshot_lock}"
+  )"
+fi
+snapshot_app_name="$(jq -er '.product.app_name' <<<"${snapshot_profile_spec}")"
+snapshot_bundle_identifier="$(
+  jq -er '.product.bundle_identifier' <<<"${snapshot_profile_spec}"
+)"
+case "${app_relative}" in
+  "${snapshot_app_name}.app") ;;
+  *) echo "Unexpected rollback app path." >&2; exit 1;;
+esac
 
 codesign --verify --deep --strict "${snapshot_app}"
 actual_requirement="$(codesign -d -r- "${snapshot_app}" 2>&1 | sed -n '/^designated => /p')"
@@ -82,7 +99,8 @@ jq -e \
   --arg vscodium_tag "${expected_vscodium_tag}" \
   --arg vscodium_commit "${expected_vscodium_commit}" \
   --arg code_oss_tag "${expected_code_oss_tag}" \
-  --arg code_oss_commit "${expected_code_oss_commit}" '
+  --arg code_oss_commit "${expected_code_oss_commit}" \
+  --arg bundle_identifier "${snapshot_bundle_identifier}" '
     .extension.dbcode.id == $dbcode_id
     and .extension.dbcode.version == $dbcode_version
     and .extension.dbcode.sha256 == $dbcode_sha
@@ -115,7 +133,7 @@ jq -e \
     and .approved_extension.version == $dbcode_version
     and .approved_extension.vsix_sha256 == $dbcode_sha
     and .approved_extension.signature_archive_sha256 == $dbcode_signature_sha
-    and .artifact.bundle_identifier == "io.alexabelle.dbcodewrapper"
+    and .artifact.bundle_identifier == $bundle_identifier
   ' "${snapshot_build_manifest}" >/dev/null || {
   echo "Rollback build manifest does not match the approved release history and release lock." >&2
   exit 1

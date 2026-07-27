@@ -10,7 +10,12 @@ jq -e '
   .product.bundle_identifier == "io.alexabelle.dbcodewrapper" and
   .product.url_scheme == "dbcode-wrapper" and
   .product.data_folder_name == ".dbcode-wrapper" and
+  .product.user_data_folder_name == "DBCode Wrapper" and
+  .product.extensions_folder_name == "extensions" and
   .product.shared_data_folder_name == ".dbcode-wrapper-shared" and
+  .product.backup_folder_name == "DBCode Wrapper Profile Backups" and
+  .product.storage_namespace == "dbcode-wrapper" and
+  .product.query_folder_name == "queries" and
   .product.signing == {
     mode: "local-certificate",
     identity_common_name: "DBCode Wrapper Local Signing",
@@ -29,6 +34,8 @@ for required_placeholder in \
   '${DBCODE_WRAPPER_BUNDLE_IDENTIFIER}' \
   '${DBCODE_WRAPPER_DATA_FOLDER_NAME}' \
   '${DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME}' \
+  '${DBCODE_WRAPPER_STORAGE_NAMESPACE}' \
+  '${DBCODE_WRAPPER_QUERY_FOLDER_NAME}' \
   '${DBCODE_WRAPPER_URL_SCHEME}' \
   '${DBCODE_WRAPPER_SERVER_APPLICATION_NAME}' \
   '${DBCODE_WRAPPER_SERVER_DATA_FOLDER_NAME}' \
@@ -53,9 +60,20 @@ for required_export in \
   'DBCODE_WRAPPER_BUNDLE_IDENTIFIER="${BUNDLE_IDENTIFIER}"' \
   'DBCODE_WRAPPER_DATA_FOLDER_NAME="${DATA_FOLDER_NAME}"' \
   'DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME="${SHARED_DATA_FOLDER_NAME}"' \
+  'DBCODE_WRAPPER_STORAGE_NAMESPACE="${STORAGE_NAMESPACE}"' \
+  'DBCODE_WRAPPER_QUERY_FOLDER_NAME="${QUERY_FOLDER_NAME}"' \
   'DBCODE_WRAPPER_NARROW_BREAKPOINT="${FOCUSED_SHELL_NARROW_BREAKPOINT}"'; do
   rg -Fq "${required_export}" "${REPO_ROOT}/script/compile_host.sh" || {
     echo "Host compilation must export release-lock binding ${required_export}." >&2
+    exit 1
+  }
+done
+
+for required_static_identity_check in \
+  "dbcodeWrapperStorageNamespace' \"\${product_json}\")\" == \"\${STORAGE_NAMESPACE}\"" \
+  "dbcodeWrapperQueryFolderName' \"\${product_json}\")\" == \"\${QUERY_FOLDER_NAME}\""; do
+  rg -Fq "${required_static_identity_check}" "${REPO_ROOT}/script/smoke_host.sh" || {
+    echo "Static smoke must verify generated host identity: ${required_static_identity_check}" >&2
     exit 1
   }
 done

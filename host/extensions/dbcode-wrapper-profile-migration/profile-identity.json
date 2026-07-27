@@ -1,0 +1,20 @@
+{
+  "product": {
+    "app_name": "DBCode Wrapper",
+    "application_name": "dbcode-wrapper",
+    "backup_folder_name": "DBCode Wrapper Profile Backups",
+    "bundle_identifier": "io.alexabelle.dbcodewrapper",
+    "data_folder_name": ".dbcode-wrapper",
+    "extensions_folder_name": "extensions",
+    "query_folder_name": "queries",
+    "shared_data_folder_name": ".dbcode-wrapper-shared",
+    "storage_namespace": "dbcode-wrapper",
+    "user_data_folder_name": "DBCode Wrapper"
+  },
+  "profile_schema_version": 1,
+  "schema_version": 1,
+  "target": {
+    "architecture": "arm64",
+    "platform": "darwin"
+  }
+}
