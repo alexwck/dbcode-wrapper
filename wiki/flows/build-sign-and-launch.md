@@ -9,7 +9,7 @@ tags:
   - launch
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 8e1573615fc360d2de9d69a4f2d237c6ef336822
 ---
 ## Summary
 
@@ -49,7 +49,7 @@ sequenceDiagram
 1. Resolve a clean release ref and create a [Release Source Snapshot](../modules/release-source-snapshot.md).
 2. Materialize that commit in a narrow temporary checkout.
 3. Validate [Release Specification](../modules/release-specification.md) and the ordered patch plan.
-4. Calculate the [Compiled Host Cache](../modules/compiled-host-cache.md) input ID.
+4. Calculate the [Compiled Host Cache](../modules/compiled-host-cache.md) input ID from content and Git's regular-or-executable file state.
 5. Reuse a verified cache entry, or prepare and compile the pinned upstream host once.
 6. Copy wrapper extensions and generate runtime and release-status records.
 7. Sign the app and generate a manifest containing source, compiled-host, app, and release identities.

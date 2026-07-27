@@ -9,17 +9,17 @@ tags:
   - cache
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 8e1573615fc360d2de9d69a4f2d237c6ef336822
 ---
 ## Summary
 
 Compiled Host Cache separates expensive Code OSS compilation from the smaller release assembly step. It gives the exact compilation inputs a content-addressed ID, verifies the cached app byte-for-byte including file modes and symbolic links, and records the compiler environment in a receipt.
 
-A DBCode-only, documentation, test, or assembly-only change can reuse the host when the compilation ID is unchanged. The release still gets a fresh source snapshot, wrapper records, signature, manifest, and acceptance report.
+The source digest keeps Git's regular-or-executable distinction but ignores local read and write permission differences. The same clean commit therefore keeps the same ID in a normal checkout and in the private release checkout. A DBCode-only, documentation, test, or assembly-only change can reuse the host when the compilation ID is unchanged. The release still gets a fresh source snapshot, wrapper records, signature, manifest, and acceptance report.
 
 ## Responsibilities
 
-- Hash upstream revisions, toolchain pins, compile-time product values, active patches, icon, slimming policy, and compilation code.
+- Hash upstream revisions, toolchain pins, compile-time product values, active patches, icon, slimming policy, compilation code, and Git's regular-or-executable file state.
 - Exclude DBCode payload and assembly-only inputs from the compilation ID.
 - Publish a compiled app and environment receipt atomically.
 - Verify the cached app digest, file modes, links, identity, and receipt before reuse.
@@ -41,13 +41,13 @@ flowchart LR
 
 ## Public API / entry points
 
-[`compile_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/compile_host.sh) prepares and compiles the upstream host. [`assemble_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/assemble_host.sh) resolves or creates the cache entry, then copies it into the release bundle before assembly and signing.
+[`compile_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/compile_host.sh) prepares and compiles the upstream host. [`assemble_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/assemble_host.sh) resolves or creates the cache entry, then copies it into the release bundle before assembly and signing.
 
 ## Key files
 
-- [`script/lib/compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/compiled_host_cache.sh) — input ID, receipt, integrity, resolution, and publication logic.
-- [`script/test_compiled_host_cache_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_compiled_host_cache_contract.sh) — cache-hit, invalidation, tamper, and path checks.
-- [`script/lib/artifact_digest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/artifact_digest.sh) — deterministic app digest including modes and links.
+- [`script/lib/compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/compiled_host_cache.sh) — input ID, normalized source modes, receipt, integrity, resolution, and publication logic.
+- [`script/test_compiled_host_cache_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/test_compiled_host_cache_contract.sh) — cache-hit, invalidation, permission, tamper, and path checks.
+- [`script/lib/artifact_digest.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/artifact_digest.sh) — deterministic app digest including modes and links.
 
 ## Dependencies
 

@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: 8e1573615fc360d2de9d69a4f2d237c6ef336822
 ---
 ## Summary
 
@@ -40,13 +40,13 @@ flowchart LR
 - [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
 - [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
 
-Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/compiled_host_cache.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
+Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/compiled_host_cache.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
 
 ## Design decisions
 
 - Update discovery is advisory. It cannot approve or install a release.
 - Accepted source tags are immutable and must identify the commit that built the app.
-- The compiled-host ID changes only when real compilation inputs change.
+- The compiled-host ID changes only when real compilation inputs change. It keeps Git's executable-file distinction but ignores local read and write permission differences.
 - Assembly always creates fresh wrapper records, signature, manifest, and release identity.
 - Final acceptance re-enters the manifest's materialized source and reruns development and static checks. Detached success logs are not enough.
 - The rendered report is reusable only for the same exact release-set ID.

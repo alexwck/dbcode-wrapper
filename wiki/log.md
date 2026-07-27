@@ -29,3 +29,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - Coverage: immutable release source; compiled-host reuse; fast prompt-free verification; DBCode feature evidence; AI and MCP privacy; focused-shell routes; exact private packaging
 - Created: [Release Source Snapshot](./modules/release-source-snapshot.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [DBCode capability evidence](./concepts/dbcode-capability-evidence.md), and [AI and MCP data boundaries](./concepts/ai-and-mcp-data-boundaries.md)
 - Updated: [Overview](./OVERVIEW.md), all [architecture pages](./architecture/product-and-upstream-boundaries.md), the affected [release modules](./modules/release-specification.md), [focused shell](./modules/focused-shell-extensions.md), [verification](./modules/verification-harness.md), [build and release flows](./flows/build-sign-and-launch.md), and [update and feature guides](./guides/review-an-upstream-update.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: 8e15736 (was 2008ff4)
+- Coverage: stable Compiled Host identity across normal and private-permission checkouts
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Compiled Host Cache](./modules/compiled-host-cache.md), and [Build sign and launch](./flows/build-sign-and-launch.md)
