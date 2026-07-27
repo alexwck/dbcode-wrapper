@@ -36,6 +36,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 - `package_private_release.sh` creates the exact five host-only Private Personal Release assets after an annotated source tag, signed app, release lock, and either the prompt-free acceptance report or a compatible older acceptance report agree.
 - `verify_private_release.sh` treats the DMG as untrusted input, mounts it read-only, checks its source and acceptance identity, scans its contents, verifies the app and metadata, and writes a sanitized receipt.
 - `approve_private_release.sh` accepts only schema-3 prompt-free acceptance and the matching final package verification. It writes an attestation, approved record, and merged history under generated acceptance evidence without installing the app or writing the production profile.
+- `private_release_contract.sh` exposes the Private Personal Release module's validated prompt-free acceptance record to the approval writer. It does not create evidence or change release state.
 - `inspect_private_release_tree.sh` rejects DBCode, extension caches, profiles, licence or activation state, credentials, databases, Keychain exports, signing material, and escaping links.
 - Personal package and public-push commands keep DBCode, profiles, credentials, databases, and signing secrets outside Git and outside the host-only package.
 

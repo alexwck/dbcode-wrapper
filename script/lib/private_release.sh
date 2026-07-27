@@ -96,6 +96,169 @@ private_release_validate_source_tag() {
   printf '%s\n' "${tag_commit}"
 }
 
+private_release_validate_prompt_free_acceptance() {
+  local manifest_file="$1"
+  local release_lock="$2"
+  local acceptance_file="$3"
+  local release_build_spec release_extension_spec release_profile_spec
+  local manifest_sha lock_sha expected_installed_extensions
+
+  private_release_assert_file "${manifest_file}" "The build manifest" || return 1
+  private_release_assert_file "${release_lock}" "The release lock" || return 1
+  private_release_assert_file "${acceptance_file}" "The final acceptance report" || return 1
+  if ! declare -F release_specification_validate >/dev/null ||
+    ! declare -F release_specification_record >/dev/null; then
+    echo "The Release Specification module is unavailable." >&2
+    return 1
+  fi
+
+  release_specification_validate "${release_lock}" || return 1
+  release_build_spec="$(release_specification_record build "${release_lock}")" || return 1
+  release_extension_spec="$(release_specification_record extensions "${release_lock}")" || return 1
+  release_profile_spec="$(release_specification_record profile "${release_lock}")" || return 1
+  manifest_sha="$(shasum -a 256 "${manifest_file}" | awk '{print $1}')"
+  lock_sha="$(shasum -a 256 "${release_lock}" | awk '{print $1}')"
+  expected_installed_extensions="$(
+    jq -c '[.packages[] | (.id + "@" + .version)] | sort' <<<"${release_extension_spec}"
+  )"
+
+  jq -e \
+    --arg app_name "$(jq -er '.product.app_name' <<<"${release_profile_spec}")" \
+    --arg bundle_identifier "$(jq -er '.product.bundle_identifier' <<<"${release_profile_spec}")" \
+    --arg architecture "$(jq -er '.target.architecture' <<<"${release_build_spec}")" \
+    --arg app_sha "$(jq -er '.artifact.sha256' "${manifest_file}")" \
+    --argjson installed_size_kib "$(jq -er '.packaging.installed_kib' "${manifest_file}")" \
+    --arg manifest_sha "${manifest_sha}" \
+    --arg lock_sha "${lock_sha}" \
+    --arg code_oss_version "$(jq -er '.runtime.code_oss_version' <<<"${release_build_spec}")" \
+    --arg dbcode_id "$(jq -er '.dbcode.id' <<<"${release_extension_spec}")" \
+    --arg dbcode_version "$(jq -er '.dbcode.version' <<<"${release_extension_spec}")" \
+    --arg dbcode_sha256 "$(jq -er '.dbcode.sha256' <<<"${release_extension_spec}")" \
+    --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
+    --arg certificate_sha1 "$(jq -er '.artifact.signing_certificate_sha1' "${manifest_file}")" \
+    --arg certificate_sha256 "$(jq -er '.artifact.signing_certificate_sha256' "${manifest_file}")" \
+    --arg source_revision "$(jq -er '.source.snapshot.repository_revision' "${manifest_file}")" \
+    --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
+    --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
+    --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
+    --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" \
+    --argjson expected_installed_extensions "${expected_installed_extensions}" '
+      .schema_version == 3
+      and .status == "passed"
+      and .scope == "current-user-private-use"
+      and .source == {
+        repository_revision: $source_revision,
+        tree_oid: $source_tree_oid,
+        snapshot_sha256: $source_snapshot_sha256,
+        compiled_host_input_id: $compiled_host_input_id
+      }
+      and .release == {
+        release_set_id: $release_set_id,
+        app_name: $app_name,
+        bundle_identifier: $bundle_identifier,
+        platform: "darwin",
+        architecture: $architecture,
+        app_sha256: $app_sha,
+        installed_size_kib: $installed_size_kib,
+        code_oss_version: $code_oss_version,
+        dbcode: {
+          id: $dbcode_id,
+          version: $dbcode_version,
+          vsix_sha256: $dbcode_sha256
+        },
+        installed_extensions: $expected_installed_extensions
+      }
+      and .evidence_sha256.build_manifest == $manifest_sha
+      and .evidence_sha256.release_lock == $lock_sha
+      and (.evidence_sha256 | keys | sort) == [
+        "build_manifest",
+        "development_log",
+        "release_lock",
+        "rendered_report",
+        "smoke_log"
+      ]
+      and all(.evidence_sha256[]; type == "string" and test("^[0-9a-f]{64}$"))
+      and .gates == {
+        development_contracts: "passed",
+        strict_signature_and_manifest: "passed",
+        signed_app_one_profile_launch: "passed",
+        dbcode_focused_rendered_interface: "passed",
+        exact_external_extension_inventory: "passed",
+        prompt_free_automation: "passed",
+        bundle_unchanged_after_use: "passed"
+      }
+      and .gate_execution == {
+        source_snapshot_sha256: $source_snapshot_sha256,
+        release_set_id: $release_set_id,
+        app_sha256: $app_sha,
+        build_manifest_sha256: $manifest_sha,
+        development_runner: "script/check_development.sh",
+        static_smoke_runner: "script/smoke_host.sh"
+      }
+      and .automation == {
+        profile_name: "qa",
+        persistent_profile: true,
+        person_controlled_actions: "not-invoked",
+        kernel_started: false,
+        sql_executed: false,
+        model_called: false,
+        secret_entered: false
+      }
+      and (.rendered_evidence.check_count | type == "number" and . >= 8)
+      and (.rendered_evidence.known_warning_count | type == "number" and . >= 0)
+      and .rendered_evidence.unexpected_error_count == 0
+      and .signing.kind == "certificate"
+      and .signing.scope == "current-user-private-use"
+      and .signing.designated_requirement == $signature_requirement
+      and .signing.certificate.sha1 == $certificate_sha1
+      and .signing.certificate.sha256 == $certificate_sha256
+      and (. | has("manual_evidence") | not)
+      and .failures == []
+      and .waivers == []
+      and .distribution_claims == {
+        developer_id: false,
+        notarized: false,
+        public_distribution_ready: false,
+        intel_support: false,
+        multi_user_support: false,
+        official_dbcode_endorsement: false
+      }
+      and (.completed_at_utc | type == "string" and length > 0)
+      and (.private_use_risks | type == "array" and length >= 5)
+      and all(.private_use_risks[]; type == "string" and length > 0)
+    ' "${acceptance_file}" >/dev/null || {
+    echo "The prompt-free acceptance report is incomplete or belongs to another artifact." >&2
+    return 1
+  }
+}
+
+private_release_prompt_free_acceptance_record() {
+  local manifest_file="$1"
+  local release_lock="$2"
+  local acceptance_file="$3"
+
+  private_release_validate_prompt_free_acceptance \
+    "${manifest_file}" \
+    "${release_lock}" \
+    "${acceptance_file}" || return 1
+
+  jq -S -c \
+    --arg acceptance_sha256 "$(shasum -a 256 "${acceptance_file}" | awk '{print $1}')" \
+    --arg build_manifest_sha256 "$(shasum -a 256 "${manifest_file}" | awk '{print $1}')" \
+    --arg release_lock_sha256 "$(shasum -a 256 "${release_lock}" | awk '{print $1}')" \
+    --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" '
+      {
+        schema_version: 1,
+        status: "validated",
+        acceptance_schema_version: 3,
+        acceptance_sha256: $acceptance_sha256,
+        build_manifest_sha256: $build_manifest_sha256,
+        release_lock_sha256: $release_lock_sha256,
+        release_set_id: $release_set_id
+      }
+    ' <<<"{}"
+}
+
 private_release_validate_sources() {
   local app_path="$1"
   local manifest_file="$2"
@@ -287,99 +450,10 @@ private_release_validate_sources() {
 
   acceptance_schema="$(jq -er '.schema_version' "${acceptance_file}")"
   if [[ "${acceptance_schema}" == "3" ]]; then
-    jq -e \
-      --arg app_sha "${app_sha}" \
-      --arg manifest_sha "${manifest_sha}" \
-      --arg lock_sha "${lock_sha}" \
-      --arg code_oss_version "${code_oss_version}" \
-      --arg dbcode_version "${dbcode_version}" \
-      --arg dbcode_sha256 "${dbcode_sha256}" \
-      --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
-      --arg certificate_sha1 "$(jq -er '.artifact.signing_certificate_sha1' "${manifest_file}")" \
-      --arg certificate_sha256 "$(jq -er '.artifact.signing_certificate_sha256' "${manifest_file}")" \
-      --arg source_revision "$(jq -er '.source.snapshot.repository_revision' "${manifest_file}")" \
-      --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
-      --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
-      --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
-      --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" '
-        .schema_version == 3
-        and .status == "passed"
-        and .scope == "current-user-private-use"
-        and .source == {
-          repository_revision: $source_revision,
-          tree_oid: $source_tree_oid,
-          snapshot_sha256: $source_snapshot_sha256,
-          compiled_host_input_id: $compiled_host_input_id
-        }
-        and .release.release_set_id == $release_set_id
-        and .release.app_sha256 == $app_sha
-        and .release.platform == "darwin"
-        and .release.architecture == "arm64"
-        and .release.code_oss_version == $code_oss_version
-        and .release.dbcode.id == "dbcode.dbcode"
-        and .release.dbcode.version == $dbcode_version
-        and .release.dbcode.vsix_sha256 == $dbcode_sha256
-        and .evidence_sha256.build_manifest == $manifest_sha
-        and .evidence_sha256.release_lock == $lock_sha
-        and (.evidence_sha256 | keys | sort) == [
-          "build_manifest",
-          "development_log",
-          "release_lock",
-          "rendered_report",
-          "smoke_log"
-        ]
-        and all(.evidence_sha256[]; type == "string" and test("^[0-9a-f]{64}$"))
-        and .gates == {
-          development_contracts: "passed",
-          strict_signature_and_manifest: "passed",
-          signed_app_one_profile_launch: "passed",
-          dbcode_focused_rendered_interface: "passed",
-          exact_external_extension_inventory: "passed",
-          prompt_free_automation: "passed",
-          bundle_unchanged_after_use: "passed"
-        }
-        and .gate_execution == {
-          source_snapshot_sha256: $source_snapshot_sha256,
-          release_set_id: $release_set_id,
-          app_sha256: $app_sha,
-          build_manifest_sha256: $manifest_sha,
-          development_runner: "script/check_development.sh",
-          static_smoke_runner: "script/smoke_host.sh"
-        }
-        and .automation == {
-          profile_name: "qa",
-          persistent_profile: true,
-          person_controlled_actions: "not-invoked",
-          kernel_started: false,
-          sql_executed: false,
-          model_called: false,
-          secret_entered: false
-        }
-        and (.rendered_evidence.check_count | type == "number" and . >= 8)
-        and (.rendered_evidence.known_warning_count | type == "number" and . >= 0)
-        and .rendered_evidence.unexpected_error_count == 0
-        and .signing.kind == "certificate"
-        and .signing.scope == "current-user-private-use"
-        and .signing.designated_requirement == $signature_requirement
-        and .signing.certificate.sha1 == $certificate_sha1
-        and .signing.certificate.sha256 == $certificate_sha256
-        and (. | has("manual_evidence") | not)
-        and .failures == []
-        and .waivers == []
-        and .distribution_claims == {
-          developer_id: false,
-          notarized: false,
-          public_distribution_ready: false,
-          intel_support: false,
-          multi_user_support: false,
-          official_dbcode_endorsement: false
-        }
-        and (.completed_at_utc | type == "string" and length > 0)
-        and (.private_use_risks | type == "array" and length >= 5)
-      ' "${acceptance_file}" >/dev/null || {
-      echo "The prompt-free acceptance report is incomplete or belongs to another artifact." >&2
-      return 1
-    }
+    private_release_validate_prompt_free_acceptance \
+      "${manifest_file}" \
+      "${release_lock}" \
+      "${acceptance_file}" || return 1
   else
     jq -e \
     --arg app_sha "${app_sha}" \

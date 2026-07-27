@@ -24,3 +24,5 @@
 ## Answer
 
 There is now one place that decides whether a release set is structurally safe, exactly identified, fully approved, and eligible for an update. Shell automation and the in-app update service receive the same answer from the same code, while the retained older rollback record stays available only for its deliberate legacy purpose.
+
+Prompt-free private approval now enters through the same module boundary. Its adapter asks the Release Specification and Private Personal Release modules for validated purpose records, then the central writer binds those records to the exact runtime inventory, package receipt, and no-install attestation before it can create or upsert an approval. The package verifier reads its required check vocabulary from this module so the producer and approval validator cannot drift.

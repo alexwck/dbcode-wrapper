@@ -2,8 +2,10 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { isDeepStrictEqual } = require('node:util');
 
 const GIT_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
+const SHA1_PATTERN = /^[0-9a-fA-F]{40}$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const COMPILED_HOST_INPUT_PATTERN = /^compiled-host-[0-9a-f]{64}$/;
 const VERSION_PATTERN = /^\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -90,12 +92,40 @@ function requireCommit(value, label) {
   return requirePattern(value, GIT_COMMIT_PATTERN, label);
 }
 
+function requireSha1(value, label) {
+  return requirePattern(value, SHA1_PATTERN, label);
+}
+
+function requireHttpsUrl(value, label) {
+  const text = requireString(value, label);
+  if (!text.startsWith('https://')) {
+    fail(`${label} is invalid.`);
+  }
+  return text;
+}
+
 function requireTarget(target, label = 'Release target') {
   requireObject(target, label);
   if (target.platform !== 'darwin' || target.architecture !== 'arm64') {
     fail(`${label} is unsupported.`);
   }
   return target;
+}
+
+function requireEvidenceArtifact(input, label) {
+  requireObject(input, label);
+  return {
+    value: requireObject(input.value, `${label} document`),
+    digest: requireSha256(input.digest, `${label} digest`)
+  };
+}
+
+function sortByIdentity(records) {
+  return [...records].sort((left, right) => {
+    const leftKey = `${left.id ?? ''}@${left.version ?? ''}`;
+    const rightKey = `${right.id ?? ''}@${right.version ?? ''}`;
+    return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+  });
 }
 
 function hasCanonicalSourceSetId(sourceSetId, codeOssVersion, dbcodeVersion) {
@@ -407,41 +437,218 @@ function resolvePreparedMember(setFile, memberName) {
   return resolvedPath;
 }
 
-function createPromptFreeApprovedRecord({
-  compatibility,
+function validateReleaseSpecificationRecords(input) {
+  requireObject(input, 'Validated Release Specification records');
+  const build = requireObject(input.build, 'Release Specification build record');
+  const extensions = requireObject(
+    input.extensions,
+    'Release Specification extension record'
+  );
+  const profile = requireObject(input.profile, 'Release Specification profile record');
+  if (
+    build.schema_version !== 1 ||
+    extensions.schema_version !== 1 ||
+    profile.schema_version !== 1 ||
+    !isDeepStrictEqual(build.target, profile.target) ||
+    !isDeepStrictEqual(build.product, profile.product) ||
+    extensions.host_code_oss_version !== build.runtime?.code_oss_version
+  ) {
+    fail('Validated Release Specification records do not describe one release.');
+  }
+  requireTarget(build.target, 'Release Specification target');
+  requirePositiveInteger(
+    profile.profile_schema_version,
+    'Release Specification profile schema'
+  );
+  if (!Array.isArray(extensions.packages) || extensions.packages.length === 0) {
+    fail('Release Specification runtime package set is missing.');
+  }
+  return { build, extensions, profile };
+}
+
+function runtimeExtensionRecord(packageRecord) {
+  return {
+    role: packageRecord.role,
+    id: packageRecord.id,
+    version: packageRecord.version,
+    target_platform: packageRecord.target_platform,
+    verified_publisher: packageRecord.verified_publisher,
+    vsix_sha256: packageRecord.sha256,
+    signature_archive_sha256: packageRecord.signature_archive_sha256,
+    public_key_id: packageRecord.public_key_id,
+    public_key_sha256: packageRecord.public_key_sha256,
+    install_location: 'external-private-profile',
+    required: true
+  };
+}
+
+function externalRuntimeRecord(packageRecord) {
+  return {
+    id: packageRecord.id,
+    version: packageRecord.version,
+    target_platform: packageRecord.target_platform,
+    vsix_sha256: packageRecord.sha256,
+    signature_archive_sha256: packageRecord.signature_archive_sha256,
+    public_key_id: packageRecord.public_key_id,
+    public_key_sha256: packageRecord.public_key_sha256
+  };
+}
+
+function validateManifestAgainstReleaseSpecification(
   manifest,
-  releaseLock,
-  acceptance,
-  verification,
-  attestation,
-  compatibilitySha256,
-  manifestSha256,
-  releaseLockSha256,
-  acceptanceSha256,
-  verificationSha256,
-  attestationSha256
+  compatibility,
+  releaseSpecification
+) {
+  const { build, extensions } = releaseSpecification;
+  const codeOss = build.upstream.code_oss;
+  const dbcode = extensions.dbcode;
+  const packages = extensions.packages;
+  const product = build.product;
+  const release = build.release;
+  const runtime = build.runtime;
+  const vscodium = build.upstream.vscodium;
+  const expectedManifestExtensions = sortByIdentity(
+    packages.map(runtimeExtensionRecord)
+  );
+  const actualManifestExtensions = Array.isArray(manifest.runtime_extensions)
+    ? sortByIdentity(manifest.runtime_extensions)
+    : [];
+  const expectedExternalRuntime = sortByIdentity(
+    packages.map(externalRuntimeRecord)
+  );
+  const actualExternalRuntime = Array.isArray(
+    compatibility.external_runtime?.packages
+  )
+    ? sortByIdentity(compatibility.external_runtime.packages)
+    : [];
+
+  if (
+    manifest.release?.compatibility_status !== release.compatibility_status ||
+    manifest.release?.validation_issue !== release.validation_issue ||
+    manifest.source?.vscodium?.tag !== vscodium.tag ||
+    manifest.source?.vscodium?.commit !== vscodium.commit ||
+    manifest.source?.code_oss?.tag !== codeOss.tag ||
+    manifest.source?.code_oss?.commit !== codeOss.commit ||
+    manifest.runtime?.code_oss !== runtime.code_oss_version ||
+    manifest.runtime?.host !== vscodium.tag ||
+    manifest.runtime?.electron !== runtime.electron_version ||
+    manifest.artifact?.app_name !== product.app_name ||
+    manifest.artifact?.application_name !== product.application_name ||
+    manifest.artifact?.bundle_identifier !== product.bundle_identifier ||
+    manifest.artifact?.platform !== 'darwin' ||
+    manifest.artifact?.architecture !== 'arm64' ||
+    manifest.artifact?.signature_kind !== 'certificate' ||
+    manifest.artifact?.signature_scope !== 'current-user-private-use' ||
+    manifest.artifact?.signing_certificate_common_name !==
+      product.signing.identity_common_name ||
+    compatibility.release?.code_oss_version !== runtime.code_oss_version ||
+    compatibility.release?.vscodium_version !== vscodium.tag ||
+    compatibility.release?.dbcode_version !== dbcode.version ||
+    compatibility.release?.architecture !== 'arm64' ||
+    compatibility.app?.filename !== `${product.app_name}.app` ||
+    compatibility.app?.bundle_identifier !== product.bundle_identifier ||
+    compatibility.app?.signature?.kind !==
+      'current-user-self-signed-certificate' ||
+    compatibility.app?.signature?.designated_requirement !==
+      manifest.artifact?.signature_requirement ||
+    compatibility.app?.signature?.developer_id !== false ||
+    compatibility.app?.signature?.notarized !== false ||
+    compatibility.external_runtime?.bundled !== false ||
+    compatibility.external_runtime?.setup !==
+      'focused-pinned-official-sources' ||
+    compatibility.external_runtime?.source !== 'official-open-vsx' ||
+    !isDeepStrictEqual(actualManifestExtensions, expectedManifestExtensions) ||
+    !isDeepStrictEqual(actualExternalRuntime, expectedExternalRuntime)
+  ) {
+    fail('Candidate manifest or private-release metadata does not match the Release Specification.');
+  }
+  requireVersion(
+    compatibility.release?.minimum_macos,
+    'Private-release minimum macOS version'
+  );
+  requireString(
+    manifest.artifact?.signature_requirement,
+    'Candidate designated requirement'
+  );
+  requireSha1(
+    manifest.artifact?.signing_certificate_sha1,
+    'Candidate signing certificate SHA-1'
+  );
+  requireSha256(
+    manifest.artifact?.signing_certificate_sha256,
+    'Candidate signing certificate SHA-256'
+  );
+  requirePositiveInteger(
+    manifest.packaging?.installed_kib,
+    'Candidate installed size'
+  );
+}
+
+function validatePromptFreeAcceptanceRecord({
+  record,
+  acceptanceDigest,
+  manifestDigest,
+  lockDigest,
+  releaseSetId
 }) {
-  requireObject(compatibility, 'Private-release compatibility manifest');
-  requireObject(manifest, 'Candidate build manifest');
-  requireObject(releaseLock, 'Candidate Release Specification');
-  requireObject(acceptance, 'Prompt-free acceptance report');
-  requireObject(verification, 'Private-release verification receipt');
-  requireObject(attestation, 'Prompt-free approval attestation');
-  const compatibilityDigest = requireSha256(
-    compatibilitySha256,
-    'Private-release compatibility-manifest digest'
+  requireObject(record, 'Validated prompt-free acceptance record');
+  if (
+    record.schema_version !== 1 ||
+    record.status !== 'validated' ||
+    record.acceptance_schema_version !== 3 ||
+    record.acceptance_sha256 !== acceptanceDigest ||
+    record.build_manifest_sha256 !== manifestDigest ||
+    record.release_lock_sha256 !== lockDigest ||
+    record.release_set_id !== releaseSetId
+  ) {
+    fail('Validated prompt-free acceptance record belongs to another release set.');
+  }
+}
+
+function promptFreeVerificationChecks() {
+  return [...PROMPT_FREE_VERIFICATION_CHECKS];
+}
+
+function createPromptFreeApprovedRecord(input) {
+  requireObject(input, 'Prompt-free approval input');
+  const compatibilityInput = requireEvidenceArtifact(
+    input.compatibility,
+    'Private-release compatibility manifest'
   );
-  const manifestDigest = requireSha256(manifestSha256, 'Candidate build-manifest digest');
-  const lockDigest = requireSha256(releaseLockSha256, 'Candidate release-lock digest');
-  const acceptanceDigest = requireSha256(acceptanceSha256, 'Prompt-free acceptance digest');
-  const verificationDigest = requireSha256(
-    verificationSha256,
-    'Private-release verification digest'
+  const manifestInput = requireEvidenceArtifact(
+    input.manifest,
+    'Candidate build manifest'
   );
-  const attestationDigest = requireSha256(
-    attestationSha256,
-    'Prompt-free approval-attestation digest'
+  const releaseLockInput = requireEvidenceArtifact(
+    input.releaseLock,
+    'Candidate Release Specification'
   );
+  const acceptanceInput = requireEvidenceArtifact(
+    input.acceptance,
+    'Prompt-free acceptance report'
+  );
+  const verificationInput = requireEvidenceArtifact(
+    input.verification,
+    'Private-release verification receipt'
+  );
+  const attestationInput = requireEvidenceArtifact(
+    input.attestation,
+    'Prompt-free approval attestation'
+  );
+  const compatibility = compatibilityInput.value;
+  const manifest = manifestInput.value;
+  const verification = verificationInput.value;
+  const attestation = attestationInput.value;
+  const releaseSpecification = validateReleaseSpecificationRecords(
+    input.releaseSpecification
+  );
+  const acceptanceValidation = input.acceptanceValidation;
+  const compatibilityDigest = compatibilityInput.digest;
+  const manifestDigest = manifestInput.digest;
+  const lockDigest = releaseLockInput.digest;
+  const acceptanceDigest = acceptanceInput.digest;
+  const verificationDigest = verificationInput.digest;
+  const attestationDigest = attestationInput.digest;
 
   if (
     compatibility.schema_version !== 1 ||
@@ -488,13 +695,12 @@ function createPromptFreeApprovedRecord({
   if (compatibility.disk_image?.read_only !== true) {
     fail('Private-release disk-image record is invalid.');
   }
-  const profileSchemaVersion = requirePositiveInteger(
-    releaseLock.release?.profile_schema_version,
-    'Candidate profile schema'
-  );
+  const profileSchemaVersion =
+    releaseSpecification.profile.profile_schema_version;
   if (
-    releaseLock.release?.compatibility_status !== 'candidate' ||
-    releaseLock.release?.validation_issue !== manifest.release?.validation_issue ||
+    releaseSpecification.build.release?.compatibility_status !== 'candidate' ||
+    releaseSpecification.build.release?.validation_issue !==
+      manifest.release?.validation_issue ||
     manifest.schema_version < 6 ||
     manifest.release?.release_set_id !== releaseSetId ||
     manifest.release?.source_set_id !== sourceSetId ||
@@ -517,6 +723,11 @@ function createPromptFreeApprovedRecord({
   ) {
     fail('Prompt-free approval inputs do not describe one exact candidate release set.');
   }
+  validateManifestAgainstReleaseSpecification(
+    manifest,
+    compatibility,
+    releaseSpecification
+  );
   requireCommit(manifest.source?.vscodium?.commit, 'Candidate VSCodium revision');
   requireCommit(manifest.source?.code_oss?.commit, 'Candidate Code OSS revision');
   requireCommit(manifest.source?.snapshot?.tree_oid, 'Candidate source tree');
@@ -539,22 +750,13 @@ function createPromptFreeApprovedRecord({
     fail('Candidate immutable source snapshot is invalid.');
   }
 
-  if (
-    acceptance.schema_version !== 3 ||
-    acceptance.status !== 'passed' ||
-    acceptance.release?.release_set_id !== releaseSetId ||
-    acceptance.release?.app_sha256 !== appSha ||
-    acceptance.source?.repository_revision !== sourceCommit ||
-    acceptance.source?.tree_oid !== compatibility.source?.tree_oid ||
-    acceptance.source?.snapshot_sha256 !== compatibility.source?.snapshot_sha256 ||
-    acceptance.source?.compiled_host_input_id !== compatibility.source?.compiled_host_input_id ||
-    !Array.isArray(acceptance.failures) ||
-    acceptance.failures.length !== 0 ||
-    !Array.isArray(acceptance.waivers) ||
-    acceptance.waivers.length !== 0
-  ) {
-    fail('Prompt-free acceptance does not approve this exact release set.');
-  }
+  validatePromptFreeAcceptanceRecord({
+    record: acceptanceValidation,
+    acceptanceDigest,
+    manifestDigest,
+    lockDigest,
+    releaseSetId,
+  });
 
   const verificationChecks = Object.keys(verification.checks ?? {}).sort();
   if (
@@ -609,19 +811,7 @@ function createPromptFreeApprovedRecord({
   }
   requireTimestamp(attestation.approved_at, 'Prompt-free approval timestamp');
 
-  const dbcodePackages = Array.isArray(compatibility.external_runtime?.packages)
-    ? compatibility.external_runtime.packages.filter(entry => entry.id === 'dbcode.dbcode')
-    : [];
-  const dbcode = dbcodePackages[0];
-  if (
-    compatibility.external_runtime?.bundled !== false ||
-    compatibility.external_runtime?.setup !== 'focused-pinned-official-sources' ||
-    compatibility.external_runtime?.source !== 'official-open-vsx' ||
-    dbcodePackages.length !== 1 ||
-    compatibility.release?.dbcode_version !== dbcode?.version
-  ) {
-    fail('Private-release external runtime policy is invalid.');
-  }
+  const dbcode = releaseSpecification.extensions.dbcode;
   const record = {
     schema_version: 2,
     id: releaseSetId,
@@ -660,7 +850,7 @@ function createPromptFreeApprovedRecord({
     dbcode: {
       id: dbcode.id,
       version: requireVersion(dbcode.version, 'Candidate DBCode version'),
-      vsix_sha256: requireSha256(dbcode.vsix_sha256, 'Candidate DBCode package digest'),
+      vsix_sha256: requireSha256(dbcode.sha256, 'Candidate DBCode package digest'),
       signature_archive_sha256: requireSha256(
         dbcode.signature_archive_sha256,
         'Candidate DBCode signature digest'
@@ -825,6 +1015,7 @@ module.exports = {
   createPromptFreeApprovedRecord,
   findApprovedCandidate,
   hasCanonicalSourceSetId,
+  promptFreeVerificationChecks,
   readPlainJsonFile,
   resolvePreparedMember,
   upsertApprovedHistory,

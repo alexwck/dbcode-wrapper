@@ -3,9 +3,13 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const contract = require('../host/extensions/dbcode-wrapper-release-status/approved-release-set');
+const releaseSpecificationScript = path.join(__dirname, 'release_specification.sh');
+const privateReleaseContractScript = path.join(__dirname, 'private_release_contract.sh');
+const VALIDATOR_TIMEOUT_MS = 30_000;
 
 function usage() {
   console.error(`Usage:
@@ -14,6 +18,7 @@ function usage() {
   ./script/approved_release_set.cjs validate-approved FILE
   ./script/approved_release_set.cjs validate-history FILE
   ./script/approved_release_set.cjs history-record HISTORY ID
+  ./script/approved_release_set.cjs prompt-free-verification-checks
   ./script/approved_release_set.cjs write-prompt-free-approval COMPATIBILITY MANIFEST RELEASE_LOCK \
     ATTESTATION ACCEPTANCE VERIFICATION BASE_HISTORY RECORD OUTPUT_HISTORY
   ./script/approved_release_set.cjs write-approval CANDIDATE MANIFEST ATTESTATION PROOF GATE RECORD HISTORY`);
@@ -24,6 +29,53 @@ function fileSha256(filePath, label) {
   const value = contract.readPlainJsonFile(filePath, label);
   const digest = crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
   return { value, digest };
+}
+
+function readValidatedJson(scriptPath, args, label) {
+  const result = spawnSync('/bin/bash', [scriptPath, ...args], {
+    encoding: 'utf8',
+    maxBuffer: 4 * 1024 * 1024,
+    timeout: VALIDATOR_TIMEOUT_MS,
+    killSignal: 'SIGTERM'
+  });
+  if (result.error) {
+    if (result.error.code === 'ETIMEDOUT') {
+      throw new Error(`${label} validation timed out after ${VALIDATOR_TIMEOUT_MS} ms.`);
+    }
+    throw result.error;
+  }
+  if (result.signal) {
+    throw new Error(`${label} validator stopped after signal ${result.signal}.`);
+  }
+  if (result.status !== 0) {
+    const reason = result.stderr.trim();
+    throw new Error(reason || `${label} validation failed.`);
+  }
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    throw new Error(`${label} validator returned invalid JSON.`);
+  }
+}
+
+function validatedReleaseSpecification(releaseLockPath) {
+  return {
+    build: readValidatedJson(
+      releaseSpecificationScript,
+      ['build', releaseLockPath],
+      'Release Specification build record'
+    ),
+    extensions: readValidatedJson(
+      releaseSpecificationScript,
+      ['extensions', releaseLockPath],
+      'Release Specification extension record'
+    ),
+    profile: readValidatedJson(
+      releaseSpecificationScript,
+      ['profile', releaseLockPath],
+      'Release Specification profile record'
+    )
+  };
 }
 
 function writeJsonAtomically(filePath, value) {
@@ -79,6 +131,14 @@ function main(argv) {
       process.stdout.write(`${JSON.stringify(record)}\n`);
       break;
     }
+    case 'prompt-free-verification-checks': {
+      if (args.length !== 0) usage();
+      const checks = Object.fromEntries(
+        contract.promptFreeVerificationChecks().map(name => [name, 'passed'])
+      );
+      process.stdout.write(`${JSON.stringify(checks)}\n`);
+      break;
+    }
     case 'write-prompt-free-approval': {
       if (args.length !== 9) usage();
       const [
@@ -108,19 +168,26 @@ function main(argv) {
         baseHistoryPath,
         'Base Approved Release Set history'
       );
+      const releaseSpecification = validatedReleaseSpecification(releaseLockPath);
+      const acceptanceValidation = readValidatedJson(
+        privateReleaseContractScript,
+        [
+          'prompt-free-acceptance-record',
+          manifestPath,
+          releaseLockPath,
+          acceptancePath
+        ],
+        'Prompt-free acceptance report'
+      );
       const record = contract.createPromptFreeApprovedRecord({
-        compatibility: compatibility.value,
-        manifest: manifest.value,
-        releaseLock: releaseLock.value,
-        acceptance: acceptance.value,
-        verification: verification.value,
-        attestation: attestation.value,
-        compatibilitySha256: compatibility.digest,
-        manifestSha256: manifest.digest,
-        releaseLockSha256: releaseLock.digest,
-        acceptanceSha256: acceptance.digest,
-        verificationSha256: verification.digest,
-        attestationSha256: attestation.digest
+        compatibility,
+        manifest,
+        releaseLock,
+        acceptance,
+        verification,
+        attestation,
+        releaseSpecification,
+        acceptanceValidation
       });
       const nextHistory = contract.upsertApprovedHistory(baseHistory, record);
       writeJsonAtomically(recordPath, record);

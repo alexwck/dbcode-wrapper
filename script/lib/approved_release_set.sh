@@ -26,6 +26,10 @@ approved_release_history_record() {
   approved_release_set_cli history-record "$1" "$2"
 }
 
+approved_release_set_prompt_free_verification_checks() {
+  approved_release_set_cli prompt-free-verification-checks
+}
+
 approved_release_set_write_approval() {
   approved_release_set_cli write-approval "$@"
 }

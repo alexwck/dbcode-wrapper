@@ -6,6 +6,7 @@ umask 077
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
+source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/private_release.sh"
 source "${script_root}/lib/generated_workspace.sh"
 
@@ -243,6 +244,7 @@ private_release_validate_compatibility_manifest \
 hdiutil detach "${mounted_device}" -quiet
 mounted_device=""
 
+verification_checks="$(approved_release_set_prompt_free_verification_checks)"
 jq -n \
   --arg verified_at_utc "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
   --arg release_set_id "${release_set_id}" \
@@ -258,7 +260,8 @@ jq -n \
   --arg acceptance_sha256 "${acceptance_sha256}" \
   --arg checksum_sha256 "$(shasum -a 256 "${checksum_file}" | awk '{print $1}')" \
   --arg compatibility_sha256 "$(shasum -a 256 "${compatibility_file}" | awk '{print $1}')" \
-  --arg notes_sha256 "${notes_sha256}" '
+  --arg notes_sha256 "${notes_sha256}" \
+  --argjson verification_checks "${verification_checks}" '
     {
       schema_version: 1,
       status: "passed",
@@ -280,22 +283,7 @@ jq -n \
         compatibility_manifest_sha256: $compatibility_sha256,
         install_and_rollback_sha256: $notes_sha256
       },
-      checks: {
-        source_tag: "passed",
-        complete_same_mac_acceptance: "passed",
-        disk_image_integrity: "passed",
-        mounted_read_only: "passed",
-        exact_top_level_contents: "passed",
-        host_only_content_scan: "passed",
-        app_artifact_digest: "passed",
-        nested_code_signatures: "passed",
-        designated_requirement: "passed",
-        apple_silicon_only: "passed",
-        upstream_notices: "passed",
-        install_guide: "passed",
-        external_runtime_not_bundled: "passed",
-        private_data_absent: "passed"
-      },
+      checks: $verification_checks,
       failures: []
     }
   ' > "${output_file}"

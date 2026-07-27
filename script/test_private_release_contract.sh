@@ -287,6 +287,7 @@ jq -n \
   --arg app_sha256 "${app_sha256}" \
   --arg code_oss_version "${CODE_OSS_VERSION}" \
   --arg vscodium_version "${VSCODIUM_TAG}" \
+  --arg electron_version "$(jq -er '.runtime.electron_version' "${release_lock}")" \
   --arg vscodium_commit "$(jq -er '.upstream.vscodium.commit' "${release_lock}")" \
   --arg code_oss_commit "$(jq -er '.upstream.code_oss.commit' "${release_lock}")" \
   --arg fixture_source_set_id "${fixture_source_set_id}" \
@@ -343,10 +344,12 @@ jq -n \
       },
       runtime: {
         code_oss: $code_oss_version,
-        host: $vscodium_version
+        host: $vscodium_version,
+        electron: $electron_version
       },
       artifact: {
         app_name: "DBCode Wrapper",
+        application_name: "dbcode-wrapper",
         bundle_identifier: "io.alexabelle.dbcodewrapper",
         platform: "darwin",
         architecture: "arm64",
@@ -354,11 +357,13 @@ jq -n \
         signature_kind: "certificate",
         signature_requirement: "designated => fixture requirement",
         signature_scope: "current-user-private-use",
+        signing_certificate_common_name: "DBCode Wrapper Local Signing",
         signing_certificate_sha1: ("b" * 40),
         signing_certificate_sha256: ("c" * 64)
       },
       packaging: {
         status: "built-and-signed",
+        installed_kib: 1,
         updater_enabled: false,
         external_runtime_in_app: false,
         external_runtime_setup: "focused-pinned-official-sources",
@@ -419,7 +424,10 @@ jq -n \
       },
       release: {
         release_set_id: $release_set_id,
+        app_name: "DBCode Wrapper",
+        bundle_identifier: "io.alexabelle.dbcodewrapper",
         app_sha256: $app_sha256,
+        installed_size_kib: 1,
         platform: "darwin",
         architecture: "arm64",
         code_oss_version: $code_oss_version,
