@@ -9,7 +9,7 @@ tags:
   - transfer
 wiki_profile: public
 wiki_depth: standard
-source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
+source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
 ---
 ## Summary
 
@@ -48,11 +48,13 @@ sequenceDiagram
 5. Generate sanitized metadata that states DBCode, licence, and profile contents are not included.
 6. Build the DMG, external checksum, and verification receipt under the registered private-release root.
 7. Mount the final image read-only and independently recheck contents, digest, signatures, and compatibility record.
-8. Run prompt-free approval with the exact release-set ID. It writes an attestation, approved record, and merged history under generated output only.
-9. Review the generated record before adding it to maintained approved history. Approval does not launch or install the app and does not write the production profile.
+8. Run prompt-free approval with the exact release-set ID. It consumes the final mounted-package receipt and does not rerun live signature checks against a build-app path.
+9. Review the generated attestation, approved record, and merged history before adding the exact record to maintained approved history. Approval does not launch or install the app and does not write the production profile.
 10. Transfer only through the owner's private location.
 11. On the target Mac, verify the checksum, install the host, then install the pinned external packages into a new Standalone DBCode Profile.
 12. Handle Gatekeeper, Safe Storage, licence, or account prompts as normal user setup, outside automated deployment.
+
+The current checkpoint completed steps 1–9 for private release `v0.1.1`, with DBCode `1.36.4` on the retained host. The app and production profile were not changed.
 
 ## Failure modes
 

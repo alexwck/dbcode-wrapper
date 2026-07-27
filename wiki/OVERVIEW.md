@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
+source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
 tags:
   - wiki
   - overview
@@ -12,7 +12,9 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`f18fc4e`](https://github.com/alexwck/dbcode-wrapper/tree/f18fc4ecc80e580a54695ccb04311f119c7a2642). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`ea09161`](https://github.com/alexwck/dbcode-wrapper/tree/ea091613c180550d6e6df9120b2a9b4fe66ffcc2). Check source and tests when details disagree.
+
+The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 > [!NOTE]
 > The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.

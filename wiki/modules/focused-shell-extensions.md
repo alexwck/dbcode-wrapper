@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
 ---
 ## Summary
 
@@ -29,13 +29,15 @@ The focused shell removes general IDE navigation and makes DBCode the product su
 
 Most shell behaviour comes from the focused Code OSS patch. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately installed upstream extension and owns its commands, views, webviews, editors, AI providers, and MCP tools.
 
+The approved DBCode `1.36.4` policy keeps capability status separate from evidence depth. Features exercised by the prompt-free gate carry their actual `declared`, `reachable`, or `rendered` evidence. Optional debugger and AI workflows that were not activated are marked limited instead of being treated as failed or falsely tested.
+
 ## Key files
 
-- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing and dismissal behaviour.
-- [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration) — setup, import, runtime installation, and recovery.
-- [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-release-status) — discovery and approved-set status.
-- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/dbcode-feature-policy.json) — DBCode capability and route policy.
+- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing and dismissal behaviour.
+- [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/extensions/dbcode-wrapper-profile-migration) — setup, import, runtime installation, and recovery.
+- [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
+- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/extensions/dbcode-wrapper-release-status) — discovery and approved-set status.
+- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/dbcode-feature-policy.json) — DBCode capability and route policy.
 
 ## Dependencies
 

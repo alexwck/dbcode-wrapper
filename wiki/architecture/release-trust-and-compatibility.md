@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
+source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
 ---
 ## Summary
 
@@ -41,7 +41,7 @@ flowchart LR
 - [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
 - [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
 
-Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/compiled_host_cache.sh), [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/private_release.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
+Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/compiled_host_cache.sh), [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/private_release.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
 
 ## Design decisions
 
@@ -53,7 +53,9 @@ Core transition checks live in [`release_source_snapshot.sh`](https://github.com
 - The rendered report is reusable only for the same exact release-set ID.
 - Human prompts and external services are normal app-use gates, not deployment tests.
 - Release Specification and Private Personal Release remain the only owners of their full input schemas. Approval consumes their validated purpose records and binds the resulting digests to the package receipt.
+- Packaging and mounted verification own live app signature checks. Approval consumes the final mounted-package receipt and does not recheck a build-app path or local certificate trust.
 - Prompt-free approval writes generated evidence only. It never installs the app or writes the production profile.
+- A capability policy becomes approved only when exact host and DBCode package digests match maintained approved history. Features outside the prompt-free evidence are marked limited, not left pending or presented as tested.
 - The previous complete set stays protected for rollback.
 
 ## Related

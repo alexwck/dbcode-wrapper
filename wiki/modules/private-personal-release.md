@@ -9,7 +9,7 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
+source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
 ---
 ## Summary
 
@@ -24,22 +24,23 @@ A Private Personal Release is a locally produced host-only package for Macs owne
 - Generate sanitized compatibility metadata without credentials, licences, profile contents, or local paths.
 - Build the host-only DMG and external checksum.
 - Mount and verify the final image independently before transfer.
-- Create a generated approval bundle only after the exact acceptance, package, source tag, and confirmation agree.
+- Keep live app signature and architecture checks in packaging and mounted verification.
+- Create a generated approval bundle only after the exact acceptance, package, source tag, final receipt, and confirmation agree. Approval does not accept or recheck a build-app path.
 - Keep approval separate from installation and production-profile writes.
 - Keep final assets protected until the owning workflow releases them.
 
 ## Public API / entry points
 
-[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/package_private_release.sh) builds the package. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/verify_private_release.sh) mounts and verifies it. [`approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/approve_private_release.sh) writes the generated approval bundle without installing. Shared checks and compatibility-record construction live in [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/private_release.sh).
+[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/package_private_release.sh) builds the package. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_private_release.sh) mounts and verifies it. [`approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/approve_private_release.sh) consumes that final receipt and writes the generated approval bundle without installing. Shared checks and compatibility-record construction live in [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/private_release.sh).
 
 ## Key files
 
-- [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/verify_fast_release.sh) — exact-source and exact-app acceptance.
-- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/package_private_release.sh) — task-level packager.
-- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/verify_private_release.sh) — independent mounted-image verifier.
-- [`script/private_release_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/private_release_contract.sh) — read-only schema-3 acceptance adapter for the approval writer.
-- [`script/approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/approve_private_release.sh) — prompt-free approval evidence writer.
-- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/verify_same_mac_release.sh) — optional owner-machine continuity checks outside normal deployment.
+- [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_fast_release.sh) — exact-source and exact-app acceptance.
+- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/package_private_release.sh) — task-level packager.
+- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_private_release.sh) — independent mounted-image verifier.
+- [`script/private_release_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/private_release_contract.sh) — read-only schema-3 acceptance adapter for the approval writer.
+- [`script/approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/approve_private_release.sh) — prompt-free approval evidence writer.
+- [`script/verify_same_mac_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_same_mac_release.sh) — optional owner-machine continuity checks outside normal deployment.
 
 ## Dependencies
 

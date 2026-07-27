@@ -57,3 +57,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: f18fc4e (was 8a70d5c)
 - Coverage: prompt-free private approval; authoritative release and acceptance validation; mounted-package evidence; approval and installation separation
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set](./modules/approved-release-set.md), [Private Personal Release](./modules/private-personal-release.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: ea09161 (was f18fc4e)
+- Coverage: exact `v0.1.1` approved history; mounted-package receipt as the approval boundary; approved DBCode `1.36.4` capability policy; honest limited evidence for optional debugger and AI workflows; approval without installation
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set](./modules/approved-release-set.md), [Private Personal Release](./modules/private-personal-release.md), [Verification Harness](./modules/verification-harness.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [DBCode capability evidence](./concepts/dbcode-capability-evidence.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)
