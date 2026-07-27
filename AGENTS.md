@@ -32,6 +32,8 @@ Before changing behaviour, read:
 - Product language and scope: `CONTEXT.md`.
 - Pinned versions, digests, product identity, and toolchain: `host/release-lock.json` through the Release Specification module.
 - Supported DBCode routes and known compatibility gaps: `host/dbcode-feature-policy.json`.
+- Official feature-family orientation: `docs/product/dbcode-capability-coverage.md`.
+- AI and MCP payload guidance: `docs/security/ai-data-sharing.md`.
 - Package slimming and its rollback: `host/slimming-policy.json`.
 - Current task state and evidence: `.scratch/dbcode-wrapper-implementation/`.
 - Exact behaviour: current source and tests.
@@ -44,6 +46,18 @@ Before changing behaviour, read:
 - Before hiding or removing a DBCode command, view, menu, or context-menu action, check the official DBCode documentation, sanitized contribution evidence already captured by maintained policy or tests, `host/dbcode-feature-policy.json`, and rendered behaviour.
 - Remove only a duplicate or proven-broken wrapper route. Keep at least one working DBCode-owned route to every retained capability.
 - PostgreSQL, DuckDB, Parquet, SQLite, and notebooks are representative acceptance checks, not a connection allowlist. The unchanged DBCode connection catalogue remains authoritative.
+- DBCode owns database, notebook, AI, MCP, account, and licence behaviour. The wrapper packages, pins, integrates, and exposes those features without recreating them.
+- Treat the DBCode documentation as a capability map, not a backlog for reimplementing DBCode inside the wrapper.
+- Add wrapper-owned behaviour only for application identity, profile isolation, packaging and verification, or exposing a DBCode-owned route. Prefer DBCode's implementation whenever it already owns the workflow.
+- Record capability evidence as `declared`, `reachable`, `rendered`, or `live`. Opening a route does not prove the complete workflow.
+- During a DBCode version bump, compare the official changelog, public extension contributions, maintained feature policy, and rendered behaviour. Give deeper checks to added or changed surfaces.
+
+### AI, MCP, and data privacy
+
+- Track Query Builder AI, Grid AI, inline completion, plan analysis, Explore AI, Copilot Tools, automatic MCP registration, HTTP MCP, and inferred relationships separately.
+- Automatic MCP registration and the HTTP MCP server are separate capabilities. Keep HTTP MCP off by default, bound to localhost, and protected by OAuth unless a person deliberately chooses otherwise.
+- A local database connection does not mean AI data remains local. Record what each AI feature sends and which provider receives it.
+- Never use real private data in AI, Copilot, or MCP tests. DML, DDL, data copy, and workspace relationship writes require an explicit user action.
 
 ### Redesign work
 
@@ -54,9 +68,18 @@ Before changing behaviour, read:
 ### Release state and macOS prompts
 
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
+- Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
+- Keep upstream host compilation separate from release assembly. A DBCode-only bump should reuse the Compiled Host when its content-addressed input ID still matches.
+- Treat a missing or changed input ID as a full-build request. Cache validation must cover file contents, symbolic-link targets, and executable modes. Preserve a damaged cache entry for investigation, rebuild it, and never weaken validation to save time.
+- Store the actual compiler environment in the Compiled Host receipt. On a cache hit, use that receipt in the final manifest and skip compiler-only Python, Clang, SDK, Node, and npm preflights.
 - An accepted source tag is immutable. Package only when the tag, release lock, build manifest, app digest, and final acceptance evidence identify the same release set.
 - Fully quit the DBCode Wrapper App before rebuilding, packaging, or testing profile persistence.
-- Keychain, Kernel, Gatekeeper, and Safe Storage prompts are explicit human gates. Do not approve or bypass them automatically.
+- Automated tests must never wait for Keychain, Kernel, Gatekeeper, Safe Storage, sign-in, licence, OAuth, or another person-controlled prompt. Do not approve or bypass those prompts automatically.
+- Treat those prompts as normal app setup or use, not automated test evidence. The fast rendered check must avoid actions that can open them.
+- Use the one persistent generated `qa` profile for rendered checks. Do not create fresh or recovery profiles in the default deployment path.
+- The generated `qa` profile and the user's Standalone DBCode Profile are separate. "One profile" means one automated GUI profile, never the real personal profile.
+- Static smoke must not launch the app. The one-profile rendered smoke owns the only automated GUI launch and checks prompt-gated DBCode routes for reachability without activating them.
+- Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
 - For an authenticated GitHub draft transfer, verify `draft: true`, no publication timestamp, exact uploaded sizes and digests, authenticated owner access, anonymous denial, and the absence of any workflow that can publish it.
 
@@ -64,7 +87,7 @@ Before changing behaviour, read:
 
 - Scripts that accept paths must support documented relative paths, absolute paths, and spaces in filenames. Cover those forms with focused automated tests that exercise the script's public interface.
 - When a path contract returns a normalized absolute output path, the caller must use that returned value. Do not validate a relative path against the repository and then use the original value against the process working directory.
-- Keep generated checkouts, proof profiles, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave `.dbcode-proof-*` folders in the repository root or user home directory.
+- Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary proof folders in the repository root or user home directory.
 - Use `./script/generated_workspace.sh inventory` and its dry-run `cleanup` command before proposing any generated-state cleanup. Do not replace the retention contract with ad hoc `rm` commands.
 - Remove only temporary paths created by the current task. Follow the maintained and generated file rules below for all existing evidence.
 
@@ -84,12 +107,15 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 
 ## Verification
 
+- Follow `docs/agents/verification-policy.md` when choosing the smallest useful gate.
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
-- Source, policy, or patch changes: run focused tests while working and `./script/check_development.sh` before resolving the ticket.
-- Built-host changes: run the static host smoke and rendered focused-shell checks.
-- Release identity, extension inventory, profile, signing, update, or rollback changes: run the complete release-set gates and record evidence in the issue.
+- Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
+- Gate-composition, public-push, private-package, deep rollback, controlled-upgrade, debugger-fixture, and historical-acceptance tests are change-owned checks, not part of the default development or deployment path.
+- Built-host changes: run the static host smoke and the one-profile rendered focused-shell smoke.
+- Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
+- Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.
 
-Full builds are expensive. App launches can open GUI windows and trigger real macOS Keychain prompts. Do not rebuild, launch the production profile, approve Keychain access, or delete retained release evidence unless the current task requires it and the user has agreed to that gate.
+Full builds are expensive. Prefer `build_host.sh`, which reuses an exact Compiled Host and performs only release assembly when the inputs match. App launches can open GUI windows and trigger real macOS Keychain prompts. Do not force a rebuild, launch the production profile, approve Keychain access, or delete retained release evidence unless the current task requires it and the user has agreed to that gate.
 
 ## Documentation sync
 

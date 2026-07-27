@@ -8,7 +8,7 @@ Read `README.md`, `CONTEXT.md`, and `docs/architecture/overview.md`. Explain in 
 
 ## 2. Trace a build
 
-Start at `script/build_host.sh`. Follow source preparation, the patch plan, package slimming, application packaging, signing, and `dist/build-manifest.json`. Note which inputs come from the Release Specification and which files are generated.
+Start at `script/build_host.sh`. Follow the Release Source Snapshot into `script/assemble_host.sh` and the Compiled Host input ID. On the cache-miss path, continue into `script/compile_host.sh`, source preparation, the patch plan, and package slimming. Return to `assemble_host.sh` for wrapper extension assembly, signing, and `dist/build-manifest.json`. Explain which changes require Code OSS compilation and which need only release assembly.
 
 ## 3. Trace a visible DBCode action
 
@@ -16,21 +16,21 @@ Choose Connections, New Query, Query Builder, a table grid, or a notebook. Follo
 
 ## 4. Trace a profile
 
-Start at the Profile Layout interface. Follow the record into preparation, launch, migration, recovery, proof, and the JavaScript recovery adapter. Identify which paths are durable, which are generated, and which remain in macOS Keychain.
+Start at the Profile Layout interface. Follow the record into the normal app profile, the persistent generated `qa` profile, preparation, launch, migration, recovery, and the JavaScript recovery adapter. Identify which paths are durable, which are generated, and which remain in macOS Keychain.
 
 ## 5. Trace an Approved Release Set
 
-Start with `host/release-lock.json`. Follow the Release Specification into source-set identity, build manifest, compatibility checks, proof receipts, approval history, installed health, and rollback. Explain why a version string alone cannot authorize an update.
+Start with `host/release-lock.json`. Follow the Release Specification into the immutable source snapshot, Compiled Host identity, source-set identity, build manifest, prompt-free acceptance, approval history, package identity, and rollback notes. Explain why a version string alone cannot authorize an update.
 
 ## 6. Compare verification levels
 
 Find one example of each:
 
 - a fast source contract;
-- a rendered focused-shell check using an isolated mock Keychain;
-- an isolated release-pair check;
-- a real-profile licensed proof;
-- an installed health or rollback check.
+- the static signed-host smoke;
+- a rendered focused-shell check using the persistent QA profile and mock Keychain;
+- a prompt-free release acceptance report;
+- a private-package check.
 
 Explain which failure each level can see that the previous level cannot.
 
@@ -40,8 +40,16 @@ Open DBCode's current supported-databases documentation, then inspect `host/dbco
 
 ## 8. Trace generated state
 
-Run `./script/generated_workspace.sh inventory`, then trace one registered root from `script/lib/generated-workspace-retention.js` into its owning build, proof, rendered, upgrade, rollback, or private-release workflow. Explain why unknown output, caches, and worktrees stay protected until their owner records expiry, and why the cleanup command produces a plan without deleting anything. Confirm that protected artifacts and private profile contents are not traversed for size.
+Run `./script/generated_workspace.sh inventory`, then trace one registered root from `script/lib/generated-workspace-retention.js` into its owning build, smoke, rendered, acceptance, rollback, or private-release workflow. Explain why unknown output, caches, and worktrees stay protected until their owner records expiry, and why the cleanup command produces a plan without deleting anything. Confirm that protected artifacts and private profile contents are not traversed for size.
 
 ## 9. Make one safe change
 
 Pick a documentation or source-contract improvement. Identify its owning module and test seam, make the smallest change, run the narrow test, then run `./script/check_development.sh`. Record the evidence in the local Markdown issue before resolving it.
+
+## 10. Review AI and MCP boundaries
+
+Read `docs/product/dbcode-capability-coverage.md` and `docs/security/ai-data-sharing.md`. Choose one AI feature and explain its provider, possible payload, user gate, wrapper route, and current evidence level. Confirm that automatic MCP registration is not treated as proof of the optional HTTP MCP server.
+
+## 11. Keep verification fast
+
+Read `docs/agents/verification-policy.md`. For one recent change, identify the focused test, the one final source gate, and any signed-host check. Explain why automated deployment must avoid actions that need a person or external approval.

@@ -33,20 +33,24 @@ An intentional move to a newer Approved Release Set after Code OSS, VSCodium pac
 _Avoid_: silent extension update, irreversible upgrade
 
 **Approved Release Set**:
-One exact wrapper build with its Code OSS runtime and VSCodium packaging revisions, one exact unchanged DBCode version, and their compatible Standalone DBCode Profile version after the complete compatibility gate passes. The set is promoted and rolled back together even though Code OSS, VSCodium, and DBCode releases are discovered separately.
+One exact wrapper build with its Code OSS runtime and VSCodium packaging revisions, one exact unchanged DBCode version, and their compatible Standalone DBCode Profile version after the Prompt-Free Release Gate passes. The set is installed and rolled back together even though Code OSS, VSCodium, and DBCode releases are discovered separately.
 _Avoid_: independently promoted versions, assumed compatibility, always-latest pairing
+
+**Release Source Snapshot**:
+The clean immutable Git commit used to build and identify one candidate. The build materializes this commit and reads wrapper inputs there, so later changes in the launcher checkout cannot affect the app.
+_Avoid_: dirty working tree, moving branch, uncommitted release input
+
+**Compiled Host**:
+The reusable application base produced from one exact set of Code OSS, VSCodium, toolchain, patch, icon, product, and slimming inputs. Its receipt covers bytes, links, executable modes, and the actual compiler environment. It does not yet contain release-specific wrapper extensions or records and is not signed as the final app.
+_Avoid_: finished release, DBCode package, accepted signed app
+
+**Prompt-Free Release Gate**:
+The automated release check for wrapper-owned behaviour. It combines source contracts, static signed-app checks, and one rendered run in the generated QA profile. It never waits for a database, kernel, model, account, secret, macOS approval, or another person.
+_Avoid_: full DBCode product test, real-profile proof, prompt-driven deployment
 
 **Upgrade Prompt**:
 A notice that a newer Code OSS runtime, VSCodium packaging release, or DBCode release is available and invites the user to begin a Controlled DBCode Upgrade. It never installs an update silently.
 _Avoid_: automatic update, forced upgrade
-
-**Required Data Targets**:
-The data that must work in the standalone feasibility proof: PostgreSQL connections, DuckDB databases, and Parquet files.
-_Avoid_: required database engines
-
-**Host Feasibility Proof**:
-The smallest evidence gate showing that unchanged DBCode can provide a persistent Standalone DBCode Experience for the Required Data Targets before shell shaping, migration, or advanced-feature validation begins.
-_Avoid_: finished app, full acceptance test
 
 **Unmodified Extension Boundary**:
 The DBCode Wrapper App may host the legitimately licensed extension for the license holder's private use, but must not modify it, reverse engineer it, bypass its licensing, or share it with others. Written vendor permission is not a project gate.

@@ -28,19 +28,22 @@ macOS build machinery       identity, patches, policy, tests
 - Open VSX is the verified package source for DBCode and the required Python/Jupyter runtime extensions.
 - DBCode owns database connections, dialects, object browsing, editors, results, notebooks, AI, MCP, account, and licensing.
 - The wrapper owns the standalone application identity, focused navigation, profile isolation, compatibility gates, signing, update approval, rollback, and personal packaging.
+- Database Explorer is the focused shell's persistent workspace navigation: editor, canvas, result-grid, and Escape interactions do not dismiss it. Its direct toolbar action toggles it, while another DBCode action can replace it in the shared sidebar. Other DBCode-only drawers remain temporary.
 
 ## Deep modules
 
-The maintained architecture concentrates cross-cutting rules behind eight seams:
+The maintained architecture concentrates cross-cutting rules behind ten seams:
 
 1. **Release Specification** validates `host/release-lock.json` and returns purpose-level build, extension, profile/product, and identity records. New candidates use the current strict schema. A separate read-only adapter can interpret supported frozen schema-2 and schema-4 records only when the retained build manifest binds their exact lock digest; it never turns historical state into a new candidate or invents approval.
-2. **Approved Release Set** owns canonical source and artifact identity, approval records, safe member resolution, promotion, and rollback compatibility.
-3. **Profile Layout** returns one validated record for every Standalone DBCode Profile path used by shell and JavaScript adapters.
-4. **Host Session** owns one application lifecycle: process start, renderer readiness, DBCode readiness, logs, timeout, and complete quit.
-5. **Patch Plan** applies the maintained Code OSS and VSCodium overlay by semantic seam and verifies the resulting source tree.
-6. **Focused Runtime Setup** derives one public package-and-key record from the Release Specification. On a fresh Finder launch it downloads only that exact DBCode and Python/Jupyter set, verifies every acquisition boundary, installs outside the app with extension-pack dependencies disabled, and reloads only after the managed inventory matches.
-7. **Private Personal Release** binds one annotated source tag, approved release lock, signed host manifest, complete same-Mac acceptance report, and host-only DMG. Its task-level packager and independent verifier share one compatibility-record constructor, while the install-guide renderer remains separate user-facing policy.
-8. **Generated Workspace Retention** registers build, smoke, rendered, proof, controlled-upgrade, rollback, cache, acceptance, and private-release roots in one inspectable policy. It measures only deliberately expired output, reports protected and unregistered output without traversing it, and produces only explicit dry-run cleanup plans.
+2. **Release Source Snapshot** proves that the complete release input came from one clean immutable Git commit. The build materializes that commit in a temporary checkout and runs compilation and assembly there. The manifest and private package bind the commit, tree, host-and-script digest, and release-lock digest.
+3. **Compiled Host Cache** separates expensive Code OSS compilation from release assembly. Its content-addressed input covers upstream revisions, the toolchain, active Release Specification code, compile-time product values, patches, icon, and slimming choices. Cache integrity covers bytes, links, and executable modes. Its receipt records the actual compiler environment. DBCode package metadata and assembly-only wrapper files do not change that ID.
+4. **Approved Release Set** owns canonical source and artifact identity, approval records, safe member resolution, promotion, and rollback compatibility.
+5. **Profile Layout** returns one validated record for every Standalone DBCode Profile path used by shell and JavaScript adapters.
+6. **Host Session** owns one application lifecycle: process start, renderer readiness, DBCode readiness, logs, timeout, and complete quit.
+7. **Patch Plan** applies the maintained Code OSS and VSCodium overlay by semantic seam and verifies the resulting source tree.
+8. **Focused Runtime Setup** derives one public package-and-key record from the Release Specification. On a fresh Finder launch it downloads only that exact DBCode and Python/Jupyter set, verifies every acquisition boundary, installs outside the app with extension-pack dependencies disabled, and reloads only after the managed inventory matches.
+9. **Private Personal Release** binds one annotated source tag, approved release lock, signed host manifest, prompt-free automated acceptance report, and host-only DMG. Final acceptance re-enters the manifest's materialized source and reruns the fast source and static-smoke gates instead of trusting detached logs. Its task-level packager and independent verifier share one compatibility-record constructor, while the install-guide renderer remains separate user-facing policy. Older real-profile acceptance remains readable for compatibility but is not the normal deployment path.
+10. **Generated Workspace Retention** registers build, smoke, rendered, historical proof, controlled-upgrade, rollback, cache, acceptance, and private-release roots in one inspectable policy. It measures only deliberately expired output, reports protected and unregistered output without traversing it, and produces only explicit dry-run cleanup plans.
 
 Tests cross the same interfaces as production callers. Compatibility adapters keep established command-line workflows stable while implementation details move behind the seams.
 
@@ -50,40 +53,48 @@ Build and verification workflows resolve or assert their ignored output roots th
 
 PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are practical fixtures that can be exercised locally. They are not an allowlist. DBCode's official supported-databases catalogue currently contains more than 80 databases, services, cloud targets, and data-file formats. The wrapper must not filter that catalogue or maintain a competing static list.
 
+New DBCode-owned capabilities are recorded without becoming wrapper implementations. DBCode `1.36.4`, for example, adds a stored-routine debugger contribution. The wrapper keeps the DBCode-owned route and can use the loopback PostgreSQL fixture for focused diagnostics, but normal deployment does not start a database or wait for a person to drive a debugger.
+
 A new DBCode release may add or remove connection types. The release gate therefore uses two independent checks. First, it binds the exact public package contribution digest and the unchanged `dbcode.connections.add` command to the Approved Release Set. Second, an isolated mock-Keychain launch opens DBCode's real New Connection picker and reduces its counted sections and normalized label set to counts and SHA-256 fingerprints. Raw vendor labels never enter Git or the rendered report.
 
-The wrapper passes no arguments into that DBCode-owned entry point and does not transform the catalogue. If the extension version, contribution digest, section shape, item count, or label fingerprint changes, the candidate stops for complete release-pair review. PostgreSQL, DuckDB, Parquet, SQLite, and Python remain representative depth checks; they do not define the breadth of supported connections. Actual connectivity can still depend on the target server or service, network, credentials, operating system, optional drivers, and the exact installed DBCode version.
+The wrapper passes no arguments into that DBCode-owned entry point and does not transform the catalogue. If the extension version, contribution digest, section shape, item count, or label fingerprint changes, the candidate stops for focused review. PostgreSQL, DuckDB, Parquet, SQLite, and Python remain optional depth checks; they do not define the breadth of supported connections or block normal deployment. Actual connectivity can still depend on the target server or service, network, credentials, operating system, optional drivers, and the exact installed DBCode version.
 
 ## Release flow
 
 ```text
-release specification
+clean immutable release-source commit
         │
         ▼
-prepare pinned sources and verified extension packages
+materialized temporary checkout
         │
         ▼
-apply semantic patch plan → build → sign → manifest
+release specification → Compiled Host input ID
+        │
+        ├─ cache hit ───────────────────────┐
+        └─ cache miss → prepare → compile ──┤
+                                           ▼
+                     assemble wrapper records and extensions
+                                           │
+                                           ▼
+                                     sign → manifest
         │
         ▼
 candidate Approved Release Set
         │
         ├─ source and package contracts
-        ├─ rendered focused-shell checks
-        ├─ representative database and notebook proofs
-        ├─ restart and Keychain checks
-        └─ promotion and rollback rehearsal
+        ├─ static signed-host smoke
+        └─ one-profile rendered focused-shell smoke
         │
         ▼
-approved set promoted as one host, extension inventory, and profile schema
+prompt-free acceptance report
         │
         ▼
 annotated source tag → host-only DMG → independent mounted verification
 ```
 
-Code OSS runtime, VSCodium packaging, and DBCode updates are discovered separately but never promoted separately. Every source or patch change creates a new candidate identity; old proof cannot silently carry forward.
+Code OSS runtime, VSCodium packaging, and DBCode updates are discovered separately but packaged as one exact release set. Every release commit creates a new audited source snapshot. Only compilation inputs create a new Compiled Host ID, so a DBCode-only bump can reuse the unchanged host and still receive a new signed artifact, manifest, and acceptance report.
 
-The compatibility matrix runs `H0/D0`, `H0/D1`, `H1/D0`, and `H1/D1` as separate receipts. Promotion fails if any one of those pairings fails. This keeps independently discovered host and DBCode releases independently testable while still installing and rolling back one complete Approved Release Set.
+Rendered automation uses one persistent generated QA profile. It does not run first-use migration, profile recovery, Python kernels, SQL execution, model calls, secret entry, or other work that can open a person-controlled prompt. macOS permissions and DBCode sign-in or licence choices remain part of normal app use, outside automated deployment checks.
 
 The first-run setup and Private Personal Release do not weaken that rule. The setup record is generated from the same exact extension specification and is hashed into the signed build manifest. The package command refuses an app without that evidence. It also refuses a lightweight tag, a tag at a different source revision, a changed release lock, a stripped acceptance report, colliding source or artifact filenames, or a DMG at or above GitHub's 2 GiB asset limit.
 
