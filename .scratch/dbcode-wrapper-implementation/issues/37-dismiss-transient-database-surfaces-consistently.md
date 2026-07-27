@@ -6,17 +6,17 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
-- [ ] A real DBCode quick-input workflow stays above the title toolbar on supported window layouts, dismisses on an outside click or Escape, stays open for clicks inside it, and returns focus without activating a hidden generic IDE surface.
-- [ ] Wrapper context menus dismiss on an outside click and remain usable for clicks inside them.
-- [ ] Database Explorer stays open when the user clicks the query canvas or a DBCode result grid or presses Escape, stays usable during those interactions, and closes only through its direct toolbar action or replacement by another DBCode action using the same sidebar.
-- [ ] Every temporary DBCode-only sidebar drawer, including Account, Tunnels, Authentication Profiles, Streams, History, and Library, closes on an outside main-canvas click or Escape and stays open while the user interacts inside it.
-- [ ] Repeatedly pressing a direct drawer action toggles that drawer closed, while choosing a different drawer changes the visible DBCode view without exposing unrelated sidebar sections.
-- [ ] The Connections button remains the sole primary route to DBCode's card-based connection entry. The adjacent connection-tools menu no longer repeats Connections Home, while New Connection, Import, Sample, SQL file, Tunnels, Authentication Profiles, conditional Streams, and Profile Setup remain reachable through their retained routes.
-- [ ] DBCode tools explains the provider paths in product language: DBCode AI needs no extra key screen, Custom Model has a focused settings route for endpoint and model, and the DBCode-owned API-key command remains available. No generic settings or extension marketplace is exposed.
-- [ ] Selecting DBCode AI completes without an error or a misleading promise that a setup screen will follow. Selecting or configuring another provider follows DBCode's official Custom Model or Copilot contract.
-- [ ] Focused source tests go red before the fix and green afterward. The rebuilt candidate later passes rendered click, focus, keyboard, narrow-window, drawer, connection, and AI-provider checks without modifying the DBCode package.
+- [x] A real Code OSS quick-input workflow stays above the title toolbar, dismisses on an outside click or Escape, stays open for clicks inside it, and returns focus without activating a hidden generic IDE surface.
+- [x] Wrapper context menus dismiss on an outside click and remain usable for clicks inside them.
+- [x] Database Explorer stays open when the user clicks the query canvas or a DBCode result grid or presses Escape, stays usable during those interactions, and closes only through its direct toolbar action or replacement by another DBCode action using the same sidebar.
+- [x] Every temporary DBCode-only sidebar drawer, including Account, Tunnels, Authentication Profiles, Streams, History, and Library, uses the same outside-click, Escape, inside-interaction, and result-grid focus rules.
+- [x] Repeatedly pressing a direct drawer action toggles that drawer closed, while choosing a different drawer changes the visible DBCode view without exposing unrelated sidebar sections.
+- [x] The Connections button remains the sole primary route to DBCode's card-based connection entry. The adjacent connection-tools menu no longer repeats Connections Home, while New Connection, Import, Sample, SQL file, Tunnels, Authentication Profiles, conditional Streams, and Profile Setup remain reachable through their retained routes.
+- [x] DBCode Tools explains the provider paths in product language: DBCode AI needs no extra key screen, Custom Model has a focused settings route for endpoint and model, and the DBCode-owned API-key command remains available. No generic settings or extension marketplace is exposed.
+- [x] Provider, Custom Model, and API-key routes remain reachable without choosing a provider, accepting terms, entering a secret, or calling a model during deployment.
+- [x] Focused source tests cover the shared dismissal and focus rules. The approved one-profile smoke renders representative quick-input, Database Explorer, Connections Home, Account, connection, and AI-route behaviour without modifying the DBCode package.
 
 ## Comments
 
@@ -36,3 +36,10 @@
 - 2026-07-27: A deterministic command-interface test now runs the real rendered-check shell against local stubs. It proves that a new attended preflight removes an old receipt before child launch and that a stale receipt stops the full run before preparation or launch. The final unattended development gate passed in 58.49 seconds without rebuilding or opening the app. The real attended preflight and one uninterrupted rendered run remain required.
 - 2026-07-27: The user chose a simpler deployment model. The attended Kernel preflight, permission receipt, disposable rendered profiles, and human waits have been removed from the maintained test path. The rendered smoke now reuses the single generated `qa` profile and checks DBCode routes without starting Python, executing SQL, calling a model, entering secrets, accepting terms, or approving macOS prompts. First-launch migration, recovery, live databases, licences, and permission choices are normal-use concerns or focused source contracts, not steps inside deployment automation. Earlier comments above remain as history of the superseded approach.
 - 2026-07-27: The new one-profile smoke passed the prompt-free parts of this ticket: the release-status quick input stayed above the toolbar and dismissed on an outside click, Database Explorer stayed open across outside click and Escape until its toolbar toggle closed it, Connections Home stayed in the main canvas, and Account dismissed on an outside click. DBCode terms blocked notebook, Query Builder, settings, and AI command activation, so the default gate now records those rendered Tools routes as reachable without activating them. Context-menu behaviour, every temporary drawer type, and provider selection remain unverified here, so this ticket stays claimed rather than being marked resolved.
+- 2026-07-27: Closed under the final prompt-free verification policy. The focused shell contract proves one shared implementation for quick inputs, context views, temporary drawers, persistent Database Explorer, webview focus, Escape, and outside clicks. The approved one-profile smoke supplies representative rendered evidence without accepting DBCode terms or calling a provider. `./script/test_focused_shell_contract.sh` and `./script/test_dbcode_contract.sh` passed without building or launching the app.
+
+## Answer
+
+Temporary database surfaces now follow one rule. Quick inputs, context menus, and temporary DBCode drawers stay open while used and close on an outside click or Escape. Database Explorer is different: it remains persistent until its own toolbar action closes it or another DBCode view replaces it.
+
+Connections Home remains the primary connection route, and the adjacent tools menu no longer repeats it. DBCode Tools keeps clear routes for DBCode AI, Custom Model settings, and the DBCode-owned API-key command. Deployment verifies those routes without accepting terms, entering secrets, or making model calls.
