@@ -6,10 +6,10 @@ umask 077
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_root}/.." && pwd)"
 source "${script_root}/lib/host_config.sh"
-test_root="$(mktemp -d "${repo_root}/.build/local-signing-contract.XXXXXX")"
+test_root="$(mktemp -d "${BUILD_ROOT}/local-signing-contract.XXXXXX")"
 cleanup_test_root() {
   case "${test_root}" in
-    "${repo_root}/.build/local-signing-contract."*) rm -rf "${test_root}" ;;
+    "${BUILD_ROOT}/local-signing-contract."*) rm -rf "${test_root}" ;;
     *) echo "Refusing to remove unexpected signing-test path: ${test_root}" >&2; return 1 ;;
   esac
 }

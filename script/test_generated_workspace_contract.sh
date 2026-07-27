@@ -42,7 +42,7 @@ for caller in \
 done
 
 source "${shell_adapter}"
-if rg -n '\$\{REPO_ROOT\}/\.build' "${REPO_ROOT}/script" --glob 'test_*'; then
+if rg -n '\$\{(REPO_ROOT|repo_root)\}/\.build' "${REPO_ROOT}/script" --glob 'test_*'; then
   echo "A test targets generated output under its source checkout instead of BUILD_ROOT." >&2
   exit 1
 fi
