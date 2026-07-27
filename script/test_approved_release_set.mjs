@@ -5,9 +5,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
-  realpathSync,
   rmSync,
-  symlinkSync,
   writeFileSync
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -29,47 +27,29 @@ const releaseLockTemplate = JSON.parse(
   readFileSync(join(scriptRoot, '..', 'host', 'release-lock.json'), 'utf8')
 );
 
-function preparedSet(overrides = {}) {
-  return {
-    schema_version: 1,
-    role: 'candidate',
-    prepared_at_utc: '2026-07-23T00:00:00Z',
-    release: { release_set_id: releaseSetId, source_set_id: sourceSetId },
-    source: { repository_revision: commit('c') },
-    target: { platform: 'darwin', architecture: 'arm64' },
-    host: {
-      app_sha256: artifactSha,
-      build_manifest_sha256: sha('d'),
-      code_oss_version: '1.127.0'
-    },
-    dbcode: {
-      id: 'dbcode.dbcode',
-      version: '1.37.0',
-      vsix_sha256: sha('e'),
-      signature_archive_sha256: sha('f')
-    },
-    profile: {
-      schema_version: 2,
-      user_data_sha256: sha('1'),
-      source_extensions_sha256: sha('2'),
-      extensions_sha256: sha('2'),
-      shared_data_sha256: sha('3'),
-      installed_extensions: ['dbcode.dbcode@1.37.0'],
-      restored_signed_payloads: []
-    },
-    evidence: { proof_sha256: sha('4') },
-    paths: {
-      app: 'DBCode Wrapper.app',
-      build_manifest: 'build-manifest.json',
-      release_lock: 'release-lock.json',
-      user_data: 'profile/user-data',
-      extensions: 'profile/extensions',
-      shared_data: 'profile/shared-data',
-      proof: 'evidence/proof-state.json'
-    },
-    ...overrides
-  };
-}
+test('retired prepared-release operations stay absent', () => {
+  const cliSource = readFileSync(contractCli, 'utf8');
+  const shellSource = readFileSync(join(scriptRoot, 'lib', 'approved_release_set.sh'), 'utf8');
+
+  for (const retiredCommand of ['validate-set FILE', 'member FILE MEMBER', 'write-approval CANDIDATE']) {
+    assert.equal(cliSource.includes(retiredCommand), false, retiredCommand);
+  }
+  for (const retiredAdapter of [
+    'approved_release_set_validate()',
+    'approved_release_set_member()',
+    'approved_release_set_write_approval()'
+  ]) {
+    assert.equal(shellSource.includes(retiredAdapter), false, retiredAdapter);
+  }
+  for (const retiredExport of [
+    'createApprovedRecord',
+    'resolvePreparedMember',
+    'validatePreparedReleaseSet',
+    'validateRelativeMemberPath'
+  ]) {
+    assert.equal(approvedReleaseSet[retiredExport], undefined, retiredExport);
+  }
+});
 
 function promptFreeReleaseSpecification() {
   const releaseLock = structuredClone(releaseLockTemplate);
@@ -566,29 +546,6 @@ test('shell and JavaScript adapters accept and reject the same records', t => {
   }
 });
 
-test('prepared release members stay inside the prepared directory', t => {
-  const root = mkdtempSync(join(tmpdir(), 'dbcode-prepared-release-set-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  const setFile = join(root, 'release-set.json');
-  const app = join(root, 'DBCode Wrapper.app');
-  mkdirSync(app);
-  writeJson(setFile, preparedSet());
-
-  approvedReleaseSet.validatePreparedReleaseSet(preparedSet());
-  assert.equal(approvedReleaseSet.resolvePreparedMember(setFile, 'app'), realpathSync(app));
-  assert.equal(
-    execFileSync(process.execPath, [contractCli, 'member', setFile, 'app'], { encoding: 'utf8' }).trim(),
-    realpathSync(app)
-  );
-
-  const unsafe = preparedSet({ paths: { ...preparedSet().paths, app: '../Outside.app' } });
-  assert.throws(() => approvedReleaseSet.validatePreparedReleaseSet(unsafe), /path/i);
-  const link = join(root, 'linked-app');
-  symlinkSync(app, link);
-  writeJson(setFile, preparedSet({ paths: { ...preparedSet().paths, app: 'linked-app' } }));
-  assert.throws(() => approvedReleaseSet.resolvePreparedMember(setFile, 'app'), /symlink/i);
-});
-
 test('legacy history remains readable but never becomes update-ready', () => {
   const legacy = {
     id: 'code-oss-1.126.0-dbcode-1.36.1',
@@ -671,38 +628,6 @@ test('installed identity accepts only official release-note locations', () => {
   const badCodeOss = installedIdentity();
   badCodeOss.host.codeOssReleaseNotesUrl = 'https://github.com/microsoft/vscode/releases/tag/1.125.0';
   assert.throws(() => approvedReleaseSet.validateInstalledReleaseSet(badCodeOss), /release notes/i);
-});
-
-test('approval construction binds the candidate, manifest, proof, gate, and attestation', () => {
-  const candidate = preparedSet();
-  const manifest = candidateManifest();
-  const attestation = {
-    schema_version: 1,
-    approved_at: '2026-07-23T00:05:00Z',
-    release_set_id: releaseSetId,
-    candidate_set_sha256: sha('a'),
-    candidate_manifest_sha256: sha('d'),
-    proof_sha256: sha('4'),
-    gate_receipt_sha256: sha('0'),
-    confirmation: 'exact-release-set-id',
-    automatic_install: false,
-    privileged_install: false
-  };
-  const record = approvedReleaseSet.createApprovedRecord({
-    candidateSet: candidate,
-    manifest,
-    attestation,
-    candidateSetSha256: sha('a'),
-    manifestSha256: sha('d'),
-    attestationSha256: sha('5'),
-    proofSha256: sha('4'),
-    gateReceiptSha256: sha('0')
-  });
-  assert.equal(record.id, releaseSetId);
-  assert.equal(record.manifest.approval_attestation_sha256, sha('5'));
-  assert.equal(record.manifest.source_snapshot_sha256, sha('8'));
-  assert.equal(record.manifest.compiled_host_input_id, `compiled-host-${sha('9')}`);
-  assert.equal(record.approval.gate_receipt_sha256, sha('0'));
 });
 
 test('prompt-free approval binds accepted package evidence without installing it', t => {

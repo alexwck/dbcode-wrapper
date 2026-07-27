@@ -13,15 +13,12 @@ const VALIDATOR_TIMEOUT_MS = 30_000;
 
 function usage() {
   console.error(`Usage:
-  ./script/approved_release_set.cjs validate-set FILE
-  ./script/approved_release_set.cjs member FILE MEMBER
   ./script/approved_release_set.cjs validate-approved FILE
   ./script/approved_release_set.cjs validate-history FILE
   ./script/approved_release_set.cjs history-record HISTORY ID
   ./script/approved_release_set.cjs prompt-free-verification-checks
   ./script/approved_release_set.cjs write-prompt-free-approval COMPATIBILITY MANIFEST RELEASE_LOCK \
-    ATTESTATION ACCEPTANCE VERIFICATION BASE_HISTORY RECORD OUTPUT_HISTORY
-  ./script/approved_release_set.cjs write-approval CANDIDATE MANIFEST ATTESTATION PROOF GATE RECORD HISTORY`);
+    ATTESTATION ACCEPTANCE VERIFICATION BASE_HISTORY RECORD OUTPUT_HISTORY`);
   process.exit(2);
 }
 
@@ -99,17 +96,6 @@ function writeJsonAtomically(filePath, value) {
 function main(argv) {
   const [command, ...args] = argv;
   switch (command) {
-    case 'validate-set': {
-      if (args.length !== 1) usage();
-      const record = contract.readPlainJsonFile(args[0], 'Prepared release-set record');
-      contract.validatePreparedReleaseSet(record);
-      break;
-    }
-    case 'member': {
-      if (args.length !== 2) usage();
-      console.log(contract.resolvePreparedMember(args[0], args[1]));
-      break;
-    }
     case 'validate-approved': {
       if (args.length !== 1) usage();
       const record = contract.readPlainJsonFile(args[0], 'Approved Release Set record');
@@ -192,34 +178,6 @@ function main(argv) {
       const nextHistory = contract.upsertApprovedHistory(baseHistory, record);
       writeJsonAtomically(recordPath, record);
       writeJsonAtomically(outputHistoryPath, nextHistory);
-      console.log(recordPath);
-      break;
-    }
-    case 'write-approval': {
-      if (args.length !== 7) usage();
-      const [candidatePath, manifestPath, attestationPath, proofPath, gatePath, recordPath, historyPath] = args;
-      const candidate = fileSha256(candidatePath, 'Candidate release-set record');
-      const manifest = fileSha256(manifestPath, 'Candidate build manifest');
-      const attestation = fileSha256(attestationPath, 'Approval attestation');
-      const proof = fileSha256(proofPath, 'Candidate proof');
-      const gate = fileSha256(gatePath, 'Compatibility gate receipt');
-      const record = contract.createApprovedRecord({
-        candidateSet: candidate.value,
-        manifest: manifest.value,
-        attestation: attestation.value,
-        candidateSetSha256: candidate.digest,
-        manifestSha256: manifest.digest,
-        attestationSha256: attestation.digest,
-        proofSha256: proof.digest,
-        gateReceiptSha256: gate.digest
-      });
-      let history = { schema_version: 2, approved_release_sets: [] };
-      if (fs.existsSync(historyPath)) {
-        history = contract.readPlainJsonFile(historyPath, 'Approved Release Set history');
-      }
-      const nextHistory = contract.upsertApprovedHistory(history, record);
-      writeJsonAtomically(recordPath, record);
-      writeJsonAtomically(historyPath, nextHistory);
       console.log(recordPath);
       break;
     }

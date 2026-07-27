@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('node:fs');
-const path = require('node:path');
 const { isDeepStrictEqual } = require('node:util');
 
 const GIT_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
@@ -25,16 +24,6 @@ const PROMPT_FREE_VERIFICATION_CHECKS = [
   'source_tag',
   'upstream_notices'
 ];
-const PREPARED_MEMBER_NAMES = new Set([
-  'app',
-  'build_manifest',
-  'release_lock',
-  'user_data',
-  'extensions',
-  'shared_data',
-  'proof'
-]);
-
 function fail(message) {
   throw new Error(message);
 }
@@ -148,69 +137,6 @@ function requireCanonicalIdentity(record) {
   if (record.id !== expectedId) {
     fail('Approved Release Set artifact identity is invalid.');
   }
-}
-
-function validateRelativeMemberPath(value, label = 'Prepared release-set member path') {
-  const relativePath = requireString(value, label);
-  if (
-    path.isAbsolute(relativePath) ||
-    relativePath.includes('\0') ||
-    relativePath.includes('\\') ||
-    relativePath.split('/').some(part => part === '' || part === '.' || part === '..')
-  ) {
-    fail(`${label} is unsafe.`);
-  }
-  return relativePath;
-}
-
-function validatePreparedReleaseSet(record) {
-  requireObject(record, 'Prepared release-set record');
-  if (record.schema_version !== 1) {
-    fail('Prepared release-set schema is unsupported.');
-  }
-  if (!['current', 'candidate'].includes(record.role)) {
-    fail('Prepared release-set role is invalid.');
-  }
-  requireTimestamp(record.prepared_at_utc, 'Prepared release-set timestamp');
-  const release = requireObject(record.release, 'Prepared release identity');
-  requireString(release.release_set_id, 'Prepared release-set ID');
-  requireString(release.source_set_id, 'Prepared source-set ID');
-  requireCommit(record.source?.repository_revision, 'Prepared source revision');
-  requireTarget(record.target, 'Prepared release target');
-  requireSha256(record.host?.app_sha256, 'Prepared app digest');
-  requireSha256(record.host?.build_manifest_sha256, 'Prepared build-manifest digest');
-  requireVersion(record.host?.code_oss_version, 'Prepared Code OSS version');
-  if (record.dbcode?.id !== 'dbcode.dbcode') {
-    fail('Prepared DBCode identity is invalid.');
-  }
-  requireVersion(record.dbcode?.version, 'Prepared DBCode version');
-  requireSha256(record.dbcode?.vsix_sha256, 'Prepared DBCode package digest');
-  requireSha256(record.dbcode?.signature_archive_sha256, 'Prepared DBCode signature digest');
-  requirePositiveInteger(record.profile?.schema_version, 'Prepared profile schema');
-  requireSha256(record.profile?.user_data_sha256, 'Prepared user-data digest');
-  requireSha256(record.profile?.source_extensions_sha256, 'Prepared source-extension digest');
-  requireSha256(record.profile?.extensions_sha256, 'Prepared extension digest');
-  requireSha256(record.profile?.shared_data_sha256, 'Prepared shared-data digest');
-  if (!Array.isArray(record.profile?.installed_extensions) || record.profile.installed_extensions.length === 0) {
-    fail('Prepared extension inventory is missing.');
-  }
-  if (!record.profile.installed_extensions.every(value => typeof value === 'string' && value.includes('@'))) {
-    fail('Prepared extension inventory is invalid.');
-  }
-  if (!Array.isArray(record.profile?.restored_signed_payloads)) {
-    fail('Prepared restored-payload record is invalid.');
-  }
-  const paths = requireObject(record.paths, 'Prepared release-set paths');
-  for (const member of ['app', 'build_manifest', 'release_lock', 'user_data', 'extensions', 'shared_data']) {
-    validateRelativeMemberPath(paths[member], `Prepared ${member} path`);
-  }
-  if (record.role === 'candidate') {
-    requireSha256(record.evidence?.proof_sha256, 'Prepared proof digest');
-    validateRelativeMemberPath(paths.proof, 'Prepared proof path');
-  } else if (paths.proof !== undefined) {
-    validateRelativeMemberPath(paths.proof, 'Prepared proof path');
-  }
-  return record;
 }
 
 function validateLegacyApprovedRecord(record) {
@@ -409,32 +335,6 @@ function readPlainJsonFile(filePath, label) {
   } catch {
     fail(`${label} is not valid JSON.`);
   }
-}
-
-function resolvePreparedMember(setFile, memberName) {
-  if (!PREPARED_MEMBER_NAMES.has(memberName)) {
-    fail(`Unknown prepared release-set member: ${memberName}`);
-  }
-  const record = readPlainJsonFile(setFile, 'Prepared release-set record');
-  validatePreparedReleaseSet(record);
-  const relativePath = validateRelativeMemberPath(record.paths?.[memberName], `Prepared ${memberName} path`);
-  const setRoot = fs.realpathSync(path.dirname(setFile));
-  const candidatePath = path.join(setRoot, relativePath);
-  let candidateInfo;
-  try {
-    candidateInfo = fs.lstatSync(candidatePath);
-  } catch {
-    fail(`Prepared release-set member is missing: ${relativePath}`);
-  }
-  if (candidateInfo.isSymbolicLink()) {
-    fail(`Prepared release-set member is symlinked: ${relativePath}`);
-  }
-  const resolvedPath = fs.realpathSync(candidatePath);
-  const relativeResolvedPath = path.relative(setRoot, resolvedPath);
-  if (relativeResolvedPath === '' || relativeResolvedPath.startsWith(`..${path.sep}`) || path.isAbsolute(relativeResolvedPath)) {
-    fail(`Prepared release-set member escapes its directory: ${relativePath}`);
-  }
-  return resolvedPath;
 }
 
 function validateReleaseSpecificationRecords(input) {
@@ -876,122 +776,6 @@ function createPromptFreeApprovedRecord(input) {
   return record;
 }
 
-function createApprovedRecord({
-  candidateSet,
-  manifest,
-  attestation,
-  candidateSetSha256,
-  manifestSha256,
-  attestationSha256,
-  proofSha256,
-  gateReceiptSha256
-}) {
-  validatePreparedReleaseSet(candidateSet);
-  if (candidateSet.role !== 'candidate') {
-    fail('Only a candidate prepared release set can be approved.');
-  }
-  requireObject(manifest, 'Candidate build manifest');
-  requireObject(attestation, 'Approval attestation');
-  const candidateDigest = requireSha256(candidateSetSha256, 'Candidate release-set digest');
-  const manifestDigest = requireSha256(manifestSha256, 'Candidate build-manifest digest');
-  const attestationDigest = requireSha256(attestationSha256, 'Approval attestation digest');
-  const proofDigest = requireSha256(proofSha256, 'Candidate proof digest');
-  const gateDigest = requireSha256(gateReceiptSha256, 'Compatibility gate digest');
-  if (manifest.schema_version < 6 || manifest.release?.release_set_id !== candidateSet.release.release_set_id ||
-      manifest.release?.source_set_id !== candidateSet.release.source_set_id) {
-    fail('Candidate build manifest belongs to another release set.');
-  }
-  if (manifest.source?.repository_revision !== candidateSet.source.repository_revision ||
-      manifest.source?.snapshot?.repository_revision !== candidateSet.source.repository_revision ||
-      manifest.artifact?.sha256 !== candidateSet.host.app_sha256 ||
-      manifest.source?.code_oss?.tag !== candidateSet.host.code_oss_version) {
-    fail('Candidate build manifest does not match the prepared set.');
-  }
-  requireCommit(manifest.source?.vscodium?.commit, 'Candidate VSCodium revision');
-  requireCommit(manifest.source?.code_oss?.commit, 'Candidate Code OSS revision');
-  requireCommit(manifest.source?.snapshot?.tree_oid, 'Candidate source tree');
-  requireSha256(manifest.source?.snapshot?.snapshot_sha256, 'Candidate source-snapshot digest');
-  if (
-    manifest.source?.snapshot?.schema_version !== 1 ||
-    manifest.source?.snapshot?.mode !== 'immutable-git-commit' ||
-    manifest.source?.snapshot?.host_script_sha256 !== manifest.source?.overlay_sha256 ||
-    manifest.source?.snapshot?.release_lock_sha256 !== manifest.source?.release_lock_sha256 ||
-    manifest.source?.compiled_host?.schema_version !== 2 ||
-    manifest.source?.compiled_host?.app_digest_algorithm !== 'sha256-files-modes-links-v1'
-  ) {
-    fail('Candidate immutable source snapshot is invalid.');
-  }
-  requirePattern(
-    manifest.source?.compiled_host?.input_id,
-    COMPILED_HOST_INPUT_PATTERN,
-    'Candidate compiled-host input ID'
-  );
-  requireSha256(manifest.source?.shell_patch_revision, 'Candidate shell-patch digest');
-  requireSha256(manifest.source?.overlay_sha256, 'Candidate overlay digest');
-  if (manifest.packaging?.status !== 'built-and-signed') {
-    fail('Candidate package is not built and signed.');
-  }
-  if (
-    attestation.schema_version !== 1 ||
-    attestation.release_set_id !== candidateSet.release.release_set_id ||
-    attestation.candidate_set_sha256 !== candidateDigest ||
-    attestation.candidate_manifest_sha256 !== manifestDigest ||
-    attestation.proof_sha256 !== proofDigest ||
-    attestation.gate_receipt_sha256 !== gateDigest ||
-    attestation.confirmation !== 'exact-release-set-id' ||
-    attestation.automatic_install !== false ||
-    attestation.privileged_install !== false
-  ) {
-    fail('Approval attestation does not bind the exact candidate evidence.');
-  }
-  requireTimestamp(attestation.approved_at, 'Approval timestamp');
-  if (candidateSet.host.build_manifest_sha256 !== manifestDigest ||
-      candidateSet.evidence.proof_sha256 !== proofDigest) {
-    fail('Prepared release-set evidence does not match the approval inputs.');
-  }
-  const record = {
-    schema_version: 2,
-    id: candidateSet.release.release_set_id,
-    source_set_id: candidateSet.release.source_set_id,
-    compatibility_status: 'approved',
-    source_commit: manifest.source.repository_revision,
-    target: candidateSet.target,
-    profile: { schema_version: candidateSet.profile.schema_version },
-    manifest: {
-      schema_version: manifest.schema_version,
-      build_manifest_sha256: manifestDigest,
-      candidate_manifest_sha256: manifestDigest,
-      approval_attestation_sha256: attestationDigest,
-      artifact_sha256: candidateSet.host.app_sha256,
-      shell_patch_revision: manifest.source.shell_patch_revision,
-      overlay_sha256: manifest.source.overlay_sha256,
-      source_snapshot_sha256: manifest.source.snapshot.snapshot_sha256,
-      compiled_host_input_id: manifest.source.compiled_host.input_id,
-      packaging_status: manifest.packaging.status
-    },
-    host: {
-      vscodium_tag: requireVersion(manifest.source.vscodium?.tag, 'Candidate VSCodium version'),
-      vscodium_commit: manifest.source.vscodium.commit,
-      code_oss_tag: requireVersion(manifest.source.code_oss?.tag, 'Candidate Code OSS version'),
-      code_oss_commit: manifest.source.code_oss.commit
-    },
-    dbcode: {
-      id: candidateSet.dbcode.id,
-      version: candidateSet.dbcode.version,
-      vsix_sha256: candidateSet.dbcode.vsix_sha256,
-      signature_archive_sha256: candidateSet.dbcode.signature_archive_sha256
-    },
-    approval: {
-      approved_at: attestation.approved_at,
-      validation_issue: requireString(manifest.release?.validation_issue, 'Candidate validation issue'),
-      proof_sha256: proofDigest,
-      gate_receipt_sha256: gateDigest
-    }
-  };
-  validateApprovedRecord(record, { allowLegacy: false });
-  return record;
-}
-
 function upsertApprovedHistory(history, record) {
   const existing = history ?? { schema_version: 2, approved_release_sets: [] };
   validateApprovedHistory(existing);
@@ -1011,17 +795,13 @@ module.exports = {
   GIT_COMMIT_PATTERN,
   SHA256_PATTERN,
   COMPILED_HOST_INPUT_PATTERN,
-  createApprovedRecord,
   createPromptFreeApprovedRecord,
   findApprovedCandidate,
   hasCanonicalSourceSetId,
   promptFreeVerificationChecks,
   readPlainJsonFile,
-  resolvePreparedMember,
   upsertApprovedHistory,
   validateApprovedHistory,
   validateApprovedRecord,
-  validateInstalledReleaseSet,
-  validatePreparedReleaseSet,
-  validateRelativeMemberPath
+  validateInstalledReleaseSet
 };
