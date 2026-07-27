@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 8e1573615fc360d2de9d69a4f2d237c6ef336822
+source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
 ---
 ## Summary
 
@@ -25,10 +25,11 @@ flowchart LR
   S --> C[Compiled Host Cache]
   C --> A[Assemble and sign]
   A --> E[Exact-source and exact-app checks]
-  E --> R[Prompt-free rendered report]
-  R --> P[Approved Release Set]
-  P --> I[Promote or package]
-  I --> H[Health or rollback]
+  E --> R[Prompt-free acceptance]
+  R --> K[Host-only package]
+  K --> V[Mounted verification]
+  V --> P[Approved Release Set]
+  P --> I[Separate install or rollback]
 ```
 
 ## Key components
@@ -40,7 +41,7 @@ flowchart LR
 - [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
 - [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
 
-Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/script/lib/compiled_host_cache.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/8e1573615fc360d2de9d69a4f2d237c6ef336822/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
+Core transition checks live in [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/compiled_host_cache.sh), [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/script/lib/private_release.sh), and [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/f18fc4ecc80e580a54695ccb04311f119c7a2642/host/extensions/dbcode-wrapper-release-status/approved-release-set.js).
 
 ## Design decisions
 
@@ -51,6 +52,8 @@ Core transition checks live in [`release_source_snapshot.sh`](https://github.com
 - Final acceptance re-enters the manifest's materialized source and reruns development and static checks. Detached success logs are not enough.
 - The rendered report is reusable only for the same exact release-set ID.
 - Human prompts and external services are normal app-use gates, not deployment tests.
+- Release Specification and Private Personal Release remain the only owners of their full input schemas. Approval consumes their validated purpose records and binds the resulting digests to the package receipt.
+- Prompt-free approval writes generated evidence only. It never installs the app or writes the production profile.
 - The previous complete set stays protected for rollback.
 
 ## Related

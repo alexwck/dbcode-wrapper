@@ -50,3 +50,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 8a70d5c (was f18e06e)
 - Coverage: current VSCodium release-lock field in exact acceptance
 - Pages: [Overview](./OVERVIEW.md) and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: f18fc4e (was 8a70d5c)
+- Coverage: prompt-free private approval; authoritative release and acceptance validation; mounted-package evidence; approval and installation separation
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set](./modules/approved-release-set.md), [Private Personal Release](./modules/private-personal-release.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)

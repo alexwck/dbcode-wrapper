@@ -9,11 +9,11 @@ tags:
   - transfer
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
 ---
 ## Summary
 
-This flow packages one locally signed, prompt-free accepted host for private use on another Mac owned by the same person. It separates public source, host-only package contents, and private profile state, then verifies the final mounted image independently.
+This flow packages one locally signed, prompt-free accepted host for private use on another Mac owned by the same person. It separates public source, host-only package contents, approval evidence, installation, and private profile state. The final mounted image is verified independently before approval can be recorded.
 
 ## Trigger
 
@@ -28,13 +28,15 @@ sequenceDiagram
   participant Packager
   participant Image as Host-only DMG
   participant Verifier
+  participant Approval
   participant Target as Personal Mac
   Source->>Accept: Snapshot manifest app rendered report
   Accept-->>Packager: Matching passed report
   Packager->>Image: App guidance metadata checksum
   Image->>Verifier: Mount and inspect independently
-  Verifier-->>Target: Verified compatibility facts
-  Target->>Target: Install packages and create profile
+  Verifier-->>Approval: Exact package receipt
+  Approval-->>Target: Approved record without installation
+  Target->>Target: Install host and create profile separately
 ```
 
 ## Steps
@@ -46,9 +48,11 @@ sequenceDiagram
 5. Generate sanitized metadata that states DBCode, licence, and profile contents are not included.
 6. Build the DMG, external checksum, and verification receipt under the registered private-release root.
 7. Mount the final image read-only and independently recheck contents, digest, signatures, and compatibility record.
-8. Transfer only through the owner's private location.
-9. On the target Mac, verify the checksum, install the host, then install the pinned external packages into a new Standalone DBCode Profile.
-10. Handle Gatekeeper, Safe Storage, licence, or account prompts as normal user setup, outside automated deployment.
+8. Run prompt-free approval with the exact release-set ID. It writes an attestation, approved record, and merged history under generated output only.
+9. Review the generated record before adding it to maintained approved history. Approval does not launch or install the app and does not write the production profile.
+10. Transfer only through the owner's private location.
+11. On the target Mac, verify the checksum, install the host, then install the pinned external packages into a new Standalone DBCode Profile.
+12. Handle Gatekeeper, Safe Storage, licence, or account prompts as normal user setup, outside automated deployment.
 
 ## Failure modes
 
@@ -58,6 +62,8 @@ sequenceDiagram
 - The checksum changes during transfer.
 - The target treats the locally signed app as a new identity and asks for approval.
 - Packaging or verification writes outside the registered private-release root.
+- Approval receives an incomplete schema-3 report, a changed receipt, the wrong exact ID, or an attestation that claims installation.
+- An existing approval output is overwritten instead of reviewed as immutable evidence.
 
 ## Related
 

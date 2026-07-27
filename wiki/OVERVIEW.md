@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: 8a70d5c18c6b782860a78cd4945bcb04fdb6082b
+source_commit: f18fc4ecc80e580a54695ccb04311f119c7a2642
 tags:
   - wiki
   - overview
@@ -12,7 +12,7 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`8a70d5c`](https://github.com/alexwck/dbcode-wrapper/tree/8a70d5c18c6b782860a78cd4945bcb04fdb6082b). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`f18fc4e`](https://github.com/alexwck/dbcode-wrapper/tree/f18fc4ecc80e580a54695ccb04311f119c7a2642). Check source and tests when details disagree.
 
 > [!NOTE]
 > The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.
@@ -32,7 +32,9 @@ flowchart LR
   P --> F
   F --> Q[DBCode features]
   A --> V[Prompt-free acceptance]
-  V --> R[Private release and rollback]
+  V --> R[Private package and mounted verification]
+  R --> G[Prompt-free approval bundle]
+  G --> I[Separate install or rollback]
 ```
 
 The app bundle is a replaceable host and the private profile is durable owner-controlled state. A release is trusted only when its immutable source, compiled host, signed app, external packages, profile schema, and acceptance evidence identify the same [Approved Release Set](concepts/approved-release-set.md).
