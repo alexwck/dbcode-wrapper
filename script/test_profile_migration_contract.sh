@@ -9,6 +9,7 @@ extension_manifest="${extension_root}/package.json"
 extension_runtime="${extension_root}/extension.js"
 extension_view="${extension_root}/view.js"
 migration_logic="${extension_root}/migration.js"
+profile_setup="${extension_root}/profileSetup.js"
 staging_logic="${extension_root}/staging.js"
 recovery_logic="${extension_root}/profileRecovery.js"
 recovery_worker="${extension_root}/profileRecoveryWorker.js"
@@ -30,6 +31,7 @@ for required_file in \
   "${extension_runtime}" \
   "${extension_view}" \
   "${migration_logic}" \
+  "${profile_setup}" \
   "${staging_logic}" \
   "${recovery_logic}" \
   "${recovery_worker}" \
@@ -91,12 +93,36 @@ for required_runtime_contract in \
   }
 done
 
-if rg -n '\.vscode|Code/User|VSCodium/User|globalStorage/dbcode\.dbcode|SecretStorage' "${extension_runtime}" "${extension_view}" "${migration_logic}" "${staging_logic}" "${recovery_logic}" "${recovery_worker}"; then
+for required_orchestration_contract in \
+  'class ProfileSetup' \
+  'async dispatch(action)' \
+  'async panelClosed()' \
+  'async recreateProfile()' \
+  'requireMatchingRelaunchPath' \
+  'await this.adapter.startRecovery(this.recoveryRequest())' \
+  'await this.adapter.quit()'; do
+  rg -Fq "${required_orchestration_contract}" "${profile_setup}" || {
+    echo "Profile Setup is missing orchestration: ${required_orchestration_contract}" >&2
+    exit 1
+  }
+done
+
+if rg -n 'class ProfileMigrationController|this\.plan|this\.staged|preflightProgress|finishPreflight|recoveryRequest' "${extension_runtime}"; then
+  echo "The extension must remain a thin host adapter for Profile Setup." >&2
+  exit 1
+fi
+
+rg -Fq 'new ProfileSetup({' "${extension_runtime}" || {
+  echo "The extension must delegate Profile Setup actions to the testable module." >&2
+  exit 1
+}
+
+if rg -n '\.vscode|Code/User|VSCodium/User|globalStorage/dbcode\.dbcode|SecretStorage' "${extension_runtime}" "${extension_view}" "${migration_logic}" "${profile_setup}" "${staging_logic}" "${recovery_logic}" "${recovery_worker}"; then
   echo "Profile migration must not inspect or copy another editor profile or secret store." >&2
   exit 1
 fi
 
-if rg -n '/usr/bin/security|context\.secrets|keytar|find-generic-password|delete-generic-password' "${extension_runtime}" "${recovery_logic}" "${recovery_worker}"; then
+if rg -n '/usr/bin/security|context\.secrets|keytar|find-generic-password|delete-generic-password' "${extension_runtime}" "${profile_setup}" "${recovery_logic}" "${recovery_worker}"; then
   echo "Profile recovery must not read, write, or delete macOS Keychain records." >&2
   exit 1
 fi
@@ -142,6 +168,7 @@ jq -e '
 "${NODE_BIN_DIR}/node" --check "${extension_runtime}"
 "${NODE_BIN_DIR}/node" --check "${extension_view}"
 "${NODE_BIN_DIR}/node" --check "${migration_logic}"
+"${NODE_BIN_DIR}/node" --check "${profile_setup}"
 "${NODE_BIN_DIR}/node" --check "${staging_logic}"
 "${NODE_BIN_DIR}/node" --check "${recovery_logic}"
 "${NODE_BIN_DIR}/node" --check "${recovery_worker}"
