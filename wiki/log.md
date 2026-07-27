@@ -43,3 +43,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: f18e06e (was 8e15736)
 - Coverage: normalized materialized-source paths for exact release acceptance
 - Pages: [Overview](./OVERVIEW.md), [Release Source Snapshot](./modules/release-source-snapshot.md), [Verification Harness](./modules/verification-harness.md), and [Build sign and launch](./flows/build-sign-and-launch.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: 8a70d5c (was f18e06e)
+- Coverage: current VSCodium release-lock field in exact acceptance
+- Pages: [Overview](./OVERVIEW.md) and [Verification Harness](./modules/verification-harness.md)
