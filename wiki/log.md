@@ -79,3 +79,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: c72b801 (was 03b41f3)
 - Coverage: one maintained prompt-free approval writer; retired prepared-set validator, member resolver, and proof-based writer; unchanged approved-history, update-matching, and guarded-rollback paths
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set concept](./concepts/approved-release-set.md), and [Approved Release Set module](./modules/approved-release-set.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: d06cd2a (was c72b801)
+- Coverage: zero unknown generated roots; protected historical controlled-upgrade evidence; explicit dry-run targets for Finder metadata, the retired catalogue profile, and the abandoned smoke-backup root; retained caches and worktrees for fast deployment
+- Pages: [Overview](./OVERVIEW.md) and [Generated Workspace Retention](./modules/generated-workspace-retention.md)

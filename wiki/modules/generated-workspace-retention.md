@@ -9,11 +9,13 @@ tags:
   - safety
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: d06cd2a317dd76df152327b00ad361f485e3afa9
 ---
 ## Summary
 
 Generated Workspace Retention is the ownership and safety boundary for ignored output from builds, tests, upgrades, rollback, caches, and private packaging. Each maintained root has a class, owner, reason, and cleanup decision. It is not a general disk cleaner: protected and unknown paths are reported without traversal, and cleanup remains dry-run only.
+
+The current inventory has no unknown root. It protects the historical short-path controlled-upgrade receipts and limits the dry-run plan to Finder metadata, the retired short-path connection-catalogue profile, and an abandoned smoke-backup root. No generated data was deleted.
 
 ## Responsibilities
 
@@ -22,7 +24,7 @@ Generated Workspace Retention is the ownership and safety boundary for ignored o
 - Normalize relative paths, absolute paths, and paths containing spaces before callers use them.
 - Refuse broad roots, home roots, symbolic links, paths outside the safety root, and unregistered cleanup targets.
 - Avoid reading or measuring private profile contents and other protected artifacts.
-- Measure only output already declared expired under the dedicated expired root.
+- Measure only paths that the contract explicitly registers as expired, including descendants under the dedicated expired root.
 - Require one explicit class or exact path for cleanup planning.
 - Return a plan without deleting anything.
 
@@ -41,20 +43,21 @@ flowchart LR
 
 ## Public API / entry points
 
-[`generated_workspace.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generated_workspace.sh) provides `inventory` and dry-run `cleanup`. Shell workflows use [`script/lib/generated_workspace.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/generated_workspace.sh) to resolve the same roots.
+[`generated_workspace.sh`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/generated_workspace.sh) provides `inventory` and dry-run `cleanup`. Shell workflows use [`script/lib/generated_workspace.sh`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/lib/generated_workspace.sh) to resolve the same roots.
 
 ## Key files
 
-- [`script/lib/generated-workspace-retention.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/generated-workspace-retention.js) — registry, validation, inventory, and cleanup planning.
-- [`script/generated_workspace.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/generated_workspace.cjs) — task command adapter.
-- [`script/lib/compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/compiled_host_cache.sh) — protected reusable cache consumer.
-- [`script/test_generated_workspace_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_generated_workspace_contract.sh) — public path and refusal checks.
+- [`script/lib/generated-workspace-retention.js`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/lib/generated-workspace-retention.js) — registry, validation, inventory, and cleanup planning.
+- [`script/generated_workspace.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/generated_workspace.cjs) — task command adapter.
+- [`script/lib/compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/lib/compiled_host_cache.sh) — protected reusable cache consumer.
+- [`script/test_generated_workspace_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/d06cd2a317dd76df152327b00ad361f485e3afa9/script/test_generated_workspace_contract.sh) — public path, classification, dry-run, and refusal checks.
 
 ## Design decisions
 
 - Retention follows declared ownership, not age or a guessed directory name.
 - Reusable compiled hosts stay protected because deleting them can turn a quick release into a full build.
 - Accepted apps, active evidence, rollback backups, and final transfer assets remain protected until their workflows release them.
+- Retiring an executable harness does not expire its accepted historical evidence.
 - Protected artifacts use an uninspected size status.
 - Callers use the normalized absolute path returned by the contract.
 - Cleanup mutation is intentionally absent.

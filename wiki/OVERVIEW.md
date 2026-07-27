@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8
+source_commit: d06cd2a317dd76df152327b00ad361f485e3afa9
 tags:
   - wiki
   - overview
@@ -12,11 +12,13 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`c72b801`](https://github.com/alexwck/dbcode-wrapper/tree/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`d06cd2a`](https://github.com/alexwck/dbcode-wrapper/tree/d06cd2a317dd76df152327b00ad361f485e3afa9). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
+
+Generated cleanup is also conservative. The current inventory has no unknown root and its dry-run plan selects only Finder metadata, the obsolete short-path catalogue profile, and an abandoned smoke-backup root. Reusable caches, worktrees, accepted release assets, and historical upgrade evidence remain protected.
 
 > [!NOTE]
 > The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.
