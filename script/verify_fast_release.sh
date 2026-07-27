@@ -76,10 +76,12 @@ if [[ "${DBCODE_WRAPPER_RELEASE_VERIFIER_MATERIALIZED:-no}" != "yes" ]]; then
   trap cleanup_verifier_source EXIT INT TERM
 
   jq -S '.source.snapshot' "${manifest}" > "${verifier_source_record}"
-  release_source_snapshot_materialize \
-    "${launcher_repo_root}" \
-    "${verifier_source_record}" \
-    "${materialized_verifier_source}" >/dev/null
+  materialized_verifier_source="$(
+    release_source_snapshot_materialize \
+      "${launcher_repo_root}" \
+      "${verifier_source_record}" \
+      "${materialized_verifier_source}"
+  )"
 
   DBCODE_WRAPPER_GENERATED_REPO_ROOT="${launcher_repo_root}" \
   DBCODE_WRAPPER_RELEASE_VERIFIER_MATERIALIZED="yes" \

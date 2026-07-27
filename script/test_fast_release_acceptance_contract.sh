@@ -18,6 +18,7 @@ for required_contract in \
   'compiled_host_input_id' \
   'mode == "immutable-git-commit"' \
   'release_source_snapshot_materialize' \
+  'materialized_verifier_source="$(' \
   'DBCODE_WRAPPER_RELEASE_VERIFIER_MATERIALIZED' \
   '"${script_root}/check_development.sh"' \
   '"${script_root}/smoke_host.sh"' \

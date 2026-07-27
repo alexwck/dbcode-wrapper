@@ -74,10 +74,16 @@ release_source_snapshot_verify_json \
   "${repository}" \
   "$(jq -c . "${record}")"
 materialized_source="${test_root}/materialized source"
-release_source_snapshot_materialize \
-  "${repository}" \
-  "${record}" \
-  "${materialized_source}" >/dev/null
+returned_materialized_source="$(
+  release_source_snapshot_materialize \
+    "${repository}" \
+    "${record}" \
+    "${materialized_source}"
+)"
+[[ "${returned_materialized_source}" == "$(cd "${materialized_source}" && pwd -P)" ]] || {
+  echo "The materialized source did not return its normalized absolute path." >&2
+  exit 1
+}
 [[ "$(cat "${materialized_source}/host/wrapper.txt")" == "wrapper source" ]] || {
   echo "The materialized source did not use the recorded immutable commit." >&2
   exit 1
