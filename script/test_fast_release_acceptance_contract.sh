@@ -26,6 +26,7 @@ for required_contract in \
   '--manifest "${manifest}"' \
   'gate_execution' \
   'build_manifest_sha256: $manifest_sha256' \
+  '.upstream.vscodium.tag == $vscodium_version' \
   'kernel_started: false' \
   'sql_executed: false' \
   'model_called: false' \
@@ -50,6 +51,7 @@ for forbidden_contract in \
   '--matrix' \
   '--health' \
   '--rollback' \
+  '.runtime.vscodium_version' \
   'manual_checks' \
   'manual_evidence' \
   'Independent launch passed'; do

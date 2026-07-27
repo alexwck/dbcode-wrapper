@@ -216,7 +216,7 @@ jq -e \
   --arg dbcode_version "${dbcode_version}" \
   --arg dbcode_sha256 "${dbcode_sha256}" '
     .runtime.code_oss_version == $code_oss_version
-    and .runtime.vscodium_version == $vscodium_version
+    and .upstream.vscodium.tag == $vscodium_version
     and .extension.dbcode.id == $dbcode_id
     and .extension.dbcode.version == $dbcode_version
     and .extension.dbcode.sha256 == $dbcode_sha256
