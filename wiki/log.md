@@ -93,3 +93,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: e20a9a1 (was d06cd2a)
 - Coverage: one testable Profile Setup workflow; thin VS Code and DBCode host adapter; prompt-free action-order, cleanup, persistence, DuckDB preflight, and recovery-handoff checks
 - Pages: [Overview](./OVERVIEW.md), [Focused host and private profile](./architecture/focused-host-and-private-profile.md), and [Profile Layout and Setup](./modules/profile-layout-and-setup.md)
+
+## 2026-07-27: refresh
+
+- Profile: public/standard
+- source_commit: ddaa6a0 (was e20a9a1)
+- Coverage: Release Specification schema 5; generated profile identity; shell and JavaScript path parity; query-storage product identity; profile-only Compiled Host reuse; static identity checks; historical rollback identity
+- Pages: [Overview](./OVERVIEW.md), [Focused host and private profile](./architecture/focused-host-and-private-profile.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Standalone DBCode Profile](./concepts/standalone-dbcode-profile.md), [Release Specification](./modules/release-specification.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Verification Harness](./modules/verification-harness.md), [Build sign and launch](./flows/build-sign-and-launch.md), and [Approval and guarded rollback](./flows/approval-and-guarded-rollback.md)

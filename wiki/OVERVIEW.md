@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: e20a9a13c697b331902ce83a84cbb7505c0dc3fc
+source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
 tags:
   - wiki
   - overview
@@ -12,11 +12,13 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`e20a9a1`](https://github.com/alexwck/dbcode-wrapper/tree/e20a9a13c697b331902ce83a84cbb7505c0dc3fc). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`ddaa6a0`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
+
+Profile Layout now consumes one small identity generated from the Release Specification. Shell, bundled JavaScript, query storage, recovery, static smoke, and rollback no longer keep competing application or profile constants. Profile-only identity changes stay in fast release assembly, while query storage changes rebuild the host because the focused shell embeds them.
 
 Generated cleanup is also conservative. The current inventory has no unknown root and its dry-run plan selects only Finder metadata, the obsolete short-path catalogue profile, and an abandoned smoke-backup root. Reusable caches, worktrees, accepted release assets, and historical upgrade evidence remain protected.
 
@@ -67,7 +69,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Release Source Snapshot](modules/release-source-snapshot.md) — one clean immutable source record per build.
 - [Compiled Host Cache](modules/compiled-host-cache.md) — safe reuse of unchanged Code OSS compilation.
 - [Approved Release Set](modules/approved-release-set.md) — approved history, exact update matching, prompt-free approval, and installed identity.
-- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — safe profile paths and one testable setup, migration, and recovery workflow.
+- [Profile Layout and Setup](modules/profile-layout-and-setup.md) — generated profile identity, safe paths, and one testable setup, migration, and recovery workflow.
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — verified DBCode and notebook package installation.

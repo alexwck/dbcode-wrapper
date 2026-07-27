@@ -1,6 +1,6 @@
 ---
 title: Profile Layout and Setup
-description: The safe path and testable workflow for Standalone DBCode Profile setup, import, and recovery.
+description: The generated identity, safe paths, and testable workflow for Standalone DBCode Profile setup and recovery.
 type: module
 tags:
   - wiki
@@ -9,36 +9,39 @@ tags:
   - setup
 wiki_profile: public
 wiki_depth: standard
-source_commit: e20a9a13c697b331902ce83a84cbb7505c0dc3fc
+source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
 ---
 ## Summary
 
-Profile Layout defines where each Standalone DBCode Profile may live. Profile Setup owns the first-use workflow behind one testable interface. The host extension only adapts that workflow to VS Code, unchanged DBCode commands, files, the clipboard, time, process spawning, and quit.
+Profile Layout defines where every Standalone DBCode Profile path may live. It no longer owns a second hard-coded product constant. Release assembly generates one small identity record from [Release Specification](release-specification.md), and shell and bundled JavaScript validate and use that same record.
+
+Profile Setup owns the first-use workflow behind one testable interface. The host extension only adapts that workflow to VS Code, unchanged DBCode commands, files, the clipboard, time, process spawning, and quit.
 
 ## Responsibilities
 
-- Derive `default`, `qa`, and `isolated` layouts from explicit owner roots.
-- Keep one stable generated `qa` layout for rendered deployment checks.
-- Validate serialized layouts and reject unknown, broad, escaped, or linked paths.
+- Load and validate the generated application, bundle, folder, query-storage, and profile-schema identity.
+- Derive `default`, persistent `qa`, and explicit `isolated` layouts from owned roots.
+- Include user data, extensions, shared data, cache, logs, backups, and query storage in one record.
+- Reject missing, linked, malformed, oversized, unsafe, stale, or mismatched identity and layout data.
 - Check mutation targets before setup, migration, backup, or recovery.
-- Keep user data, extensions, shared data, cache, logs, and backups in one owned layout.
 - Own start-clean, reviewed import, staging cleanup, DuckDB preflight, completion, cancellation, and recovery order.
 - Remove reviewed temporary data after completion, cancellation, close, recovery, or an action failure.
 - Recreate only wrapper-owned state after explicit user confirmation.
 
 ## Public API / entry points
 
-`createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the path API.
+`loadProfileIdentity`, `validateProfileIdentity`, `createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the identity and path API. `script/profile_layout.cjs` gives shell callers the same implementation.
 
 `ProfileSetup` provides `requiresSetup`, `open`, `dispatch`, and `panelClosed`. Production supplies one host adapter. Fast tests supply an in-memory adapter and exercise the same action order.
 
 ## Key files
 
-- [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — path derivation and validation.
-- [`profileSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js) — setup state and action ordering.
-- [`extension.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/extension.js) — VS Code, DBCode, file, clipboard, process, and quit adapters.
-- [`migration.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/migration.js), [`staging.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/staging.js), and [`profileRecovery.js`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — reviewed import, temporary storage, and safe state movement.
-- [`managed-settings.json`](https://github.com/alexwck/dbcode-wrapper/blob/e20a9a13c697b331902ce83a84cbb7505c0dc3fc/host/extensions/dbcode-wrapper-profile-migration/managed-settings.json) — focused defaults.
+- [`profile-identity.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profile-identity.json) — generated profile identity used by source tests and the bundled extension.
+- [`script/generate_profile_identity.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/generate_profile_identity.sh) — safe deterministic generator used during assembly.
+- [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — identity loading, path derivation, and validation.
+- [`profileSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js) — setup state and action ordering.
+- [`script/lib/profile_paths.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/profile_paths.sh) — shell adapter for the generated layout.
+- [`migration.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/migration.js), [`staging.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/staging.js), and [`profileRecovery.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — reviewed import, temporary storage, and safe state movement.
 
 ## Dependencies
 
@@ -47,6 +50,7 @@ The module uses [Release Specification](release-specification.md) for identity a
 ## Participates in
 
 - [First run, activation, and query](../flows/first-run-activate-and-query.md)
+- [Build, sign, and launch](../flows/build-sign-and-launch.md)
 - [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 
 ## Related
@@ -54,3 +58,4 @@ The module uses [Release Specification](release-specification.md) for identity a
 - [Standalone DBCode Profile](../concepts/standalone-dbcode-profile.md)
 - [Focused host and private profile](../architecture/focused-host-and-private-profile.md)
 - [Host Session](host-session.md)
+- [Verification Harness](verification-harness.md)
