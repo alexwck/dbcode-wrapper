@@ -48,8 +48,8 @@ assert_bootstrap_generated_path() {
       ;;
   esac
 
-  relative="${candidate#"${REPO_ROOT}/"}"
-  current="${REPO_ROOT}"
+  relative="${candidate#"${GENERATED_REPO_ROOT}/"}"
+  current="${GENERATED_REPO_ROOT}"
   IFS='/' read -r -a components <<<"${relative}"
   for component in "${components[@]}"; do
     [[ -n "${component}" ]] || continue

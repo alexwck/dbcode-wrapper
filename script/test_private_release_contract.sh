@@ -205,6 +205,15 @@ source_tag="private-release-fixture"
 git -C "${fixture_repository}" tag -a "${source_tag}" -m "Fixture source tag"
 release_lock="${fixture_repository}/host/release-lock.json"
 release_lock_sha256="$(shasum -a 256 "${release_lock}" | awk '{print $1}')"
+source_tree_oid="$(git -C "${fixture_repository}" rev-parse 'HEAD^{tree}')"
+source_snapshot_sha256="$(
+  release_source_snapshot_digest "${fixture_repository}" "${source_commit}"
+)"
+source_host_script_sha256="$(
+  release_source_snapshot_host_script_digest "${fixture_repository}" "${source_commit}"
+)"
+compiled_host_input_id="compiled-host-$(printf 'd%.0s' {1..64})"
+compiled_host_app_sha256="$(printf 'e%.0s' {1..64})"
 
 fixture_app="${test_root}/DBCode Wrapper.app"
 mkdir -p \
@@ -265,17 +274,51 @@ fixture_dbcode_sha256="$(jq -er '.sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
 manifest_file="${test_root}/build-manifest.json"
 jq -n \
   --arg source_commit "${source_commit}" \
+  --arg source_tag "${source_tag}" \
+  --arg source_tree_oid "${source_tree_oid}" \
+  --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
+  --arg source_host_script_sha256 "${source_host_script_sha256}" \
   --arg release_lock_sha256 "${release_lock_sha256}" \
+  --arg compiled_host_input_id "${compiled_host_input_id}" \
+  --arg compiled_host_app_sha256 "${compiled_host_app_sha256}" \
   --arg runtime_setup_sha256 "${runtime_setup_sha256}" \
   --arg app_sha256 "${app_sha256}" \
   --arg code_oss_version "${CODE_OSS_VERSION}" \
   --arg vscodium_version "${VSCODIUM_TAG}" \
   --argjson runtime_extensions "${fixture_runtime_extensions}" '
     {
-      schema_version: 5,
+      schema_version: 6,
       source: {
         repository_revision: $source_commit,
-        release_lock_sha256: $release_lock_sha256
+        release_lock_sha256: $release_lock_sha256,
+        overlay_sha256: $source_host_script_sha256,
+        snapshot: {
+          schema_version: 1,
+          mode: "immutable-git-commit",
+          requested_ref: $source_tag,
+          repository_revision: $source_commit,
+          tree_oid: $source_tree_oid,
+          snapshot_sha256: $source_snapshot_sha256,
+          host_script_sha256: $source_host_script_sha256,
+          release_lock_sha256: $release_lock_sha256
+        },
+        compiled_host: {
+          schema_version: 2,
+          input_id: $compiled_host_input_id,
+          source_revision: $source_commit,
+          app_digest_algorithm: "sha256-files-modes-links-v1",
+          app_sha256: $compiled_host_app_sha256,
+          compilation_environment: {
+            schema_version: 1,
+            node: "v22.15.0",
+            npm: "10.9.2",
+            python: "3.9.6",
+            clang: "Apple clang version 17.0.0",
+            macos_sdk: "15.5",
+            macos: "15.5"
+          },
+          cache_status: "hit"
+        }
       },
       release: {
         compatibility_status: "candidate",
@@ -314,6 +357,10 @@ release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
 acceptance_file="${test_root}/final-acceptance.json"
 jq -n \
   --arg release_set_id "${release_set_id}" \
+  --arg source_commit "${source_commit}" \
+  --arg source_tree_oid "${source_tree_oid}" \
+  --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
+  --arg compiled_host_input_id "${compiled_host_input_id}" \
   --arg app_sha256 "${app_sha256}" \
   --arg manifest_sha256 "${manifest_sha256}" \
   --arg release_lock_sha256 "${release_lock_sha256}" \
@@ -344,10 +391,16 @@ jq -n \
         recorded_at: "2026-07-24T00:00:00Z"
       };
     {
-      schema_version: 1,
+      schema_version: 2,
       status: "passed",
       completed_at_utc: "2026-07-24T00:00:00Z",
       scope: "current-user-private-use",
+      source: {
+        repository_revision: $source_commit,
+        tree_oid: $source_tree_oid,
+        snapshot_sha256: $source_snapshot_sha256,
+        compiled_host_input_id: $compiled_host_input_id
+      },
       release: {
         release_set_id: $release_set_id,
         app_sha256: $app_sha256,
@@ -378,6 +431,7 @@ jq -n \
         protected_credential_reentry: "passed",
         read_only_update_discovery: "passed",
         postgresql_read_only: "passed",
+        stored_routine_debugger: "passed",
         duckdb_and_parquet: "passed",
         first_run_migration_and_hyphen_path: "passed",
         four_way_update_compatibility: "passed",
@@ -391,6 +445,7 @@ jq -n \
         credential_reentry: manual,
         update_discovery: manual,
         postgresql: manual,
+        debugger: manual,
         duckdb: manual,
         parquet: manual,
         persistence: manual
@@ -503,6 +558,107 @@ package_source_arguments=(
   --source-tag "${source_tag}"
 )
 
+legacy_acceptance_file="${test_root}/historical-final-acceptance.json"
+jq '
+  .schema_version = 1
+  | del(.gates.stored_routine_debugger)
+  | del(.manual_evidence.debugger)
+' "${acceptance_file}" > "${legacy_acceptance_file}"
+PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+  "${fixture_app}" \
+  "${manifest_file}" \
+  "${release_lock}" \
+  "${legacy_acceptance_file}"
+
+fast_acceptance_file="${test_root}/prompt-free-final-acceptance.json"
+jq '
+  {
+    schema_version: 3,
+    status,
+    completed_at_utc,
+    scope,
+    source,
+    release,
+    signing: {
+      kind: .signing.kind,
+      scope: .signing.scope,
+      designated_requirement: .signing.designated_requirement,
+      certificate: .signing.certificate
+    },
+    automation: {
+      profile_name: "qa",
+      persistent_profile: true,
+      person_controlled_actions: "not-invoked",
+      kernel_started: false,
+      sql_executed: false,
+      model_called: false,
+      secret_entered: false
+    },
+    gates: {
+      development_contracts: "passed",
+      strict_signature_and_manifest: "passed",
+      signed_app_one_profile_launch: "passed",
+      dbcode_focused_rendered_interface: "passed",
+      exact_external_extension_inventory: "passed",
+      prompt_free_automation: "passed",
+      bundle_unchanged_after_use: "passed"
+    },
+    gate_execution: {
+      source_snapshot_sha256: .source.snapshot_sha256,
+      release_set_id: .release.release_set_id,
+      app_sha256: .release.app_sha256,
+      build_manifest_sha256: .evidence_sha256.build_manifest,
+      development_runner: "script/check_development.sh",
+      static_smoke_runner: "script/smoke_host.sh"
+    },
+    rendered_evidence: {
+      check_count: 8,
+      known_warning_count: 0,
+      unexpected_error_count: 0
+    },
+    evidence_sha256: {
+      build_manifest: .evidence_sha256.build_manifest,
+      release_lock: .evidence_sha256.release_lock,
+      rendered_report: .evidence_sha256.rendered_report,
+      development_log: .evidence_sha256.development_log,
+      smoke_log: .evidence_sha256.smoke_log
+    },
+    failures,
+    waivers,
+    private_use_risks: ["1", "2", "3", "4", "5"],
+    distribution_claims
+  }
+' "${acceptance_file}" > "${fast_acceptance_file}"
+PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+  "${fixture_app}" \
+  "${manifest_file}" \
+  "${release_lock}" \
+  "${fast_acceptance_file}"
+
+stale_gate_acceptance_file="${test_root}/stale-gate-final-acceptance.json"
+jq '.gate_execution.source_snapshot_sha256 = ("f" * 64)' \
+  "${fast_acceptance_file}" > "${stale_gate_acceptance_file}"
+if PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+  "${fixture_app}" \
+  "${manifest_file}" \
+  "${release_lock}" \
+  "${stale_gate_acceptance_file}" >/dev/null 2>&1; then
+  echo "Private packaging accepted gate evidence from another source snapshot." >&2
+  exit 1
+fi
+
+tampered_snapshot_manifest="${test_root}/tampered-source-snapshot-manifest.json"
+jq '.source.snapshot.snapshot_sha256 = ("f" * 64)' \
+  "${manifest_file}" > "${tampered_snapshot_manifest}"
+if private_release_validate_source_tag \
+  "${fixture_repository}" \
+  "${source_tag}" \
+  "${tampered_snapshot_manifest}" \
+  "${release_lock}" >/dev/null 2>&1; then
+  echo "The private release accepted a source snapshot that did not match its tag." >&2
+  exit 1
+fi
+
 package_output="${test_root}/package-output"
 PATH="${stub_bin}:${PATH}" bash "${packager}" \
   --app "${fixture_app}" \
@@ -534,9 +690,15 @@ packaged_verification="$(find "${package_output}" -maxdepth 1 -type f -name '*-v
 }
 jq -e \
   --arg source_tag "${source_tag}" \
-  --arg source_commit "${source_commit}" '
+  --arg source_commit "${source_commit}" \
+  --arg source_tree_oid "${source_tree_oid}" \
+  --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
+  --arg compiled_host_input_id "${compiled_host_input_id}" '
     .source.tag == $source_tag
     and .source.repository_revision == $source_commit
+    and .source.tree_oid == $source_tree_oid
+    and .source.snapshot_sha256 == $source_snapshot_sha256
+    and .source.compiled_host_input_id == $compiled_host_input_id
     and .external_runtime.setup == "focused-pinned-official-sources"
     and .claims.dbcode_included == false
     and .claims.public_application_release == false

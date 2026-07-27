@@ -146,7 +146,7 @@ if rg -n \
   exit 1
 fi
 
-rg -Fq 'generate_runtime_setup_manifest.sh' "${REPO_ROOT}/script/build_host.sh" || {
+rg -Fq 'generate_runtime_setup_manifest.sh' "${REPO_ROOT}/script/assemble_host.sh" || {
   echo "The production build does not generate the pinned runtime setup manifest." >&2
   exit 1
 }

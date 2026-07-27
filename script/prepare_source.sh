@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/patch_plan.sh"
+source "${REPO_ROOT}/script/lib/source_cache.sh"
 
 require_command git
 require_command jq
@@ -39,10 +40,9 @@ if [[ "${vscodium_actual}" != "${VSCODIUM_COMMIT}" ]]; then
 fi
 
 prepare_bare_cache "${code_oss_cache}" "${CODE_OSS_REPOSITORY}"
-if ! git --git-dir="${code_oss_cache}" cat-file -e "${CODE_OSS_COMMIT}^{commit}" 2>/dev/null; then
-  git --git-dir="${code_oss_cache}" fetch --depth 1 origin "${CODE_OSS_COMMIT}:refs/dbcode-wrapper/pinned"
-fi
-code_oss_actual="$(git --git-dir="${code_oss_cache}" rev-parse "${CODE_OSS_COMMIT}^{commit}")"
+code_oss_cache_ref="refs/dbcode-wrapper/pinned-${CODE_OSS_COMMIT}"
+source_cache_ensure_commit_ref "${code_oss_cache}" "${CODE_OSS_COMMIT}" "${code_oss_cache_ref}"
+code_oss_actual="$(git --git-dir="${code_oss_cache}" rev-parse "${code_oss_cache_ref}^{commit}")"
 if [[ "${code_oss_actual}" != "${CODE_OSS_COMMIT}" ]]; then
   echo "Code OSS commit mismatch: ${code_oss_actual}." >&2
   exit 1

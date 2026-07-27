@@ -12,7 +12,10 @@ generated_workspace_require_runtime() {
 generated_workspace_path() {
   generated_workspace_require_runtime || return 1
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
-    path --id "$1"
+    path \
+    --id "$1" \
+    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
+    --source-root "${REPO_ROOT}"
 }
 
 generated_workspace_resolve_path() {
@@ -24,7 +27,9 @@ generated_workspace_resolve_path() {
   generated_workspace_require_runtime || return 1
   if managed_result="$(
     "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
-      "${arguments[@]}" 2>&1
+      "${arguments[@]}" \
+      --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
+      --source-root "${REPO_ROOT}" 2>&1
   )"; then
     jq -er '.path' <<<"${managed_result}"
     return
@@ -48,7 +53,10 @@ generated_workspace_resolve_path() {
       ;;
   esac
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
-    "${arguments[@]}" | jq -er '.path'
+    "${arguments[@]}" \
+    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
+    --source-root "${REPO_ROOT}" |
+    jq -er '.path'
 }
 
 generated_workspace_assert_path() {

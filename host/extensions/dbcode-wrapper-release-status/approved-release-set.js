@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const GIT_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+const COMPILED_HOST_INPUT_PATTERN = /^compiled-host-[0-9a-f]{64}$/;
 const VERSION_PATTERN = /^\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.-]+)?$/;
 const PREPARED_MEMBER_NAMES = new Set([
   'app',
@@ -203,21 +204,16 @@ function validateLegacyApprovedRecord(record) {
   return { kind: 'legacy', record };
 }
 
-function validateApprovedRecord(record, { allowLegacy = true } = {}) {
-  requireObject(record, 'Approved Release Set record');
-  if (record.schema_version !== 1) {
-    if (allowLegacy) {
-      return validateLegacyApprovedRecord(record);
-    }
-    fail('Approved Release Set schema is unsupported.');
-  }
+function validateVersionedApprovedRecord(record, { current }) {
   if (record.compatibility_status !== 'approved') {
     fail('Approved Release Set compatibility state is invalid.');
   }
   requireCommit(record.source_commit, 'Approved source revision');
   requireTarget(record.target, 'Approved release target');
   requirePositiveInteger(record.profile?.schema_version, 'Approved profile schema');
-  if (!Number.isInteger(record.manifest?.schema_version) || record.manifest.schema_version < 5) {
+  const minimumManifestSchema = current ? 6 : 5;
+  if (!Number.isInteger(record.manifest?.schema_version) ||
+      record.manifest.schema_version < minimumManifestSchema) {
     fail('Approved build-manifest schema is unsupported.');
   }
   requireSha256(record.manifest?.build_manifest_sha256, 'Approved build-manifest digest');
@@ -226,6 +222,14 @@ function validateApprovedRecord(record, { allowLegacy = true } = {}) {
   requireSha256(record.manifest?.artifact_sha256, 'Approved artifact digest');
   requireSha256(record.manifest?.shell_patch_revision, 'Approved shell-patch digest');
   requireSha256(record.manifest?.overlay_sha256, 'Approved overlay digest');
+  if (current) {
+    requireSha256(record.manifest?.source_snapshot_sha256, 'Approved source-snapshot digest');
+    requirePattern(
+      record.manifest?.compiled_host_input_id,
+      COMPILED_HOST_INPUT_PATTERN,
+      'Approved compiled-host input ID'
+    );
+  }
   if (record.manifest?.packaging_status !== 'built-and-signed') {
     fail('Approved packaging state is invalid.');
   }
@@ -244,7 +248,21 @@ function validateApprovedRecord(record, { allowLegacy = true } = {}) {
   requireSha256(record.approval?.proof_sha256, 'Approval proof digest');
   requireSha256(record.approval?.gate_receipt_sha256, 'Approval gate-receipt digest');
   requireCanonicalIdentity(record);
-  return { kind: 'complete', record };
+  return { kind: current ? 'complete' : 'previous', record };
+}
+
+function validateApprovedRecord(record, { allowLegacy = true } = {}) {
+  requireObject(record, 'Approved Release Set record');
+  if (record.schema_version === 2) {
+    return validateVersionedApprovedRecord(record, { current: true });
+  }
+  if (!allowLegacy) {
+    fail('Approved Release Set schema is unsupported.');
+  }
+  if (record.schema_version === 1) {
+    return validateVersionedApprovedRecord(record, { current: false });
+  }
+  return validateLegacyApprovedRecord(record);
 }
 
 function validateApprovedHistory(history) {
@@ -382,17 +400,35 @@ function createApprovedRecord({
   const attestationDigest = requireSha256(attestationSha256, 'Approval attestation digest');
   const proofDigest = requireSha256(proofSha256, 'Candidate proof digest');
   const gateDigest = requireSha256(gateReceiptSha256, 'Compatibility gate digest');
-  if (manifest.schema_version < 5 || manifest.release?.release_set_id !== candidateSet.release.release_set_id ||
+  if (manifest.schema_version < 6 || manifest.release?.release_set_id !== candidateSet.release.release_set_id ||
       manifest.release?.source_set_id !== candidateSet.release.source_set_id) {
     fail('Candidate build manifest belongs to another release set.');
   }
   if (manifest.source?.repository_revision !== candidateSet.source.repository_revision ||
+      manifest.source?.snapshot?.repository_revision !== candidateSet.source.repository_revision ||
       manifest.artifact?.sha256 !== candidateSet.host.app_sha256 ||
       manifest.source?.code_oss?.tag !== candidateSet.host.code_oss_version) {
     fail('Candidate build manifest does not match the prepared set.');
   }
   requireCommit(manifest.source?.vscodium?.commit, 'Candidate VSCodium revision');
   requireCommit(manifest.source?.code_oss?.commit, 'Candidate Code OSS revision');
+  requireCommit(manifest.source?.snapshot?.tree_oid, 'Candidate source tree');
+  requireSha256(manifest.source?.snapshot?.snapshot_sha256, 'Candidate source-snapshot digest');
+  if (
+    manifest.source?.snapshot?.schema_version !== 1 ||
+    manifest.source?.snapshot?.mode !== 'immutable-git-commit' ||
+    manifest.source?.snapshot?.host_script_sha256 !== manifest.source?.overlay_sha256 ||
+    manifest.source?.snapshot?.release_lock_sha256 !== manifest.source?.release_lock_sha256 ||
+    manifest.source?.compiled_host?.schema_version !== 2 ||
+    manifest.source?.compiled_host?.app_digest_algorithm !== 'sha256-files-modes-links-v1'
+  ) {
+    fail('Candidate immutable source snapshot is invalid.');
+  }
+  requirePattern(
+    manifest.source?.compiled_host?.input_id,
+    COMPILED_HOST_INPUT_PATTERN,
+    'Candidate compiled-host input ID'
+  );
   requireSha256(manifest.source?.shell_patch_revision, 'Candidate shell-patch digest');
   requireSha256(manifest.source?.overlay_sha256, 'Candidate overlay digest');
   if (manifest.packaging?.status !== 'built-and-signed') {
@@ -417,7 +453,7 @@ function createApprovedRecord({
     fail('Prepared release-set evidence does not match the approval inputs.');
   }
   const record = {
-    schema_version: 1,
+    schema_version: 2,
     id: candidateSet.release.release_set_id,
     source_set_id: candidateSet.release.source_set_id,
     compatibility_status: 'approved',
@@ -432,6 +468,8 @@ function createApprovedRecord({
       artifact_sha256: candidateSet.host.app_sha256,
       shell_patch_revision: manifest.source.shell_patch_revision,
       overlay_sha256: manifest.source.overlay_sha256,
+      source_snapshot_sha256: manifest.source.snapshot.snapshot_sha256,
+      compiled_host_input_id: manifest.source.compiled_host.input_id,
       packaging_status: manifest.packaging.status
     },
     host: {
@@ -475,6 +513,7 @@ function upsertApprovedHistory(history, record) {
 module.exports = {
   GIT_COMMIT_PATTERN,
   SHA256_PATTERN,
+  COMPILED_HOST_INPUT_PATTERN,
   createApprovedRecord,
   findApprovedCandidate,
   hasCanonicalSourceSetId,

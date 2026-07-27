@@ -59,7 +59,7 @@ index c7a145e7..7c173338 100644
  		// File
  		if (this.shouldDrawMenu('File')) {
  			const fileMenu = new Menu();
-@@ -405,12 +412,63 @@ export class Menubar extends Disposable {
+@@ -405,12 +412,64 @@ export class Menubar extends Disposable {
  		}
  	}
  
@@ -87,7 +87,8 @@ index c7a145e7..7c173338 100644
 +		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.checkForUpdates', "Check for Updates…"), 'dbcodeWrapper.checkForUpdates'));
 +		dbcodeToolsMenu.append(__separator__());
 +		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiProvider', "AI: Choose Provider"), 'dbcode.ai.chooseProvider'));
-+		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiApiKey', "AI: Set API Key"), 'dbcode.ai.setApiKey'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiCustomModel', "AI: Configure Custom Model…"), 'dbcodeWrapper.openDbcodeAiSettings'));
++		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.aiApiKey', "AI: Set Custom Model API Key…"), 'dbcode.ai.setApiKey'));
 +		dbcodeToolsMenu.append(__separator__());
 +		dbcodeToolsMenu.append(this.createMenuItem(nls.localize('dbcodeWrapper.scratchFolder', "Show Scratch Files in Finder"), 'dbcodeWrapper.revealScratchFiles'));
 +		databaseMenu.append(new MenuItem({ label: nls.localize('dbcodeWrapper.dbcodeTools', "DBCode Tools"), submenu: dbcodeToolsMenu }));

@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/local_signing_identity.sh"
 source "${REPO_ROOT}/script/lib/patch_plan.sh"
+source "${REPO_ROOT}/script/lib/source_cache.sh"
 
 check_built_artifact="yes"
 if [[ $# -eq 1 && "${1}" == "--source-only" ]]; then
@@ -39,6 +40,56 @@ while IFS= read -r shell_script; do
 done < <(find "${REPO_ROOT}/script" -type f -name '*.sh' -print | sort)
 
 patch_plan_validate
+source_cache_test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-source-cache-contract.XXXXXX")"
+cleanup_source_cache_test() {
+  rm -rf "${source_cache_test_root}"
+}
+trap cleanup_source_cache_test EXIT
+git -C "${source_cache_test_root}" init --quiet seed
+git -C "${source_cache_test_root}/seed" config user.name "DBCode Wrapper Test"
+git -C "${source_cache_test_root}/seed" config user.email "dbcode-wrapper-test@example.invalid"
+printf '%s\n' "first" > "${source_cache_test_root}/seed/fixture.txt"
+git -C "${source_cache_test_root}/seed" add fixture.txt
+git -C "${source_cache_test_root}/seed" commit --quiet -m "first"
+source_cache_commit="$(git -C "${source_cache_test_root}/seed" rev-parse HEAD)"
+git clone --quiet --bare "${source_cache_test_root}/seed" "${source_cache_test_root}/cache.git"
+source_cache_ref="refs/dbcode-wrapper/pinned-${source_cache_commit}"
+source_cache_ensure_commit_ref "${source_cache_test_root}/cache.git" "${source_cache_commit}" "${source_cache_ref}"
+[[ "$(git --git-dir="${source_cache_test_root}/cache.git" rev-parse "${source_cache_ref}^{commit}")" == "${source_cache_commit}" ]] || {
+  echo "An existing cached Code OSS commit did not gain its immutable commit-keyed ref." >&2
+  exit 1
+}
+cleanup_source_cache_test
+trap - EXIT
+
+alternate_smoke_root="$(
+  mktemp -d "${TMPDIR:-/tmp}/dbcode-alternate-smoke-inputs.XXXXXX"
+)"
+cleanup_alternate_smoke() {
+  rm -rf "${alternate_smoke_root}"
+}
+trap cleanup_alternate_smoke EXIT
+alternate_smoke_app="${alternate_smoke_root}/Alternate Candidate.app"
+alternate_smoke_manifest="${alternate_smoke_root}/alternate-manifest.json"
+mkdir -p "${alternate_smoke_app}"
+printf '%s\n' '{}' > "${alternate_smoke_manifest}"
+set +e
+alternate_smoke_output="$(
+  "${REPO_ROOT}/script/smoke_host.sh" \
+    --app "${alternate_smoke_app}" \
+    --manifest "${alternate_smoke_manifest}" 2>&1
+)"
+alternate_smoke_status=$?
+set -e
+[[ "${alternate_smoke_status}" -eq 1 &&
+  "${alternate_smoke_output}" == *"${alternate_smoke_app}"* &&
+  "${alternate_smoke_output}" == *"${alternate_smoke_manifest}"* ]] || {
+  echo "Static smoke did not use the explicitly supplied app and manifest." >&2
+  exit 1
+}
+cleanup_alternate_smoke
+trap - EXIT
+
 while IFS= read -r overlay_patch; do
   git apply --numstat "${overlay_patch}" >/dev/null || {
     echo "Malformed maintained overlay patch: ${overlay_patch}" >&2
@@ -125,7 +176,7 @@ if [[ "${check_built_artifact}" == "yes" && -d "${APP_BUNDLE}" ]]; then
     exit 1
   }
   verify_local_signed_code "${APP_BUNDLE}" "${BUNDLE_IDENTIFIER}"
-  "${REPO_ROOT}/script/smoke_host.sh" --static-only
+  "${REPO_ROOT}/script/smoke_host.sh"
 fi
 
 "${REPO_ROOT}/script/test_single_app_identity_contract.sh"

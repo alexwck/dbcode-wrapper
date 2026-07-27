@@ -111,6 +111,9 @@ release_lock_sha256="$(shasum -a 256 "${release_lock}" | awk '{print $1}')"
 acceptance_sha256="$(shasum -a 256 "${acceptance_file}" | awk '{print $1}')"
 notes_sha256="$(shasum -a 256 "${notes_file}" | awk '{print $1}')"
 release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
+source_tree_oid="$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")"
+source_snapshot_sha256="$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")"
+compiled_host_input_id="$(jq -er '.source.compiled_host.input_id' "${manifest_file}")"
 expected_checksum="${dmg_sha256}  $(basename "${dmg_file}")"
 [[ "$(cat "${checksum_file}")" == "${expected_checksum}" ]] || {
   echo "The checksum file does not cover this exact disk image." >&2
@@ -123,12 +126,18 @@ jq -e \
   --argjson dmg_size_bytes "${dmg_size_bytes}" \
   --arg source_tag "${source_tag}" \
   --arg source_commit "${source_commit}" \
+  --arg source_tree_oid "${source_tree_oid}" \
+  --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
+  --arg compiled_host_input_id "${compiled_host_input_id}" \
   --arg release_set_id "${release_set_id}" \
   '
     .schema_version == 1
     and .scope == "private-personal-release"
     and .source.tag == $source_tag
     and .source.repository_revision == $source_commit
+    and .source.tree_oid == $source_tree_oid
+    and .source.snapshot_sha256 == $source_snapshot_sha256
+    and .source.compiled_host_input_id == $compiled_host_input_id
     and .release.release_set_id == $release_set_id
     and .release.architecture == "arm64"
     and .disk_image.filename == $dmg_name
@@ -239,6 +248,9 @@ jq -n \
   --arg release_set_id "${release_set_id}" \
   --arg source_tag "${source_tag}" \
   --arg source_commit "${source_commit}" \
+  --arg source_tree_oid "${source_tree_oid}" \
+  --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
+  --arg compiled_host_input_id "${compiled_host_input_id}" \
   --arg dmg_name "$(basename "${dmg_file}")" \
   --arg dmg_sha256 "${dmg_sha256}" \
   --arg manifest_sha256 "${manifest_sha256}" \
@@ -252,7 +264,13 @@ jq -n \
       status: "passed",
       verified_at_utc: $verified_at_utc,
       release_set_id: $release_set_id,
-      source: {tag: $source_tag, repository_revision: $source_commit},
+      source: {
+        tag: $source_tag,
+        repository_revision: $source_commit,
+        tree_oid: $source_tree_oid,
+        snapshot_sha256: $source_snapshot_sha256,
+        compiled_host_input_id: $compiled_host_input_id
+      },
       disk_image: {filename: $dmg_name, sha256: $dmg_sha256},
       evidence: {
         build_manifest_sha256: $manifest_sha256,

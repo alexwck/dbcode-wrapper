@@ -18,10 +18,6 @@ shell_patch_digest() {
     host/patches/code-oss
 }
 
-overlay_digest() {
-  digest_source_files host script .codex/environments
-}
-
 wrapper_source_digest() {
   digest_source_files \
     host/entitlements \
@@ -30,8 +26,10 @@ wrapper_source_digest() {
     host/icon \
     host/profile/settings.json \
     host/dbcode-feature-policy.json \
+    script/assemble_host.sh \
     script/bootstrap_toolchain.sh \
     script/build_host.sh \
+    script/compile_host.sh \
     script/build_icon.sh \
     script/build_icns.py \
     script/check_vscode_engine.cjs \
@@ -39,11 +37,18 @@ wrapper_source_digest() {
     script/sign_host.sh \
     script/setup_local_signing_identity.sh \
     script/verify_local_signing_continuity.sh \
-    script/verify_same_mac_release.sh \
     script/generate_manifest.sh \
     script/generate_installed_release_status.sh \
+    script/generate_runtime_setup_manifest.sh \
+    script/lib/artifact_digest.sh \
+    script/lib/compiled_host_cache.sh \
+    script/lib/generated_workspace.sh \
     script/lib/host_config.sh \
     script/lib/local_signing_identity.sh \
+    script/lib/patch_plan.sh \
+    script/lib/release_source_snapshot.sh \
+    script/lib/release_specification.sh \
+    script/lib/source_cache.sh \
     script/lib/source_digest.sh \
     script/lib/release_identity.sh
 }

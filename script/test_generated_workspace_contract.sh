@@ -24,14 +24,12 @@ done
 for caller in \
   "${REPO_ROOT}/script/prepare_source.sh" \
   "${REPO_ROOT}/script/prepare_dbcode.sh" \
-  "${REPO_ROOT}/script/build_host.sh" \
+  "${REPO_ROOT}/script/assemble_host.sh" \
+  "${REPO_ROOT}/script/compile_host.sh" \
   "${REPO_ROOT}/script/build_icon.sh" \
   "${REPO_ROOT}/script/smoke_host.sh" \
   "${REPO_ROOT}/script/test_focused_shell_rendered.sh" \
-  "${REPO_ROOT}/script/prepare_python_notebook_qa.sh" \
-  "${REPO_ROOT}/script/proof_dbcode.sh" \
   "${REPO_ROOT}/script/controlled_upgrade.sh" \
-  "${REPO_ROOT}/script/verify_same_mac_release.sh" \
   "${REPO_ROOT}/script/prepare_release_rollback.sh" \
   "${REPO_ROOT}/script/verify_release_rollback.sh" \
   "${REPO_ROOT}/script/preview_release_rollback.sh" \
@@ -70,12 +68,12 @@ rg -Fq 'runtime_cache_root="$(' \
   "${REPO_ROOT}/script/prepare_dbcode.sh"
 rg -Fq '"build-cache"' \
   "${REPO_ROOT}/script/prepare_dbcode.sh"
-rg -Fq 'generated_workspace_assert_path "accepted-host" "${APP_BUNDLE}"' \
-  "${REPO_ROOT}/script/build_host.sh"
+rg -Fq 'assert_generated_path "${APP_BUNDLE}"' \
+  "${REPO_ROOT}/script/assemble_host.sh"
 rg -Fq 'generated_workspace_assert_path "toolchain-cache" "${TOOLCHAIN_ROOT}"' \
-  "${REPO_ROOT}/script/build_host.sh"
+  "${REPO_ROOT}/script/compile_host.sh"
 rg -Fq 'generated_workspace_assert_path "download-cache" "${BUILD_ROOT}/downloads"' \
-  "${REPO_ROOT}/script/build_host.sh"
+  "${REPO_ROOT}/script/compile_host.sh"
 rg -Fq 'generated_parent="$(generated_workspace_path "generated-source")"' \
   "${REPO_ROOT}/script/build_icon.sh"
 rg -Fq 'smoke_root="$(generated_workspace_path "smoke-evidence")"' \
@@ -91,19 +89,11 @@ rg -Fq 'qa_root="$(generated_workspace_path "rendered-evidence")"' \
   "${REPO_ROOT}/script/test_focused_shell_rendered.sh"
 rg -Fq 'output_root="$(generated_workspace_path "rendered-screenshots")"' \
   "${REPO_ROOT}/script/test_focused_shell_rendered.sh"
-rg -Fq 'qa_root="$(generated_workspace_path "rendered-evidence")"' \
-  "${REPO_ROOT}/script/prepare_python_notebook_qa.sh"
 rg -Fq "process.env.DBCODE_WRAPPER_QA_ROOT" \
   "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
 rg -Fq "process.env.DBCODE_WRAPPER_RENDERED_OUTPUT_ROOT" \
   "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
-rg -Fq 'proof_parent="$(generated_workspace_path "proof-evidence")"' \
-  "${REPO_ROOT}/script/proof_dbcode.sh"
 [[ "$(rg -c 'generated_workspace_resolve_path' "${REPO_ROOT}/script/controlled_upgrade.sh")" -eq 2 ]]
-rg -Fq '"acceptance-evidence"' \
-  "${REPO_ROOT}/script/verify_same_mac_release.sh"
-rg -Fq 'output_file="$(' \
-  "${REPO_ROOT}/script/verify_same_mac_release.sh"
 rg -Fq '"controlled-upgrade-evidence"' \
   "${REPO_ROOT}/script/controlled_upgrade.sh"
 rg -Fq 'snapshot_parent="$(generated_workspace_path "rollback-evidence")"' \

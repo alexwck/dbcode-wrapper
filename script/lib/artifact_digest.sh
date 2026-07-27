@@ -28,6 +28,38 @@ artifact_digest() {
   )
 }
 
+artifact_digest_with_modes() {
+  local artifact_path="${1}"
+  local artifact_parent artifact_name artifact_item
+  local artifact_item_mode artifact_item_sha256
+
+  artifact_parent="$(cd "$(dirname "${artifact_path}")" && pwd)"
+  artifact_name="$(basename "${artifact_path}")"
+
+  (
+    cd "${artifact_parent}"
+    find "${artifact_name}" \( -type f -o -type l \) -print0 |
+      LC_ALL=C sort -z |
+      while IFS= read -r -d '' artifact_item; do
+        if [[ -L "${artifact_item}" ]]; then
+          printf 'link\t%s\t%s\n' "${artifact_item}" "$(readlink "${artifact_item}")"
+        else
+          artifact_item_mode="$(
+            stat -f '%Lp' "${artifact_item}" 2>/dev/null ||
+              stat -c '%a' "${artifact_item}"
+          )"
+          artifact_item_sha256="$(shasum -a 256 "${artifact_item}" | awk '{print $1}')"
+          printf 'file\t%s\t%s\t%s\n' \
+            "${artifact_item}" \
+            "${artifact_item_mode}" \
+            "${artifact_item_sha256}"
+        fi
+      done |
+      shasum -a 256 |
+      awk '{print $1}'
+  )
+}
+
 directory_content_digest() {
   local directory_path="${1}"
 

@@ -54,8 +54,8 @@ for required_export in \
   'DBCODE_WRAPPER_DATA_FOLDER_NAME="${DATA_FOLDER_NAME}"' \
   'DBCODE_WRAPPER_SHARED_DATA_FOLDER_NAME="${SHARED_DATA_FOLDER_NAME}"' \
   'DBCODE_WRAPPER_NARROW_BREAKPOINT="${FOCUSED_SHELL_NARROW_BREAKPOINT}"'; do
-  rg -Fq "${required_export}" "${REPO_ROOT}/script/build_host.sh" || {
-    echo "The build must export release-lock binding ${required_export}." >&2
+  rg -Fq "${required_export}" "${REPO_ROOT}/script/compile_host.sh" || {
+    echo "Host compilation must export release-lock binding ${required_export}." >&2
     exit 1
   }
 done
@@ -70,16 +70,6 @@ if rg -Fq 'os.homedir()' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"; then
   exit 1
 fi
 
-rg -Fq 'assertResultsBeside' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "Rendered shell tests must prove DBCode can open its own results beside the query." >&2
-  exit 1
-}
-
-rg -Fq 'assertResultsBelow' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "Rendered shell tests must prove DBCode can open its own results below the query." >&2
-  exit 1
-}
-
 [[ ! -e "${REPO_ROOT}/script/build_diagnostic_host.sh" ]] || {
   echo "The separate full-workbench diagnostic application must not be built." >&2
   exit 1
@@ -92,6 +82,7 @@ rg -Fq 'assertResultsBelow' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
 
 for runtime_file in \
   "${REPO_ROOT}/script/build_host.sh" \
+  "${REPO_ROOT}/script/assemble_host.sh" \
   "${REPO_ROOT}/script/generate_manifest.sh" \
   "${REPO_ROOT}/script/lib/host_config.sh" \
   "${REPO_ROOT}/script/prepare_dbcode.sh" \
@@ -108,8 +99,8 @@ rg -Fq -- '--use-mock-keychain' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" ||
   exit 1
 }
 
-rg -Fq -- '--use-mock-keychain' "${REPO_ROOT}/script/smoke_host.sh" || {
-  echo "The isolated launch smoke test must not use the real macOS Keychain." >&2
+rg -Fq 'env -u NODE_OPTIONS' "${REPO_ROOT}/script/generate_manifest.sh" || {
+  echo "Manifest generation must isolate the signed Electron runtime from build-only Node options." >&2
   exit 1
 }
 

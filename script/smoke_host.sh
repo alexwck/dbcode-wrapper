@@ -5,25 +5,50 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
-source "${REPO_ROOT}/script/lib/profile_guard.sh"
+source "${REPO_ROOT}/script/lib/compiled_host_cache.sh"
 source "${REPO_ROOT}/script/lib/source_digest.sh"
 source "${REPO_ROOT}/script/lib/release_identity.sh"
 source "${REPO_ROOT}/script/lib/local_signing_identity.sh"
-source "${REPO_ROOT}/script/lib/profile_paths.sh"
-source "${REPO_ROOT}/script/lib/host_session.sh"
+source "${REPO_ROOT}/script/lib/release_source_snapshot.sh"
 
-static_only="no"
-if [[ "${1:-}" == "--static-only" ]]; then
-  static_only="yes"
-elif [[ $# -gt 0 ]]; then
-  echo "Usage: ./script/smoke_host.sh [--static-only]" >&2
+usage() {
+  echo "Usage: ./script/smoke_host.sh [--app APP --manifest FILE]" >&2
   exit 2
-fi
+}
+
+smoke_app="${APP_BUNDLE}"
+smoke_manifest="${BUILD_MANIFEST}"
+explicit_app="no"
+explicit_manifest="no"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --app)
+      [[ $# -ge 2 ]] || usage
+      smoke_app="$2"
+      explicit_app="yes"
+      shift
+      ;;
+    --manifest)
+      [[ $# -ge 2 ]] || usage
+      smoke_manifest="$2"
+      explicit_manifest="yes"
+      shift
+      ;;
+    *)
+      usage
+      ;;
+  esac
+  shift
+done
+[[ "${explicit_app}" == "${explicit_manifest}" ]] || usage
+
+APP_BUNDLE="${smoke_app}"
+BUILD_MANIFEST="${smoke_manifest}"
 
 info_plist="${APP_BUNDLE}/Contents/Info.plist"
 product_json="${APP_BUNDLE}/Contents/Resources/app/product.json"
 if [[ ! -f "${info_plist}" || ! -f "${product_json}" || ! -f "${BUILD_MANIFEST}" ]]; then
-  echo "Build the host first with ./script/build_host.sh" >&2
+  echo "Static host inputs are incomplete: app=${APP_BUNDLE}, manifest=${BUILD_MANIFEST}" >&2
   exit 1
 fi
 
@@ -131,7 +156,7 @@ jq -e '
     "toolchain"
   ]
 ' "${BUILD_MANIFEST}" >/dev/null || { echo "Manifest must describe only DBCode Wrapper." >&2; exit 1; }
-[[ "$(jq -er '.schema_version' "${BUILD_MANIFEST}")" == "5" ]] || { echo "Unexpected build-manifest schema." >&2; exit 1; }
+[[ "$(jq -er '.schema_version' "${BUILD_MANIFEST}")" == "6" ]] || { echo "Unexpected build-manifest schema." >&2; exit 1; }
 expected_source_set_id="$(release_source_set_id)"
 expected_release_set_id="${expected_source_set_id}-artifact-$(jq -er '.artifact.sha256' "${BUILD_MANIFEST}")"
 [[ "$(jq -er '.release.source_set_id' "${BUILD_MANIFEST}")" == "${expected_source_set_id}" ]] || { echo "Manifest candidate source-set mismatch." >&2; exit 1; }
@@ -190,115 +215,26 @@ rm -f "${expected_runtime_setup_manifest}"
 [[ "$(jq -er '.source.vscodium.commit' "${BUILD_MANIFEST}")" == "${VSCODIUM_COMMIT}" ]] || { echo "Manifest VSCodium commit mismatch." >&2; exit 1; }
 [[ "$(jq -er '.source.code_oss.commit' "${BUILD_MANIFEST}")" == "${CODE_OSS_COMMIT}" ]] || { echo "Manifest Code OSS commit mismatch." >&2; exit 1; }
 [[ "$(jq -er '.runtime.electron' "${BUILD_MANIFEST}")" == "${ELECTRON_VERSION}" ]] || { echo "Manifest Electron version mismatch." >&2; exit 1; }
+manifest_source_snapshot="$(jq -c '.source.snapshot' "${BUILD_MANIFEST}")"
+release_source_snapshot_verify_json "${REPO_ROOT}" "${manifest_source_snapshot}"
+jq -e '
+  .source.repository_revision == .source.snapshot.repository_revision
+  and .source.release_lock_sha256 == .source.snapshot.release_lock_sha256
+  and .source.overlay_sha256 == .source.snapshot.host_script_sha256
+  and .source.compiled_host.schema_version == 2
+  and (.source.compiled_host.input_id | test("^compiled-host-[0-9a-f]{64}$"))
+  and (.source.compiled_host.source_revision | test("^[0-9a-f]{40}$"))
+  and .source.compiled_host.app_digest_algorithm == "sha256-files-modes-links-v1"
+  and (.source.compiled_host.app_sha256 | test("^[0-9a-f]{64}$"))
+  and .source.compiled_host.compilation_environment.schema_version == 1
+  and (.source.compiled_host.cache_status | IN("hit", "miss-built"))
+' "${BUILD_MANIFEST}" >/dev/null || {
+  echo "The build manifest has an invalid immutable source or compiled-host record." >&2
+  exit 1
+}
 [[ "$(jq -er '.source.release_lock_sha256' "${BUILD_MANIFEST}")" == "$(shasum -a 256 "${LOCK_FILE}" | awk '{print $1}')" ]] || { echo "The build manifest has a stale release lock." >&2; exit 1; }
 [[ "$(jq -er '.source.shell_patch_revision' "${BUILD_MANIFEST}")" == "$(shell_patch_digest)" ]] || { echo "The build manifest has stale host patches." >&2; exit 1; }
-[[ "$(jq -er '.source.overlay_sha256' "${BUILD_MANIFEST}")" == "$(overlay_digest)" ]] || { echo "The build manifest has a stale host overlay." >&2; exit 1; }
+[[ "$(jq -er '.source.compiled_host.input_id' "${BUILD_MANIFEST}")" == "$(compiled_host_input_id "${LOCK_FILE}" "${REPO_ROOT}")" ]] || { echo "The build manifest has stale compiled-host inputs." >&2; exit 1; }
 jq -e '.runtime.node and .runtime.chromium and .runtime.electron and .runtime.code_oss' "${BUILD_MANIFEST}" >/dev/null
 
 echo "Static host checks passed: identity, darwin-${TARGET_ARCH}, SQL document association, signature, and manifest."
-
-if [[ "${static_only}" == "yes" ]]; then
-  exit 0
-fi
-
-external_code_pids=()
-for external_process in "Visual Studio Code" "Code" "VSCodium"; do
-  while IFS= read -r external_pid; do
-    [[ -n "${external_pid}" ]] && external_code_pids+=("${external_pid}")
-  done < <(pgrep -x "${external_process}" 2>/dev/null || true)
-done
-
-if [[ ${#external_code_pids[@]} -gt 0 ]]; then
-  echo "Coexistence check: existing VS Code/VSCodium PIDs are ${external_code_pids[*]}."
-else
-  echo "Independent-launch check: no VS Code or VSCodium process is running."
-fi
-
-normal_profile_before="$(normal_profile_fingerprint)"
-query_file="${REPO_ROOT}/host/qa/project-query.sql"
-rm -rf "${smoke_root}"
-mkdir -p "${smoke_root}"
-resolve_isolated_profile_paths "${smoke_root}"
-profile_layout_assert_mutable state user_data extensions shared_data backup cache logs
-mkdir -p \
-  "${PROFILE_USER_DATA_ROOT}" \
-  "${PROFILE_EXTENSIONS_ROOT}" \
-  "${PROFILE_SHARED_DATA_ROOT}" \
-  "${PROFILE_BACKUP_ROOT}" \
-  "${PROFILE_CACHE_ROOT}" \
-  "${PROFILE_LOG_ROOT}"
-chmod "${PROFILE_DIRECTORY_MODE}" \
-  "${PROFILE_STATE_ROOT}" \
-  "${PROFILE_USER_DATA_ROOT}" \
-  "${PROFILE_EXTENSIONS_ROOT}" \
-  "${PROFILE_SHARED_DATA_ROOT}" \
-  "${PROFILE_BACKUP_ROOT}" \
-  "${PROFILE_CACHE_ROOT}" \
-  "${PROFILE_LOG_ROOT}"
-smoke_log="${smoke_root}/host.log"
-smoke_policy="${smoke_root}/host-session-policy.json"
-smoke_result="${smoke_root}/host-session-result.json"
-smoke_arguments="$(jq -cn --args '$ARGS.positional' -- \
-  --verbose \
-  --use-mock-keychain \
-  --user-data-dir "${PROFILE_USER_DATA_ROOT}" \
-  --extensions-dir "${PROFILE_EXTENSIONS_ROOT}" \
-  --shared-data-dir "${PROFILE_SHARED_DATA_ROOT}" \
-  --disk-cache-dir "${PROFILE_CACHE_ROOT}" \
-  --logsPath "${PROFILE_LOG_ROOT}" \
-  --disable-extensions \
-  --new-window \
-  --skip-release-notes \
-  --skip-welcome \
-  "${query_file}")"
-smoke_environment="$(jq -cn --arg profile_layout "${PROFILE_LAYOUT}" '{
-  DBCODE_WRAPPER_PROFILE_LAYOUT_JSON: $profile_layout,
-  ELECTRON_ENABLE_LOGGING: "1"
-}')"
-host_log_patterns="$(jq -cn --arg state_db "${PROFILE_SHARED_DATA_ROOT}/sharedStorage/state.vscdb" '[
-  {kind: "literal", value: $state_db}
-]')"
-host_session_write_policy \
-  "${smoke_policy}" \
-  "isolated-smoke-$(date -u +'%Y%m%dT%H%M%SZ')-$$" \
-  "${app_executable}" \
-  "${smoke_arguments}" \
-  "${smoke_environment}" \
-  "${smoke_log}" \
-  "${PROFILE_LOG_ROOT}" \
-  25 \
-  1000 \
-  3 \
-  false \
-  '[]' \
-  "${host_log_patterns}" \
-  quit-after-ready \
-  false
-host_session_run "${smoke_policy}" "${smoke_result}" || {
-  echo "The isolated host failed its Host Session policy. See ${smoke_log}" >&2
-  exit 1
-}
-
-app_pid="$(jq -er '.process.app_pid' "${smoke_result}")"
-renderer_pid="$(jq -er '.process.renderer_pid' "${smoke_result}")"
-process_command="$(jq -er '.process.command' "${smoke_result}")"
-process_parent="$(jq -er '.process.parent_pid' "${smoke_result}")"
-[[ "${process_command}" == *"${APP_NAME}.app/Contents/MacOS/${bundle_executable}"* ]] || { echo "Unexpected launched process: ${process_command}" >&2; exit 1; }
-[[ "${process_command}" == *"--user-data-dir ${PROFILE_USER_DATA_ROOT}"* ]] || { echo "The launched process is not using the isolated user-data directory." >&2; exit 1; }
-[[ "${process_command}" == *"--extensions-dir ${PROFILE_EXTENSIONS_ROOT}"* ]] || { echo "The launched process is not using the isolated extension directory." >&2; exit 1; }
-[[ "${process_command}" == *"--shared-data-dir ${PROFILE_SHARED_DATA_ROOT}"* ]] || { echo "The launched process is not using the isolated shared-data directory." >&2; exit 1; }
-[[ "${process_command}" == *"${query_file}"* ]] || { echo "The launched process did not receive the project SQL file." >&2; exit 1; }
-rg -Fq "${query_file}" "${smoke_log}" || { echo "The host did not resolve the project SQL file during launch." >&2; exit 1; }
-[[ -f "${PROFILE_SHARED_DATA_ROOT}/sharedStorage/state.vscdb" ]] || { echo "The host did not create shared storage inside the isolated directory." >&2; exit 1; }
-for external_pid in "${external_code_pids[@]}"; do
-  [[ "${app_pid}" != "${external_pid}" ]] || { echo "The host reused an external Code process." >&2; exit 1; }
-  [[ "${process_parent}" != "${external_pid}" ]] || { echo "The host was launched by an external Code process." >&2; exit 1; }
-done
-
-normal_profile_after="$(normal_profile_fingerprint)"
-[[ "${normal_profile_before}" == "${normal_profile_after}" ]] || {
-  echo "A normal VS Code or VSCodium profile changed during the isolated launch." >&2
-  exit 1
-}
-
-echo "Independent launch passed with a stable renderer, isolated directories, and no normal-profile changes."

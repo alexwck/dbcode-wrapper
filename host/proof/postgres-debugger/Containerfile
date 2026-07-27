@@ -1,0 +1,12 @@
+FROM docker.io/library/postgres:17.4-bookworm@sha256:304ab813518754228f9f792f79d6da36359b82d8ecf418096c636725f8c930ad
+
+ARG DBCODE_WRAPPER_FIXTURE_CONTAINERFILE_SHA256
+
+LABEL io.dbcode-wrapper.fixture.id="postgres-debugger" \
+      io.dbcode-wrapper.fixture.containerfile-sha256="${DBCODE_WRAPPER_FIXTURE_CONTAINERFILE_SHA256}" \
+      io.dbcode-wrapper.fixture.pldebugger-package="postgresql-17-pldebugger=1:1.10-1.pgdg12+1"
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+      postgresql-17-pldebugger=1:1.10-1.pgdg12+1 \
+    && rm -rf /var/lib/apt/lists/*

@@ -85,6 +85,7 @@ focused_database_shell="false"
 dbcode_started="false"
 normal_pro_activation="false"
 postgresql="false"
+debugger="false"
 duckdb="false"
 parquet="false"
 hyphen_path_preflight="not-run"
@@ -108,18 +109,30 @@ proof_file=""
 if [[ "${inputs_ready}" == "true" ]] && jq -e '.paths.proof | type == "string"' "${dbcode_set}" >/dev/null 2>&1; then
   proof_file="$(approved_release_set_member "${dbcode_set}" proof || true)"
 fi
+dbcode_version="$(jq -r '.dbcode.version // empty' "${dbcode_set}" 2>/dev/null || true)"
+proof_manual_check_schema=""
+if [[ -n "${proof_file}" ]]; then
+  proof_manual_check_schema="$(jq -r '.manual_check_schema_version // 1' "${proof_file}" 2>/dev/null || true)"
+fi
 if [[ -n "${proof_file}" ]] && \
-  proof_state_is_finalizable "${proof_file}" && \
+  proof_state_is_runtime_usable "${proof_file}" "${dbcode_version}" && \
   jq -e \
     --arg host_release "$(jq -er '.release.release_set_id' "${host_set}")" \
     --arg dbcode_id "$(jq -er '.dbcode.id' "${dbcode_set}")" \
-    --arg dbcode_version "$(jq -er '.dbcode.version' "${dbcode_set}")" '
+    --arg dbcode_version "${dbcode_version}" \
+    --argjson manual_check_schema "${proof_manual_check_schema}" '
       .status == "passed"
       and .approved_release_set.host.release_set_id == $host_release
       and .approved_release_set.dbcode.id == $dbcode_id
       and .approved_release_set.dbcode.version == $dbcode_version
       and .manual_checks.activation.status == "passed"
       and .manual_checks.postgresql.status == "passed"
+      and (
+        if $manual_check_schema == 2
+        then .manual_checks.debugger.status == "passed"
+        else (.manual_checks | has("debugger") | not)
+        end
+      )
       and .manual_checks.duckdb.status == "passed"
       and .manual_checks.parquet.status == "passed"
       and .manual_checks.persistence.status == "passed"
@@ -136,12 +149,15 @@ if [[ -n "${proof_file}" ]] && \
     ' "${proof_file}" >/dev/null 2>&1; then
   normal_pro_activation="true"
   postgresql="true"
+  if [[ "${proof_manual_check_schema}" == "2" ]]; then
+    debugger="true"
+  fi
   duckdb="true"
   parquet="true"
 fi
 
 if jq -e \
-  --arg dbcode_version "$(jq -r '.dbcode.version // empty' "${dbcode_set}" 2>/dev/null || true)" \
+  --arg dbcode_version "${dbcode_version}" \
   --arg host_version "$(jq -r '.host.code_oss_version // empty' "${host_set}" 2>/dev/null || true)" '
     .approval_status == "approved"
     and .extension.version == $dbcode_version
@@ -297,6 +313,7 @@ jq -n \
   --argjson dbcode_started "${dbcode_started}" \
   --argjson normal_pro_activation "${normal_pro_activation}" \
   --argjson postgresql "${postgresql}" \
+  --argjson debugger "${debugger}" \
   --argjson duckdb "${duckdb}" \
   --argjson parquet "${parquet}" \
   --arg hyphen_path_preflight "${hyphen_path_preflight}" \
@@ -313,6 +330,7 @@ jq -n \
       dbcode_started: $dbcode_started,
       normal_pro_activation: $normal_pro_activation,
       postgresql: $postgresql,
+      debugger: $debugger,
       duckdb: $duckdb,
       parquet: $parquet,
       hyphen_path_preflight: $hyphen_path_preflight,

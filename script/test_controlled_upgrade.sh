@@ -272,9 +272,10 @@ jq --arg lock_sha "${fixture_lock_sha}" '.source.release_lock_sha256 = $lock_sha
 mv "${fixture_manifest}.tmp" "${fixture_manifest}"
 jq -n \
   --arg release_set_id "${fixture_release_id}" '
-  ["activation", "credential_reentry", "update_discovery", "postgresql", "duckdb", "parquet", "persistence"] as $checks
+  ["activation", "credential_reentry", "update_discovery", "postgresql", "debugger", "duckdb", "parquet", "persistence"] as $checks
   | {
       schema_version: 5,
+      manual_check_schema_version: 2,
       status: "passed",
       completed_at: "2026-07-21T04:00:00Z",
       approved_release_set: {
@@ -313,6 +314,27 @@ jq -n \
         postgresql: {
           server_enforced_read_only: true,
           verified_result: {transaction_read_only: "on", row_count: 3, amount_sum: "75.00"}
+        },
+        postgresql_debugger: {
+          address: "127.0.0.1:55434/dbcode_debugger_proof",
+          image: "localhost/dbcode-wrapper-postgres-debugger:17.4-pldebugger-1.10@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          base_image: "docker.io/library/postgres:17.4-bookworm@sha256:304ab813518754228f9f792f79d6da36359b82d8ecf418096c636725f8c930ad",
+          package: "postgresql-17-pldebugger=1:1.10-1.pgdg12+1",
+          containerfile_sha256: ("b" * 64),
+          seed_sha256: ("c" * 64),
+          server_enforced_loopback: true,
+          authentication: "local-loopback-test-fixture",
+          shared_preload_libraries: "plugin_debugger",
+          extension: {name: "pldbgapi", version: "1.1"},
+          routine: {
+            schema: "debugger_proof",
+            name: "calculate_total",
+            language: "plpgsql",
+            owner: "dbcode_debugger",
+            owner_is_superuser: false,
+            arguments: [5, 3],
+            expected_result: 22
+          }
         },
         duckdb: {verified_result: {amount_sum: "61.50", first_id: 1, last_id: 3, row_count: 3}},
         parquet: {verified_result: {amount_sum: "61.50", first_id: 1, last_id: 3, row_count: 3}}
@@ -442,6 +464,7 @@ jq -e '
   and (.dbcode_started | type == "boolean")
   and (.normal_pro_activation | type == "boolean")
   and (.postgresql | type == "boolean")
+  and (.debugger | type == "boolean")
   and (.duckdb | type == "boolean")
   and (.parquet | type == "boolean")
   and (.hyphen_path_preflight == "passed" or .hyphen_path_preflight == "not-required" or .hyphen_path_preflight == "not-run")
@@ -775,6 +798,7 @@ jq -n \
           dbcode_started: true,
           normal_pro_activation: $full,
           postgresql: $full,
+          debugger: $full,
           duckdb: $full,
           parquet: $full,
           hyphen_path_preflight: (if $full then "passed" else "not-required" end),

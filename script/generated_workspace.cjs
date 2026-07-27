@@ -52,8 +52,9 @@ function parseOptions(args) {
 
 function commonOptions(parsed) {
   const repoRoot = path.resolve(parsed['repo-root'] ?? path.join(__dirname, '..'));
+  const sourceRoot = path.resolve(parsed['source-root'] ?? repoRoot);
   const homeDirectory = path.resolve(parsed.home ?? os.homedir());
-  const ticketFile = path.resolve(repoRoot, DEFAULT_ISSUE);
+  const ticketFile = path.resolve(sourceRoot, DEFAULT_ISSUE);
   return {
     repoRoot,
     homeDirectory,
@@ -75,7 +76,7 @@ function writeJson(value) {
 
 function main([command, ...args]) {
   const parsed = parseOptions(args);
-  const commonKeys = ['repo-root', 'home'];
+  const commonKeys = ['repo-root', 'source-root', 'home'];
   if (command === 'inventory') {
     rejectUnknownOptions(parsed, commonKeys);
     writeJson(inventoryGeneratedWorkspace(commonOptions(parsed)));

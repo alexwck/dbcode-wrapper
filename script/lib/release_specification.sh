@@ -268,6 +268,41 @@ release_specification_record() {
         product
       }' "${release_lock}"
       ;;
+    compiled-host)
+      jq -S -c '{
+        schema_version: 1,
+        target,
+        upstream: {
+          vscodium: {
+            repository: .upstream.vscodium.repository,
+            tag: .upstream.vscodium.tag,
+            commit: .upstream.vscodium.commit
+          },
+          code_oss: {
+            repository: .upstream.code_oss.repository,
+            tag: .upstream.code_oss.tag,
+            commit: .upstream.code_oss.commit
+          }
+        },
+        toolchain,
+        runtime,
+        product: {
+          app_name: .product.app_name,
+          application_name: .product.application_name,
+          bundle_identifier: .product.bundle_identifier,
+          url_scheme: .product.url_scheme,
+          data_folder_name: .product.data_folder_name,
+          shared_data_folder_name: .product.shared_data_folder_name,
+          server_application_name: .product.server_application_name,
+          server_data_folder_name: .product.server_data_folder_name,
+          tunnel_application_name: .product.tunnel_application_name,
+          focused_shell: .product.focused_shell,
+          darwin_profile_uuid: .product.darwin_profile_uuid,
+          darwin_profile_payload_uuid: .product.darwin_profile_payload_uuid,
+          document_extensions: .product.document_extensions
+        }
+      }' "${release_lock}"
+      ;;
     extensions)
       jq -S -c '{
         schema_version: 1,

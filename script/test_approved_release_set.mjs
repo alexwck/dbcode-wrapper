@@ -60,7 +60,7 @@ function preparedSet(overrides = {}) {
 
 function completeApproval(overrides = {}) {
   return {
-    schema_version: 1,
+    schema_version: 2,
     id: releaseSetId,
     source_set_id: sourceSetId,
     compatibility_status: 'approved',
@@ -68,13 +68,15 @@ function completeApproval(overrides = {}) {
     target: { platform: 'darwin', architecture: 'arm64' },
     profile: { schema_version: 2 },
     manifest: {
-      schema_version: 5,
+      schema_version: 6,
       build_manifest_sha256: sha('d'),
       candidate_manifest_sha256: sha('d'),
       approval_attestation_sha256: sha('5'),
       artifact_sha256: artifactSha,
       shell_patch_revision: sha('6'),
       overlay_sha256: sha('7'),
+      source_snapshot_sha256: sha('8'),
+      compiled_host_input_id: `compiled-host-${sha('9')}`,
       packaging_status: 'built-and-signed'
     },
     host: {
@@ -212,6 +214,20 @@ test('legacy history remains readable but never becomes update-ready', () => {
   };
   const history = { schema_version: 2, approved_release_sets: [legacy, completeApproval()] };
   assert.equal(approvedReleaseSet.validateApprovedHistory(history).records[0].kind, 'legacy');
+  const previous = completeApproval();
+  previous.schema_version = 1;
+  previous.manifest.schema_version = 5;
+  delete previous.manifest.source_snapshot_sha256;
+  delete previous.manifest.compiled_host_input_id;
+  assert.equal(approvedReleaseSet.validateApprovedRecord(previous).kind, 'previous');
+  assert.equal(
+    approvedReleaseSet.findApprovedCandidate([previous], installedIdentity(), {
+      vscodiumVersion: '1.127.0',
+      codeOssVersion: '1.127.0',
+      dbcodeVersion: '1.37.0'
+    }),
+    undefined
+  );
   assert.equal(
     approvedReleaseSet.findApprovedCandidate(history.approved_release_sets, installedIdentity(), {
       vscodiumVersion: '1.126.04524',
@@ -261,7 +277,7 @@ test('installed identity accepts only official release-note locations', () => {
 test('approval construction binds the candidate, manifest, proof, gate, and attestation', () => {
   const candidate = preparedSet();
   const manifest = {
-    schema_version: 5,
+    schema_version: 6,
     release: {
       release_set_id: releaseSetId,
       source_set_id: sourceSetId,
@@ -269,7 +285,22 @@ test('approval construction binds the candidate, manifest, proof, gate, and atte
     },
     source: {
       repository_revision: commit('c'),
+      release_lock_sha256: sha('1'),
       shell_patch_revision: sha('6'), overlay_sha256: sha('7'),
+      snapshot: {
+        schema_version: 1,
+        mode: 'immutable-git-commit',
+        repository_revision: commit('c'),
+        tree_oid: commit('a'),
+        snapshot_sha256: sha('8'),
+        host_script_sha256: sha('7'),
+        release_lock_sha256: sha('1')
+      },
+      compiled_host: {
+        schema_version: 2,
+        input_id: `compiled-host-${sha('9')}`,
+        app_digest_algorithm: 'sha256-files-modes-links-v1'
+      },
       vscodium: { tag: '1.127.0', commit: commit('8') },
       code_oss: { tag: '1.127.0', commit: commit('9') }
     },
@@ -300,5 +331,7 @@ test('approval construction binds the candidate, manifest, proof, gate, and atte
   });
   assert.equal(record.id, releaseSetId);
   assert.equal(record.manifest.approval_attestation_sha256, sha('5'));
+  assert.equal(record.manifest.source_snapshot_sha256, sha('8'));
+  assert.equal(record.manifest.compiled_host_input_id, `compiled-host-${sha('9')}`);
   assert.equal(record.approval.gate_receipt_sha256, sha('0'));
 });

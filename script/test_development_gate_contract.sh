@@ -65,11 +65,29 @@ for adapter in \
   test_update_status_contract.sh \
   test_profile_migration_contract.sh \
   test_host_session_contract.sh \
-  test_generated_workspace_contract.sh; do
+  test_generated_workspace_contract.sh \
+  test_connection_catalogue_contract.sh \
+  test_fast_release_acceptance_contract.sh \
+  test_focused_shell_contract.sh; do
   require_line_once \
     "${trace_file}" \
     "script:${adapter}" \
     "The development gate must invoke ${adapter} exactly once"
+done
+
+for change_owned_adapter in \
+  test_development_gate_contract.sh \
+  test_public_push_readiness.sh \
+  test_private_release_contract.sh \
+  test_postgres_debugger_fixture_contract.sh \
+  test_proof_state.sh \
+  test_release_rollback_contract.sh \
+  test_same_mac_release_contract.sh \
+  test_controlled_upgrade.sh; do
+  if rg -Fq "script:${change_owned_adapter}" "${trace_file}"; then
+    echo "The fast development gate must leave ${change_owned_adapter} to changes that own that workflow." >&2
+    exit 1
+  fi
 done
 
 for owned_node_test in \
@@ -109,5 +127,17 @@ require_line_once \
   "${script_root}/test_generated_workspace_contract.sh" \
   '"${NODE_BIN_DIR}/node" --test "${REPO_ROOT}/script/test_generated_workspace_retention.mjs"' \
   "The generated workspace adapter must run its Node tests with pinned Node"
+require_line_once \
+  "${script_root}/test_connection_catalogue_contract.sh" \
+  '"${NODE_BIN_DIR}/node" --test "${REPO_ROOT}/script/test_connection_catalogue_contract.mjs"' \
+  "The connection-catalogue adapter must run its Node tests with pinned Node"
+require_line_once \
+  "${script_root}/test_focused_shell_contract.sh" \
+  '"${NODE_BIN_DIR}/node" "${extension_host_log_policy_test}"' \
+  "The focused-shell adapter must run its colocated extension-host log-policy test with pinned Node"
+require_line_once \
+  "${script_root}/test_focused_shell_contract.sh" \
+  '"${NODE_BIN_DIR}/node" --test "${rendered_session_support_test}"' \
+  "The focused-shell adapter must run its rendered-session support tests with pinned Node"
 
 echo "Development gate execution contracts passed."

@@ -112,12 +112,12 @@ rg -Fq 'external_runtime:' "${audit_script}" || {
   exit 1
 }
 
-rg -Fq 'export DBCODE_WRAPPER_STRIP_SOURCE_MAPS="yes"' "${REPO_ROOT}/script/build_host.sh" || {
-  echo "The production build must request source-map omission explicitly." >&2
+rg -Fq 'export DBCODE_WRAPPER_STRIP_SOURCE_MAPS="yes"' "${REPO_ROOT}/script/compile_host.sh" || {
+  echo "Host compilation must request source-map omission explicitly." >&2
   exit 1
 }
-rg -Fq 'export DBCODE_WRAPPER_BUILTIN_EXTENSION_ALLOWLIST' "${REPO_ROOT}/script/build_host.sh" || {
-  echo "The production build must pass the reviewed built-in extension allowlist to Code OSS." >&2
+rg -Fq 'export DBCODE_WRAPPER_BUILTIN_EXTENSION_ALLOWLIST' "${REPO_ROOT}/script/compile_host.sh" || {
+  echo "Host compilation must pass the reviewed built-in extension allowlist to Code OSS." >&2
   exit 1
 }
 rg -Fq "process.env['DBCODE_WRAPPER_STRIP_SOURCE_MAPS'] === 'yes'" "${slimming_patch}" || {
@@ -144,6 +144,8 @@ source_map_filter_count="$(rg -Fc "!**/*.map" "${slimming_patch}")"
 
 if rg -n '(find .*\.map.*-delete|rm .*\.map)' \
   "${REPO_ROOT}/script/build_host.sh" \
+  "${REPO_ROOT}/script/assemble_host.sh" \
+  "${REPO_ROOT}/script/compile_host.sh" \
   "${REPO_ROOT}/script/sign_host.sh"; then
   echo "Source maps must be omitted by packaging, not deleted from the built or signed app." >&2
   exit 1

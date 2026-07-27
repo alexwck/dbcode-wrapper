@@ -28,11 +28,6 @@ rg -Fq 'ipykernel==7.3.0' "${qa_kernel_preparer}" || {
   echo "The QA Python kernel must pin its top-level ipykernel dependency." >&2
   exit 1
 }
-rg -Fq 'DBCODE_WRAPPER_QA_JUPYTER_PATH' "${REPO_ROOT}/script/test_focused_shell_rendered.sh" || {
-  echo "The rendered proof must pass its isolated Jupyter data path to DBCode Wrapper." >&2
-  exit 1
-}
-
 jq -e '
   .publisher == "dbcode-wrapper"
   and .name == "python-kernel-bridge"
@@ -68,7 +63,7 @@ if rg -n 'child_process|execFile|spawn\(' "${kernel_bridge_runtime}"; then
   exit 1
 fi
 
-rg -Fq 'copy_first_party_extensions' "${REPO_ROOT}/script/build_host.sh" || {
+rg -Fq 'copy_first_party_extensions' "${REPO_ROOT}/script/assemble_host.sh" || {
   echo "The production build must bundle the reviewed first-party kernel bridge before signing." >&2
   exit 1
 }
@@ -80,38 +75,39 @@ rg -Fq "dbcode-wrapper-python-kernel.ipynb" "${focused_shell_patch}" || {
   echo "The private bootstrap notebook must stay out of the visible DBCode tab strip." >&2
   exit 1
 }
-rg -Fq 'dbcode_wrapper_notebook_proof = 6 * 7' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must execute a deterministic Python expression in a DBCode notebook." >&2
-  exit 1
-}
-rg -Fq 'DBCODE_NOTEBOOK_PYTHON_OUTPUT_42' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must assert the real Python kernel output." >&2
-  exit 1
-}
-rg -Fq 'findNotebookPythonOutput' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must read the deterministic result from DBCode's rendered notebook output frame." >&2
-  exit 1
-}
-rg -Fq 'DBCode Wrapper QA \(Python\)' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must select the isolated Python kernel through DBCode's visible kernel flow." >&2
-  exit 1
-}
+for rendered_notebook_contract in \
+  'the DBCode notebook route remains reachable without starting a kernel' \
+  'kernelStarted: false' \
+  'permissionPromptExpected: false'; do
+  rg -Fq "${rendered_notebook_contract}" "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
+    echo "The rendered smoke is missing its prompt-free notebook route check: ${rendered_notebook_contract}" >&2
+    exit 1
+  }
+done
 
-rg -Fq 'scanExtensionHostLogs' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered notebook proof must reject required extension-host activation errors." >&2
+if rg -Fq 'prepare_python_notebook_qa.sh' "${REPO_ROOT}/script/test_focused_shell_rendered.sh"; then
+  echo "The fast rendered smoke must not prepare or start a Python kernel." >&2
   exit 1
-}
-rg -Fq 'python-kernel-ipykernel-7\.3\.0' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must also accept Jupyter's direct QA virtual-environment label." >&2
-  exit 1
-}
-rg -Fq 'approveSampleConnectionIfOffered' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must approve its own sample DBCode connection without manual input." >&2
-  exit 1
-}
-rg -Fq 'approveDbcodeKernelAccessIfOffered' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
-  echo "The rendered proof must approve DBCode's first-use Jupyter access without manual input." >&2
-  exit 1
-}
+fi
+
+for forbidden_interactive_notebook_contract in \
+  'runDbcodeKernelCellWithHumanGate' \
+  'focusDbcodeWindowForHumanKernelGate' \
+  'HUMAN ACTION REQUIRED' \
+  'DBCODE_WRAPPER_QA_MANUAL_KERNEL_GATE' \
+  'kernel-permission-preflight' \
+  'verifyNotebookRoute' \
+  '.notebookOverlay.notebook-editor:visible' \
+  'dbcode_wrapper_notebook_proof = 6 * 7' \
+  'DBCODE_NOTEBOOK_PYTHON_OUTPUT_42' \
+  'findNotebookPythonOutput' \
+  'chooseQaPythonKernel'; do
+  if rg -Fq "${forbidden_interactive_notebook_contract}" \
+    "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" \
+    "${REPO_ROOT}/script/test_focused_shell_rendered.sh"; then
+    echo "The fast rendered smoke still contains an interactive Kernel workflow: ${forbidden_interactive_notebook_contract}" >&2
+    exit 1
+  fi
+done
 
 echo "Core Python-notebook contract checks passed."

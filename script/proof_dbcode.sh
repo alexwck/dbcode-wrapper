@@ -11,6 +11,7 @@ source "${REPO_ROOT}/script/lib/proof_state.sh"
 source "${REPO_ROOT}/script/lib/local_signing_identity.sh"
 source "${REPO_ROOT}/script/lib/host_session.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
+source "${REPO_ROOT}/script/lib/postgres_debugger_fixture.sh"
 
 proof_parent="$(generated_workspace_path "proof-evidence")"
 proof_root="${proof_parent}/dbcode-wrapper"
@@ -251,6 +252,7 @@ collect_proof_snapshot() {
     --arg duckdb "${workspace_root}/STANDALONE_DBCODE_PROOF.duckdb" \
     --arg parquet "${workspace_root}/STANDALONE_DBCODE_PROOF.parquet" \
     --argjson postgres_verification "${postgres_fixture_summary}" \
+    --argjson postgres_debugger_verification "${postgres_debugger_fixture_summary}" \
     --argjson duckdb_verification "${duckdb_fixture_summary}" '
       {
         host: {
@@ -285,6 +287,7 @@ collect_proof_snapshot() {
             server_enforced_read_only: true,
             verified_result: $postgres_verification
           },
+          postgresql_debugger: $postgres_debugger_verification,
           duckdb: {path: $duckdb, verified_result: $duckdb_verification.duckdb},
           parquet: {path: $parquet, verified_result: $duckdb_verification.parquet}
         }
@@ -305,9 +308,11 @@ create_evidence_record() {
     --arg vscodium_commit "${VSCODIUM_COMMIT}" \
     --arg code_oss_tag "${CODE_OSS_TAG}" \
     --arg code_oss_commit "${CODE_OSS_COMMIT}" \
+    --argjson pending_manual_checks "$(proof_state_pending_manual_checks_json)" \
     --argjson snapshot "${snapshot}" '
       {
         schema_version: 5,
+        manual_check_schema_version: 2,
         status: "awaiting-manual-checks",
         prepared_at: $prepared_at,
         release_set_under_test: {
@@ -329,15 +334,7 @@ create_evidence_record() {
         fixtures: $snapshot.fixtures,
         launches: [],
         complete_quits: [],
-        manual_checks: {
-          activation: {status: "pending"},
-          credential_reentry: {status: "pending"},
-          update_discovery: {status: "pending"},
-          postgresql: {status: "pending"},
-          duckdb: {status: "pending"},
-          parquet: {status: "pending"},
-          persistence: {status: "pending"}
-        }
+        manual_checks: $pending_manual_checks
       }
     ' > "${evidence_file}"
   chmod 600 "${evidence_file}"
@@ -403,6 +400,7 @@ prepare_all() {
 
   "${REPO_ROOT}/script/prepare_dbcode.sh" --profile default --allow-candidate
   prepare_postgres
+  postgres_debugger_fixture_prepare "${workspace_root}"
   if [[ "${proof_phase}" == "relaunch" ]]; then
     prepare_duckdb no
   else
@@ -418,6 +416,20 @@ prepare_all() {
 
   create_evidence_record
   refresh_evidence_release_set
+}
+
+prepare_debugger_fixture() {
+  mkdir -p "${workspace_root}"
+  chmod 700 "${proof_root}" "${workspace_root}"
+  postgres_debugger_fixture_prepare "${workspace_root}"
+  jq -n \
+    --arg proof_sql "${workspace_root}/postgres-debugger-proof.sql" \
+    --argjson fixture "${postgres_debugger_fixture_summary}" '
+      {
+        fixture: $fixture,
+        proof_sql: $proof_sql
+      }
+    '
 }
 
 launch_proof() {
@@ -525,7 +537,7 @@ launch_proof() {
 
 record_manual_check() {
   [[ $# -ge 3 ]] || {
-    echo "Usage: ./script/proof_dbcode.sh record <activation|credential_reentry|update_discovery|postgresql|duckdb|parquet|persistence> <passed|failed> <observation>" >&2
+    echo "Usage: ./script/proof_dbcode.sh record <activation|credential_reentry|update_discovery|postgresql|debugger|duckdb|parquet|persistence> <passed|failed> <observation>" >&2
     exit 2
   }
   local check_name="$1"
@@ -549,6 +561,9 @@ record_manual_check() {
       ;;
     postgresql)
       expected_result="DBCode reports transaction_read_only=on and returns 3 rows with amount sum 75.00."
+      ;;
+    debugger)
+      expected_result="DBCode starts a PL/pgSQL routine debug session, stops at a SQL breakpoint, exposes stepping and variables, completes with the expected result, and returns to the focused database shell without a generic IDE workbench."
       ;;
     duckdb)
       expected_result="DBCode returns the 3 persistent DuckDB rows with amount sum 61.50."
@@ -657,7 +672,7 @@ finalize_proof() {
   mv "${migrated_evidence}" "${evidence_file}"
 
   proof_state_is_finalizable "${evidence_file}" || {
-    echo "Finalization requires an initial launch, a linked complete quit, a relaunch, and seven fresh passing observations from that relaunch." >&2
+    echo "Finalization requires an initial launch, a linked complete quit, a relaunch, and eight fresh passing observations from that relaunch." >&2
     jq '{active_launch, last_complete_quit, manual_checks}' "${evidence_file}" >&2
     exit 1
   }
@@ -811,6 +826,9 @@ case "${1:-status}" in
     prepare_all prepare
     show_status
     ;;
+  prepare-debugger)
+    prepare_debugger_fixture
+    ;;
   launch)
     launch_proof launch
     ;;
@@ -831,7 +849,7 @@ case "${1:-status}" in
     show_status
     ;;
   *)
-    echo "Usage: ./script/proof_dbcode.sh [prepare|launch|quit|relaunch|record|finalize|status]" >&2
+    echo "Usage: ./script/proof_dbcode.sh [prepare|prepare-debugger|launch|quit|relaunch|record|finalize|status]" >&2
     exit 2
     ;;
 esac

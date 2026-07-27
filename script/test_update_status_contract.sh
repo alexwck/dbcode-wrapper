@@ -127,10 +127,10 @@ done
 jq -n -e \
   --argjson build "${RELEASE_BUILD_SPEC}" \
   --argjson extensions "${RELEASE_EXTENSION_SPEC}" '
-  $build.release.release_set_base_id == "code-oss-1.126.0-dbcode-1.36.2"
+  $build.release.release_set_base_id == "code-oss-1.126.0-dbcode-1.36.4"
   and $build.release.compatibility_status == "candidate"
   and $build.release.profile_schema_version == 1
-  and $build.release.validation_issue == "24-open-official-release-pages-from-every-update-row"
+  and $build.release.validation_issue == "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130"
   and ($build.upstream.vscodium.published_at | type == "string")
   and ($build.upstream.vscodium.release_notes_url | startswith("https://github.com/VSCodium/vscodium/releases/tag/"))
   and ($build.upstream.code_oss.published_at | type == "string")
@@ -147,24 +147,26 @@ if ! approved_release_history_validate "${approved_history}" >/dev/null; then
 fi
 
 for manifest_contract in \
-  'schema_version: 5' \
+  'schema_version: 6' \
   'release_set_id' \
   'profile_schema_version' \
   'compatibility_status' \
   'packaging_status' \
   'built_in_extension_count' \
-  'source_map_file_count'; do
+  'source_map_file_count' \
+  'release_source_snapshot' \
+  'compiled_host'; do
   rg -Fq "${manifest_contract}" "${REPO_ROOT}/script/generate_manifest.sh" || {
     echo "The installed build manifest is missing: ${manifest_contract}" >&2
     exit 1
   }
 done
 
-rg -Fq 'generate_installed_release_status.sh' "${REPO_ROOT}/script/build_host.sh" || {
+rg -Fq 'generate_installed_release_status.sh' "${REPO_ROOT}/script/assemble_host.sh" || {
   echo "The production build must create the runtime release identity." >&2
   exit 1
 }
-rg -Fq 'approved-release-sets.json' "${REPO_ROOT}/script/build_host.sh" || {
+rg -Fq 'approved-release-sets.json' "${REPO_ROOT}/script/assemble_host.sh" || {
   echo "The production build must bundle the local approved-candidate registry." >&2
   exit 1
 }
@@ -173,7 +175,7 @@ installed_identity="$(mktemp "${TMPDIR:-/tmp}/dbcode-installed-release.XXXXXX")"
 trap 'rm -f "${installed_identity}"' EXIT
 "${installed_manifest_generator}" "${installed_identity}" >/dev/null
 jq -e '
-  (.sourceSetId | test("^code-oss-1\\.126\\.0-dbcode-1\\.36\\.2-source-[0-9a-f]{64}$"))
+  (.sourceSetId | test("^code-oss-1\\.126\\.0-dbcode-1\\.36\\.4-source-[0-9a-f]{64}$"))
   and .compatibilityStatus == "candidate"
   and .profileSchemaVersion == 1
   and .target == {platform: "darwin", architecture: "arm64"}

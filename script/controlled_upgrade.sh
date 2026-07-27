@@ -588,6 +588,7 @@ validate_promotion_matrix() {
       and .combinations[3].details.runtime.dbcode_started == true
       and .combinations[3].details.runtime.normal_pro_activation == true
       and .combinations[3].details.runtime.postgresql == true
+      and .combinations[3].details.runtime.debugger == true
       and .combinations[3].details.runtime.duckdb == true
       and .combinations[3].details.runtime.parquet == true
       and .combinations[3].details.static.connection_capability_contract == true

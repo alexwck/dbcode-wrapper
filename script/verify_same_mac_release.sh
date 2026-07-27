@@ -257,6 +257,7 @@ jq -e \
     and .approved_release_set.dbcode.installed_extensions == $expected_extensions
     and ([.manual_checks.activation, .manual_checks.credential_reentry,
           .manual_checks.update_discovery, .manual_checks.postgresql,
+          .manual_checks.debugger,
           .manual_checks.duckdb, .manual_checks.parquet,
           .manual_checks.persistence] | all(.status == "passed"))
     and (.launches | length) >= 2
@@ -298,6 +299,7 @@ jq -e \
       and .dbcode.version == $dbcode_version
       and .details.runtime.normal_pro_activation == true
       and .details.runtime.postgresql == true
+      and .details.runtime.debugger == true
       and .details.runtime.duckdb == true
       and .details.runtime.parquet == true
       and (.details.runtime.hyphen_path_preflight == "passed"
@@ -444,7 +446,7 @@ jq -n \
   --argjson rendered_warning_count "${rendered_warning_count}" \
   --argjson manual_checks "${manual_checks}" '
     {
-      schema_version: 1,
+      schema_version: 2,
       status: "passed",
       completed_at_utc: $completed_at_utc,
       scope: "current-user-private-use",
@@ -485,6 +487,7 @@ jq -n \
         protected_credential_reentry: "passed",
         read_only_update_discovery: "passed",
         postgresql_read_only: "passed",
+        stored_routine_debugger: "passed",
         duckdb_and_parquet: "passed",
         first_run_migration_and_hyphen_path: "passed",
         four_way_update_compatibility: "passed",

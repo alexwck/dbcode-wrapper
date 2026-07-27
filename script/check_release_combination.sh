@@ -113,6 +113,7 @@ else
     dbcode_started: false,
     normal_pro_activation: false,
     postgresql: false,
+    debugger: false,
     duckdb: false,
     parquet: false,
     hyphen_path_preflight: "not-run",
@@ -135,6 +136,7 @@ jq -e '
   and (.dbcode_started | type == "boolean")
   and (.normal_pro_activation | type == "boolean")
   and (.postgresql | type == "boolean")
+  and (.debugger | type == "boolean")
   and (.duckdb | type == "boolean")
   and (.parquet | type == "boolean")
   and (.hyphen_path_preflight == "passed" or .hyphen_path_preflight == "not-required" or .hyphen_path_preflight == "not-run")

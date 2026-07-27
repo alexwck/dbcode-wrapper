@@ -79,7 +79,7 @@ function approvedReleaseSet(vscodiumVersion = '1.127.00001', dbcodeVersion = '1.
   const artifactSha = '3333333333333333333333333333333333333333333333333333333333333333';
   const sourceSetId = `code-oss-${codeOssTag}-dbcode-${dbcodeVersion}-source-${SOURCE_ID_SHA}`;
   return {
-    schema_version: 1,
+    schema_version: 2,
     id: `${sourceSetId}-artifact-${artifactSha}`,
     source_set_id: sourceSetId,
     compatibility_status: 'approved',
@@ -87,13 +87,15 @@ function approvedReleaseSet(vscodiumVersion = '1.127.00001', dbcodeVersion = '1.
     target: { platform: 'darwin', architecture: 'arm64' },
     profile: { schema_version: 1 },
     manifest: {
-      schema_version: 5,
+      schema_version: 6,
       build_manifest_sha256: '2222222222222222222222222222222222222222222222222222222222222222',
       candidate_manifest_sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       approval_attestation_sha256: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       artifact_sha256: artifactSha,
       shell_patch_revision: '4444444444444444444444444444444444444444444444444444444444444444',
       overlay_sha256: '5555555555555555555555555555555555555555555555555555555555555555',
+      source_snapshot_sha256: '8888888888888888888888888888888888888888888888888888888888888888',
+      compiled_host_input_id: `compiled-host-${'9'.repeat(64)}`,
       packaging_status: 'built-and-signed'
     },
     host: {

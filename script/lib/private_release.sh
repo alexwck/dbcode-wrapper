@@ -5,6 +5,9 @@ if [[ "${DBCODE_WRAPPER_PRIVATE_RELEASE_LIBRARY_LOADED:-}" == "yes" ]]; then
 fi
 DBCODE_WRAPPER_PRIVATE_RELEASE_LIBRARY_LOADED="yes"
 
+private_release_library_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${private_release_library_root}/lib/release_source_snapshot.sh"
+
 private_release_path_is_within() {
   local root_path="$1"
   local candidate_path="$2"
@@ -32,7 +35,8 @@ private_release_validate_source_tag() {
   local source_tag="$2"
   local manifest_file="$3"
   local release_lock="$4"
-  local tag_object tag_commit expected_commit tagged_lock_sha manifest_lock_sha actual_lock_sha
+  local tag_object tag_commit expected_commit snapshot_json
+  local tagged_lock_sha manifest_lock_sha actual_lock_sha
 
   [[ -d "${repository}" && ! -L "${repository}" ]] || {
     echo "The source repository is missing or unsafe: ${repository}" >&2
@@ -59,7 +63,16 @@ private_release_validate_source_tag() {
     echo "The source tag does not resolve to a commit: ${source_tag}" >&2
     return 1
   }
-  expected_commit="$(jq -er '.source.repository_revision' "${manifest_file}")"
+  snapshot_json="$(jq -c '.source.snapshot' "${manifest_file}")"
+  release_source_snapshot_verify_json "${repository}" "${snapshot_json}" || {
+    echo "The build manifest does not contain a valid immutable source snapshot." >&2
+    return 1
+  }
+  expected_commit="$(jq -er '.repository_revision' <<<"${snapshot_json}")"
+  [[ "$(jq -er '.source.repository_revision' "${manifest_file}")" == "${expected_commit}" ]] || {
+    echo "The manifest source revision does not match its immutable source snapshot." >&2
+    return 1
+  }
   [[ "${tag_commit}" == "${expected_commit}" ]] || {
     echo "The source tag does not identify the source revision that built the app." >&2
     return 1
@@ -131,10 +144,24 @@ private_release_validate_sources() {
     --arg code_oss_version "$(jq -er '.runtime.code_oss_version' <<<"${release_build_spec}")" \
     --arg vscodium_version "$(jq -er '.upstream.vscodium.tag' <<<"${release_build_spec}")" \
     --arg compatibility_status "$(jq -er '.release.compatibility_status' <<<"${release_build_spec}")" '
-      .schema_version == 5
+      .schema_version == 6
       and .release.compatibility_status == $compatibility_status
       and (.release.release_set_id | type == "string" and length > 0)
       and .source.release_lock_sha256 == $lock_sha
+      and .source.repository_revision == .source.snapshot.repository_revision
+      and .source.release_lock_sha256 == .source.snapshot.release_lock_sha256
+      and .source.overlay_sha256 == .source.snapshot.host_script_sha256
+      and .source.snapshot.schema_version == 1
+      and .source.snapshot.mode == "immutable-git-commit"
+      and (.source.snapshot.tree_oid | test("^[0-9a-f]{40}$"))
+      and (.source.snapshot.snapshot_sha256 | test("^[0-9a-f]{64}$"))
+      and .source.compiled_host.schema_version == 2
+      and (.source.compiled_host.input_id | test("^compiled-host-[0-9a-f]{64}$"))
+      and (.source.compiled_host.source_revision | test("^[0-9a-f]{40}$"))
+      and .source.compiled_host.app_digest_algorithm == "sha256-files-modes-links-v1"
+      and (.source.compiled_host.app_sha256 | test("^[0-9a-f]{64}$"))
+      and .source.compiled_host.compilation_environment.schema_version == 1
+      and (.source.compiled_host.cache_status | IN("hit", "miss-built"))
       and .runtime.code_oss == $code_oss_version
       and .runtime.host == $vscodium_version
       and .artifact.app_name == $app_name
@@ -258,7 +285,103 @@ private_release_validate_sources() {
   dbcode_version="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")"
   dbcode_sha256="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .vsix_sha256' "${manifest_file}")"
 
-  jq -e \
+  acceptance_schema="$(jq -er '.schema_version' "${acceptance_file}")"
+  if [[ "${acceptance_schema}" == "3" ]]; then
+    jq -e \
+      --arg app_sha "${app_sha}" \
+      --arg manifest_sha "${manifest_sha}" \
+      --arg lock_sha "${lock_sha}" \
+      --arg code_oss_version "${code_oss_version}" \
+      --arg dbcode_version "${dbcode_version}" \
+      --arg dbcode_sha256 "${dbcode_sha256}" \
+      --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
+      --arg certificate_sha1 "$(jq -er '.artifact.signing_certificate_sha1' "${manifest_file}")" \
+      --arg certificate_sha256 "$(jq -er '.artifact.signing_certificate_sha256' "${manifest_file}")" \
+      --arg source_revision "$(jq -er '.source.snapshot.repository_revision' "${manifest_file}")" \
+      --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
+      --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
+      --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
+      --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" '
+        .schema_version == 3
+        and .status == "passed"
+        and .scope == "current-user-private-use"
+        and .source == {
+          repository_revision: $source_revision,
+          tree_oid: $source_tree_oid,
+          snapshot_sha256: $source_snapshot_sha256,
+          compiled_host_input_id: $compiled_host_input_id
+        }
+        and .release.release_set_id == $release_set_id
+        and .release.app_sha256 == $app_sha
+        and .release.platform == "darwin"
+        and .release.architecture == "arm64"
+        and .release.code_oss_version == $code_oss_version
+        and .release.dbcode.id == "dbcode.dbcode"
+        and .release.dbcode.version == $dbcode_version
+        and .release.dbcode.vsix_sha256 == $dbcode_sha256
+        and .evidence_sha256.build_manifest == $manifest_sha
+        and .evidence_sha256.release_lock == $lock_sha
+        and (.evidence_sha256 | keys | sort) == [
+          "build_manifest",
+          "development_log",
+          "release_lock",
+          "rendered_report",
+          "smoke_log"
+        ]
+        and all(.evidence_sha256[]; type == "string" and test("^[0-9a-f]{64}$"))
+        and .gates == {
+          development_contracts: "passed",
+          strict_signature_and_manifest: "passed",
+          signed_app_one_profile_launch: "passed",
+          dbcode_focused_rendered_interface: "passed",
+          exact_external_extension_inventory: "passed",
+          prompt_free_automation: "passed",
+          bundle_unchanged_after_use: "passed"
+        }
+        and .gate_execution == {
+          source_snapshot_sha256: $source_snapshot_sha256,
+          release_set_id: $release_set_id,
+          app_sha256: $app_sha,
+          build_manifest_sha256: $manifest_sha,
+          development_runner: "script/check_development.sh",
+          static_smoke_runner: "script/smoke_host.sh"
+        }
+        and .automation == {
+          profile_name: "qa",
+          persistent_profile: true,
+          person_controlled_actions: "not-invoked",
+          kernel_started: false,
+          sql_executed: false,
+          model_called: false,
+          secret_entered: false
+        }
+        and (.rendered_evidence.check_count | type == "number" and . >= 8)
+        and (.rendered_evidence.known_warning_count | type == "number" and . >= 0)
+        and .rendered_evidence.unexpected_error_count == 0
+        and .signing.kind == "certificate"
+        and .signing.scope == "current-user-private-use"
+        and .signing.designated_requirement == $signature_requirement
+        and .signing.certificate.sha1 == $certificate_sha1
+        and .signing.certificate.sha256 == $certificate_sha256
+        and (. | has("manual_evidence") | not)
+        and .failures == []
+        and .waivers == []
+        and .distribution_claims == {
+          developer_id: false,
+          notarized: false,
+          public_distribution_ready: false,
+          intel_support: false,
+          multi_user_support: false,
+          official_dbcode_endorsement: false
+        }
+        and (.completed_at_utc | type == "string" and length > 0)
+        and (.private_use_risks | type == "array" and length >= 5)
+      ' "${acceptance_file}" >/dev/null || {
+      echo "The prompt-free acceptance report is incomplete or belongs to another artifact." >&2
+      return 1
+    }
+  else
+    jq -e \
     --arg app_sha "${app_sha}" \
     --arg manifest_sha "${manifest_sha}" \
     --arg lock_sha "${lock_sha}" \
@@ -269,7 +392,7 @@ private_release_validate_sources() {
     --arg certificate_sha1 "$(jq -er '.artifact.signing_certificate_sha1' "${manifest_file}")" \
     --arg certificate_sha256 "$(jq -er '.artifact.signing_certificate_sha256' "${manifest_file}")" \
     --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" '
-      .schema_version == 1
+      (.schema_version == 1 or .schema_version == 2)
       and .status == "passed"
       and .scope == "current-user-private-use"
       and .release.release_set_id == $release_set_id
@@ -295,34 +418,69 @@ private_release_validate_sources() {
         "smoke_log"
       ]
       and all(.evidence_sha256[]; type == "string" and test("^[0-9a-f]{64}$"))
-      and .gates == {
-        development_contracts: "passed",
-        strict_signature_and_manifest: "passed",
-        rebuilt_host_safe_storage_behavior: "accepted-limitation",
-        independent_launch_and_profile_isolation: "passed",
-        dbcode_focused_rendered_interface: "passed",
-        exact_external_extension_inventory: "passed",
-        lifetime_entitlement_and_persistence: "passed",
-        protected_credential_reentry: "passed",
-        read_only_update_discovery: "passed",
-        postgresql_read_only: "passed",
-        duckdb_and_parquet: "passed",
-        first_run_migration_and_hyphen_path: "passed",
-        four_way_update_compatibility: "passed",
-        promotion_restart_health: "passed",
-        complete_set_rollback: "passed",
-        owner_only_profile_permissions: "passed",
-        bundle_unchanged_after_use: "passed"
-      }
-      and (.manual_evidence | keys | sort) == [
-        "activation",
-        "credential_reentry",
-        "duckdb",
-        "parquet",
-        "persistence",
-        "postgresql",
-        "update_discovery"
-      ]
+      and (
+        if .schema_version == 1 then
+          .gates == {
+            development_contracts: "passed",
+            strict_signature_and_manifest: "passed",
+            rebuilt_host_safe_storage_behavior: "accepted-limitation",
+            independent_launch_and_profile_isolation: "passed",
+            dbcode_focused_rendered_interface: "passed",
+            exact_external_extension_inventory: "passed",
+            lifetime_entitlement_and_persistence: "passed",
+            protected_credential_reentry: "passed",
+            read_only_update_discovery: "passed",
+            postgresql_read_only: "passed",
+            duckdb_and_parquet: "passed",
+            first_run_migration_and_hyphen_path: "passed",
+            four_way_update_compatibility: "passed",
+            promotion_restart_health: "passed",
+            complete_set_rollback: "passed",
+            owner_only_profile_permissions: "passed",
+            bundle_unchanged_after_use: "passed"
+          }
+          and (.manual_evidence | keys | sort) == [
+            "activation",
+            "credential_reentry",
+            "duckdb",
+            "parquet",
+            "persistence",
+            "postgresql",
+            "update_discovery"
+          ]
+        else
+          .gates == {
+            development_contracts: "passed",
+            strict_signature_and_manifest: "passed",
+            rebuilt_host_safe_storage_behavior: "accepted-limitation",
+            independent_launch_and_profile_isolation: "passed",
+            dbcode_focused_rendered_interface: "passed",
+            exact_external_extension_inventory: "passed",
+            lifetime_entitlement_and_persistence: "passed",
+            protected_credential_reentry: "passed",
+            read_only_update_discovery: "passed",
+            postgresql_read_only: "passed",
+            stored_routine_debugger: "passed",
+            duckdb_and_parquet: "passed",
+            first_run_migration_and_hyphen_path: "passed",
+            four_way_update_compatibility: "passed",
+            promotion_restart_health: "passed",
+            complete_set_rollback: "passed",
+            owner_only_profile_permissions: "passed",
+            bundle_unchanged_after_use: "passed"
+          }
+          and (.manual_evidence | keys | sort) == [
+            "activation",
+            "credential_reentry",
+            "debugger",
+            "duckdb",
+            "parquet",
+            "persistence",
+            "postgresql",
+            "update_discovery"
+          ]
+        end
+      )
       and all(.manual_evidence[];
         .status == "passed"
         and .launch_kind == "relaunch"
@@ -357,7 +515,8 @@ private_release_validate_sources() {
     ' "${acceptance_file}" >/dev/null || {
     echo "The final acceptance report is incomplete or does not approve this exact private-use artifact." >&2
     return 1
-  }
+    }
+  fi
 
   expected_extensions="$(
     jq -c '[.runtime_extensions[] | "\(.id)@\(.version)"] | sort' "${manifest_file}"
@@ -427,6 +586,9 @@ private_release_write_compatibility_manifest() {
     --arg created_at_utc "${created_at_utc}" \
     --arg source_tag "${source_tag}" \
     --arg source_commit "${source_commit}" \
+    --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
+    --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
+    --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
     --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" \
     --arg source_set_id "$(jq -er '.release.source_set_id' "${manifest_file}")" \
     --arg code_oss_version "$(jq -er '.runtime.code_oss' "${manifest_file}")" \
@@ -464,7 +626,10 @@ private_release_write_compatibility_manifest() {
         source: {
           tag: $source_tag,
           repository_revision: $source_commit,
-          release_lock_sha256: $release_lock_sha256
+          tree_oid: $source_tree_oid,
+          snapshot_sha256: $source_snapshot_sha256,
+          release_lock_sha256: $release_lock_sha256,
+          compiled_host_input_id: $compiled_host_input_id
         },
         release: {
           release_set_id: $release_set_id,

@@ -80,9 +80,10 @@ expected_extension_inventory=$'dbcode.dbcode@1.36.2\nms-toolsai.jupyter-renderer
 }
 
 valid_evidence="${test_root}/valid.json"
-jq -n '
-  ["activation", "credential_reentry", "update_discovery", "postgresql", "duckdb", "parquet", "persistence"] as $checks
-  | {
+jq -n \
+  --argjson required_checks "$(proof_state_required_manual_checks_json)" '
+    {
+      manual_check_schema_version: 2,
       launches: [
         {id: "launch-1", kind: "launch", launched_at: "2026-07-18T00:00:00Z", ready_at: "2026-07-18T00:00:10Z", normal_profile_before: "normal-profile-a"},
         {id: "launch-2", kind: "relaunch", launched_at: "2026-07-18T00:02:00Z", ready_at: "2026-07-18T00:02:10Z", normal_profile_before: "normal-profile-a"}
@@ -104,7 +105,30 @@ jq -n '
         ready_at: "2026-07-18T00:02:10Z",
         normal_profile_before: "normal-profile-a"
       },
-      manual_checks: (reduce $checks[] as $check ({};
+      fixtures: {
+        postgresql_debugger: {
+          address: "127.0.0.1:55434/dbcode_debugger_proof",
+          image: "localhost/dbcode-wrapper-postgres-debugger:17.4-pldebugger-1.10@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          base_image: "docker.io/library/postgres:17.4-bookworm@sha256:304ab813518754228f9f792f79d6da36359b82d8ecf418096c636725f8c930ad",
+          package: "postgresql-17-pldebugger=1:1.10-1.pgdg12+1",
+          containerfile_sha256: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          seed_sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          server_enforced_loopback: true,
+          authentication: "local-loopback-test-fixture",
+          shared_preload_libraries: "plugin_debugger",
+          extension: {name: "pldbgapi", version: "1.1"},
+          routine: {
+            schema: "debugger_proof",
+            name: "calculate_total",
+            language: "plpgsql",
+            owner: "dbcode_debugger",
+            owner_is_superuser: false,
+            arguments: [5, 3],
+            expected_result: 22
+          }
+        }
+      },
+      manual_checks: (reduce $required_checks[] as $check ({};
         .[$check] = {
           status: "passed",
           launch_id: "launch-2",
@@ -121,6 +145,36 @@ proof_state_is_finalizable "${valid_evidence}" || {
   echo "A complete launch, quit, relaunch, and fresh-check sequence was rejected." >&2
   exit 1
 }
+
+historical_runtime_evidence="${test_root}/historical-runtime.json"
+jq '
+  .manual_check_schema_version = 1
+  | .status = "passed"
+  | .approved_release_set = {
+      host: {release_set_id: "historical-release"},
+      dbcode: {id: "dbcode.dbcode", version: "1.36.2"}
+    }
+  | del(.manual_checks.debugger, .fixtures.postgresql_debugger)
+' "${valid_evidence}" > "${historical_runtime_evidence}"
+proof_state_is_runtime_usable "${historical_runtime_evidence}" "1.36.2" || {
+  echo "A retained DBCode 1.36.2 proof using the historical seven-check contract was rejected." >&2
+  exit 1
+}
+if proof_state_is_runtime_usable "${historical_runtime_evidence}" "1.36.4"; then
+  echo "A historical seven-check proof was accepted for the DBCode 1.36.4 candidate." >&2
+  exit 1
+fi
+if proof_state_is_finalizable "${historical_runtime_evidence}"; then
+  echo "A historical seven-check proof was accepted as a new finalizable proof." >&2
+  exit 1
+fi
+
+candidate_missing_debugger_evidence="${test_root}/candidate-missing-debugger-evidence.json"
+jq 'del(.manual_checks.debugger)' "${valid_evidence}" > "${candidate_missing_debugger_evidence}"
+if proof_state_is_finalizable "${candidate_missing_debugger_evidence}"; then
+  echo "Current candidate proof evidence without the required debugger gate was accepted." >&2
+  exit 1
+fi
 
 assert_rejected() {
   local label="$1"
@@ -147,6 +201,10 @@ assert_rejected "an empty manual note" '.manual_checks.parquet.note = ""'
 assert_rejected "a check recorded before relaunch" '.manual_checks.postgresql.recorded_at = "2026-07-18T00:01:30Z"'
 assert_rejected "missing protected-credential re-entry evidence" 'del(.manual_checks.credential_reentry)'
 assert_rejected "missing update-discovery evidence" 'del(.manual_checks.update_discovery)'
+assert_rejected "pending debugger evidence" '.manual_checks.debugger = {status: "pending"}'
+assert_rejected "missing debugger fixture evidence" 'del(.fixtures.postgresql_debugger)'
+assert_rejected "a debugger fixture exposed beyond loopback" '.fixtures.postgresql_debugger.server_enforced_loopback = false'
+assert_rejected "the wrong pldbgapi extension" '.fixtures.postgresql_debugger.extension.version = "1.0"'
 
 legacy_evidence="${test_root}/legacy-schema-4.json"
 migrated_legacy_evidence="${test_root}/migrated-schema-5.json"
@@ -269,7 +327,8 @@ jq -e '
   and (.active_launch | not)
   and (.last_complete_quit | not)
   and (.completed_at | not)
-  and (.manual_checks | keys) == ["activation", "credential_reentry", "duckdb", "parquet", "persistence", "postgresql", "update_discovery"]
+  and .manual_check_schema_version == 2
+  and (.manual_checks | keys) == ["activation", "credential_reentry", "debugger", "duckdb", "parquet", "persistence", "postgresql", "update_discovery"]
   and all(.manual_checks[]; .status == "pending" and (keys == ["status"]))
 ' "${refreshed_release}" >/dev/null || {
   echo "A changed host or DBCode release set inherited stale proof evidence." >&2

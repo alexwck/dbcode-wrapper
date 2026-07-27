@@ -45,9 +45,10 @@ jq -e \
   --arg code_oss_commit "${code_oss_commit}" \
   --arg vscodium_version "${vscodium_version}" \
   --arg vscodium_commit "${vscodium_commit}" \
+  --arg approval_status "${RELEASE_COMPATIBILITY_STATUS}" \
   --arg contributions_sha256 "${expected_contributions_sha256}" '
   .schema_version == 2 and
-  .approval_status == "approved" and
+  .approval_status == $approval_status and
   .extension == {
     id: $extension_id,
     version: $extension_version,
@@ -97,7 +98,7 @@ jq -e \
   (.connection_capability_contract.runtime_boundaries | length) == 6 and
   ((.feature_groups[] | select(.id == "data-file-editor") | .prior_compatibility_failure) as $failure |
     $failure.extension == "dbcode.dbcode@1.36.1" and
-    $failure.host == ("Code OSS " + $code_oss_version) and
+    $failure.host == "Code OSS 1.126.0" and
     ($failure.message | length) > 80
   ) and
   (.boundary | length) > 40 and
@@ -105,15 +106,72 @@ jq -e \
   ([.feature_groups[].id] | length) == ([.feature_groups[].id] | unique | length) and
   all(.feature_groups[];
     (.status == "supported" or .status == "limited" or .status == "requires-validation") and
+    (.evidence_levels | length) > 0 and
+    (.evidence_levels | length) == (.evidence_levels | unique | length) and
+    all(.evidence_levels[];
+      . == "declared" or . == "reachable" or . == "rendered" or . == "live"
+    ) and
     (.declared_contributions | length) > 0 and
     (.focused_routes | length) > 0 and
     (.evidence | length) > 0
   ) and
+  ((.feature_groups[] | select(.id == "stored-routine-debugger")) as $debugger |
+    $debugger.status == "requires-validation" and
+    ($debugger | has("release_gate") | not) and
+    ($debugger.validation_boundary | contains("not a deployment gate"))
+  ) and
+  ([.feature_groups[].id] | index("ai")) == null and
+  ([
+    "ai-provider-configuration",
+    "ai-inline-completion",
+    "ai-query-builder",
+    "ai-grid",
+    "ai-explore",
+    "ai-plan-analysis",
+    "ai-query-explanations",
+    "copilot-tools",
+    "mcp-auto-registration",
+    "mcp-http-server",
+    "ai-inferred-relationships",
+    "team-ai-controls"
+  ] - [.feature_groups[].id] | length) == 0 and
+  ((.feature_groups[] | select(.id == "ai-provider-configuration")) as $ai |
+    $ai.status == "supported" and
+    $ai.evidence_levels == ["declared", "reachable"] and
+    ($ai.evidence | contains("terms-gated")) and
+    ($ai.evidence | contains("live model calls"))
+  ) and
+  ((.feature_groups[] | select(.id == "ai-inline-completion")) as $completion |
+    $completion.status == "requires-validation" and
+    ($completion.evidence_levels | index("live")) == null
+  ) and
+  ((.feature_groups[] | select(.id == "copilot-tools")) as $copilot |
+    $copilot.status == "limited" and
+    ($copilot.evidence | contains("Generic Code OSS Chat"))
+  ) and
+  ((.feature_groups[] | select(.id == "mcp-auto-registration")) as $mcp_auto |
+    $mcp_auto.status == "supported" and
+    $mcp_auto.evidence_levels == ["declared", "reachable"] and
+    ($mcp_auto.evidence | contains("HTTP server"))
+  ) and
+  ((.feature_groups[] | select(.id == "mcp-http-server")) as $mcp_http |
+    $mcp_http.status == "limited" and
+    ($mcp_http.evidence_levels | index("rendered")) == null and
+    $mcp_http.focused_routes == ["DBCode Settings > AI > MCP"] and
+    ($mcp_http.evidence | contains("only declared")) and
+    ($mcp_http.evidence | contains("external client"))
+  ) and
+  ((.feature_groups[] | select(.id == "ai-inferred-relationships")) as $relationships |
+    $relationships.status == "limited" and
+    ($relationships.evidence | contains("workspace settings"))
+  ) and
   .public_contribution_contract.contribution_keys == [
+    "breakpoints",
     "colors",
     "commands",
     "configuration",
     "customEditors",
+    "debuggers",
     "icons",
     "keybindings",
     "languageModelTools",
@@ -127,15 +185,23 @@ jq -e \
     "viewsContainers",
     "viewsWelcome"
   ] and
-  .public_contribution_contract.commands.count == 170 and
+  .public_contribution_contract.commands.count == 171 and
   (.public_contribution_contract.commands.sorted_ids_sha256 | test("^[0-9a-f]{64}$")) and
   (.public_contribution_contract.views | length) == 8 and
   (.public_contribution_contract.custom_editor.selector_extensions | length) == 11 and
   (.public_contribution_contract.notebook.renderer == "dbcode-notebook-renderer") and
+  .public_contribution_contract.debugger == {
+    type: "dbcode",
+    label: "%Database Routine Debugger%",
+    languages: ["sql"],
+    breakpoint_languages: ["sql"],
+    command: "dbcode.debug.routine"
+  } and
   (.public_contribution_contract.language_model_tools | length) == 12 and
   .public_contribution_contract.mcp_server_definition_providers == ["dbcode"] and
   (.public_contribution_contract.configuration_titles | length) == 11 and
   ([.focused_routes.wrapper_commands[].id] | sort) == [
+    "dbcodeWrapper.openDbcodeAiSettings",
     "dbcodeWrapper.openDbcodeSettings",
     "dbcodeWrapper.revealScratchFiles",
     "dbcodeWrapper.startProfileMigration"
@@ -184,7 +250,7 @@ for required_catalogue_contract in \
   'createConnectionCatalogueSnapshot' \
   'verifyConnectionCatalogueSnapshot' \
   'captureConnectionCatalogueSnapshot' \
-  'unchanged DBCode exposes the complete reviewed New Connection catalogue' \
+  'unchanged DBCode exposes the reviewed New Connection catalogue' \
   'ticket-22-connection-catalogue-report.json' \
   'rawLabelsStored: false'; do
   rg -Fq -- "${required_catalogue_contract}" "${catalogue_contract_module}" "${rendered_test}" || {
@@ -207,6 +273,7 @@ done
 
 for required_route in \
   'dbcodeWrapper.openDbcodeSettings' \
+  'dbcodeWrapper.openDbcodeAiSettings' \
   'dbcodeWrapper.revealScratchFiles' \
   'dbcode.scratchFiles.path' \
   'INativeHostService' \
@@ -218,6 +285,7 @@ for required_route in \
   'dbcode.queryBuilder.open' \
   'dbcode.ai.chooseProvider' \
   'dbcode.ai.setApiKey' \
+  '@ext:dbcode.dbcode custom model' \
   'DBCODE_WRAPPER_HIDDEN_TREE_ACTIONS' \
   'dbcode.library.revealFile' \
   'settings-editor > .settings-header' \
@@ -280,9 +348,20 @@ if [[ -n "${manifest_file}" ]]; then
     (($manifest.contributes.notebooks | map(select(.type == $expected.public_contribution_contract.notebook.type)) | length) == 1) and
     (($manifest.contributes.notebooks[] | select(.type == $expected.public_contribution_contract.notebook.type) | .selector | filename_patterns) == ($expected.public_contribution_contract.notebook.selector_extensions | sorted)) and
     (($manifest.contributes.notebookRenderer | map(.id) | sorted) == [$expected.public_contribution_contract.notebook.renderer]) and
+    (($manifest.contributes.breakpoints | map(.language) | sorted) == ($expected.public_contribution_contract.debugger.breakpoint_languages | sorted)) and
+    ([$manifest.contributes.debuggers[] |
+      select(
+        .type == $expected.public_contribution_contract.debugger.type and
+        .label == $expected.public_contribution_contract.debugger.label and
+        ((.languages | sorted) == ($expected.public_contribution_contract.debugger.languages | sorted))
+      )
+    ] | length) == 1 and
     (($manifest.contributes.languageModelTools | map(.name) | sorted) == ($expected.public_contribution_contract.language_model_tools | sorted)) and
     (($manifest.contributes.mcpServerDefinitionProviders | map(.id) | sorted) == ($expected.public_contribution_contract.mcp_server_definition_providers | sorted)) and
     (($manifest.contributes.configuration | map(.title) | sorted) == ($expected.public_contribution_contract.configuration_titles | sorted)) and
+    (($expected.public_contribution_contract.required_configuration_keys - ([
+      $manifest.contributes.configuration[]?.properties? | keys[]
+    ] | unique | sorted)) | length) == 0 and
     ([
       $expected.focused_routes.dbcode_commands[].id,
       $expected.focused_routes.contextual_commands[].id,

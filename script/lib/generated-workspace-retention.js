@@ -194,8 +194,8 @@ function createRetentionContract({
       'build-cache',
       '.build/cache',
       'reusable-cache',
-      'prepare-source',
-      'Verified source and package caches remain reusable until the source workflow explicitly expires them.',
+      'host-build',
+      'Verified source, package, and Compiled Host caches remain reusable until the host-build workflow explicitly expires them.',
       false
     ),
     managedRoot(

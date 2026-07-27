@@ -1,9 +1,9 @@
 {
   "schema_version": 2,
-  "approval_status": "approved",
+  "approval_status": "candidate",
   "extension": {
     "id": "dbcode.dbcode",
-    "version": "1.36.2",
+    "version": "1.36.4",
     "engine": "^1.95.0",
     "source": "public-package-manifest"
   },
@@ -41,7 +41,7 @@
     ],
     "catalogue_snapshot": {
       "source": "rendered-new-connection-picker",
-      "extension": "dbcode.dbcode@1.36.2",
+      "extension": "dbcode.dbcode@1.36.4",
       "normalization": "Unicode NFC, collapsed whitespace, case-sensitive code-point sort",
       "section_count": 12,
       "item_count": 88,
@@ -81,6 +81,7 @@
     {
       "id": "connections-and-schema",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode.connections.add",
         "dbcode.connections.import",
@@ -96,11 +97,12 @@
         "Connection tools menu",
         "DBCode-owned tree context actions"
       ],
-      "evidence": "The rendered shell test opens Connections Home, fingerprints every counted item in DBCode's unchanged New Connection catalogue without storing its labels, and keeps the isolated Database Explorer, import, Tunnels, Authentication Profiles, a real sample database, and DBCode-owned object actions reachable without generic IDE navigation."
+      "evidence": "The one-profile smoke opens Connections Home, fingerprints every counted item in DBCode's unchanged New Connection catalogue without storing its labels, and renders the isolated Database Explorer. Import, Tunnels, Authentication Profiles, connections, and DBCode-owned object actions remain declared or reachable without live database work."
     },
     {
       "id": "profile-setup-and-connection-import",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode.connections.import"
       ],
@@ -114,6 +116,7 @@
     {
       "id": "sql-query-editor",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "sql language",
         "dbcode.connections.sqlFile",
@@ -128,11 +131,12 @@
         "SQL editor context menu",
         "DBCode SQL keybindings"
       ],
-      "evidence": "The rendered and licensed proofs execute project SQL through unchanged DBCode and retain only DBCode and basic editing context actions."
+      "evidence": "The one-profile smoke opens a real SQL file through the focused wrapper without executing it. DBCode execution commands and basic editing actions remain available for normal user work."
     },
     {
       "id": "results-and-table-editor",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode.panelView",
         "dbcode.table.open",
@@ -145,11 +149,12 @@
         "Database Explorer table actions",
         "DBCode-owned grid toolbar and context actions"
       ],
-      "evidence": "The rendered shell test opens a real table and query result grid beside and below the query while the generic workbench panel remains closed."
+      "evidence": "The wrapper retains DBCode's result and table-editor contributions, automatic result placement, and DBCode-owned grid routes. The fast deployment gate does not execute SQL or open live table data."
     },
     {
       "id": "history",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode.history.view",
         "dbcode.history.loadQuery",
@@ -164,6 +169,7 @@
     {
       "id": "library",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode.library.view",
         "dbcode.library.addScript",
@@ -179,6 +185,7 @@
     {
       "id": "notebooks",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode-notebook",
         "dbcode-notebook-renderer",
@@ -189,11 +196,12 @@
         "DBCode tools > New DBCode Notebook",
         "DBCode notebook toolbar and cell menus"
       ],
-      "evidence": "The package retains the standard notebook host and renderer built-in. The DBCode 1.36.2 rendered proof opens a real DBCode notebook from the focused tools menu while the duplicate database-tree shortcut remains suppressed because its forwarded tree context was not a reliable host contract."
+      "evidence": "The package retains the standard notebook host and renderer built-in. The one-profile smoke confirms that New DBCode Notebook remains visible in DBCode Tools without activating the terms-gated command. The duplicate database-tree shortcut remains suppressed because its forwarded tree context is not a reliable host contract."
     },
     {
       "id": "python-notebooks",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode-notebook Python cells",
         "ms-toolsai.jupyter",
@@ -205,11 +213,12 @@
         "DBCode notebook cell language selector > Python",
         "DBCode notebook kernel picker"
       ],
-      "evidence": "The complete Jupyter and Python runtime set is mandatory, pinned, verified, and installed into the private profile. The DBCode 1.36.2 rendered proof starts an isolated user-selected Python kernel, grants DBCode the normal first-use Jupyter permission, renders the deterministic output 42, and confirms that the permission is not requested again."
+      "evidence": "The complete Jupyter and Python runtime set is mandatory, pinned, verified, and installed into the private profile. Automated deployment verifies package identity and route visibility but does not start a kernel or handle first-use permission prompts."
     },
     {
       "id": "data-file-editor",
       "status": "limited",
+      "evidence_levels": ["declared"],
       "declared_contributions": [
         "dbcode.dataFileViewer",
         "DBCode custom editor selectors"
@@ -218,7 +227,7 @@
         "Connections Home > New connection",
         "DBCode table data grid"
       ],
-      "evidence": "DBCode 1.36.2 still declares the custom editor. The prior pair did not register its provider, so the wrapper continues to hide the guaranteed-failure route during the update-pair gate. Direct CSV, Excel, Parquet, and Avro opening remains a separate documented compatibility gate; Connections is usable but is not claimed as feature-equivalent.",
+      "evidence": "DBCode 1.36.4 still declares the custom editor. The prior pair did not register its provider, so the wrapper continues to hide the guaranteed-failure route until the new update pair proves it works. Direct CSV, Excel, Parquet, and Avro opening remains a separate compatibility gate; Connections is usable but is not claimed as feature-equivalent.",
       "prior_compatibility_failure": {
         "extension": "dbcode.dbcode@1.36.1",
         "host": "Code OSS 1.126.0",
@@ -228,6 +237,7 @@
     {
       "id": "diagrams-and-query-builder",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode.tables.diagram",
         "dbcode.queryBuilder.open"
@@ -239,8 +249,26 @@
       "evidence": "The DBCode 1.36.2 rendered proof opens the context-free Query Builder workflow and keeps the relationship-diagram action in Database Explorer without generic IDE actions. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
     },
     {
+      "id": "stored-routine-debugger",
+      "status": "requires-validation",
+      "evidence_levels": ["declared"],
+      "declared_contributions": [
+        "dbcode.debug.routine",
+        "dbcode debugger type",
+        "SQL breakpoints"
+      ],
+      "focused_routes": [
+        "DBCode-owned routine context action",
+        "DBCode SQL editor Debug action",
+        "contextual DBCode debugger session"
+      ],
+      "validation_boundary": "A real PostgreSQL PL/pgSQL debugging session is optional user validation, not a deployment gate.",
+      "evidence": "DBCode 1.36.4 declares its database-routine debugger, SQL breakpoints, and DBCode-owned Debug actions. These routes remain covered by policy, but automated deployment does not start a database or debugger session."
+    },
+    {
       "id": "account-and-license",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "dbcode.account.view",
         "DBCode authentication and licence commands"
@@ -249,44 +277,190 @@
         "Account toolbar action",
         "DBCode Account view actions"
       ],
-      "evidence": "The rendered shell test retains account actions, while the licensed quit-and-relaunch proof restores the user's lifetime entitlement through DBCode's own account surface."
+      "evidence": "The one-profile smoke opens and dismisses DBCode's Account drawer. Licence activation and account persistence remain normal user actions, not deployment tests."
     },
     {
-      "id": "ai",
+      "id": "ai-provider-configuration",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
         "dbcode.ai.chooseProvider",
         "dbcode.ai.changeModel",
         "dbcode.ai.setApiKey",
-        "DBCode result-grid AI surface",
-        "12 language model tools"
+        "dbcode.ai.customModel endpoint, model, timeout, and only settings",
+        "dbcode.ai.modelId"
       ],
       "focused_routes": [
         "DBCode tools > Choose AI Provider",
-        "DBCode tools > Set AI API Key",
-        "DBCode Settings > AI",
-        "DBCode-owned result-grid AI tab"
+        "DBCode tools > Configure Custom Model",
+        "DBCode tools > Set Custom Model API Key",
+        "DBCode Settings > AI"
       ],
-      "evidence": "The DBCode 1.36.2 rendered proof opens DBCode's real provider and API-key workflows. Model selection remains available in DBCode's provider flow and filtered AI settings instead of a duplicate redirect. Generic Code OSS Chat remains intentionally absent; its language-model-tool integration is tracked separately from DBCode's native AI surfaces."
+      "evidence": "The one-profile smoke confirms that provider choice, Custom Model settings, and protected API-key setup remain visible in DBCode Tools without activating terms-gated commands. Default CI does not enter secrets or make live model calls."
     },
     {
-      "id": "mcp",
-      "status": "limited",
+      "id": "ai-inline-completion",
+      "status": "requires-validation",
+      "evidence_levels": ["declared", "reachable"],
       "declared_contributions": [
-        "dbcode MCP server definition provider",
+        "dbcode.ai.inlineCompletion",
+        "dbcode.ai.modelId",
+        "DBCode SQL and notebook inline completion"
+      ],
+      "focused_routes": [
+        "DBCode SQL editor",
+        "DBCode notebook SQL cells",
+        "DBCode Settings > AI > Inline Completion"
+      ],
+      "evidence": "The exact package declares the inline-completion setting, and the focused wrapper renders the owning SQL and notebook editors. The candidate has not yet produced a separate inline suggestion with synthetic schema and SQL, so rendered and live evidence are not claimed. A focused check must not send private SQL or require a live model in default CI."
+    },
+    {
+      "id": "ai-query-builder",
+      "status": "requires-validation",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
+        "dbcode.queryBuilder.open",
+        "DBCode Query Builder AI prompt",
+        "structured QueryModel validation and undo"
+      ],
+      "focused_routes": [
+        "DBCode tools > Query Builder",
+        "DBCode Query Builder > AI input"
+      ],
+      "evidence": "The one-profile smoke confirms that Query Builder remains visible in DBCode Tools without activating the terms-gated command. The candidate has not separately rendered its AI input, structured model validation, or undo flow. Any deeper check must use a synthetic schema and must not require a provider, account, or live model response."
+    },
+    {
+      "id": "ai-grid",
+      "status": "requires-validation",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
+        "DBCode result-grid AI surface",
+        "DBCode grid, chart, filter, sort, group, pivot, and layout actions"
+      ],
+      "focused_routes": [
+        "DBCode table and query result grids",
+        "DBCode-owned result-grid AI tab"
+      ],
+      "evidence": "The wrapper retains DBCode's result-grid owner, but the fast smoke does not activate a database or record Grid AI as a separate surface. The wrapper must not implement or grade grid actions. A pinned-version privacy review remains necessary before promising that conversational Grid AI never sends values or reruns SQL."
+    },
+    {
+      "id": "ai-explore",
+      "status": "requires-validation",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
+        "DBCode Explore AI insights",
+        "DBCode Summary Data disclosure"
+      ],
+      "focused_routes": [
+        "DBCode data grid > Explore > AI insights"
+      ],
+      "evidence": "The focused wrapper retains DBCode's data-grid owner, but the candidate does not yet have separate rendered evidence for Explore AI or its Summary Data disclosure. A focused route check must use synthetic values and keep live model calls outside default CI."
+    },
+    {
+      "id": "ai-plan-analysis",
+      "status": "requires-validation",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
+        "DBCode execution-plan AI analysis",
+        "dbcode.notebook.executeExplain"
+      ],
+      "focused_routes": [
+        "DBCode execution plan > AI analysis",
+        "DBCode notebook cell execute menu"
+      ],
+      "evidence": "The exact package declares the notebook explain action and the wrapper retains DBCode's execution-plan owner. The candidate has not yet rendered the AI analysis panel separately. A focused check may use synthetic schema and plain EXPLAIN; live model calls and EXPLAIN ANALYZE stay outside default CI."
+    },
+    {
+      "id": "ai-query-explanations",
+      "status": "limited",
+      "evidence_levels": ["declared"],
+      "declared_contributions": [
+        "ai.analysis team policy",
+        "DBCode query explanations"
+      ],
+      "focused_routes": [
+        "DBCode-owned query analysis surfaces"
+      ],
+      "evidence": "Official team policy names query explanations under ai.analysis, but the current official feature pages do not identify a distinct UI route. The wrapper therefore records the capability without claiming a reachable or rendered path until the pinned version is checked."
+    },
+    {
+      "id": "copilot-tools",
+      "status": "limited",
+      "evidence_levels": ["declared"],
+      "declared_contributions": [
+        "12 DBCode language model tools",
+        "separate read, DML, DDL, disconnect, copy, and inferred-relationship tools"
+      ],
+      "focused_routes": [
+        "Generic Code OSS Chat agent tools",
+        "DBCode HTTP MCP fallback"
+      ],
+      "evidence": "The exact DBCode package declares twelve language-model tools, but Generic Code OSS Chat is intentionally absent from the focused product. The tools therefore have no current focused Copilot route. The separate HTTP MCP server is the planned focused fallback and remains limited until its lifecycle and OAuth gate pass."
+    },
+    {
+      "id": "mcp-auto-registration",
+      "status": "supported",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
+        "dbcode MCP server definition provider"
+      ],
+      "focused_routes": [
+        "DBCode-owned MCP provider registration"
+      ],
+      "evidence": "The exact package declares DBCode's MCP server definition provider and the focused host keeps that provider unchanged. This proves that automatic editor registration remains reachable. It does not prove the separate HTTP server, an external client, OAuth, or a live tool call."
+    },
+    {
+      "id": "mcp-http-server",
+      "status": "limited",
+      "evidence_levels": ["declared", "reachable"],
+      "declared_contributions": [
         "dbcode.mcp.start",
         "dbcode.mcp.stop",
         "dbcode.mcp.oauth.revokeTokens"
       ],
       "focused_routes": [
-        "DBCode Settings > AI > MCP",
-        "DBCode-owned MCP provider registration"
+        "DBCode Settings > AI > MCP"
       ],
-      "evidence": "DBCode's provider auto-registers and its HTTP MCP settings remain available, but official documentation defines automatic registration and the HTTP server as separate capabilities. Manual HTTP Start, Stop, OAuth revoke, and one external client remain a separate focused compatibility gate and are not claimed as covered by automatic registration."
+      "evidence": "The HTTP MCP settings page is reachable. Start, Stop, OAuth revoke, and external client use are only declared and do not yet have a focused route or proof against the pinned version. Keep the server off by default and require a separate compatibility gate before claiming HTTP MCP support."
+    },
+    {
+      "id": "ai-inferred-relationships",
+      "status": "limited",
+      "evidence_levels": ["declared"],
+      "declared_contributions": [
+        "dbcode-get-inferred-relationships",
+        "dbcode-set-inferred-relationships",
+        "DBCode relationship rendering"
+      ],
+      "focused_routes": [
+        "DBCode Copilot tools",
+        "DBCode MCP tools",
+        "DBCode data relationship views"
+      ],
+      "evidence": "The exact package declares relationship read and write tools, and the wrapper keeps DBCode relationship views. Copilot tool access is unavailable and HTTP MCP remains limited, so an external tool invocation is not yet proved. Relationship writes can change workspace settings and always require an explicit user-directed action."
+    },
+    {
+      "id": "team-ai-controls",
+      "status": "limited",
+      "evidence_levels": ["declared"],
+      "declared_contributions": [
+        "ai",
+        "ai.completions",
+        "ai.analysis",
+        "ai.queryBuilder",
+        "ai.explore",
+        "ai.grid"
+      ],
+      "focused_routes": [
+        "DBCode Account view",
+        "DBCode team administration"
+      ],
+      "evidence": "The wrapper keeps DBCode's account surface and does not override its team AI policy, but account sign-in and team administration are not exercised in default CI. DBCode roles are policy controls, not a security boundary, so the wrapper does not claim rendered or live team-control evidence."
     },
     {
       "id": "settings",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "11 DBCode configuration sections"
       ],
@@ -298,6 +472,7 @@
     {
       "id": "scratch-files",
       "status": "supported",
+      "evidence_levels": ["declared", "reachable", "rendered"],
       "declared_contributions": [
         "DBCode Scratch Files configuration",
         "dbcode.scratchFiles.openFolder"
@@ -310,12 +485,14 @@
     }
   ],
   "public_contribution_contract": {
-    "jq_sorted_compact_contributes_sha256": "8eb40f616f4d08b1a76a54bb60e0c8ea1b0b223a7128404c2d901034e4ed1307",
+    "jq_sorted_compact_contributes_sha256": "8564abd6d8e7c33489a634c64f50decaf22a59192c87574f11b5b09ab9e8c937",
     "contribution_keys": [
+      "breakpoints",
       "colors",
       "commands",
       "configuration",
       "customEditors",
+      "debuggers",
       "icons",
       "keybindings",
       "languageModelTools",
@@ -330,8 +507,8 @@
       "viewsWelcome"
     ],
     "commands": {
-      "count": 170,
-      "sorted_ids_sha256": "212ee458f451debf5c53a572c9256053cfddc59cf39203715eb0a02793d28039"
+      "count": 171,
+      "sorted_ids_sha256": "c05c7132942d9413869dde670bc2402d79e43876ec14e4eba347aaa320b90db5"
     },
     "views": [
       "dbcode.connections.view",
@@ -367,6 +544,17 @@
       ],
       "renderer": "dbcode-notebook-renderer"
     },
+    "debugger": {
+      "type": "dbcode",
+      "label": "%Database Routine Debugger%",
+      "languages": [
+        "sql"
+      ],
+      "breakpoint_languages": [
+        "sql"
+      ],
+      "command": "dbcode.debug.routine"
+    },
     "language_model_tools": [
       "dbcode-get-connections",
       "dbcode-workspace-connection",
@@ -396,6 +584,12 @@
       "%Cloud Providers, Connections and Tunnels%",
       "%Scratch Files%",
       "%Transactions%"
+    ],
+    "required_configuration_keys": [
+      "dbcode.ai.customModel.endpoint",
+      "dbcode.ai.customModel.model",
+      "dbcode.ai.customModel.only",
+      "dbcode.ai.customModel.timeout"
     ]
   },
   "focused_routes": {
@@ -404,6 +598,11 @@
         "id": "dbcodeWrapper.openDbcodeSettings",
         "route": "DBCode tools",
         "target": "@ext:dbcode.dbcode"
+      },
+      {
+        "id": "dbcodeWrapper.openDbcodeAiSettings",
+        "route": "DBCode tools > AI: Configure Custom Model",
+        "target": "@ext:dbcode.dbcode custom model"
       },
       {
         "id": "dbcodeWrapper.revealScratchFiles",
@@ -431,7 +630,7 @@
       },
       {
         "id": "dbcode.ai.setApiKey",
-        "route": "DBCode tools > AI: Set API Key"
+        "route": "DBCode tools > AI: Set Custom Model API Key"
       },
       {
         "id": "dbcode.connections.import",
@@ -464,6 +663,10 @@
         "route": "Database Explorer tables context menu"
       },
       {
+        "id": "dbcode.debug.routine",
+        "route": "DBCode routine and SQL editor context actions"
+      },
+      {
         "id": "dbcode.notebook.export",
         "route": "DBCode notebook toolbar"
       },
@@ -488,7 +691,7 @@
     ]
   },
   "command_exposure_policy": {
-    "declared_command_count": 170,
+    "declared_command_count": 171,
     "command_palette": "The generic Command Palette is unavailable in production, and the locally verified public package manifest proves which declared commands DBCode itself places in retained DBCode views, editors, notebooks, and webviews.",
     "dbcode_owned_contexts": "Commands declared on DBCode-owned contexts remain governed by DBCode's public when clauses, except for the duplicate tree shortcuts explicitly suppressed below. The wrapper adds only the focused routes listed above.",
     "suppressed_duplicates": [
@@ -547,12 +750,12 @@
     {
       "contribution": "dbcode.mcp.start, dbcode.mcp.stop, dbcode.mcp.oauth.revokeTokens",
       "reason": "The isolated 1.36.1 audit did not open the configured HTTP port or report an outcome, so that pair could not present the controls as working.",
-      "fallback": "Automatic registration is not equivalent. Retest the focused HTTP lifecycle controls with 1.36.2 before deciding their route."
+      "fallback": "Automatic registration is not equivalent. Retest the focused HTTP lifecycle controls with 1.36.4 before deciding their route."
     },
     {
       "contribution": "dbcode.dataFileViewer",
-      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the 1.36.2 update-pair gate does not claim direct-file compatibility.",
-      "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until the separate 1.36.2 direct-file gate proves a focused replacement."
+      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the 1.36.4 update-pair gate does not assume direct-file compatibility.",
+      "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until the separate 1.36.4 direct-file gate proves a focused replacement."
     }
   ]
 }

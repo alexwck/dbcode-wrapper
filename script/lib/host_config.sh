@@ -2,7 +2,16 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+GENERATED_REPO_ROOT="${DBCODE_WRAPPER_GENERATED_REPO_ROOT:-${REPO_ROOT}}"
+[[ "${GENERATED_REPO_ROOT}" == /* &&
+  "${GENERATED_REPO_ROOT}" != "/" &&
+  -d "${GENERATED_REPO_ROOT}" &&
+  ! -L "${GENERATED_REPO_ROOT}" ]] || {
+  echo "Generated repository root is missing or unsafe: ${GENERATED_REPO_ROOT}" >&2
+  exit 1
+}
+GENERATED_REPO_ROOT="$(cd "${GENERATED_REPO_ROOT}" && pwd -P)"
 LOCK_FILE="${REPO_ROOT}/host/release-lock.json"
 
 source "${REPO_ROOT}/script/lib/release_specification.sh"
@@ -64,13 +73,13 @@ DBCODE_PUBLIC_KEY_SHA256="$(jq -er '.public_key_sha256' <<<"${DBCODE_PACKAGE_SPE
 DBCODE_CONTRIBUTIONS_SHA256="$(jq -er '.jq_sorted_compact_contributes_sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
 DBCODE_PACKAGE_SIZE="$(jq -er '.package_size' <<<"${DBCODE_PACKAGE_SPEC}")"
 
-BUILD_ROOT="${REPO_ROOT}/.build"
+BUILD_ROOT="${GENERATED_REPO_ROOT}/.build"
 CACHE_ROOT="${BUILD_ROOT}/cache"
 WORK_ROOT="${BUILD_ROOT}/work/vscodium-${VSCODIUM_TAG}"
 TOOLCHAIN_ROOT="${BUILD_ROOT}/toolchains"
 NODE_ROOT="${TOOLCHAIN_ROOT}/node-v${NODE_VERSION}-darwin-${TARGET_ARCH}"
 NODE_BIN_DIR="${NODE_ROOT}/bin"
-DIST_ROOT="${REPO_ROOT}/dist"
+DIST_ROOT="${GENERATED_REPO_ROOT}/dist"
 APP_BUNDLE="${DIST_ROOT}/${APP_NAME}.app"
 BUILD_MANIFEST="${DIST_ROOT}/build-manifest.json"
 
@@ -93,11 +102,34 @@ current_user_home() {
 }
 
 assert_generated_path() {
-  case "${1}" in
+  local candidate="$1"
+  local relative current component
+  local -a components=()
+
+  case "${candidate}" in
     "${BUILD_ROOT}"/*|"${DIST_ROOT}"/*) ;;
     *)
-      echo "Refusing to modify a path outside generated output: ${1}" >&2
+      echo "Refusing to modify a path outside generated output: ${candidate}" >&2
       exit 1
       ;;
   esac
+
+  relative="${candidate#"${GENERATED_REPO_ROOT}/"}"
+  case "${relative}" in
+    ""|..|../*|*/../*|*/..)
+      echo "Refusing a generated path with parent traversal: ${candidate}" >&2
+      exit 1
+      ;;
+  esac
+
+  current="${GENERATED_REPO_ROOT}"
+  IFS='/' read -r -a components <<<"${relative}"
+  for component in "${components[@]}"; do
+    [[ -n "${component}" ]] || continue
+    current="${current}/${component}"
+    if [[ -L "${current}" ]]; then
+      echo "Refusing a generated path with a symbolic-link ancestor: ${current}" >&2
+      exit 1
+    fi
+  done
 }

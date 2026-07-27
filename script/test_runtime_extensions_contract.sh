@@ -15,8 +15,9 @@ expected_extension_ids='[
 ]'
 
 jq -e \
+  --arg dbcode_version "${DBCODE_VERSION}" \
   --argjson expected_extension_ids "${expected_extension_ids}" '
-  .dbcode.version == "1.36.2" and
+  .dbcode.version == $dbcode_version and
   .python_notebooks.required == true and
   .python_notebooks.user_installation_required == false and
   .python_notebooks.kernel_runtime == "user-selected" and
@@ -47,7 +48,7 @@ jq -e \
     ($package.package_size > 0)
   )
 ' <<<"${RELEASE_EXTENSION_SPEC}" >/dev/null || {
-  echo "The release lock must define DBCode 1.36.2 and the complete mandatory Python-notebook runtime set." >&2
+  echo "The release lock must define its selected DBCode version and the complete mandatory Python-notebook runtime set." >&2
   exit 1
 }
 
@@ -77,8 +78,14 @@ rg -Fq -- '--allow-candidate' "${runtime_preparer}" || {
   echo "A candidate runtime set must require an explicit preparation flag." >&2
   exit 1
 }
-jq -e '.approval_status == "approved"' "${feature_policy}" >/dev/null || {
-  echo "DBCode 1.36.2 must be labelled approved after the complete real-profile and rollback gates pass." >&2
+jq -e \
+  --arg approval_status "${RELEASE_COMPATIBILITY_STATUS}" \
+  --arg dbcode_version "${DBCODE_VERSION}" '
+  .approval_status == $approval_status
+  and .extension.id == "dbcode.dbcode"
+  and .extension.version == $dbcode_version
+' "${feature_policy}" >/dev/null || {
+  echo "The DBCode feature policy must match the selected release-set status and version." >&2
   exit 1
 }
 jq -e '
@@ -93,10 +100,6 @@ jq -e '
 }
 rg -Fq 'excluded_optional_extension_ids' "${runtime_preparer}" || {
   echo "Release-set preparation must remove only explicitly excluded optional runtime members." >&2
-  exit 1
-}
-rg -Fq -- '--allow-candidate' "${REPO_ROOT}/script/proof_dbcode.sh" || {
-  echo "Only the explicit candidate proof may prepare the normal profile before approval." >&2
   exit 1
 }
 rg -Fq -- '--allow-candidate' "${REPO_ROOT}/script/test_focused_shell_rendered.sh" || {

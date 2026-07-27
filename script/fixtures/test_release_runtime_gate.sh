@@ -35,6 +35,7 @@ jq -n \
     dbcode_started: $runtime_passed,
     normal_pro_activation: $runtime_passed,
     postgresql: $runtime_passed,
+    debugger: $runtime_passed,
     duckdb: $runtime_passed,
     parquet: $runtime_passed,
     hyphen_path_preflight: "not-required",

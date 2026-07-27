@@ -50,13 +50,17 @@ changed_product_id="$(release_source_set_id "${changed_product_lock}")"
   echo "Build-affecting slimming changes must change the immutable release-set identity." >&2
   exit 1
 }
-[[ "${candidate_id}" =~ ^code-oss-1\.126\.0-dbcode-1\.36\.2-source-[0-9a-f]{64}$ ]] || {
+candidate_source_sha="${candidate_id#"${RELEASE_SET_BASE_ID}-source-"}"
+[[ "${candidate_id}" == "${RELEASE_SET_BASE_ID}-source-${candidate_source_sha}" && "${candidate_source_sha}" =~ ^[0-9a-f]{64}$ ]] || {
   echo "Unexpected canonical release-set identity: ${candidate_id}" >&2
   exit 1
 }
 
 payload="$(release_source_set_identity_payload "${candidate_lock}")"
-jq -e '
+jq -e \
+  --arg vscodium_commit "${VSCODIUM_COMMIT}" \
+  --arg code_oss_commit "${CODE_OSS_COMMIT}" \
+  --arg dbcode_version "${DBCODE_VERSION}" '
   .target == {platform: "darwin", architecture: "arm64"}
   and .profile_schema_version == 1
   and .product.url_scheme == "dbcode-wrapper"
@@ -65,9 +69,9 @@ jq -e '
   and (.wrapper_source_sha256 | test("^[0-9a-f]{64}$"))
   and (.shell_patch_revision | test("^[0-9a-f]{64}$"))
   and (.slimming_build_policy_sha256 | test("^[0-9a-f]{64}$"))
-  and .upstream.vscodium.commit == "4015f2d0191311733aa5dbb2abde8101dce63eef"
-  and .upstream.code_oss.commit == "7e7950df89d055b5a378379db9ee14290772148a"
-  and .extension.dbcode.version == "1.36.2"
+  and .upstream.vscodium.commit == $vscodium_commit
+  and .upstream.code_oss.commit == $code_oss_commit
+  and .extension.dbcode.version == $dbcode_version
   and (.runtime_extensions | length) == 7
   and all(.runtime_extensions[]; (.vsix_sha256 | test("^[0-9a-f]{64}$")))
 ' <<<"${payload}" >/dev/null || {

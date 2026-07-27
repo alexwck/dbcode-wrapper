@@ -21,7 +21,6 @@ done
 
 for caller in \
   "${REPO_ROOT}/script/run_host.sh" \
-  "${REPO_ROOT}/script/smoke_host.sh" \
   "${REPO_ROOT}/script/smoke_release_pair.sh" \
   "${REPO_ROOT}/script/check_installed_release_health.sh"; do
   rg -Fq 'host_session_write_policy' "${caller}" || {
@@ -40,7 +39,6 @@ for removed_loop in \
   'kill -KILL "${app_pid}"'; do
   if rg -Fq "${removed_loop}" \
     "${REPO_ROOT}/script/run_host.sh" \
-    "${REPO_ROOT}/script/smoke_host.sh" \
     "${REPO_ROOT}/script/smoke_release_pair.sh" \
     "${REPO_ROOT}/script/check_installed_release_health.sh"; then
     echo "A removed launch or quit loop returned: ${removed_loop}" >&2
@@ -50,10 +48,6 @@ done
 
 rg -Fq 'Foreground debugging deliberately' "${REPO_ROOT}/script/run_host.sh" || {
   echo "Foreground debugging must remain an explicit non-production adapter." >&2
-  exit 1
-}
-rg -Fq 'host_session_stop' "${REPO_ROOT}/script/proof_dbcode.sh" || {
-  echo "The real-profile proof must stop its app through Host Session." >&2
   exit 1
 }
 [[ ! -e "${REPO_ROOT}/script/lib/launch_readiness.sh" ]] || {

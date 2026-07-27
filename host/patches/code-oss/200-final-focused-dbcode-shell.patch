@@ -71,7 +71,7 @@ new file mode 100644
 index 00000000..66f01dd3
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
-@@ -0,0 +1,757 @@
+@@ -0,0 +1,906 @@
 +/*---------------------------------------------------------------------------------------------
 + *  Copyright (c) Microsoft Corporation. All rights reserved.
 + *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -84,18 +84,20 @@ index 00000000..66f01dd3
 +import { INativeHostService } from '../../../../platform/native/common/native.js';
 +import { IPathService } from '../../../services/path/common/pathService.js';
 +import { disposableTimeout } from '../../../../base/common/async.js';
-+import { Disposable, MutableDisposable } from '../../../../base/common/lifecycle.js';
++import { Disposable, DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 +import { joinPath } from '../../../../base/common/resources.js';
 +import { localize } from '../../../../nls.js';
 +import { CommandsRegistry, ICommandService } from '../../../../platform/commands/common/commands.js';
 +import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-+import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
++import { IContextMenuService, IContextViewService } from '../../../../platform/contextview/browser/contextView.js';
 +import { IFileDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 +import { IFileService } from '../../../../platform/files/common/files.js';
 +import { INotificationService } from '../../../../platform/notification/common/notification.js';
 +import product from '../../../../platform/product/common/product.js';
++import { IQuickInputService } from '../../../../platform/quickinput/common/quickInput.js';
 +import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 +import { IViewDescriptorService, ViewContainerLocation } from '../../../common/views.js';
++import { IWebviewService } from '../../webview/browser/webview.js';
 +import { GroupsOrder, IEditorGroup, IEditorGroupsService } from '../../../services/editor/common/editorGroupsService.js';
 +import { IEditorService } from '../../../services/editor/common/editorService.js';
 +import { IExtensionService } from '../../../services/extensions/common/extensions.js';
@@ -116,6 +118,7 @@ index 00000000..66f01dd3
 +const DBCODE_RESULT_LOCATION_SETTING = 'dbcode.resultLocation';
 +const OPEN_SQL_FILE_COMMAND = 'dbcodeWrapper.openSqlFile';
 +const OPEN_DBCODE_SETTINGS_COMMAND = 'dbcodeWrapper.openDbcodeSettings';
++const OPEN_DBCODE_AI_SETTINGS_COMMAND = 'dbcodeWrapper.openDbcodeAiSettings';
 +const REVEAL_SCRATCH_FILES_COMMAND = 'dbcodeWrapper.revealScratchFiles';
 +const GET_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.getUpdateStatus';
 +const REVIEW_UPDATES_COMMAND = 'dbcodeWrapper.reviewUpdates';
@@ -158,6 +161,10 @@ index 00000000..66f01dd3
 +
 +	CommandsRegistry.registerCommand(OPEN_DBCODE_SETTINGS_COMMAND, accessor =>
 +		accessor.get(ICommandService).executeCommand('workbench.action.openSettings', '@ext:dbcode.dbcode')
++	);
++
++	CommandsRegistry.registerCommand(OPEN_DBCODE_AI_SETTINGS_COMMAND, accessor =>
++		accessor.get(ICommandService).executeCommand('workbench.action.openSettings', '@ext:dbcode.dbcode custom model')
 +	);
 +
 +	CommandsRegistry.registerCommand(REVEAL_SCRATCH_FILES_COMMAND, async accessor => {
@@ -203,6 +210,8 @@ index 00000000..66f01dd3
 +	private dbcodeExtensionStatus: HTMLElement | undefined;
 +	private releaseStatusButton: HTMLButtonElement | undefined;
 +	private readonly emptyGroupCleanup = this._register(new MutableDisposable());
++	private readonly webviewDismissLayers = this._register(new MutableDisposable<DisposableStore>());
++	private readonly webviewDismissLayerRefresh = this._register(new MutableDisposable());
 +	private readonly emptyGroupsPendingCleanup = new Set<IEditorGroup>();
 +	private cleanupAllEmptyGroups = false;
 +
@@ -213,10 +222,13 @@ index 00000000..66f01dd3
 +		@ICommandService private readonly commandService: ICommandService,
 +		@IConfigurationService private readonly configurationService: IConfigurationService,
 +		@IContextMenuService private readonly contextMenuService: IContextMenuService,
++		@IContextViewService private readonly contextViewService: IContextViewService,
++		@IWebviewService private readonly webviewService: IWebviewService,
 +		@IFileService private readonly fileService: IFileService,
 +		@IExtensionService private readonly extensionService: IExtensionService,
 +		@IUserDataProfileService private readonly userDataProfileService: IUserDataProfileService,
 +		@INotificationService private readonly notificationService: INotificationService,
++		@IQuickInputService private readonly quickInputService: IQuickInputService,
 +		@IEditorGroupsService private readonly editorGroupsService: IEditorGroupsService,
 +		@IEditorService private readonly editorService: IEditorService
 +	) {
@@ -295,7 +307,7 @@ index 00000000..66f01dd3
 +		toolbar.append(this.releaseStatusButton);
 +		this.root.dataset.dbcodeWrapperDbcodeState = 'starting';
 +		this.updateActiveEditorState();
-+		toolbar.append(this.createButton('account', localize('dbcodeWrapper.account', "Account"), 'account', false, () => this.openDrawerView(DBCODE_ACCOUNT_VIEW)));
++		toolbar.append(this.createButton('account', localize('dbcodeWrapper.account', "Account"), 'account', false, () => this.toggleDrawer(DBCODE_ACCOUNT_VIEW)));
 +	}
 +
 +	private createIcon(name: string): HTMLElement {
@@ -328,7 +340,6 @@ index 00000000..66f01dd3
 +
 +	private showConnectionsMenu(anchor: HTMLElement): void {
 +		const actions = [
-+			toAction({ id: 'dbcodeWrapper.connectionsHome', label: localize('dbcodeWrapper.connectionsHome', "Connections Home"), run: () => this.openConnectionsHome() }),
 +			toAction({ id: 'dbcodeWrapper.tunnels', label: localize('dbcodeWrapper.tunnels', "Tunnels"), run: () => this.openDrawerView(DBCODE_TUNNELS_VIEW) }),
 +			toAction({ id: 'dbcodeWrapper.authenticationProfiles', label: localize('dbcodeWrapper.authenticationProfiles', "Authentication Profiles"), run: () => this.openDrawerView(DBCODE_AUTH_PROFILES_VIEW) }),
 +			new Separator(),
@@ -366,7 +377,8 @@ index 00000000..66f01dd3
 +				toAction({ id: 'dbcodeWrapper.checkForUpdates', label: localize('dbcodeWrapper.checkForUpdates', "Check for Updates…"), run: () => this.checkForUpdates() }),
 +				new Separator(),
 +				toAction({ id: 'dbcodeWrapper.aiProvider', label: localize('dbcodeWrapper.aiProvider', "AI: Choose Provider"), run: () => this.executeDbcodeCommand('dbcode.ai.chooseProvider') }),
-+				toAction({ id: 'dbcodeWrapper.aiApiKey', label: localize('dbcodeWrapper.aiApiKey', "AI: Set API Key"), run: () => this.executeDbcodeCommand('dbcode.ai.setApiKey') }),
++				toAction({ id: 'dbcodeWrapper.aiCustomModel', label: localize('dbcodeWrapper.aiCustomModel', "AI: Configure Custom Model…"), run: () => this.executeDbcodeCommand(OPEN_DBCODE_AI_SETTINGS_COMMAND) }),
++				toAction({ id: 'dbcodeWrapper.aiApiKey', label: localize('dbcodeWrapper.aiApiKey', "AI: Set Custom Model API Key…"), run: () => this.executeDbcodeCommand('dbcode.ai.setApiKey') }),
 +				new Separator(),
 +				toAction({ id: 'dbcodeWrapper.scratchFolder', label: localize('dbcodeWrapper.scratchFolder', "Show Scratch Files in Finder"), run: () => this.executeDbcodeCommand(REVEAL_SCRATCH_FILES_COMMAND) })
 +			]
@@ -439,6 +451,7 @@ index 00000000..66f01dd3
 +		this._register(this.layoutService.onDidLayoutMainContainer(dimension => {
 +			this.applyResponsiveLayout(dimension.width);
 +			this.ensureConnectionsHomeMaximized();
++			this.refreshWebviewDismissLayers();
 +		}));
 +		this._register(this.layoutService.onDidChangePartVisibility(() => {
 +			this.enforcePanelOwnership();
@@ -463,7 +476,130 @@ index 00000000..66f01dd3
 +			}
 +			this.updateControlState();
 +		}));
++		this._register(addDisposableListener(mainWindow.document, 'pointerdown', event => this.closeTransientSurfacesFromPointer(event), true));
++		this._register(addDisposableListener(mainWindow.document, 'focusin', event => this.closeTransientSurfacesFromFocus(event), true));
++		this._register(this.webviewService.onDidChangeActiveWebview(webview => {
++			if (webview) {
++				this.closeTransientSurfacesFromWebviewFocus();
++			}
++		}));
++		this._register(this.contextMenuService.onDidShowContextMenu(() => {
++			this.refreshWebviewDismissLayers();
++			this.scheduleWebviewDismissLayerRefresh();
++		}));
++		this._register(this.contextMenuService.onDidHideContextMenu(() => this.scheduleWebviewDismissLayerRefresh()));
++		this._register(this.quickInputService.onShow(() => {
++			this.refreshWebviewDismissLayers();
++			this.scheduleWebviewDismissLayerRefresh();
++		}));
++		this._register(this.quickInputService.onHide(() => this.scheduleWebviewDismissLayerRefresh()));
 +		this._register(addDisposableListener(mainWindow.document, 'keydown', event => this.handleKeydown(event), true));
++	}
++
++	private isVisibleElement(element: HTMLElement | null): element is HTMLElement {
++		if (!element) {
++			return false;
++		}
++		const bounds = element.getBoundingClientRect();
++		return getComputedStyle(element).display !== 'none' && bounds.width > 0 && bounds.height > 0;
++	}
++
++	private eventPathContains(event: PointerEvent, element: HTMLElement | null): boolean {
++		return Boolean(element && event.composedPath().includes(element));
++	}
++
++	private isDrawerToggleEvent(event: PointerEvent): boolean {
++		return event.composedPath().some(target =>
++			target instanceof HTMLElement &&
++			['database-explorer', 'account'].includes(target.dataset.dbcodeWrapperAction ?? '')
++		);
++	}
++
++	private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {
++		return viewId === DBCODE_CONNECTIONS_VIEW;
++	}
++
++	private closeTransientSurfacesFromPointer(event: PointerEvent): void {
++		const quickInput = this.root.querySelector<HTMLElement>('.quick-input-widget');
++		const clickedQuickInput = this.eventPathContains(event, quickInput);
++		if (this.isVisibleElement(quickInput) && !clickedQuickInput) {
++			void this.quickInputService.cancel();
++		}
++
++		const visibleContextViews = Array.from(this.root.querySelectorAll<HTMLElement>('.context-view')).filter(element => this.isVisibleElement(element));
++		const clickedContextView = visibleContextViews.some(element => this.eventPathContains(event, element));
++		if (visibleContextViews.length > 0 && !clickedContextView) {
++			this.contextViewService.hideContextView(true);
++		}
++
++		const sidebar = this.root.querySelector<HTMLElement>('.part.sidebar');
++		const clickedContextLayer = event.composedPath().some(target =>
++			target instanceof Element && Boolean(target.closest('.context-view, .monaco-dialog-box, .notifications-toasts'))
++		);
++		const activeDrawerView = this.activeDrawerView();
++		if (activeDrawerView && !this.isPersistentDrawerView(activeDrawerView) && !this.eventPathContains(event, sidebar) && !clickedQuickInput && !clickedContextLayer && !this.isDrawerToggleEvent(event)) {
++			this.closeDbcodeDrawer();
++		}
++	}
++
++	private closeTransientSurfacesFromFocus(event: FocusEvent): void {
++		if (!(event.target instanceof HTMLIFrameElement)) {
++			return;
++		}
++		this.closeTransientSurfacesFromWebviewFocus();
++	}
++
++	private closeTransientSurfacesFromWebviewFocus(): void {
++		const quickInput = this.root.querySelector<HTMLElement>('.quick-input-widget');
++		if (this.isVisibleElement(quickInput)) {
++			void this.quickInputService.cancel();
++		}
++		if (Array.from(this.root.querySelectorAll<HTMLElement>('.context-view')).some(element => this.isVisibleElement(element))) {
++			this.contextViewService.hideContextView(true);
++		}
++		const activeDrawerView = this.activeDrawerView();
++		if (activeDrawerView && !this.isPersistentDrawerView(activeDrawerView)) {
++			this.closeDbcodeDrawer();
++		}
++		this.refreshWebviewDismissLayers();
++	}
++
++	private scheduleWebviewDismissLayerRefresh(): void {
++		this.webviewDismissLayerRefresh.value = disposableTimeout(() => this.refreshWebviewDismissLayers(), 0);
++	}
++
++	private refreshWebviewDismissLayers(): void {
++		this.webviewDismissLayers.clear();
++		const quickInput = this.root.querySelector<HTMLElement>('.quick-input-widget');
++		const contextViewVisible = Array.from(this.root.querySelectorAll<HTMLElement>('.context-view')).some(element => this.isVisibleElement(element));
++		const activeDrawerView = this.activeDrawerView();
++		const transientDrawerVisible = Boolean(activeDrawerView && !this.isPersistentDrawerView(activeDrawerView));
++		if (!this.isVisibleElement(quickInput) && !contextViewVisible && !transientDrawerVisible) {
++			return;
++		}
++
++		const layers = new DisposableStore();
++		for (const editorContainer of this.root.querySelectorAll<HTMLElement>('.part.editor > .content .editor-group-container > .editor-container')) {
++			if (!this.isVisibleElement(editorContainer)) {
++				continue;
++			}
++			const bounds = editorContainer.getBoundingClientRect();
++			const layer = mainWindow.document.createElement('div');
++			layer.className = 'dbcode-wrapper-webview-dismiss-layer';
++			layer.setAttribute('aria-hidden', 'true');
++			layer.style.left = `${bounds.left}px`;
++			layer.style.top = `${bounds.top}px`;
++			layer.style.width = `${bounds.width}px`;
++			layer.style.height = `${bounds.height}px`;
++			this.root.append(layer);
++			layers.add({ dispose: () => layer.remove() });
++		}
++		this.webviewDismissLayers.value = layers;
++	}
++
++	private hasVisibleTransientOverlay(): boolean {
++		return Array.from(this.root.querySelectorAll<HTMLElement>('.quick-input-widget, .context-view, .monaco-dialog-box'))
++			.some(element => this.isVisibleElement(element));
 +	}
 +
 +	private registerEditorGroupCleanup(): void {
@@ -736,6 +872,14 @@ index 00000000..66f01dd3
 +		this.updateControlState();
 +	}
 +
++	private closeDbcodeDrawer(): void {
++		const visibleContainer = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
++		if (this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER) {
++			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++			this.updateControlState();
++		}
++	}
++
 +	private configureDrawerViews(viewId: string): void {
 +		const viewContainer = this.viewDescriptorService.getViewContainerById(DBCODE_ACTIVITY_CONTAINER);
 +		if (!viewContainer) {
@@ -782,9 +926,14 @@ index 00000000..66f01dd3
 +		this.connectionsButton?.classList.toggle('active', this.connectionsHomeOpen);
 +		this.databaseExplorerButton?.setAttribute('aria-expanded', String(drawerView === DBCODE_CONNECTIONS_VIEW));
 +		this.databaseExplorerButton?.classList.toggle('active', drawerView === DBCODE_CONNECTIONS_VIEW);
++		this.refreshWebviewDismissLayers();
 +	}
 +
 +	private handleKeydown(event: KeyboardEvent): void {
++		if (event.key === 'Escape' && this.hasVisibleTransientOverlay()) {
++			return;
++		}
++
 +		if (event.key === 'Escape' && this.connectionsHomeOpen) {
 +			this.closeConnectionsHome();
 +			event.preventDefault();
@@ -794,9 +943,9 @@ index 00000000..66f01dd3
 +
 +		if (event.key === 'Escape' && this.layoutService.isVisible(Parts.SIDEBAR_PART)) {
 +			const visible = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
-+			if (visible?.id === DBCODE_ACTIVITY_CONTAINER) {
-+				this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
-+				this.updateControlState();
++			const activeDrawerView = this.activeDrawerView();
++			if (visible?.id === DBCODE_ACTIVITY_CONTAINER && activeDrawerView && !this.isPersistentDrawerView(activeDrawerView)) {
++				this.closeDbcodeDrawer();
 +				event.preventDefault();
 +				event.stopImmediatePropagation();
 +			}
@@ -834,11 +983,12 @@ new file mode 100644
 index 00000000..905c5534
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css
-@@ -0,0 +1,489 @@
+@@ -0,0 +1,502 @@
 +.monaco-workbench.dbcode-wrapper-focused {
 +	--dbcode-wrapper-accent: #7655ff;
 +	--dbcode-wrapper-accent-hover: #866aff;
 +	--dbcode-wrapper-toolbar-border: color-mix(in srgb, var(--vscode-titleBar-activeForeground) 16%, transparent);
++	--dbcode-wrapper-quick-input-z-index: 2700;
 +}
 +
 +.monaco-workbench.dbcode-wrapper-focused .part.activitybar,
@@ -846,6 +996,18 @@ index 00000000..905c5534
 +.monaco-workbench.dbcode-wrapper-focused .part.statusbar,
 +.monaco-workbench.dbcode-wrapper-focused .part.banner {
 +	display: none !important;
++}
++
++.monaco-workbench.dbcode-wrapper-focused .quick-input-widget {
++	z-index: var(--dbcode-wrapper-quick-input-z-index);
++}
++
++.dbcode-wrapper-webview-dismiss-layer {
++	position: fixed;
++	z-index: 2550;
++	background: transparent;
++	cursor: default;
++	-webkit-app-region: no-drag;
 +}
 +
 +.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center {
