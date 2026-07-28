@@ -32,12 +32,13 @@
 
 The owner superseded the private-transfer channel on 29 July 2026. The public source repository now uses normal published host-only releases. A public release contains only the wrapper DMG and checksum; DBCode remains unchanged and external, and each user obtains it from the official source under their own valid licence.
 
-The existing `v0.1.2` release remains an unpublished historical draft. It will not be republished because its immutable package metadata records an owner-only private transfer. `v0.1.3` is the first public host-release candidate.
+The existing `v0.1.2` release remains an unpublished historical draft. It will not be republished because its immutable package metadata records an owner-only private transfer. [`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the first normal public host release.
 
 The public host is self-signed and not notarized. Release notes must tell users to verify the checksum and may direct them to macOS Privacy & Security > Open Anyway. No automated test waits for that prompt, a licence, a database, a kernel, a model, or another person.
 
 ## Comments
 
+- 2026-07-29: `v0.1.3` was published as a normal release, not a draft or prerelease. GitHub reports exactly two assets: the 187,949,624-byte host DMG with SHA-256 `bb2570ac19cb441623fad72a44d07dc125f99e4638b1422d63f9cffd57137bef` and its 157-byte checksum file with SHA-256 `3fedfef43a908f618708d107c5381deb77a29dc0f38f5025e0f92676a4c55c1b`. The server metadata matches the verified local package. DBCode, compatibility evidence, and verification receipts were not uploaded.
 - 2026-07-29: The owner chose a normal published release in this repository instead of an owner-only draft or a separate private release repository. The release contains only the wrapper-host DMG and checksum. DBCode remains external, and compatibility and verification evidence stays local.
 - 2026-07-29: The current `v0.1.2` draft transfer contains exactly five host-only assets. Authenticated metadata and owner download matched every local size and SHA-256, while anonymous listing omitted the draft and anonymous tag and direct-DMG lookups returned 404. The release remains a draft with no publication timestamp, and the repository has no Actions workflow that can publish it.
 - 2026-07-26: Final licence review used DBCode's official License Agreement, last updated 12 May 2026. It allows the licensee to install and use the extension on unlimited devices, includes future versions for a lifetime licence, and forbids third-party distribution. The accepted wrapper and DMG keep DBCode external and unchanged, transfer only the host between devices owned by the licensee, and therefore satisfy the remaining ticket gate without copying the vendor agreement into the public repository.

@@ -2,7 +2,7 @@
 
 ## Destination
 
-Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent signing, architecture modules, complete connection-catalogue boundary, prompt-free acceptance, public source, and verified host-only package are complete. The current work replaces the owner-only draft channel with a normal public host release, starting with `v0.1.3`.
+Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent signing, architecture modules, complete connection-catalogue boundary, prompt-free acceptance, public source, verified host-only package, and normal public release channel are complete. `v0.1.3` is the first published Host Release.
 
 ## Notes
 
@@ -15,6 +15,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - The current signed application is the accepted database-client checkpoint: Connections Home, Database Explorer, automatic DBCode result layout, focused query routes, and no generic Code OSS bottom panel.
 - The exact `v0.1.0` source was rebuilt after the focused first-run runtime installer landed, passed renewed full acceptance, and produced a verified host-only DMG without moving the annotated source tag.
 - The exact `v0.1.2` package approves unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not replace the installed app or write the production profile.
+- The exact `v0.1.3` source is published as a normal host-only release with only its independently verified DMG and checksum. It does not bundle DBCode or change the production profile.
 - Open work lives in child tickets and is found from their `Status`, `Blocked by`, and `Type` fields rather than being repeated on this map.
 - This implementation map carries execution as well as decisions. Work one ticket at a time, record focused and full verification before resolution, and commit each dependency-complete slice separately.
 - The other-owned-Mac acceptance is complete. Generated-artifact cleanup still follows the retention contract, and new release candidates must preserve the retained `v0.1.0` evidence and rollback path.
