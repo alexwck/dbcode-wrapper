@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {
   assertManagedPath,
+  executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,
   readOtherOwnedMacTicketOpen,
@@ -17,9 +18,11 @@ const DEFAULT_ISSUE = '.scratch/dbcode-wrapper-implementation/issues/09-publish-
 function usage() {
   console.error(`Usage:
   ./script/generated_workspace.cjs inventory [COMMON OPTIONS]
-  ./script/generated_workspace.cjs cleanup (--class CLASS | --path PATH) [COMMON OPTIONS]
+  ./script/generated_workspace.cjs cleanup (--class CLASS | --path PATH) [--apply] [COMMON OPTIONS]
   ./script/generated_workspace.cjs path --id ID [COMMON OPTIONS]
   ./script/generated_workspace.cjs assert-path --id ID --path PATH [--allow-temporary] [COMMON OPTIONS]
+
+The --apply option requires one exact --path. Class cleanup is plan-only.
 
 Common options:
   --repo-root DIR
@@ -36,6 +39,13 @@ function parseOptions(args) {
         usage();
       }
       parsed.allowTemporary = true;
+      continue;
+    }
+    if (name === '--apply') {
+      if (parsed.apply) {
+        usage();
+      }
+      parsed.apply = true;
       continue;
     }
     if (!name?.startsWith('--') || args.length === 0) {
@@ -83,18 +93,19 @@ function main([command, ...args]) {
     return;
   }
   if (command === 'cleanup') {
-    rejectUnknownOptions(parsed, [...commonKeys, 'class', 'path']);
+    rejectUnknownOptions(parsed, [...commonKeys, 'class', 'path', 'apply']);
     const hasClass = typeof parsed.class === 'string';
     const hasPath = typeof parsed.path === 'string';
     if (hasClass === hasPath) {
       usage();
     }
-    writeJson(planCleanup({
+    const cleanup = {
       ...commonOptions(parsed),
       selector: hasClass
         ? { classification: parsed.class }
         : { path: parsed.path }
-    }));
+    };
+    writeJson(parsed.apply ? executeCleanup(cleanup) : planCleanup(cleanup));
     return;
   }
   if (command === 'path') {

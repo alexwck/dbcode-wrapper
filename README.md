@@ -98,14 +98,22 @@ Inspect ignored build, test, acceptance, rollback, cache, and package state with
 ./script/generated_workspace.sh inventory
 ```
 
-The inventory reports each registered path, size status, retention class, owner, reason, and current cleanup eligibility. It measures only deliberately expired output. Protected release artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed or measured. Cleanup commands are deliberately dry-run only:
+The inventory reports each registered path, size status, retention class, owner, reason, and current cleanup eligibility. It measures only deliberately expired output. Protected release artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed or measured. Cleanup is a dry run by default:
 
 ```sh
 ./script/generated_workspace.sh cleanup --class expired-output
 ./script/generated_workspace.sh cleanup --path ".build/expired/example with spaces"
 ```
 
-Only an explicit eligible class or exact validated path produces a plan. Unknown paths, symbolic links, repository and home roots, active evidence, caches, worktrees, the accepted app, current profile, final transfer assets, acceptance receipts, controlled-upgrade evidence, and rollback backups remain refused until their owning workflow explicitly records expiry.
+After reviewing the inventory and exact-path plan, remove one expired target without a prompt:
+
+```sh
+./script/generated_workspace.sh cleanup \
+  --path ".build/expired/example with spaces" \
+  --apply
+```
+
+`--apply` accepts one exact path only. It cannot apply a whole class. Unknown paths, symbolic links, repository and home roots, active evidence, caches, worktrees, the accepted app, current profile, final transfer assets, acceptance receipts, controlled-upgrade evidence, and rollback backups remain refused until their owning workflow explicitly records expiry.
 
 Before any public push, inspect the exact ref that will be published rather than only the current files:
 

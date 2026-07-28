@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   chmodSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -21,6 +22,7 @@ import retention from './lib/generated-workspace-retention.js';
 
 const {
   assertManagedPath,
+  executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,
   readOtherOwnedMacTicketOpen,
@@ -200,6 +202,7 @@ test('cleanup plans are dry-run only and accept a class or an exact relative or 
     selector: { classification: 'expired-output' }
   });
   assert.equal(byClass.dry_run, true);
+  assert.equal(byClass.execution_supported, false);
   assert.equal(byClass.mutation_performed, false);
   assert.deepEqual(
     byClass.items.map(item => item.path),
@@ -220,11 +223,60 @@ test('cleanup plans are dry-run only and accept a class or an exact relative or 
       selector: { path: selectedPath }
     });
     assert.equal(exact.items.length, 1);
+    assert.equal(exact.execution_supported, true);
     assert.equal(exact.items[0].path, join(repoRoot, '.build/expired/session one'));
     assert.equal(exact.items[0].classification, 'expired-output');
     assert.equal(exact.items[0].deletion_allowed, true);
   }
   assert.equal(readFileSync(join(repoRoot, '.build/expired/session one/old.log'), 'utf8'), 'expired evidence');
+});
+
+test('cleanup apply removes only one exact validated path at a time', t => {
+  const { repoRoot, homeDirectory } = makeFixture(t);
+  const options = inventoryOptions(repoRoot, homeDirectory);
+  const expiredDirectory = join(repoRoot, '.build/expired/session one');
+  const finderMetadata = join(repoRoot, '.build/.DS_Store');
+  const protectedEvidence = join(
+    repoRoot,
+    '.build/u/r/x/rollback-transaction.json'
+  );
+
+  assert.throws(
+    () => executeCleanup({
+      ...options,
+      selector: { classification: 'expired-output' }
+    }),
+    /exact path/i
+  );
+
+  const directoryResult = executeCleanup({
+    ...options,
+    selector: { path: '.build/expired/session one' }
+  });
+  assert.equal(directoryResult.dry_run, false);
+  assert.equal(directoryResult.execution_supported, true);
+  assert.equal(directoryResult.mutation_performed, true);
+  assert.equal(directoryResult.selection.kind, 'exact-path');
+  assert.equal(directoryResult.items.length, 1);
+  assert.equal(directoryResult.items[0].path, expiredDirectory);
+  assert.equal(directoryResult.items[0].removed, true);
+  assert.equal(directoryResult.items[0].exists_after, false);
+  assert.equal(existsSync(expiredDirectory), false);
+
+  const fileResult = executeCleanup({
+    ...options,
+    selector: { path: finderMetadata }
+  });
+  assert.equal(fileResult.items[0].path, finderMetadata);
+  assert.equal(fileResult.items[0].removed, true);
+  assert.equal(existsSync(finderMetadata), false);
+
+  assert.equal(
+    readFileSync(protectedEvidence, 'utf8'),
+    '{"historical":true}'
+  );
+  assert.equal(existsSync(join(repoRoot, '.build/q')), true);
+  assert.equal(existsSync(join(repoRoot, '.build/smoke-backups')), true);
 });
 
 test('cleanup rejects unknown, protected, broad, home, and symlinked paths', t => {
@@ -428,6 +480,34 @@ test('the task command supports a repository path with spaces and relative or ab
     assert.equal(plan.items[0].path, join(repoRoot, '.build/expired/session one'));
     assert.equal(plan.mutation_performed, false);
   }
+
+  const classApply = spawnSync(process.execPath, [
+    cli,
+    'cleanup',
+    ...common,
+    '--class',
+    'expired-output',
+    '--apply'
+  ], { cwd: fixtureRoot, encoding: 'utf8' });
+  assert.equal(classApply.status, 1);
+  assert.match(classApply.stderr, /exact path/i);
+
+  const applied = JSON.parse(execFileSync(process.execPath, [
+    cli,
+    'cleanup',
+    ...common,
+    '--path',
+    '.build/expired/session one',
+    '--apply'
+  ], { cwd: fixtureRoot, encoding: 'utf8' }));
+  assert.equal(applied.dry_run, false);
+  assert.equal(applied.execution_supported, true);
+  assert.equal(applied.mutation_performed, true);
+  assert.equal(applied.items[0].removed, true);
+  assert.equal(
+    existsSync(join(repoRoot, '.build/expired/session one')),
+    false
+  );
 
   const asserted = JSON.parse(execFileSync(process.execPath, [
     cli,

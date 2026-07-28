@@ -671,9 +671,76 @@ function planCleanup({
     other_owned_mac_ticket: contract.other_owned_mac_ticket,
     selection,
     dry_run: true,
-    execution_supported: false,
+    execution_supported: selection.kind === 'exact-path',
     mutation_performed: false,
     items
+  };
+}
+
+function executeCleanup({
+  repoRoot,
+  homeDirectory,
+  otherOwnedMacTicketOpen,
+  selector
+}) {
+  if (
+    !selector ||
+    typeof selector !== 'object' ||
+    Array.isArray(selector) ||
+    Object.keys(selector).length !== 1 ||
+    !Object.hasOwn(selector, 'path')
+  ) {
+    fail('Cleanup apply requires one exact path.');
+  }
+
+  const plan = planCleanup({
+    repoRoot,
+    homeDirectory,
+    otherOwnedMacTicketOpen,
+    selector
+  });
+  const contract = createRetentionContract({
+    repoRoot,
+    homeDirectory,
+    otherOwnedMacTicketOpen
+  });
+  const planned = plan.items[0];
+  const validated = exactCleanupEntry(contract, planned.path);
+  if (
+    planned.path !== validated.path ||
+    planned.size_bytes !== validated.size_bytes ||
+    planned.size_status !== validated.size_status
+  ) {
+    fail(`Cleanup target changed during validation: ${planned.path}`);
+  }
+
+  const metadata = fs.lstatSync(validated.path);
+  if (metadata.isSymbolicLink()) {
+    fail(`Cleanup refuses a symbolic link: ${validated.path}`);
+  }
+  fs.rmSync(validated.path, {
+    recursive: metadata.isDirectory(),
+    force: false
+  });
+  try {
+    fs.lstatSync(validated.path);
+    fail(`Cleanup could not remove the exact generated path: ${validated.path}`);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+
+  return {
+    ...plan,
+    dry_run: false,
+    execution_supported: true,
+    mutation_performed: true,
+    items: [{
+      ...validated,
+      removed: true,
+      exists_after: false
+    }]
   };
 }
 
@@ -848,6 +915,7 @@ module.exports = {
   assertManagedPath,
   contains,
   createRetentionContract,
+  executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,
   readOtherOwnedMacTicketOpen,

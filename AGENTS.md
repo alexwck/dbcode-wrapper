@@ -90,7 +90,7 @@ Before changing behaviour, read:
 - Scripts that accept paths must support documented relative paths, absolute paths, and spaces in filenames. Cover those forms with focused automated tests that exercise the script's public interface.
 - When a path contract returns a normalized absolute output path, the caller must use that returned value. Do not validate a relative path against the repository and then use the original value against the process working directory.
 - Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary proof folders in the repository root or user home directory.
-- Use `./script/generated_workspace.sh inventory` and its dry-run `cleanup` command before proposing any generated-state cleanup. Do not replace the retention contract with ad hoc `rm` commands.
+- Use `./script/generated_workspace.sh inventory` and a cleanup plan before changing generated state. Apply cleanup only to one exact validated expired path. Do not replace the retention contract with ad hoc `rm` commands.
 - Remove only temporary paths created by the current task. Follow the maintained and generated file rules below for all existing evidence.
 
 ## Public and private data
@@ -105,7 +105,7 @@ Maintain wrapper sources, policies, tests, wrapper extensions, and patches under
 
 Keep current acceptance evidence, approved rollback backups, the current signed app, and reusable caches until the owning ticket says they can be removed. Rebuildable worktrees, smoke output, and screenshots may be removed only after their evidence is no longer needed.
 
-The Generated Workspace Retention module is the source of truth for ignored build, test, acceptance, rollback, cache, and package roots. Its cleanup command is dry-run only. Only deliberately expired output is currently eligible for a plan. Unknown paths, private profiles, active evidence, reusable caches, rebuildable work, symbolic links, broad roots, and protected release assets are not cleanup candidates. Do not traverse protected or unknown roots merely to calculate their size.
+The Generated Workspace Retention module is the source of truth for ignored build, test, acceptance, rollback, cache, and package roots. Cleanup is a dry run unless one exact validated path is passed with `--apply`; a class cannot be applied. Only deliberately expired output can be removed. Unknown paths, private profiles, active evidence, reusable caches, rebuildable work, symbolic links, broad roots, and protected release assets are not cleanup candidates. Do not traverse protected or unknown roots merely to calculate their size.
 
 ## Verification
 
