@@ -63,6 +63,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - [Retire manual acceptance harnesses](./issues/40-retire-manual-acceptance-harnesses.md) — Keep prompt-free schema-3 acceptance and one generated `qa` profile as the maintained release path; remove the superseded proof, four-pair, controlled-promotion, and real-profile health harnesses without deleting retained evidence or the guarded rollback tools.
 - [Remove the retired prepared-release API](./issues/41-remove-the-retired-prepared-release-api.md) — Delete the unused prepared-set validator, member resolver, and legacy approval writer after their controlled-upgrade callers are gone; keep history, update matching, and prompt-free approval.
 - [Prepare the v0.1.2 wrapper-only Private Personal Release](./issues/42-prepare-v0-1-2-wrapper-only-private-release.md) — Reuse the unchanged verified host to assemble, sign, accept, package, and locally approve the completed wrapper maintenance without pushing, publishing, installing, or changing the personal profile.
+- [Transfer v0.1.2 through an authenticated draft](./issues/43-transfer-v0-1-2-through-an-authenticated-draft.md) — Keep the five exact host-only assets in an unpublished owner-only draft, prove authenticated integrity and anonymous denial, and leave installation outside the transfer.
 
 ## Not yet specified
 

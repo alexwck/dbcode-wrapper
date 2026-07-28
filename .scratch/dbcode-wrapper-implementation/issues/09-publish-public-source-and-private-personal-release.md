@@ -30,12 +30,15 @@
 
 ## Answer
 
-The public wrapper source and the owner-only `v0.1.0` Private Personal Release are complete. The authenticated draft transfer remained private, the downloaded DMG matched its published checksum, and a fresh owned Apple-silicon Mac passed the documented manual Gatekeeper path, focused runtime setup, licence and protected-state persistence, PostgreSQL, DuckDB, Parquet, Python notebook, Kernel permission persistence, and duplicate installation.
+The public wrapper source and the owner-only Private Personal Release flow are complete. The current `v0.1.2` host-only package is in an unpublished authenticated draft with exact server-side sizes and SHA-256 digests, byte-identical owner download, and anonymous denial. It has not been installed by this transfer.
+
+The earlier `v0.1.0` transfer established the fresh owned-Mac acceptance path. Its downloaded DMG matched its published checksum, and the owned Apple-silicon Mac passed the documented manual Gatekeeper path, focused runtime setup, licence and protected-state persistence, PostgreSQL, DuckDB, Parquet, Python notebook, Kernel permission persistence, and duplicate installation. That human setup evidence is not repeated for every wrapper-only package.
 
 The [official DBCode License Agreement](https://dbcode.io/legal/license-agreement), last updated 12 May 2026, grants the licensee a non-transferable right to install and use the extension on unlimited devices and gives lifetime-license holders continued access to updates. The wrapper stays within the recorded boundary: DBCode remains unchanged, external to the application and DMG, used only by the licence holder, and never transferred to a third party.
 
 ## Comments
 
+- 2026-07-29: The current `v0.1.2` draft transfer contains exactly five host-only assets. Authenticated metadata and owner download matched every local size and SHA-256, while anonymous listing omitted the draft and anonymous tag and direct-DMG lookups returned 404. The release remains a draft with no publication timestamp, and the repository has no Actions workflow that can publish it.
 - 2026-07-26: Final licence review used DBCode's official License Agreement, last updated 12 May 2026. It allows the licensee to install and use the extension on unlimited devices, includes future versions for a lifetime licence, and forbids third-party distribution. The accepted wrapper and DMG keep DBCode external and unchanged, transfer only the host between devices owned by the licensee, and therefore satisfy the remaining ticket gate without copying the vendor agreement into the public repository.
 - 2026-07-25: The user accepted the completed second-Mac installation and feature evidence and removed second-Mac upgrade and rollback repetition from this ticket. Those behaviours remain mandatory same-Mac release-set gates for each new approved candidate; this decision removes a duplicate device test, not the controlled update or rollback contract.
 - 2026-07-25: The fresh owned Mac followed the accepted Gatekeeper path: the checksum passed first, the app was placed in Applications, one normal launch was blocked, and the user opened it only through System Settings > Privacy & Security > Open Anyway. Gatekeeper was not disabled and quarantine was not removed automatically.
