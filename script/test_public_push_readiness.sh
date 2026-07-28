@@ -26,7 +26,7 @@ initialize_repository() {
     '' \
     'This is not an official DBCode product.' \
     'DBCode is not included.' \
-    'No public app download is provided.' >"${repository}/README.md"
+    'Published releases contain only the wrapper host.' >"${repository}/README.md"
   printf '%s\n' '**Public Source Repository**: source only.' >"${repository}/CONTEXT.md"
   printf '%s\n' \
     'Code OSS' \

@@ -5,7 +5,7 @@ umask 077
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
-source "${script_root}/lib/private_release.sh"
+source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/generated_workspace.sh"
 
@@ -23,7 +23,7 @@ output_dir=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: ./script/approve_private_release.sh \
+Usage: ./script/approve_host_release.sh \
   --manifest FILE \
   --release-lock FILE \
   --acceptance FILE \
@@ -73,11 +73,11 @@ for command in git jq rg shasum stat; do
   require_command "${command}"
 done
 
-private_release_assert_file "${dmg_file}" "The private-release disk image"
-private_release_assert_file "${compatibility_file}" "The compatibility manifest"
-private_release_assert_file "${verification_file}" "The verification receipt"
-private_release_assert_file "${history_file}" "The base Approved Release Set history"
-private_release_assert_sanitized_metadata "${compatibility_file}" "${verification_file}"
+host_release_assert_file "${dmg_file}" "The host-release disk image"
+host_release_assert_file "${compatibility_file}" "The compatibility manifest"
+host_release_assert_file "${verification_file}" "The verification receipt"
+host_release_assert_file "${history_file}" "The base Approved Release Set history"
+host_release_assert_sanitized_metadata "${compatibility_file}" "${verification_file}"
 approved_release_history_validate "${history_file}" >/dev/null
 
 release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
@@ -94,7 +94,7 @@ release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
   exit 1
 }
 
-private_release_validate_source_tag \
+host_release_validate_source_tag \
   "${source_repository}" \
   "${source_tag}" \
   "${manifest_file}" \
@@ -167,7 +167,7 @@ jq -n \
       acceptance_sha256: $acceptance_sha256,
       verification_sha256: $verification_sha256,
       confirmation: "exact-release-set-id",
-      approval_mode: "prompt-free-private-release",
+      approval_mode: "prompt-free-public-host-release",
       automatic_install: false,
       privileged_install: false,
       production_profile_written: false,
@@ -194,7 +194,7 @@ jq -e \
   echo "The approved history does not contain exactly one copy of this release set." >&2
   exit 1
 }
-private_release_assert_sanitized_metadata \
+host_release_assert_sanitized_metadata \
   "${attestation_file}" \
   "${record_file}" \
   "${output_history}"
@@ -204,7 +204,7 @@ mv "${staging_root}" "${output_dir}"
 staging_root=""
 trap - EXIT INT TERM
 
-echo "Prompt-free private release approved without installation:"
+echo "Prompt-free host release approved without installation:"
 printf '  %s\n' \
   "${output_dir}/approval-attestation.json" \
   "${output_dir}/approved-release-set.json" \

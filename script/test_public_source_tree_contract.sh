@@ -12,14 +12,14 @@ public_verification_key="${repo_root}/host/keys/openvsx-14ccb407-4e79-41ed-be5a-
 third_party_notices="${repo_root}/THIRD_PARTY_NOTICES.md"
 
 [[ -f "${readme}" ]] || {
-  echo "A public repository needs a root README that explains its personal-use boundary." >&2
+  echo "A public repository needs a root README that explains its release boundary." >&2
   exit 1
 }
 
 for required_statement in \
   'This is not an official DBCode product' \
   'DBCode is not included' \
-  'No public app download is provided'; do
+  'Published releases contain only the wrapper host'; do
   rg -Fq "${required_statement}" "${readme}" || {
     echo "The public repository README is missing: ${required_statement}" >&2
     exit 1
@@ -27,7 +27,7 @@ for required_statement in \
 done
 
 rg -Fq '**Public Source Repository**:' "${context}" || {
-  echo "CONTEXT.md must distinguish public source from public app distribution." >&2
+  echo "CONTEXT.md must define the public source and host-release boundary." >&2
   exit 1
 }
 

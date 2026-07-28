@@ -146,8 +146,8 @@ function createRetentionContract({
     buildRoot
   });
   const protectedTransferReason = otherOwnedMacTicketOpen
-    ? 'The final private transfer assets must remain available while the other-owned-Mac ticket is open.'
-    : 'The other-owned-Mac ticket is closed, but the private-release workflow must still explicitly release these final transfer assets.';
+    ? 'The legacy private transfer assets must remain available while the other-owned-Mac ticket is open.'
+    : 'The legacy private transfer assets remain protected until their original workflow explicitly releases them.';
   const protectedRollbackReason = otherOwnedMacTicketOpen
     ? 'Approved rollback backups must remain available while the other-owned-Mac ticket is open.'
     : 'The other-owned-Mac ticket is closed, but the rollback workflow must still explicitly release these approved backups.';
@@ -330,11 +330,20 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
-      'private-release-assets',
+      'legacy-private-release-assets',
       '.build/private-release',
       'final-transfer-assets',
       OTHER_OWNED_MAC_ISSUE,
       protectedTransferReason,
+      false
+    ),
+    managedRoot(
+      checkedRepoRoot,
+      'host-release-assets',
+      '.build/host-release',
+      'final-transfer-assets',
+      'published-host-release',
+      'Verified public host-release assets remain protected until the release workflow explicitly expires them.',
       false
     ),
     privateProfileRoot(

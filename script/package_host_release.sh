@@ -6,8 +6,8 @@ umask 077
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
-source "${script_root}/lib/private_release.sh"
-source "${script_root}/lib/private_release_guide.sh"
+source "${script_root}/lib/host_release.sh"
+source "${script_root}/lib/host_release_guide.sh"
 source "${script_root}/lib/generated_workspace.sh"
 
 app_path=""
@@ -20,7 +20,7 @@ source_tag=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: ./script/package_private_release.sh \
+Usage: ./script/package_host_release.sh \
   --app PATH \
   --manifest FILE \
   --release-lock FILE \
@@ -50,7 +50,7 @@ done
   -n "${output_dir}" ]] || usage
 output_dir="$(
   generated_workspace_resolve_path \
-    "private-release-assets" \
+    "host-release-assets" \
     "${output_dir}" \
     allow-temporary
 )"
@@ -59,13 +59,13 @@ for command in cmp codesign ditto git hdiutil jq lipo plutil rg shasum stat; do
   require_command "${command}"
 done
 
-private_release_validate_sources \
+host_release_validate_sources \
   "${app_path}" \
   "${manifest_file}" \
   "${release_lock}" \
   "${acceptance_file}"
 source_commit="$(
-  private_release_validate_source_tag \
+  host_release_validate_source_tag \
     "${source_repository}" \
     "${source_tag}" \
     "${manifest_file}" \
@@ -73,27 +73,32 @@ source_commit="$(
 )"
 
 [[ ! -L "${output_dir}" ]] || {
-  echo "The Private Personal Release output directory must not be a symbolic link." >&2
+  echo "The host-release output directory must not be a symbolic link." >&2
   exit 1
 }
 mkdir -p "${output_dir}"
 [[ -d "${output_dir}" && "$(stat -f '%u' "${output_dir}")" == "$(id -u)" ]] || {
-  echo "The Private Personal Release output directory is unsafe." >&2
+  echo "The host-release output directory is unsafe." >&2
   exit 1
 }
 chmod 700 "${output_dir}"
 [[ -z "$(find "${output_dir}" -mindepth 1 -maxdepth 1 -print -quit)" ]] || {
-  echo "The Private Personal Release output directory must be empty." >&2
+  echo "The host-release output directory must be empty." >&2
   exit 1
 }
 
 release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
+wrapper_version="$(jq -er '.release.wrapper_version' "${release_lock}")"
+[[ "${source_tag}" == "v${wrapper_version}" ]] || {
+  echo "The source tag must match wrapper version ${wrapper_version}: v${wrapper_version}" >&2
+  exit 1
+}
 code_oss_version="$(jq -er '.runtime.code_oss' "${manifest_file}")"
 vscodium_version="$(jq -er '.runtime.host' "${manifest_file}")"
 dbcode_version="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")"
 architecture="$(jq -er '.artifact.architecture' "${manifest_file}")"
 app_sha256="$(jq -er '.artifact.sha256' "${manifest_file}")"
-package_stem="DBCode-Wrapper-${vscodium_version}-dbcode-${dbcode_version}-src-${source_commit:0:12}-app-${app_sha256:0:12}-${architecture}"
+package_stem="DBCode-Wrapper-${wrapper_version}-${vscodium_version}-dbcode-${dbcode_version}-src-${source_commit:0:12}-app-${app_sha256:0:12}-${architecture}"
 dmg_name="${package_stem}.dmg"
 checksum_name="${dmg_name}.sha256"
 compatibility_name="${package_stem}-compatibility.json"
@@ -119,7 +124,7 @@ cleanup_temporary_root() {
   case "${temporary_root}" in
     "${output_dir}/.staging."*) rm -rf "${temporary_root}" ;;
     *)
-      echo "Refusing to remove unexpected private-release path: ${temporary_root}" >&2
+      echo "Refusing to remove unexpected host-release path: ${temporary_root}" >&2
       return 1
       ;;
   esac
@@ -130,18 +135,18 @@ trap cleanup_temporary_root EXIT INT TERM
 release_tree="${temporary_root}/volume"
 mkdir -p "${release_tree}"
 ditto "${app_path}" "${release_tree}/DBCode Wrapper.app"
-private_release_write_install_guide \
+host_release_write_install_guide \
   "${release_tree}/${guide_name}" \
   "${release_set_id}" \
   "${code_oss_version}" \
   "${dbcode_version}"
 cp "${release_tree}/${guide_name}" "${temporary_root}/${notes_name}"
 
-"${script_root}/inspect_private_release_tree.sh" \
+"${script_root}/inspect_host_release_tree.sh" \
   --root "${release_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "${guide_name}"
-private_release_validate_sources \
+host_release_validate_sources \
   "${release_tree}/DBCode Wrapper.app" \
   "${manifest_file}" \
   "${release_lock}" \
@@ -162,11 +167,11 @@ guide_sha256="$(shasum -a 256 "${release_tree}/${guide_name}" | awk '{print $1}'
 minimum_macos="$(plutil -extract LSMinimumSystemVersion raw "${app_path}/Contents/Info.plist")"
 
 [[ "${dmg_size_bytes}" -lt 2147483648 ]] || {
-  echo "The Private Personal Release disk image exceeds GitHub's 2 GiB asset limit." >&2
+  echo "The host-release disk image exceeds GitHub's 2 GiB asset limit." >&2
   exit 1
 }
 
-private_release_write_compatibility_manifest \
+host_release_write_compatibility_manifest \
   "${temporary_root}/${compatibility_name}" \
   "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
   "${manifest_file}" \
@@ -187,7 +192,7 @@ private_release_write_compatibility_manifest \
 
 printf '%s  %s\n' "${dmg_sha256}" "${dmg_name}" > "${temporary_root}/${checksum_name}"
 
-"${script_root}/verify_private_release.sh" \
+"${script_root}/verify_host_release.sh" \
   --dmg "${temporary_root}/${dmg_name}" \
   --checksum "${temporary_root}/${checksum_name}" \
   --manifest "${manifest_file}" \
@@ -199,7 +204,7 @@ printf '%s  %s\n' "${dmg_sha256}" "${dmg_name}" > "${temporary_root}/${checksum_
   --notes "${temporary_root}/${notes_name}" \
   --output "${temporary_root}/${verification_name}"
 
-private_release_assert_sanitized_metadata \
+host_release_assert_sanitized_metadata \
   "${temporary_root}/${checksum_name}" \
   "${temporary_root}/${compatibility_name}" \
   "${temporary_root}/${notes_name}" \
@@ -228,11 +233,11 @@ expected_output_entries="$(
 )"
 actual_output_entries="$(find "${output_dir}" -mindepth 1 -maxdepth 1 -print | sed 's#^.*/##' | LC_ALL=C sort)"
 [[ "${actual_output_entries}" == "${expected_output_entries}" ]] || {
-  echo "The Private Personal Release output contains unexpected assets." >&2
+  echo "The host-release output contains unexpected assets." >&2
   exit 1
 }
 
-echo "Private Personal Release assets:"
+echo "Verified host-release assets:"
 printf '  %s\n' \
   "${output_dir}/${dmg_name}" \
   "${output_dir}/${checksum_name}" \

@@ -429,7 +429,7 @@ test('workflow path assertions use the same roots and permit only validated temp
     '--home',
     homeDirectory,
     '--id',
-    'private-release-assets',
+    'host-release-assets',
     '--path',
     '/private/tmp/dbcode-retention-unset-tmpdir-fixture',
     '--allow-temporary'

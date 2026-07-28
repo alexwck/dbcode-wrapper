@@ -52,7 +52,7 @@ release_specification_validate() {
       and (.public_key_sha256 | sha256)
       and (.package_size | type == "number" and . > 0);
 
-    .schema_version == 5
+    .schema_version == 6
     and .target == {platform: "darwin", architecture: "arm64"}
     and (.upstream.vscodium.repository | https_url)
     and (.upstream.vscodium.tag | version)
@@ -75,10 +75,18 @@ release_specification_validate() {
     and (.toolchain.macos_sdk_version | version)
     and (.runtime.code_oss_version == .upstream.code_oss.tag)
     and (.runtime.electron_version | version)
+    and (.release.wrapper_version | version)
     and (.release.release_set_base_id == ("code-oss-" + .runtime.code_oss_version + "-dbcode-" + .extension.dbcode.version))
     and (.release.compatibility_status | IN("candidate", "approved"))
     and (.release.profile_schema_version | type == "number" and . > 0 and floor == .)
     and (.release.validation_issue | nonempty)
+    and .distribution.channel == "github-published-release"
+    and (.distribution.repository | nonempty and test("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"))
+    and .distribution.public_download == true
+    and .distribution.dbcode_bundled == false
+    and .distribution.release_assets == ["dmg", "checksum"]
+    and (.distribution.approved_author_email | nonempty)
+    and (.distribution.approved_license_sha256 | sha256)
     and ((.extension.dbcode + {role: "database-client"}) | extension_package)
     and (.extension.dbcode.release_notes_url == ("https://dbcode.io/docs/changelog/" + .extension.dbcode.version))
     and (.extension.dbcode.jq_sorted_compact_contributes_sha256 | sha256)
@@ -255,11 +263,26 @@ release_specification_historical_validate() {
             true
           end
       );
+    def schema_5_contract:
+      .schema_version == 5
+      and (
+        .release.release_set_base_id
+          == ("code-oss-" + .runtime.code_oss_version + "-dbcode-" + .extension.dbcode.version)
+      )
+      and (.release.compatibility_status | IN("candidate", "approved"))
+      and (.release.profile_schema_version | type == "number" and . > 0 and floor == .)
+      and (.release.validation_issue | nonempty)
+      and (.extension.dbcode.target_platform | nonempty)
+      and historical_notebook_contract
+      and .product.signing.mode == "local-certificate"
+      and (.product.signing.identity_common_name | nonempty)
+      and .product.signing.scope == "current-user-private-use";
 
     common_historical_contract
     and (
       schema_2_contract
       or schema_4_contract
+      or schema_5_contract
     )
   ' "${release_lock}" >/dev/null || {
     echo "Historical Release Specification is invalid or unsupported: ${release_lock}" >&2
@@ -282,6 +305,7 @@ release_specification_record() {
         toolchain,
         runtime,
         release,
+        distribution,
         product
       }' "${release_lock}"
       ;;

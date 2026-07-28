@@ -168,8 +168,10 @@ jq -e \
   --arg app_sha256 "${app_sha256}" \
   --arg bundle_identifier "${BUNDLE_IDENTIFIER}" \
   --arg release_lock_sha256 "${release_lock_sha256}" \
+  --arg wrapper_version "${WRAPPER_VERSION}" \
   --arg signature_requirement "${signature_requirement}" '
     .schema_version == 6
+    and .release.wrapper_version == $wrapper_version
     and .artifact.sha256 == $app_sha256
     and .artifact.bundle_identifier == $bundle_identifier
     and .artifact.architecture == "arm64"

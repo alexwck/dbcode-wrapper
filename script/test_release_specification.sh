@@ -12,7 +12,7 @@ release_lock="${repo_root}/host/release-lock.json"
 }
 
 "${release_specification}" validate "${release_lock}" >/dev/null
-jq -e '.schema_version == 5' "${release_lock}" >/dev/null
+jq -e '.schema_version == 6' "${release_lock}" >/dev/null
 
 build_record="$("${release_specification}" build "${release_lock}")"
 compiled_host_record="$("${release_specification}" compiled-host "${release_lock}")"
@@ -27,7 +27,13 @@ jq -e '
   and .upstream.code_oss.published_at == "2026-06-24T12:49:34Z"
   and .upstream.code_oss.release_notes_url == "https://github.com/microsoft/vscode/releases/tag/1.126.0"
   and .runtime.code_oss_version == "1.126.0"
+  and .release.wrapper_version == "0.1.3"
   and .release.release_set_base_id == "code-oss-1.126.0-dbcode-1.36.4"
+  and .distribution.channel == "github-published-release"
+  and .distribution.repository == "alexwck/dbcode-wrapper"
+  and .distribution.public_download == true
+  and .distribution.dbcode_bundled == false
+  and .distribution.release_assets == ["dmg", "checksum"]
   and .product.application_name == "dbcode-wrapper"
   and (has("extension") | not)
 ' <<<"${build_record}" >/dev/null
@@ -92,6 +98,7 @@ missing_profile_identity="${test_root}/missing-profile-identity.json"
 unsafe_profile_identity="${test_root}/unsafe-profile-identity.json"
 unsafe_application_identity="${test_root}/unsafe-application-identity.json"
 unsafe_bundle_identity="${test_root}/unsafe-bundle-identity.json"
+missing_distribution="${test_root}/missing-distribution.json"
 missing_package="${test_root}/missing-package.json"
 duplicate_package_id="${test_root}/duplicate-package-id.json"
 mismatched_release_notes="${test_root}/mismatched-release-notes.json"
@@ -101,6 +108,7 @@ historical_schema_2="${test_root}/historical-schema-2.json"
 historical_schema_2_with_notebooks="${test_root}/historical-schema-2-with-notebooks.json"
 malformed_historical_schema_2="${test_root}/malformed-historical-schema-2.json"
 historical_schema_4="${test_root}/historical-schema-4.json"
+historical_schema_5="${test_root}/historical-schema-5.json"
 different_historical_schema_4="${test_root}/different-historical-schema-4.json"
 different_host_schema_4="${test_root}/different-host-schema-4.json"
 profile_only_schema_5="${test_root}/profile-only-schema-5.json"
@@ -116,6 +124,7 @@ jq 'del(.product.storage_namespace)' "${release_lock}" > "${missing_profile_iden
 jq '.product.query_folder_name = "../queries"' "${release_lock}" > "${unsafe_profile_identity}"
 jq '.product.application_name = "../dbcode-wrapper"' "${release_lock}" > "${unsafe_application_identity}"
 jq '.product.bundle_identifier = "not a bundle identifier"' "${release_lock}" > "${unsafe_bundle_identity}"
+jq 'del(.distribution)' "${release_lock}" > "${missing_distribution}"
 jq 'del(.extension.dbcode.sha256)' "${release_lock}" > "${missing_package}"
 jq '.extension.python_notebooks.packages[1].namespace = .extension.python_notebooks.packages[0].namespace
   | .extension.python_notebooks.packages[1].name = .extension.python_notebooks.packages[0].name
@@ -156,6 +165,10 @@ jq '
     .extension.dbcode.release_notes_url
   )
 ' "${release_lock}" > "${historical_schema_4}"
+jq '
+  .schema_version = 5
+  | del(.distribution, .release.wrapper_version)
+' "${release_lock}" > "${historical_schema_5}"
 jq '.extension.dbcode.version = "1.36.1"' \
   "${historical_schema_4}" > "${different_historical_schema_4}"
 jq '.upstream.code_oss.commit = ("0" * 40)' \
@@ -185,7 +198,7 @@ jq '.extension.dbcode.jq_sorted_compact_contributes_sha256 = false' \
 jq '.product.signing = false' \
   "${historical_schema_4}" > "${schema_4_with_false_signing}"
 
-for invalid_lock in "${invalid_schema}" "${missing_profile_identity}" "${unsafe_profile_identity}" "${unsafe_application_identity}" "${unsafe_bundle_identity}" "${missing_package}" "${duplicate_package_id}" "${mismatched_release_notes}" "${invalid_published_at}" "${symlinked_lock}"; do
+for invalid_lock in "${invalid_schema}" "${missing_profile_identity}" "${unsafe_profile_identity}" "${unsafe_application_identity}" "${unsafe_bundle_identity}" "${missing_distribution}" "${missing_package}" "${duplicate_package_id}" "${mismatched_release_notes}" "${invalid_published_at}" "${symlinked_lock}"; do
   if "${release_specification}" validate "${invalid_lock}" >/dev/null 2>&1; then
     echo "Release Specification accepted invalid input: ${invalid_lock}" >&2
     exit 1
@@ -200,10 +213,15 @@ if "${release_specification}" validate "${historical_schema_2}" >/dev/null 2>&1;
   echo "Strict Release Specification validation accepted a frozen historical record." >&2
   exit 1
 fi
+if "${release_specification}" validate "${historical_schema_5}" >/dev/null 2>&1; then
+  echo "Strict Release Specification validation accepted the public host-release schema." >&2
+  exit 1
+fi
 
 "${release_specification}" historical-validate "${historical_schema_2}" >/dev/null
 "${release_specification}" historical-validate \
   "${historical_schema_2_with_notebooks}" >/dev/null
+"${release_specification}" historical-validate "${historical_schema_5}" >/dev/null
 historical_notebook_extension_record="$(
   "${release_specification}" historical-extensions \
     "${historical_schema_2_with_notebooks}"

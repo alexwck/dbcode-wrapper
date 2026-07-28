@@ -4,14 +4,31 @@ set -euo pipefail
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
-source "${script_root}/lib/private_release.sh"
+source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/artifact_digest.sh"
-inspector="${script_root}/inspect_private_release_tree.sh"
-packager="${script_root}/package_private_release.sh"
-verifier="${script_root}/verify_private_release.sh"
-approver="${script_root}/approve_private_release.sh"
-test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-private-release-test.XXXXXX")"
+inspector="${script_root}/inspect_host_release_tree.sh"
+packager="${script_root}/package_host_release.sh"
+verifier="${script_root}/verify_host_release.sh"
+approver="${script_root}/approve_host_release.sh"
+publisher="${script_root}/publish_release.sh"
+test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-host-release-test.XXXXXX")"
 export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
+
+[[ -x "${publisher}" ]] || {
+  echo "Missing executable public-release publisher: ${publisher}" >&2
+  exit 1
+}
+bash -n "${publisher}"
+rg -Fq -- '--publish' "${publisher}"
+rg -Fq 'gh release create' "${publisher}"
+rg -Fq '.isDraft == false' "${publisher}"
+rg -Fq 'approved_release_history_validate' "${publisher}"
+rg -Fq 'push --atomic' "${publisher}"
+rg -Fq '.source.release_lock_sha256 == $release_lock_sha256' "${publisher}"
+if rg -Fq -- '--draft' "${publisher}"; then
+  echo "The normal release publisher must not create a draft." >&2
+  exit 1
+fi
 
 cleanup() {
   rm -rf "${test_root}"
@@ -21,13 +38,13 @@ trap cleanup EXIT INT TERM
 canonical_root="${test_root}/canonical-root"
 mkdir -p "${canonical_root}/mounted" "${test_root}/sibling"
 ln -s "${canonical_root}" "${test_root}/root-alias"
-private_release_path_is_within \
+host_release_path_is_within \
   "${test_root}/root-alias" \
   "${canonical_root}/mounted" || {
   echo "A canonical mount path was rejected through its safe root alias." >&2
   exit 1
 }
-if private_release_path_is_within \
+if host_release_path_is_within \
   "${test_root}/root-alias" \
   "${test_root}/sibling"; then
   echo "A path outside the canonical mount root was accepted." >&2
@@ -42,8 +59,9 @@ printf '%s\n' \
   'gist-secret,Secret Gist' \
   > "${safe_tree}/DBCode Wrapper.app/Contents/Resources/public-icon-metadata.csv"
 printf '%s\n' \
-  'DBCode Wrapper is for Macs owned by the licence holder.' \
-  'DBCode is not included and must be installed separately.' \
+  'DBCode Wrapper is an unofficial wrapper around DBCode.' \
+  'DBCode is not included. You need a valid DBCode licence.' \
+  'First run downloads the unchanged extension from its official Open VSX distribution.' \
   'Verify the published SHA-256 before opening this disk image.' \
   'Use System Settings > Privacy & Security > Open Anyway.' \
   'Do not disable Gatekeeper.' \
@@ -65,7 +83,7 @@ if bash "${inspector}" \
   --root "${bundled_dbcode_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted a bundled DBCode extension." >&2
+  echo "The Host release tree accepted a bundled DBCode extension." >&2
   exit 1
 fi
 
@@ -78,7 +96,7 @@ if bash "${inspector}" \
   --root "${profile_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted copied profile state." >&2
+  echo "The Host release tree accepted copied profile state." >&2
   exit 1
 fi
 
@@ -91,7 +109,7 @@ if bash "${inspector}" \
   --root "${extension_cache_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted an extension cache." >&2
+  echo "The Host release tree accepted an extension cache." >&2
   exit 1
 fi
 
@@ -104,7 +122,7 @@ if bash "${inspector}" \
   --root "${database_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted a private database." >&2
+  echo "The Host release tree accepted a private database." >&2
   exit 1
 fi
 
@@ -117,7 +135,7 @@ if bash "${inspector}" \
   --root "${sensitive_state_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted licence, credential, and activation state." >&2
+  echo "The Host release tree accepted licence, credential, and activation state." >&2
   exit 1
 fi
 
@@ -132,7 +150,7 @@ if bash "${inspector}" \
   --root "${credential_csv_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted a credential-bearing CSV." >&2
+  echo "The Host release tree accepted a credential-bearing CSV." >&2
   exit 1
 fi
 
@@ -147,7 +165,7 @@ if bash "${inspector}" \
   --root "${credential_key_value_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted row-oriented credentials." >&2
+  echo "The Host release tree accepted row-oriented credentials." >&2
   exit 1
 fi
 
@@ -160,7 +178,7 @@ if bash "${inspector}" \
   --root "${keychain_export_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted a Keychain export." >&2
+  echo "The Host release tree accepted a Keychain export." >&2
   exit 1
 fi
 
@@ -176,7 +194,7 @@ if bash "${inspector}" \
   --root "${secret_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted private-key material." >&2
+  echo "The Host release tree accepted private-key material." >&2
   exit 1
 fi
 
@@ -189,7 +207,7 @@ if bash "${inspector}" \
   --root "${escaping_link_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "Install DBCode Wrapper.txt" >/dev/null 2>&1; then
-  echo "The Private Personal Release tree accepted an escaping symbolic link." >&2
+  echo "The Host release tree accepted an escaping symbolic link." >&2
   exit 1
 fi
 
@@ -202,7 +220,7 @@ cp "${LOCK_FILE}" "${fixture_repository}/host/release-lock.json"
 git -C "${fixture_repository}" add host/release-lock.json
 git -C "${fixture_repository}" commit -q -m "Fixture source"
 source_commit="$(git -C "${fixture_repository}" rev-parse HEAD)"
-source_tag="private-release-fixture"
+source_tag="v$(jq -er '.release.wrapper_version' "${LOCK_FILE}")"
 git -C "${fixture_repository}" tag -a "${source_tag}" -m "Fixture source tag"
 release_lock="${fixture_repository}/host/release-lock.json"
 release_lock_sha256="$(shasum -a 256 "${release_lock}" | awk '{print $1}')"
@@ -294,6 +312,7 @@ jq -n \
   --arg vscodium_commit "$(jq -er '.upstream.vscodium.commit' "${release_lock}")" \
   --arg code_oss_commit "$(jq -er '.upstream.code_oss.commit' "${release_lock}")" \
   --arg fixture_source_set_id "${fixture_source_set_id}" \
+  --arg wrapper_version "$(jq -er '.release.wrapper_version' "${release_lock}")" \
   --arg validation_issue "$(jq -er '.release.validation_issue' "${release_lock}")" \
   --argjson runtime_extensions "${fixture_runtime_extensions}" '
     {
@@ -340,6 +359,7 @@ jq -n \
         }
       },
       release: {
+        wrapper_version: $wrapper_version,
         compatibility_status: "candidate",
         validation_issue: $validation_issue,
         source_set_id: $fixture_source_set_id,
@@ -585,7 +605,7 @@ jq '
   | del(.gates.stored_routine_debugger)
   | del(.manual_evidence.debugger)
 ' "${acceptance_file}" > "${legacy_acceptance_file}"
-PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
@@ -650,7 +670,7 @@ jq '
     distribution_claims
   }
 ' "${acceptance_file}" > "${fast_acceptance_file}"
-PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
@@ -667,7 +687,7 @@ package_source_arguments=(
 stale_gate_acceptance_file="${test_root}/stale-gate-final-acceptance.json"
 jq '.gate_execution.source_snapshot_sha256 = ("f" * 64)' \
   "${fast_acceptance_file}" > "${stale_gate_acceptance_file}"
-if PATH="${stub_bin}:${PATH}" private_release_validate_sources \
+if PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
@@ -679,7 +699,7 @@ fi
 tampered_snapshot_manifest="${test_root}/tampered-source-snapshot-manifest.json"
 jq '.source.snapshot.snapshot_sha256 = ("f" * 64)' \
   "${manifest_file}" > "${tampered_snapshot_manifest}"
-if private_release_validate_source_tag \
+if host_release_validate_source_tag \
   "${fixture_repository}" \
   "${source_tag}" \
   "${tampered_snapshot_manifest}" \
@@ -730,7 +750,11 @@ jq -e \
     and .source.compiled_host_input_id == $compiled_host_input_id
     and .external_runtime.setup == "focused-pinned-official-sources"
     and .claims.dbcode_included == false
-    and .claims.public_application_release == false
+    and .scope == "public-host-release"
+    and .transfer.channel == "github-published-release"
+    and .transfer.draft_required == false
+    and .transfer.public_download == true
+    and .claims.public_application_release == true
   ' "${compatibility_file}" >/dev/null
 
 malformed_lock="${test_root}/malformed-release-lock.json"
@@ -858,7 +882,7 @@ jq -e \
     .schema_version == 2
     and .id == $release_set_id
     and .compatibility_status == "approved"
-    and .approval.mode == "prompt-free-private-release"
+    and .approval.mode == "prompt-free-public-host-release"
     and .approval.production_profile_written == false
     and .approval.installed_app_changed == false
   ' "${approval_output}/approved-release-set.json" >/dev/null
@@ -986,4 +1010,4 @@ if PATH="${stub_bin}:${PATH}" bash "${packager}" \
   exit 1
 fi
 
-echo "Private Personal Release tree contracts passed."
+echo "Host-release tree contracts passed."

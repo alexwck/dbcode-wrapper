@@ -5,16 +5,16 @@ This context defines the language for exploring a separate macOS experience for 
 ## Language
 
 **DBCode Wrapper App**:
-An unofficial macOS application prepared only for the license holder's personal use. It wraps the compatible Code OSS extension host needed by unchanged DBCode, while presenting only DBCode functionality through its own icon and application lifecycle. Its wrapper source may be visible in a Public Source Repository, but the built application may be copied only between Macs owned by the license holder. It is not made publicly downloadable, shared with other people, or resold.
-_Avoid_: official DBCode app, DBCode fork, commercial DBCode product, redistributed DBCode app
+An unofficial public macOS host for the official, unchanged DBCode extension. It presents DBCode through its own icon and application lifecycle while using a compatible Code OSS extension host. A published wrapper release contains only the host; each user obtains DBCode separately from its official source and needs a valid DBCode licence.
+_Avoid_: official DBCode app, DBCode fork, commercial DBCode product, bundled DBCode app
 
 **Public Source Repository**:
-A publicly visible GitHub repository containing the wrapper's own source, patches, tests, and project notes. It contains no built application, DBCode package, licence or account data, credentials, profiles, local databases, signing secrets, or raw real-profile evidence. Sanitized issue notes may retain versions, artifact digests, and pass or fail summaries. Public source visibility does not turn the DBCode Wrapper App into a public release.
-_Avoid_: public binary release, bundled DBCode, secret-bearing repository, implied DBCode licence
+The GitHub repository containing the wrapper's own source, patches, tests, project notes, and normal published host-only releases. It never contains or distributes a DBCode package, licence or account data, credentials, profiles, local databases, signing secrets, or raw real-profile evidence. Sanitized issue notes may retain versions, artifact digests, and pass or fail summaries.
+_Avoid_: bundled DBCode, secret-bearing repository, implied DBCode licence
 
-**Private Personal Release**:
-A host-only DMG transferred through a private channel so the license holder can install the DBCode Wrapper App on Apple-silicon Macs they own. The user verifies its checksum and approves the self-signed app through macOS Privacy & Security. DBCode, licence material, credentials, and user profiles are never included in the release.
-_Avoid_: public release, third-party distribution, bundled DBCode, paid Apple signing, Apple notarization, disabled Gatekeeper
+**Public Host Release**:
+A normal published GitHub release containing the self-signed Apple-silicon wrapper-host DMG and its checksum. DBCode is not bundled; each user obtains the unchanged extension from its official source under their own licence. The user verifies the checksum and may need macOS Privacy & Security > Open Anyway because the host is not signed with Developer ID and is not notarized.
+_Avoid_: official DBCode release, bundled DBCode, Apple-trusted signing, Apple notarization, disabled Gatekeeper
 
 **Standalone DBCode Experience**:
 The user launches DBCode through its own macOS app, Dock icon, window, and application lifecycle without first opening VS Code. The internal technology may still use a compatible extension host.
@@ -53,5 +53,5 @@ A notice that a newer Code OSS runtime, VSCodium packaging release, or DBCode re
 _Avoid_: automatic update, forced upgrade
 
 **Unmodified Extension Boundary**:
-The DBCode Wrapper App may host the legitimately licensed extension for the license holder's private use, but must not modify it, reverse engineer it, bypass its licensing, or share it with others. Written vendor permission is not a project gate.
-_Avoid_: patched extension, license bypass, reconstructed DBCode, redistributed DBCode
+The wrapper host may be published because DBCode is not bundled. Each user obtains the official unchanged extension separately under their own valid licence. The project must not modify, mirror, redistribute, reverse engineer, or bypass the licensing of DBCode.
+_Avoid_: patched extension, licence bypass, reconstructed DBCode, redistributed DBCode

@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const contract = require('../host/extensions/dbcode-wrapper-release-status/approved-release-set');
 const releaseSpecificationScript = path.join(__dirname, 'release_specification.sh');
-const privateReleaseContractScript = path.join(__dirname, 'private_release_contract.sh');
+const hostReleaseContractScript = path.join(__dirname, 'host_release_contract.sh');
 const VALIDATOR_TIMEOUT_MS = 30_000;
 
 function usage() {
@@ -140,7 +140,7 @@ function main(argv) {
       ] = args;
       const compatibility = fileSha256(
         compatibilityPath,
-        'Private-release compatibility manifest'
+        'Host-release compatibility manifest'
       );
       const manifest = fileSha256(manifestPath, 'Candidate build manifest');
       const releaseLock = fileSha256(releaseLockPath, 'Candidate Release Specification');
@@ -148,7 +148,7 @@ function main(argv) {
       const acceptance = fileSha256(acceptancePath, 'Prompt-free acceptance report');
       const verification = fileSha256(
         verificationPath,
-        'Private-release verification receipt'
+        'Host-release verification receipt'
       );
       const baseHistory = contract.readPlainJsonFile(
         baseHistoryPath,
@@ -156,7 +156,7 @@ function main(argv) {
       );
       const releaseSpecification = validatedReleaseSpecification(releaseLockPath);
       const acceptanceValidation = readValidatedJson(
-        privateReleaseContractScript,
+        hostReleaseContractScript,
         [
           'prompt-free-acceptance-record',
           manifestPath,

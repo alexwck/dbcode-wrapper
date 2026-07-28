@@ -109,7 +109,7 @@ third_party_notices="$(read_ref_file THIRD_PARTY_NOTICES.md)"
 for required_statement in \
   'This is not an official DBCode product' \
   'DBCode is not included' \
-  'No public app download is provided'; do
+  'Published releases contain only the wrapper host'; do
   [[ "${readme}" == *"${required_statement}"* ]] || {
     echo "The selected public README is missing: ${required_statement}" >&2
     exit 1

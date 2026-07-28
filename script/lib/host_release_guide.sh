@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
 
-if [[ "${DBCODE_WRAPPER_PRIVATE_RELEASE_GUIDE_LIBRARY_LOADED:-}" == "yes" ]]; then
+if [[ "${DBCODE_WRAPPER_HOST_RELEASE_GUIDE_LIBRARY_LOADED:-}" == "yes" ]]; then
   return 0 2>/dev/null || exit 0
 fi
-DBCODE_WRAPPER_PRIVATE_RELEASE_GUIDE_LIBRARY_LOADED="yes"
+DBCODE_WRAPPER_HOST_RELEASE_GUIDE_LIBRARY_LOADED="yes"
 
-private_release_write_install_guide() {
+host_release_write_install_guide() {
   local output_file="$1"
   local release_set_id="$2"
   local code_oss_version="$3"
   local dbcode_version="$4"
 
   printf '%s\n' \
-    'DBCode Wrapper — Private Personal Release' \
+    'DBCode Wrapper — Unofficial Public Host Release' \
     '' \
-    'This host is for Macs owned by the licence holder. It is not a public application release.' \
-    'DBCode is not included and must be installed separately from its official distribution.' \
+    'This download is an unofficial wrapper around DBCode. It is not a DBCode product or endorsement.' \
+    'DBCode is not included. You need your own valid DBCode licence.' \
+    'First run obtains the exact unchanged DBCode package from its official Open VSX distribution.' \
     '' \
     "Approved release set: ${release_set_id}" \
     "Compatible host: Code OSS ${code_oss_version}" \
@@ -28,10 +29,11 @@ private_release_write_install_guide() {
     '4. If macOS blocks it, use System Settings > Privacy & Security > Open Anyway.' \
     '5. Do not disable Gatekeeper and do not remove quarantine automatically.' \
     '6. Use the focused first-run setup to obtain and verify the exact DBCode and Python/Jupyter packages from Open VSX.' \
-    '7. Enter the DBCode licence and protected database credentials on this Mac.' \
+    '7. Enter your DBCode licence and protected database credentials on this Mac.' \
     '' \
     'Trust boundary' \
     'This app is self-signed. Apple has neither identified nor notarized it.' \
+    'Only continue if the downloaded checksum matches the release checksum.' \
     'A distinct host build may need one new Safe Storage approval.' \
     'An unchanged approved app must not repeat that approval after Always Allow.' \
     '' \

@@ -220,7 +220,9 @@ function validateVersionedApprovedRecord(record, { current }) {
   requireSha256(record.approval?.proof_sha256, 'Approval proof digest');
   requireSha256(record.approval?.gate_receipt_sha256, 'Approval gate-receipt digest');
   if (record.approval?.mode !== undefined) {
-    if (record.approval.mode !== 'prompt-free-private-release') {
+    if (!['prompt-free-private-release', 'prompt-free-public-host-release'].includes(
+      record.approval.mode
+    )) {
       fail('Approved release mode is invalid.');
     }
     requireString(record.approval.source_tag, 'Approved source tag');
@@ -424,6 +426,7 @@ function validateManifestAgainstReleaseSpecification(
 
   if (
     manifest.release?.compatibility_status !== release.compatibility_status ||
+    manifest.release?.wrapper_version !== release.wrapper_version ||
     manifest.release?.validation_issue !== release.validation_issue ||
     manifest.source?.vscodium?.tag !== vscodium.tag ||
     manifest.source?.vscodium?.commit !== vscodium.commit ||
@@ -460,11 +463,11 @@ function validateManifestAgainstReleaseSpecification(
     !isDeepStrictEqual(actualManifestExtensions, expectedManifestExtensions) ||
     !isDeepStrictEqual(actualExternalRuntime, expectedExternalRuntime)
   ) {
-    fail('Candidate manifest or private-release metadata does not match the Release Specification.');
+    fail('Candidate manifest or host-release metadata does not match the Release Specification.');
   }
   requireVersion(
     compatibility.release?.minimum_macos,
-    'Private-release minimum macOS version'
+    'Host-release minimum macOS version'
   );
   requireString(
     manifest.artifact?.signature_requirement,
@@ -513,7 +516,7 @@ function createPromptFreeApprovedRecord(input) {
   requireObject(input, 'Prompt-free approval input');
   const compatibilityInput = requireEvidenceArtifact(
     input.compatibility,
-    'Private-release compatibility manifest'
+    'Host-release compatibility manifest'
   );
   const manifestInput = requireEvidenceArtifact(
     input.manifest,
@@ -529,7 +532,7 @@ function createPromptFreeApprovedRecord(input) {
   );
   const verificationInput = requireEvidenceArtifact(
     input.verification,
-    'Private-release verification receipt'
+    'Host-release verification receipt'
   );
   const attestationInput = requireEvidenceArtifact(
     input.attestation,
@@ -552,56 +555,63 @@ function createPromptFreeApprovedRecord(input) {
 
   if (
     compatibility.schema_version !== 1 ||
-    compatibility.scope !== 'private-personal-release' ||
-    compatibility.transfer?.channel !== 'authenticated-github-draft-only' ||
-    compatibility.transfer?.draft_required !== true ||
-    compatibility.transfer?.public_download !== false ||
-    compatibility.transfer?.owned_devices_only !== true ||
+    compatibility.scope !== 'public-host-release' ||
+    compatibility.transfer?.channel !== 'github-published-release' ||
+    compatibility.transfer?.draft_required !== false ||
+    compatibility.transfer?.public_download !== true ||
+    compatibility.transfer?.owned_devices_only !== false ||
     compatibility.claims?.unofficial_wrapper !== true ||
     compatibility.claims?.dbcode_included !== false ||
     compatibility.claims?.licence_or_profile_included !== false ||
-    compatibility.claims?.public_application_release !== false ||
+    compatibility.claims?.public_application_release !== true ||
     compatibility.claims?.apple_identified_or_notarized !== false
   ) {
-    fail('Private-release compatibility policy is invalid.');
+    fail('Host-release compatibility policy is invalid.');
   }
 
   const releaseSetId = requireString(
     compatibility.release?.release_set_id,
-    'Private-release release-set ID'
+    'Host-release release-set ID'
   );
   const sourceSetId = requireString(
     compatibility.release?.source_set_id,
-    'Private-release source-set ID'
+    'Host-release source-set ID'
+  );
+  const wrapperVersion = requireVersion(
+    compatibility.release?.wrapper_version,
+    'Host-release wrapper version'
   );
   const sourceCommit = requireCommit(
     compatibility.source?.repository_revision,
-    'Private-release source revision'
+    'Host-release source revision'
   );
-  const sourceTag = requireString(compatibility.source?.tag, 'Private-release source tag');
-  const appSha = requireSha256(compatibility.app?.sha256, 'Private-release app digest');
+  const sourceTag = requireString(compatibility.source?.tag, 'Host-release source tag');
+  const appSha = requireSha256(compatibility.app?.sha256, 'Host-release app digest');
   const diskImageFilename = requireString(
     compatibility.disk_image?.filename,
-    'Private-release disk-image filename'
+    'Host-release disk-image filename'
   );
   const diskImageSha = requireSha256(
     compatibility.disk_image?.sha256,
-    'Private-release disk-image digest'
+    'Host-release disk-image digest'
   );
   requirePositiveInteger(
     compatibility.disk_image?.size_bytes,
-    'Private-release disk-image size'
+    'Host-release disk-image size'
   );
   if (compatibility.disk_image?.read_only !== true) {
-    fail('Private-release disk-image record is invalid.');
+    fail('Host-release disk-image record is invalid.');
   }
   const profileSchemaVersion =
     releaseSpecification.profile.profile_schema_version;
   if (
     releaseSpecification.build.release?.compatibility_status !== 'candidate' ||
+    releaseSpecification.build.release?.wrapper_version !== wrapperVersion ||
+    sourceTag !== `v${wrapperVersion}` ||
     releaseSpecification.build.release?.validation_issue !==
       manifest.release?.validation_issue ||
     manifest.schema_version < 6 ||
+    manifest.release?.wrapper_version !== wrapperVersion ||
     manifest.release?.release_set_id !== releaseSetId ||
     manifest.release?.source_set_id !== sourceSetId ||
     manifest.source?.repository_revision !== sourceCommit ||
@@ -680,15 +690,15 @@ function createPromptFreeApprovedRecord(input) {
     !Array.isArray(verification.failures) ||
     verification.failures.length !== 0
   ) {
-    fail('Private-release verification does not approve this exact release set.');
+    fail('Host-release verification does not approve this exact release set.');
   }
   requireSha256(
     verification.evidence?.checksum_sha256,
-    'Private-release checksum-record digest'
+    'Host-release checksum-record digest'
   );
   requireSha256(
     verification.evidence?.install_and_rollback_sha256,
-    'Private-release install-guide digest'
+    'Host-release install-guide digest'
   );
 
   if (
@@ -701,7 +711,7 @@ function createPromptFreeApprovedRecord(input) {
     attestation.acceptance_sha256 !== acceptanceDigest ||
     attestation.verification_sha256 !== verificationDigest ||
     attestation.confirmation !== 'exact-release-set-id' ||
-    attestation.approval_mode !== 'prompt-free-private-release' ||
+    attestation.approval_mode !== 'prompt-free-public-host-release' ||
     attestation.automatic_install !== false ||
     attestation.privileged_install !== false ||
     attestation.production_profile_written !== false ||
@@ -764,7 +774,7 @@ function createPromptFreeApprovedRecord(input) {
       ),
       proof_sha256: acceptanceDigest,
       gate_receipt_sha256: verificationDigest,
-      mode: 'prompt-free-private-release',
+      mode: 'prompt-free-public-host-release',
       source_tag: sourceTag,
       compatibility_manifest_sha256: compatibilityDigest,
       release_lock_sha256: lockDigest,

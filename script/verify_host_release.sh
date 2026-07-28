@@ -7,7 +7,7 @@ script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/approved_release_set.sh"
-source "${script_root}/lib/private_release.sh"
+source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/generated_workspace.sh"
 
 dmg_file=""
@@ -23,7 +23,7 @@ source_tag=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: ./script/verify_private_release.sh \
+Usage: ./script/verify_host_release.sh \
   --dmg FILE \
   --checksum FILE \
   --manifest FILE \
@@ -60,7 +60,7 @@ done
   -n "${source_tag}" ]] || usage
 output_file="$(
   generated_workspace_resolve_path \
-    "private-release-assets" \
+    "host-release-assets" \
     "${output_file}" \
     allow-temporary
 )"
@@ -68,13 +68,13 @@ output_file="$(
 for command in cmp codesign diskutil git hdiutil jq lipo plutil rg shasum stat; do
   require_command "${command}"
 done
-private_release_assert_file "${dmg_file}" "The disk image"
-private_release_assert_file "${checksum_file}" "The checksum file"
-private_release_assert_file "${manifest_file}" "The build manifest"
-private_release_assert_file "${release_lock}" "The release lock"
-private_release_assert_file "${acceptance_file}" "The final acceptance report"
-private_release_assert_file "${compatibility_file}" "The compatibility manifest"
-private_release_assert_file "${notes_file}" "The install and rollback notes"
+host_release_assert_file "${dmg_file}" "The disk image"
+host_release_assert_file "${checksum_file}" "The checksum file"
+host_release_assert_file "${manifest_file}" "The build manifest"
+host_release_assert_file "${release_lock}" "The release lock"
+host_release_assert_file "${acceptance_file}" "The final acceptance report"
+host_release_assert_file "${compatibility_file}" "The compatibility manifest"
+host_release_assert_file "${notes_file}" "The install and rollback notes"
 [[ ! -L "${output_file}" ]] || {
   echo "The verification receipt must not be a symbolic link." >&2
   exit 1
@@ -90,13 +90,13 @@ output_parent="$(cd "$(dirname "${output_file}")" 2>/dev/null && pwd -P)"
 }
 
 source_commit="$(
-  private_release_validate_source_tag \
+  host_release_validate_source_tag \
     "${source_repository}" \
     "${source_tag}" \
     "${manifest_file}" \
     "${release_lock}"
 )"
-private_release_assert_sanitized_metadata \
+host_release_assert_sanitized_metadata \
   "${checksum_file}" \
   "${compatibility_file}" \
   "${notes_file}"
@@ -104,7 +104,7 @@ private_release_assert_sanitized_metadata \
 dmg_sha256="$(shasum -a 256 "${dmg_file}" | awk '{print $1}')"
 dmg_size_bytes="$(stat -f '%z' "${dmg_file}")"
 [[ "${dmg_size_bytes}" -lt 2147483648 ]] || {
-  echo "The Private Personal Release disk image exceeds GitHub's 2 GiB asset limit." >&2
+  echo "The Host release disk image exceeds GitHub's 2 GiB asset limit." >&2
   exit 1
 }
 manifest_sha256="$(shasum -a 256 "${manifest_file}" | awk '{print $1}')"
@@ -126,6 +126,7 @@ jq -e \
   --arg dmg_sha256 "${dmg_sha256}" \
   --argjson dmg_size_bytes "${dmg_size_bytes}" \
   --arg source_tag "${source_tag}" \
+  --arg wrapper_version "$(jq -er '.release.wrapper_version' "${release_lock}")" \
   --arg source_commit "${source_commit}" \
   --arg source_tree_oid "${source_tree_oid}" \
   --arg source_snapshot_sha256 "${source_snapshot_sha256}" \
@@ -133,8 +134,16 @@ jq -e \
   --arg release_set_id "${release_set_id}" \
   '
     .schema_version == 1
-    and .scope == "private-personal-release"
+    and .scope == "public-host-release"
+    and .transfer.channel == "github-published-release"
+    and .transfer.draft_required == false
+    and .transfer.public_download == true
+    and .transfer.owned_devices_only == false
+    and .claims.public_application_release == true
+    and .claims.dbcode_included == false
     and .source.tag == $source_tag
+    and .release.wrapper_version == $wrapper_version
+    and .source.tag == ("v" + $wrapper_version)
     and .source.repository_revision == $source_commit
     and .source.tree_oid == $source_tree_oid
     and .source.snapshot_sha256 == $source_snapshot_sha256
@@ -145,13 +154,13 @@ jq -e \
     and .disk_image.sha256 == $dmg_sha256
     and .disk_image.size_bytes == $dmg_size_bytes
   ' "${compatibility_file}" >/dev/null || {
-  echo "The compatibility manifest does not describe this exact private release." >&2
+  echo "The compatibility manifest does not describe this exact host release." >&2
   exit 1
 }
 
 hdiutil verify "${dmg_file}" >/dev/null
 
-mount_root="$(mktemp -d "${TMPDIR:-/private/tmp}/dbcode-private-release-mount.XXXXXX")"
+mount_root="$(mktemp -d "${TMPDIR:-/private/tmp}/dbcode-host-release-mount.XXXXXX")"
 attach_plist="${mount_root}/attach.plist"
 mounted_device=""
 mounted_path=""
@@ -161,8 +170,8 @@ cleanup_mount() {
       hdiutil detach "${mounted_device}" -force -quiet >/dev/null 2>&1 || true
   fi
   case "${mount_root}" in
-    "${TMPDIR:-/private/tmp}"/dbcode-private-release-mount.*) rm -rf "${mount_root}" ;;
-    *) echo "Refusing to remove unexpected private-release mount root: ${mount_root}" >&2 ;;
+    "${TMPDIR:-/private/tmp}"/dbcode-host-release-mount.*) rm -rf "${mount_root}" ;;
+    *) echo "Refusing to remove unexpected host-release mount root: ${mount_root}" >&2 ;;
   esac
 }
 trap cleanup_mount EXIT INT TERM
@@ -176,7 +185,7 @@ hdiutil attach \
 attach_json="$(plutil -convert json -o - "${attach_plist}")"
 mounted_path="$(jq -er '[."system-entities"[] | select(."mount-point" != null) | ."mount-point"] | first' <<<"${attach_json}")"
 mounted_device="$(jq -er '[."system-entities"[] | select(."mount-point" != null) | ."dev-entry"] | first' <<<"${attach_json}")"
-private_release_path_is_within "${mount_root}" "${mounted_path}" || {
+host_release_path_is_within "${mount_root}" "${mounted_path}" || {
   echo "The disk image mounted outside its private verification root." >&2
   exit 1
 }
@@ -197,11 +206,11 @@ jq -e '
 
 app_name="$(jq -er '.app.filename' "${compatibility_file}")"
 guide_name="$(jq -er '.disk_image.contents[] | select(endswith(".txt"))' "${compatibility_file}")"
-"${script_root}/inspect_private_release_tree.sh" \
+"${script_root}/inspect_host_release_tree.sh" \
   --root "${mounted_path}" \
   --app-name "${app_name}" \
   --guide-name "${guide_name}"
-private_release_validate_sources \
+host_release_validate_sources \
   "${mounted_path}/${app_name}" \
   "${manifest_file}" \
   "${release_lock}" \
@@ -219,7 +228,7 @@ guide_sha256="$(shasum -a 256 "${mounted_path}/${guide_name}" | awk '{print $1}'
 
 expected_compatibility="${mount_root}/expected-compatibility.json"
 minimum_macos="$(plutil -extract LSMinimumSystemVersion raw "${mounted_path}/${app_name}/Contents/Info.plist")"
-private_release_write_compatibility_manifest \
+host_release_write_compatibility_manifest \
   "${expected_compatibility}" \
   "$(jq -er '.created_at_utc' "${compatibility_file}")" \
   "${manifest_file}" \
@@ -237,7 +246,7 @@ private_release_write_compatibility_manifest \
   "$(basename "${notes_file}")" \
   "$(basename "${output_file}")" \
   "${minimum_macos}"
-private_release_validate_compatibility_manifest \
+host_release_validate_compatibility_manifest \
   "${compatibility_file}" \
   "${expected_compatibility}"
 
@@ -288,6 +297,6 @@ jq -n \
     }
   ' > "${output_file}"
 chmod 600 "${output_file}"
-private_release_assert_sanitized_metadata "${output_file}"
+host_release_assert_sanitized_metadata "${output_file}"
 
-echo "Private Personal Release verification passed: ${output_file}"
+echo "Host release verification passed: ${output_file}"

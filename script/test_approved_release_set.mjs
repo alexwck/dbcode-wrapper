@@ -17,7 +17,7 @@ import approvedReleaseSet from '../host/extensions/dbcode-wrapper-release-status
 
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const contractCli = join(scriptRoot, 'approved_release_set.cjs');
-const privateReleaseContract = join(scriptRoot, 'private_release_contract.sh');
+const hostReleaseContract = join(scriptRoot, 'host_release_contract.sh');
 const sha = character => character.repeat(64);
 const commit = character => character.repeat(40);
 const sourceSetId = `code-oss-1.127.0-dbcode-1.37.0-source-${sha('a')}`;
@@ -54,6 +54,7 @@ test('retired prepared-release operations stay absent', () => {
 function promptFreeReleaseSpecification() {
   const releaseLock = structuredClone(releaseLockTemplate);
   releaseLock.release = {
+    wrapper_version: '0.2.0',
     release_set_base_id: 'code-oss-1.127.0-dbcode-1.37.0',
     compatibility_status: 'candidate',
     profile_schema_version: 2,
@@ -102,6 +103,7 @@ function releaseSpecificationRecords(releaseLock) {
       toolchain: structuredClone(releaseLock.toolchain),
       runtime: structuredClone(releaseLock.runtime),
       release: structuredClone(releaseLock.release),
+      distribution: structuredClone(releaseLock.distribution),
       product: structuredClone(releaseLock.product)
     },
     extensions: {
@@ -164,6 +166,7 @@ function candidateManifest(releaseLock = promptFreeReleaseSpecification()) {
   return {
     schema_version: 6,
     release: {
+      wrapper_version: releaseLock.release.wrapper_version,
       release_set_id: releaseSetId,
       source_set_id: sourceSetId,
       compatibility_status: releaseLock.release.compatibility_status,
@@ -228,12 +231,12 @@ function candidateManifest(releaseLock = promptFreeReleaseSpecification()) {
 function promptFreeCompatibility(releaseLock, manifest) {
   return {
     schema_version: 1,
-    scope: 'private-personal-release',
+    scope: 'public-host-release',
     transfer: {
-      channel: 'authenticated-github-draft-only',
-      draft_required: true,
-      public_download: false,
-      owned_devices_only: true
+      channel: 'github-published-release',
+      draft_required: false,
+      public_download: true,
+      owned_devices_only: false
     },
     source: {
       tag: 'v0.2.0',
@@ -244,6 +247,7 @@ function promptFreeCompatibility(releaseLock, manifest) {
       compiled_host_input_id: manifest.source.compiled_host.input_id
     },
     release: {
+      wrapper_version: releaseLock.release.wrapper_version,
       release_set_id: releaseSetId,
       source_set_id: sourceSetId,
       code_oss_version: releaseLock.runtime.code_oss_version,
@@ -285,7 +289,7 @@ function promptFreeCompatibility(releaseLock, manifest) {
       unofficial_wrapper: true,
       dbcode_included: false,
       licence_or_profile_included: false,
-      public_application_release: false,
+      public_application_release: true,
       apple_identified_or_notarized: false
     }
   };
@@ -425,7 +429,7 @@ function promptFreeAttestation(sourceTag) {
     acceptance_sha256: sha('4'),
     verification_sha256: sha('0'),
     confirmation: 'exact-release-set-id',
-    approval_mode: 'prompt-free-private-release',
+    approval_mode: 'prompt-free-public-host-release',
     automatic_install: false,
     privileged_install: false,
     production_profile_written: false,
@@ -659,7 +663,7 @@ test('prompt-free approval binds accepted package evidence without installing it
 
   assert.equal(record.id, releaseSetId);
   assert.equal(record.profile.schema_version, 2);
-  assert.equal(record.approval.mode, 'prompt-free-private-release');
+  assert.equal(record.approval.mode, 'prompt-free-public-host-release');
   assert.equal(record.approval.source_tag, 'v0.2.0');
   assert.equal(record.approval.proof_sha256, sha('4'));
   assert.equal(record.approval.gate_receipt_sha256, sha('0'));
@@ -782,7 +786,7 @@ test('prompt-free approval binds accepted package evidence without installing it
 
   const readAcceptanceRecord = (manifestInput, lockInput, acceptanceInput, options = {}) =>
     JSON.parse(execFileSync('/bin/bash', [
-      privateReleaseContract,
+      hostReleaseContract,
       'prompt-free-acceptance-record',
       manifestInput,
       lockInput,
@@ -867,6 +871,6 @@ test('prompt-free approval binds accepted package evidence without installing it
   const writtenRecord = JSON.parse(readFileSync(recordPath, 'utf8'));
   const writtenHistory = JSON.parse(readFileSync(outputHistoryPath, 'utf8'));
   assert.equal(writtenRecord.id, releaseSetId);
-  assert.equal(writtenRecord.approval.mode, 'prompt-free-private-release');
+  assert.equal(writtenRecord.approval.mode, 'prompt-free-public-host-release');
   assert.deepEqual(writtenHistory.approved_release_sets, [writtenRecord]);
 });

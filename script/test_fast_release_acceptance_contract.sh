@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fast_acceptance="${script_root}/verify_fast_release.sh"
-private_release_module="${script_root}/lib/private_release.sh"
+host_release_module="${script_root}/lib/host_release.sh"
 
 bash -n "${fast_acceptance}"
 
@@ -87,7 +87,7 @@ set -e
   exit 1
 }
 
-rg -Fq '[[ "${acceptance_schema}" == "3" ]]' "${private_release_module}" || {
+rg -Fq '[[ "${acceptance_schema}" == "3" ]]' "${host_release_module}" || {
   echo "Private packaging must accept prompt-free schema 3 evidence." >&2
   exit 1
 }

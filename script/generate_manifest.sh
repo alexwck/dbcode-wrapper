@@ -223,6 +223,7 @@ jq -n \
   --arg code_oss_commit "${CODE_OSS_COMMIT}" \
   --arg source_set_id "${source_set_id}" \
   --arg release_set_id "${release_set_id}" \
+  --arg wrapper_version "${WRAPPER_VERSION}" \
   --arg compatibility_status "${RELEASE_COMPATIBILITY_STATUS}" \
   --arg validation_issue "${RELEASE_VALIDATION_ISSUE}" \
   --argjson profile_schema_version "${PROFILE_SCHEMA_VERSION}" \
@@ -271,6 +272,7 @@ jq -n \
     schema_version: 6,
     built_at_utc: $built_at_utc,
     release: {
+      wrapper_version: $wrapper_version,
       source_set_id: $source_set_id,
       release_set_id: $release_set_id,
       compatibility_status: $compatibility_status,

@@ -30,14 +30,15 @@
 
 ## Answer
 
-The public wrapper source and the owner-only Private Personal Release flow are complete. The current `v0.1.2` host-only package is in an unpublished authenticated draft with exact server-side sizes and SHA-256 digests, byte-identical owner download, and anonymous denial. It has not been installed by this transfer.
+The owner superseded the private-transfer channel on 29 July 2026. The public source repository now uses normal published host-only releases. A public release contains only the wrapper DMG and checksum; DBCode remains unchanged and external, and each user obtains it from the official source under their own valid licence.
 
-The earlier `v0.1.0` transfer established the fresh owned-Mac acceptance path. Its downloaded DMG matched its published checksum, and the owned Apple-silicon Mac passed the documented manual Gatekeeper path, focused runtime setup, licence and protected-state persistence, PostgreSQL, DuckDB, Parquet, Python notebook, Kernel permission persistence, and duplicate installation. That human setup evidence is not repeated for every wrapper-only package.
+The existing `v0.1.2` release remains an unpublished historical draft. It will not be republished because its immutable package metadata records an owner-only private transfer. `v0.1.3` is the first public host-release candidate.
 
-The [official DBCode License Agreement](https://dbcode.io/legal/license-agreement), last updated 12 May 2026, grants the licensee a non-transferable right to install and use the extension on unlimited devices and gives lifetime-license holders continued access to updates. The wrapper stays within the recorded boundary: DBCode remains unchanged, external to the application and DMG, used only by the licence holder, and never transferred to a third party.
+The public host is self-signed and not notarized. Release notes must tell users to verify the checksum and may direct them to macOS Privacy & Security > Open Anyway. No automated test waits for that prompt, a licence, a database, a kernel, a model, or another person.
 
 ## Comments
 
+- 2026-07-29: The owner chose a normal published release in this repository instead of an owner-only draft or a separate private release repository. The release contains only the wrapper-host DMG and checksum. DBCode remains external, and compatibility and verification evidence stays local.
 - 2026-07-29: The current `v0.1.2` draft transfer contains exactly five host-only assets. Authenticated metadata and owner download matched every local size and SHA-256, while anonymous listing omitted the draft and anonymous tag and direct-DMG lookups returned 404. The release remains a draft with no publication timestamp, and the repository has no Actions workflow that can publish it.
 - 2026-07-26: Final licence review used DBCode's official License Agreement, last updated 12 May 2026. It allows the licensee to install and use the extension on unlimited devices, includes future versions for a lifetime licence, and forbids third-party distribution. The accepted wrapper and DMG keep DBCode external and unchanged, transfer only the host between devices owned by the licensee, and therefore satisfy the remaining ticket gate without copying the vendor agreement into the public repository.
 - 2026-07-25: The user accepted the completed second-Mac installation and feature evidence and removed second-Mac upgrade and rollback repetition from this ticket. Those behaviours remain mandatory same-Mac release-set gates for each new approved candidate; this decision removes a duplicate device test, not the controlled update or rollback contract.

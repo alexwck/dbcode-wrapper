@@ -32,8 +32,9 @@ for caller in \
   "${REPO_ROOT}/script/prepare_release_rollback.sh" \
   "${REPO_ROOT}/script/verify_release_rollback.sh" \
   "${REPO_ROOT}/script/preview_release_rollback.sh" \
-  "${REPO_ROOT}/script/package_private_release.sh" \
-  "${REPO_ROOT}/script/verify_private_release.sh"; do
+  "${REPO_ROOT}/script/package_host_release.sh" \
+  "${REPO_ROOT}/script/verify_host_release.sh" \
+  "${REPO_ROOT}/script/publish_release.sh"; do
   rg -Fq 'lib/generated_workspace.sh' "${caller}" || {
     echo "A generated-output workflow does not load the retention contract: ${caller}" >&2
     exit 1
@@ -105,20 +106,22 @@ rg -Fq 'snapshot_parent="$(generated_workspace_path "rollback-evidence")"' \
 rg -Fq 'snapshot_parent="$(generated_workspace_path "rollback-evidence")"' \
   "${REPO_ROOT}/script/preview_release_rollback.sh"
 rg -Fq 'output_dir="$(' \
-  "${REPO_ROOT}/script/package_private_release.sh"
-rg -Fq '"private-release-assets"' \
-  "${REPO_ROOT}/script/package_private_release.sh"
+  "${REPO_ROOT}/script/package_host_release.sh"
+rg -Fq '"host-release-assets"' \
+  "${REPO_ROOT}/script/package_host_release.sh"
 rg -Fq 'temporary_root="$(mktemp -d "${output_dir}/.staging.XXXXXX")"' \
-  "${REPO_ROOT}/script/package_private_release.sh"
-if rg -Fq 'mktemp -d "${TMPDIR:-/private/tmp}/dbcode-private-release.' \
-  "${REPO_ROOT}/script/package_private_release.sh"; then
-  echo "Private-release staging bypasses its registered output root." >&2
+  "${REPO_ROOT}/script/package_host_release.sh"
+if rg -Fq 'mktemp -d "${TMPDIR:-/private/tmp}/dbcode-host-release.' \
+  "${REPO_ROOT}/script/package_host_release.sh"; then
+  echo "Host-release staging bypasses its registered output root." >&2
   exit 1
 fi
 rg -Fq 'output_file="$(' \
-  "${REPO_ROOT}/script/verify_private_release.sh"
-rg -Fq '"private-release-assets"' \
-  "${REPO_ROOT}/script/verify_private_release.sh"
+  "${REPO_ROOT}/script/verify_host_release.sh"
+rg -Fq '"host-release-assets"' \
+  "${REPO_ROOT}/script/verify_host_release.sh"
+rg -Fq '"host-release-assets"' \
+  "${REPO_ROOT}/script/publish_release.sh"
 
 bootstrap="${REPO_ROOT}/script/bootstrap_toolchain.sh"
 rg -Fq 'assert_bootstrap_generated_path "${BUILD_ROOT}"' "${bootstrap}"

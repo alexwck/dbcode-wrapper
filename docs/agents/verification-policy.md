@@ -13,7 +13,7 @@ Use the narrowest check that can catch the change.
 | Completed source change | `./script/check_development.sh` once before resolving the issue | None |
 | Signed-host shell change | Static host smoke, then the one-profile rendered smoke | None |
 | DBCode or runtime version change | Contribution comparison, changed-feature checks, and the one-profile rendered smoke | None |
-| Release packaging | Automated release identity, static smoke, one-profile rendered smoke, and package checks | None |
+| Release packaging and publishing | Automated release identity, static smoke, one-profile rendered smoke, package checks, and public asset verification | None |
 
 The fast source gate should stay comfortably below one minute on the normal development machine. It must not launch the app, use the network, ask a question, or wait for a person. A large timing increase is a regression to investigate, even when the tests still pass.
 
@@ -25,7 +25,7 @@ The fast source gate should stay comfortably below one minute on the normal deve
 - Test public script interfaces when path handling or command behaviour is the contract.
 - Keep fixtures local, deterministic, small, and free of private data.
 - Do not add a full rendered test for behaviour already proved by a source contract unless rendering is the risk.
-- Run gate-composition, public-push, private-package, or deep rollback tests only when a change owns that workflow.
+- Run gate-composition, public-push, host-package, publishing, or deep rollback tests only when a change owns that workflow.
 - The focused runtime-setup contract runs the small synthetic Open VSX mutation matrix through both acquisition adapters. The real cached-package verifier runs only when the verifier, an adapter, or the pinned runtime set changes.
 
 ## Prompts and external services
@@ -44,16 +44,16 @@ DBCode is unchanged upstream software. A version bump should verify the wrapper 
 
 1. Read the official changelog and changed feature pages.
 2. Compare the exact package manifest, contributions, settings, menus, views, editors, tools, and connection-catalogue fingerprint.
-3. Update the candidate Release Specification and feature policy.
+3. Update the candidate Release Specification and only the compatibility policy that changed.
 4. Reuse verified source, package, and Compiled Host caches by digest.
 5. Run focused source checks for changed wrapper seams.
-6. Finish all release-bound changes, then build and sign once.
-7. Run the one persistent-profile rendered smoke.
-8. Confirm added or changed DBCode routes remain visible. Render the deeper surface only when doing so is prompt-free.
-9. Keep model calls, real credentials, mutation, and external-service checks outside deployment.
-10. Package only after the automated release identity and package checks pass.
+6. Finish all release-bound changes, then run the complete source gate once from the final exact source.
+7. Build and sign once, then run the one persistent-profile rendered smoke.
+8. Confirm added or changed DBCode routes remain visible. Render a deeper surface only when doing so is prompt-free.
+9. Keep model calls, real credentials, mutation, human prompts, and external-service checks outside deployment.
+10. Package, approve, and publish the normal host-only release only after the automated identity and package checks pass. Verify the public release and its two assets after upload.
 
-Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion.
+Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion. Do not create a new issue or refresh the wiki for a routine version bump unless wrapper behaviour, compatibility, or the release channel changes.
 
 The old manual proof recorder, same-Mac acceptance generator, PostgreSQL debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are not maintained release paths. Their accepted generated evidence remains protected, but new releases must use the prompt-free schema-3 path.
 

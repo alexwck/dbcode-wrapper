@@ -7,7 +7,7 @@ app_name=""
 guide_name=""
 
 usage() {
-  echo "Usage: ./script/inspect_private_release_tree.sh --root DIR --app-name NAME.app --guide-name NAME.txt" >&2
+  echo "Usage: ./script/inspect_host_release_tree.sh --root DIR --app-name NAME.app --guide-name NAME.txt" >&2
   exit 2
 }
 
@@ -23,7 +23,7 @@ done
 
 [[ -n "${release_root}" && -n "${app_name}" && -n "${guide_name}" ]] || usage
 [[ -d "${release_root}" && ! -L "${release_root}" ]] || {
-  echo "The Private Personal Release root is missing or unsafe." >&2
+  echo "The host-release root is missing or unsafe." >&2
   exit 1
 }
 [[ "${app_name}" =~ ^[A-Za-z0-9._[:space:]-]+\.app$ ]] || {
@@ -70,8 +70,10 @@ unsafe_links="$(
 }
 
 for required_statement in \
-  'for Macs owned by the licence holder' \
+  'unofficial wrapper around DBCode' \
   'DBCode is not included' \
+  'valid DBCode licence' \
+  'official Open VSX distribution' \
   'Verify the published SHA-256' \
   'System Settings > Privacy & Security > Open Anyway' \
   'Do not disable Gatekeeper' \
@@ -331,4 +333,4 @@ sensitive_tabular_files="$(
   exit 1
 }
 
-echo "Private Personal Release tree is host-only."
+echo "Host release tree is host-only."

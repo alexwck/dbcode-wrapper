@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-if [[ "${DBCODE_WRAPPER_PRIVATE_RELEASE_LIBRARY_LOADED:-}" == "yes" ]]; then
+if [[ "${DBCODE_WRAPPER_HOST_RELEASE_LIBRARY_LOADED:-}" == "yes" ]]; then
   return 0 2>/dev/null || exit 0
 fi
-DBCODE_WRAPPER_PRIVATE_RELEASE_LIBRARY_LOADED="yes"
+DBCODE_WRAPPER_HOST_RELEASE_LIBRARY_LOADED="yes"
 
-private_release_library_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-source "${private_release_library_root}/lib/release_source_snapshot.sh"
+host_release_library_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${host_release_library_root}/lib/release_source_snapshot.sh"
 
-private_release_path_is_within() {
+host_release_path_is_within() {
   local root_path="$1"
   local candidate_path="$2"
   local canonical_root canonical_candidate
@@ -21,7 +21,7 @@ private_release_path_is_within() {
   esac
 }
 
-private_release_assert_file() {
+host_release_assert_file() {
   local path="$1"
   local label="$2"
   [[ -f "${path}" && ! -L "${path}" ]] || {
@@ -30,7 +30,7 @@ private_release_assert_file() {
   }
 }
 
-private_release_validate_source_tag() {
+host_release_validate_source_tag() {
   local repository="$1"
   local source_tag="$2"
   local manifest_file="$3"
@@ -96,16 +96,16 @@ private_release_validate_source_tag() {
   printf '%s\n' "${tag_commit}"
 }
 
-private_release_validate_prompt_free_acceptance() {
+host_release_validate_prompt_free_acceptance() {
   local manifest_file="$1"
   local release_lock="$2"
   local acceptance_file="$3"
   local release_build_spec release_extension_spec release_profile_spec
   local manifest_sha lock_sha expected_installed_extensions
 
-  private_release_assert_file "${manifest_file}" "The build manifest" || return 1
-  private_release_assert_file "${release_lock}" "The release lock" || return 1
-  private_release_assert_file "${acceptance_file}" "The final acceptance report" || return 1
+  host_release_assert_file "${manifest_file}" "The build manifest" || return 1
+  host_release_assert_file "${release_lock}" "The release lock" || return 1
+  host_release_assert_file "${acceptance_file}" "The final acceptance report" || return 1
   if ! declare -F release_specification_validate >/dev/null ||
     ! declare -F release_specification_record >/dev/null; then
     echo "The Release Specification module is unavailable." >&2
@@ -232,12 +232,12 @@ private_release_validate_prompt_free_acceptance() {
   }
 }
 
-private_release_prompt_free_acceptance_record() {
+host_release_prompt_free_acceptance_record() {
   local manifest_file="$1"
   local release_lock="$2"
   local acceptance_file="$3"
 
-  private_release_validate_prompt_free_acceptance \
+  host_release_validate_prompt_free_acceptance \
     "${manifest_file}" \
     "${release_lock}" \
     "${acceptance_file}" || return 1
@@ -259,7 +259,7 @@ private_release_prompt_free_acceptance_record() {
     ' <<<"{}"
 }
 
-private_release_validate_sources() {
+host_release_validate_sources() {
   local app_path="$1"
   local manifest_file="$2"
   local release_lock="$3"
@@ -279,10 +279,10 @@ private_release_validate_sources() {
     echo "The signed host application is missing or unsafe: ${app_path}" >&2
     return 1
   }
-  private_release_assert_file "${manifest_file}" "The build manifest" || return 1
-  private_release_assert_file "${release_lock}" "The release lock" || return 1
-  private_release_assert_file "${acceptance_file}" "The final acceptance report" || return 1
-  private_release_assert_file "${info_plist}" "The application Info.plist" || return 1
+  host_release_assert_file "${manifest_file}" "The build manifest" || return 1
+  host_release_assert_file "${release_lock}" "The release lock" || return 1
+  host_release_assert_file "${acceptance_file}" "The final acceptance report" || return 1
+  host_release_assert_file "${info_plist}" "The application Info.plist" || return 1
 
   if ! declare -F release_specification_validate >/dev/null ||
     ! declare -F release_specification_record >/dev/null; then
@@ -306,8 +306,10 @@ private_release_validate_sources() {
     --arg architecture "$(jq -er '.target.architecture' <<<"${release_build_spec}")" \
     --arg code_oss_version "$(jq -er '.runtime.code_oss_version' <<<"${release_build_spec}")" \
     --arg vscodium_version "$(jq -er '.upstream.vscodium.tag' <<<"${release_build_spec}")" \
-    --arg compatibility_status "$(jq -er '.release.compatibility_status' <<<"${release_build_spec}")" '
+    --arg compatibility_status "$(jq -er '.release.compatibility_status' <<<"${release_build_spec}")" \
+    --arg wrapper_version "$(jq -er '.release.wrapper_version' <<<"${release_build_spec}")" '
       .schema_version == 6
+      and .release.wrapper_version == $wrapper_version
       and .release.compatibility_status == $compatibility_status
       and (.release.release_set_id | type == "string" and length > 0)
       and .source.release_lock_sha256 == $lock_sha
@@ -354,8 +356,8 @@ private_release_validate_sources() {
 
   runtime_setup_manifest="${app_path}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration/runtime-extension-set.json"
   runtime_setup_logic="${app_path}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js"
-  private_release_assert_file "${runtime_setup_manifest}" "The focused first-run runtime setup manifest" || return 1
-  private_release_assert_file "${runtime_setup_logic}" "The focused first-run runtime setup validator" || return 1
+  host_release_assert_file "${runtime_setup_manifest}" "The focused first-run runtime setup manifest" || return 1
+  host_release_assert_file "${runtime_setup_logic}" "The focused first-run runtime setup validator" || return 1
   [[ -n "${NODE_BIN_DIR:-}" && -x "${NODE_BIN_DIR}/node" ]] || {
     echo "The pinned Node.js runtime is unavailable for focused setup validation." >&2
     return 1
@@ -450,7 +452,7 @@ private_release_validate_sources() {
 
   acceptance_schema="$(jq -er '.schema_version' "${acceptance_file}")"
   if [[ "${acceptance_schema}" == "3" ]]; then
-    private_release_validate_prompt_free_acceptance \
+    host_release_validate_prompt_free_acceptance \
       "${manifest_file}" \
       "${release_lock}" \
       "${acceptance_file}" || return 1
@@ -612,7 +614,7 @@ private_release_validate_sources() {
 
   architectures="$(lipo -archs "${app_path}/Contents/MacOS/$(plutil -extract CFBundleExecutable raw "${info_plist}")")"
   [[ "${architectures}" == "arm64" ]] || {
-    echo "The Private Personal Release must contain only the Apple-silicon host." >&2
+    echo "The Host release must contain only the Apple-silicon host." >&2
     return 1
   }
 
@@ -633,11 +635,11 @@ private_release_validate_sources() {
     "${app_path}/Contents/Resources/app/LICENSE.txt" \
     "${app_path}/Contents/Resources/app/ThirdPartyNotices.txt" \
     "${app_path}/Contents/Resources/LICENSES.chromium.html"; do
-    private_release_assert_file "${notice_path}" "A required upstream notice" || return 1
+    host_release_assert_file "${notice_path}" "A required upstream notice" || return 1
   done
 }
 
-private_release_write_compatibility_manifest() {
+host_release_write_compatibility_manifest() {
   local output_file="$1"
   local created_at_utc="$2"
   local manifest_file="$3"
@@ -665,6 +667,7 @@ private_release_write_compatibility_manifest() {
     --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
     --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" \
     --arg source_set_id "$(jq -er '.release.source_set_id' "${manifest_file}")" \
+    --arg wrapper_version "$(jq -er '.release.wrapper_version' "${release_lock}")" \
     --arg code_oss_version "$(jq -er '.runtime.code_oss' "${manifest_file}")" \
     --arg vscodium_version "$(jq -er '.runtime.host' "${manifest_file}")" \
     --arg dbcode_version "$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")" \
@@ -690,12 +693,12 @@ private_release_write_compatibility_manifest() {
       {
         schema_version: 1,
         created_at_utc: $created_at_utc,
-        scope: "private-personal-release",
+        scope: "public-host-release",
         transfer: {
-          channel: "authenticated-github-draft-only",
-          draft_required: true,
-          public_download: false,
-          owned_devices_only: true
+          channel: "github-published-release",
+          draft_required: false,
+          public_download: true,
+          owned_devices_only: false
         },
         source: {
           tag: $source_tag,
@@ -706,6 +709,7 @@ private_release_write_compatibility_manifest() {
           compiled_host_input_id: $compiled_host_input_id
         },
         release: {
+          wrapper_version: $wrapper_version,
           release_set_id: $release_set_id,
           source_set_id: $source_set_id,
           code_oss_version: $code_oss_version,
@@ -758,14 +762,14 @@ private_release_write_compatibility_manifest() {
           unofficial_wrapper: true,
           dbcode_included: false,
           licence_or_profile_included: false,
-          public_application_release: false,
+          public_application_release: true,
           apple_identified_or_notarized: false
         }
       }
     ' > "${output_file}"
 }
 
-private_release_validate_compatibility_manifest() {
+host_release_validate_compatibility_manifest() {
   local compatibility_file="$1"
   local expected_file="$2"
 
@@ -774,18 +778,18 @@ private_release_validate_compatibility_manifest() {
     return 1
   }
   cmp -s <(jq -S . "${compatibility_file}") <(jq -S . "${expected_file}") || {
-    echo "The compatibility manifest does not describe this exact private release." >&2
+    echo "The compatibility manifest does not describe this exact host release." >&2
     return 1
   }
 }
 
-private_release_assert_sanitized_metadata() {
+host_release_assert_sanitized_metadata() {
   local metadata_file
   local secret_pattern='-----BEGIN (RSA |EC |OPENSSH |DSA |ENCRYPTED )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}'
   local private_path_pattern='/(Users|home)/[A-Za-z0-9._-]+/|/(private/)?var/folders/'
 
   for metadata_file in "$@"; do
-    private_release_assert_file "${metadata_file}" "A release metadata asset" || return 1
+    host_release_assert_file "${metadata_file}" "A release metadata asset" || return 1
     if rg -a -q -- "${secret_pattern}|${private_path_pattern}" "${metadata_file}"; then
       echo "A release metadata asset contains a private path, private key, or live-token pattern: ${metadata_file}" >&2
       return 1

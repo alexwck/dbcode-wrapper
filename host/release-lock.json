@@ -1,5 +1,5 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "target": {
     "platform": "darwin",
     "architecture": "arm64"
@@ -36,10 +36,23 @@
     "electron_version": "42.2.0"
   },
   "release": {
+    "wrapper_version": "0.1.3",
     "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.4",
     "compatibility_status": "candidate",
     "profile_schema_version": 1,
     "validation_issue": "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130"
+  },
+  "distribution": {
+    "channel": "github-published-release",
+    "repository": "alexwck/dbcode-wrapper",
+    "public_download": true,
+    "dbcode_bundled": false,
+    "release_assets": [
+      "dmg",
+      "checksum"
+    ],
+    "approved_author_email": "36098488+alexwck@users.noreply.github.com",
+    "approved_license_sha256": "3ab0b2551a9d8f06139fe0e992c123733889ffc6be5996467b7bf86f7098010d"
   },
   "extension": {
     "dbcode": {

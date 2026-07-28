@@ -46,7 +46,7 @@ Before changing behaviour, read:
 - Before hiding or removing a DBCode command, view, menu, or context-menu action, check the official DBCode documentation, sanitized contribution evidence already captured by maintained policy or tests, `host/dbcode-feature-policy.json`, and rendered behaviour.
 - Remove only a duplicate or proven-broken wrapper route. Keep at least one working DBCode-owned route to every retained capability.
 - PostgreSQL, DuckDB, Parquet, SQLite, and notebooks are representative acceptance checks, not a connection allowlist. The unchanged DBCode connection catalogue remains authoritative.
-- DBCode owns database, notebook, AI, MCP, account, and licence behaviour. The wrapper packages, pins, integrates, and exposes those features without recreating them.
+- DBCode owns database, notebook, AI, MCP, account, and licence behaviour. The wrapper pins, verifies, integrates, and exposes those features without recreating or redistributing them.
 - Treat the DBCode documentation as a capability map, not a backlog for reimplementing DBCode inside the wrapper.
 - Add wrapper-owned behaviour only for application identity, profile isolation, packaging and verification, or exposing a DBCode-owned route. Prefer DBCode's implementation whenever it already owns the workflow.
 - Record capability evidence as `declared`, `reachable`, `rendered`, or `live`. Opening a route does not prove the complete workflow.
@@ -86,7 +86,11 @@ Before changing behaviour, read:
 - Prompt-free approval accepts only the schema-3 acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
 - The old manual proof recorder, same-Mac acceptance generator, debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are retired. Keep their generated historical evidence protected, but do not restore a person-driven release system.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
-- For an authenticated GitHub draft transfer, verify `draft: true`, no publication timestamp, exact uploaded sizes and digests, authenticated owner access, anonymous denial, and the absence of any workflow that can publish it.
+- Publish a release only when the annotated tag, release lock, build manifest, signed app, final acceptance report, package, and approval identify the same release set.
+- A public release is a normal GitHub release, not a draft or prerelease. Upload only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
+- Never upload DBCode, profiles, compatibility evidence, verification receipts, or other local release evidence. DBCode remains external and each user obtains it from its official source under their own licence.
+- Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing and the complete source gate once from the final exact source.
+- Use one persistent generated QA profile and no human-required deployment tests. Do not repeat real-profile, second-Mac, database, kernel, model, sign-in, licence, or macOS prompt checks for an unchanged wrapper boundary.
 
 ### Paths and temporary work
 
@@ -98,7 +102,7 @@ Before changing behaviour, read:
 
 ## Public and private data
 
-Never inspect, copy into Git, or publish a DBCode VSIX or installed package, licence or account data, credentials, Keychain evidence, private profiles, local databases, signing secrets, built applications, DMGs, or raw real-profile evidence. Sanitized version numbers, public metadata, cryptographic digests, and pass or fail summaries are allowed where the issue tracker already requires them.
+Never inspect, copy into Git, or publish a DBCode VSIX or installed package, licence or account data, credentials, Keychain evidence, private profiles, local databases, signing secrets, or raw real-profile evidence. A normal public release may contain only the independently verified host-only DMG and its checksum. Keep compatibility manifests, verification receipts, other generated evidence, and every DBCode package outside public release assets. Sanitized version numbers, public metadata, cryptographic digests, and pass or fail summaries are allowed where the issue tracker already requires them.
 
 Do not use OpenKnowledge sync, share links, or another publishing route to bypass `script/check_public_push_readiness.sh`.
 
@@ -115,7 +119,7 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 - Follow `docs/agents/verification-policy.md` when choosing the smallest useful gate.
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
 - Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
-- Gate-composition, public-push, private-package, and deep rollback tests are change-owned checks, not part of the default development or deployment path.
+- Gate-composition, public-push, host-package, publishing, and deep rollback tests are change-owned checks, not part of the default development path.
 - Built-host changes: run the static host smoke and the one-profile rendered focused-shell smoke.
 - Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
 - Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.
@@ -124,7 +128,7 @@ Full builds are expensive. Prefer `build_host.sh`, which reuses an exact Compile
 
 ## Documentation sync
 
-When current behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the current `## Answer` of affected resolved issues. Preserve dated issue comments as historical evidence even when they describe an older state.
+When wrapper behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the current `## Answer` of affected resolved issues. A routine version bump updates only the release specification, changed compatibility policy, public release notes, and required evidence; do not reopen or rewrite resolved issues for unchanged behaviour. Preserve dated issue comments as historical evidence even when they describe an older state.
 
 ## OpenKnowledge
 
@@ -133,7 +137,7 @@ When OpenKnowledge is initialized:
 - Use `wiki/OVERVIEW.md` and its linked pages for orientation, but check its `source_commit` before relying on it. Source, policies, and tests remain authoritative.
 - Use OpenKnowledge tools for reads, searches, creates, edits, moves, and deletions under `wiki/**/*.md`. Use normal repository tools for source code and for Markdown outside `wiki/`.
 - Keep `.scratch/` as the only issue tracker. Do not seed another proposal, decision, specification, or task lifecycle.
-- Refresh the wiki after meaningful changes to architecture, modules, product flows, profile handling, release handling, or verification. Do not refresh it for wording-only or fixture-only changes.
+- Refresh the wiki after meaningful changes to architecture, modules, product flows, profile handling, or verification. A routine version bump, tag, or published-release record does not need a wiki refresh unless it changes one of those subjects. Do not refresh it for wording-only or fixture-only changes.
 - After generation or refresh, require complete overview navigation, zero dead links, `ok preview`, and the public source-tree and exact-ref readiness gates.
 - Do not use OpenKnowledge GitHub sync, share links, authentication, semantic search, or diagnostic uploads for this repository.
 - OpenKnowledge must remain optional. Builds, tests, releases, and application startup must work when it is not installed.

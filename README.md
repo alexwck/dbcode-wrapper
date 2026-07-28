@@ -1,6 +1,6 @@
 # DBCode Wrapper
 
-DBCode Wrapper is a personal macOS host for running the official, unchanged DBCode extension as a focused database application. This is not an official DBCode product, fork, or endorsement.
+DBCode Wrapper is an unofficial macOS host for running the official, unchanged DBCode extension as a focused database application. This is not an official DBCode product, fork, or endorsement.
 
 ## Architecture at a glance
 
@@ -25,25 +25,25 @@ Code OSS is the extension host and application runtime. VSCodium supplies the re
 
 Database Explorer is persistent workspace navigation. Clicking a query editor, the main canvas, or a DBCode result grid keeps it open. Its own toolbar action toggles it closed, and another DBCode action may replace it when that action uses the same sidebar. Temporary DBCode drawers still dismiss on an outside click or Escape.
 
-## Public source, personal application
+## Public source and host releases
 
-This public repository contains the wrapper source, Code OSS patches, build scripts, tests, and project notes. DBCode is not included. A valid DBCode licence is still required, and the approved extension is obtained separately from its official source into the current user's private profile.
+This repository contains the wrapper source, Code OSS patches, build scripts, tests, project notes, and normal published host-only releases. DBCode is not included. Each user needs a valid DBCode licence, and the app obtains the pinned unchanged extension from its official Open VSX source into that user's private profile.
 
-No public app download is provided. Built applications, DBCode packages, licence or account data, database credentials, user profiles, local databases, signing identities, and raw real-profile evidence must stay outside Git. Sanitized issue notes may record versions, artifact digests, and pass or fail summaries. A personal application build may be transferred privately only between Macs owned by the licence holder.
+Published releases contain only the wrapper host. DBCode packages, licence or account data, database credentials, user profiles, local databases, signing identities, and raw real-profile evidence stay outside Git and outside release assets. Sanitized issue notes may record versions, artifact digests, and pass or fail summaries.
 
-The current app targets Apple silicon. It uses a current-user self-signed certificate and is not identified or notarized by Apple. Installation on another owned Mac therefore requires checksum verification and manual approval through macOS Privacy & Security.
+The current app targets Apple silicon. It is self-signed and is not identified or notarized by Apple. Verify the published checksum before opening it. macOS may then require System Settings > Privacy & Security > Open Anyway.
 
-A fresh owned Mac does not need the source repository or an extension screen. The release-ready app presents one focused first-run action that obtains only the exact pinned DBCode and Python/Jupyter packages from Open VSX, verifies their public records, engine compatibility, sizes, SHA-256 digests, public key, signatures, safe archive entries, and manifests, and installs them in that Mac's private profile. Scripted preparation and the Finder first-run action use the same package verifier. DBCode itself, the licence, credentials, connections, and profiles remain outside the app and outside the DMG.
+A fresh Mac does not need the source repository or an extension screen. The app presents one focused first-run action that obtains only the exact pinned DBCode and Python/Jupyter packages from Open VSX, verifies their public records, engine compatibility, sizes, SHA-256 digests, public key, signatures, safe archive entries, and manifests, and installs them in that user's private profile. Scripted preparation and the Finder first-run action use the same package verifier. DBCode itself, the licence, credentials, connections, and profiles remain outside the app and outside the DMG.
 
 ## Repository guide
 
 - `host/` contains release policy, the maintained Code OSS and VSCodium patch overlay, wrapper extensions, test fixtures, and the detailed host guide.
-- `script/` contains build, verification, profile, release, upgrade, rollback, and private-package commands.
+- `script/` contains build, verification, profile, release, upgrade, rollback, packaging, and publishing commands.
 - `docs/` contains architecture, design, learning, security, product coverage, and agent guidance.
 - `.scratch/` is the local Markdown issue tracker and implementation history.
 - `.build/`, `dist/`, and `output/` are generated locally and never belong in the public source repository. Inspect or plan cleanup through `./script/generated_workspace.sh`; do not remove these paths ad hoc.
 
-The newest approved release is the `v0.1.2` package. Its five host-only transfer assets remain in an unpublished authenticated draft for the repository owner; no application release is public. It pins DBCode `1.36.4`, Code OSS `1.126.0`, and VSCodium packaging `1.126.04524` for Apple silicon. Code OSS `1.130.0` remains visible as **Not tested** until compatible VSCodium packaging exists. Approval and transfer do not mean that the installed app changed. These are compatibility statements for exact release sets, not permanent promises about future upstream versions. PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are useful optional checks, not a deployment allowlist. Every connection type contributed by the installed unchanged DBCode version must remain available.
+The legacy `v0.1.2` package remains an unpublished owner-only draft. It will not be republished because its immutable metadata records a private transfer. `v0.1.3` is the first normal public host-release candidate. It keeps DBCode `1.36.4`, Code OSS `1.126.0`, and VSCodium packaging `1.126.04524` for Apple silicon. Code OSS `1.130.0` remains visible as **Not tested** until compatible VSCodium packaging exists. These are compatibility statements for exact release sets, not permanent promises about future upstream versions. PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are useful optional checks, not a deployment allowlist. Every connection type contributed by the installed unchanged DBCode version must remain available.
 
 The [DBCode capability coverage guide](docs/product/dbcode-capability-coverage.md) maps the official feature families to wrapper evidence and known gaps. The [AI data-sharing guide](docs/security/ai-data-sharing.md) explains what AI and MCP features may send outside the database. These guides describe the wrapper boundary; the installed DBCode version and maintained feature policy remain authoritative.
 
@@ -141,42 +141,55 @@ Create the prompt-free acceptance report from the exact signed app and rendered 
   --output .build/acceptance/fast-release/final-acceptance-report.json
 ```
 
-After an annotated source tag, its exact signed app, and that automated acceptance report agree, create the five host-only Private Personal Release assets:
+After an annotated source tag, its exact signed app, and that automated acceptance report agree, create the five local host-release files:
 
 ```sh
-./script/package_private_release.sh \
+./script/package_host_release.sh \
   --app "dist/DBCode Wrapper.app" \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
-  --acceptance .build/acceptance/fast-release/final-acceptance-report.json \
+  --acceptance .build/acceptance/fast-release/v0.1.3/final-acceptance-report.json \
   --source-repository . \
-  --source-tag <accepted-source-tag> \
-  --output-dir .build/private-release/final
+  --source-tag v0.1.3 \
+  --output-dir .build/host-release/v0.1.3
 ```
 
-The package command produces one read-only DMG, its SHA-256 file, a compatibility manifest, install and rollback notes, and an independent verification receipt. It refuses a source tag that does not identify the manifest's exact source revision, incomplete automated evidence, an app without focused first-run runtime setup, a DMG at or above GitHub's 2 GiB asset limit, or any bundled DBCode package, profile, extension cache, licence state, credential, database, Keychain export, or signing secret. These generated assets stay outside Git and may be uploaded only to an authenticated GitHub draft release that is never published.
+The package command produces one read-only DMG, its SHA-256 file, a compatibility manifest, install and rollback notes, and an independent verification receipt. It refuses a source tag that does not identify the manifest's exact source revision, incomplete automated evidence, an app without focused first-run runtime setup, a DMG at or above GitHub's 2 GiB asset limit, or any bundled DBCode package, profile, extension cache, licence state, credential, database, Keychain export, or signing secret. All five files stay outside Git. Only the DMG and checksum are public release assets; the compatibility and verification evidence remains local.
 
 After the mounted package verification passes, record the exact package as approved:
 
 ```sh
-./script/approve_private_release.sh \
+./script/approve_host_release.sh \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
-  --acceptance .build/acceptance/fast-release/final-acceptance-report.json \
-  --dmg <private-release.dmg> \
+  --acceptance .build/acceptance/fast-release/v0.1.3/final-acceptance-report.json \
+  --dmg <host-release.dmg> \
   --compatibility <compatibility-manifest.json> \
   --verification <verification-receipt.json> \
   --source-repository . \
-  --source-tag <accepted-source-tag> \
+  --source-tag v0.1.3 \
   --history host/approved-release-history.json \
   --confirm-release-set <exact-release-set-id> \
-  --output-dir .build/acceptance/fast-release/approval
+  --output-dir .build/acceptance/fast-release/v0.1.3-approval
 ```
 
 Approval writes an attestation, one Approved Release Set record, and the merged approved history under ignored generated output. It does not launch or install the app, approve a macOS prompt, or write the Standalone DBCode Profile. Installation remains a separate user-controlled step.
 
+Publish the approved candidate as a normal release in this repository:
+
+```sh
+./script/publish_release.sh \
+  --source-repository . \
+  --source-tag v0.1.3 \
+  --release-lock host/release-lock.json \
+  --assets-dir .build/host-release/v0.1.3 \
+  --publish
+```
+
+The publisher pushes `main` and the annotated tag, uploads only the DMG and checksum, and then checks the public release state, asset sizes, and SHA-256 digests. It does not create a draft or prerelease.
+
 ## Rights and third-party software
 
-DBCode remains proprietary software governed by DBCode's own terms. Code OSS, VSCodium, Python/Jupyter extensions, and other third-party components retain their respective licences and notices. Making this repository visible does not grant a licence to DBCode and does not authorize redistribution of the DBCode extension.
+DBCode remains proprietary software governed by DBCode's own terms. Code OSS, VSCodium, Python/Jupyter extensions, and other third-party components retain their respective licences and notices. This repository and its host-only releases do not grant a DBCode licence and do not redistribute the DBCode extension.
 
-The original wrapper code and documentation are published under the repository's All Rights Reserved [`LICENSE`](LICENSE). Public visibility allows source review but grants no permission to use, copy, modify, or redistribute that original material or a built DBCode Wrapper application.
+The original wrapper code and documentation remain under the repository's All Rights Reserved [`LICENSE`](LICENSE). Publishing a host-only release does not make this an official DBCode product or grant rights to DBCode.
