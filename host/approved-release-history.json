@@ -139,6 +139,56 @@
         "production_profile_written": false,
         "installed_app_changed": false
       }
+    },
+    {
+      "schema_version": 2,
+      "id": "code-oss-1.126.0-dbcode-1.36.4-source-241d78006db1faf914251836b3557bffb02d8eae6b67d9546f3e9f8da5e0f720-artifact-3f3c1dc55d6b557af8ce28047cfdf97e66189f1ce243eb791700550d03f6b1bb",
+      "source_set_id": "code-oss-1.126.0-dbcode-1.36.4-source-241d78006db1faf914251836b3557bffb02d8eae6b67d9546f3e9f8da5e0f720",
+      "compatibility_status": "approved",
+      "source_commit": "2027222d9406307e1ef4e0a3f54f1464ef031583",
+      "target": {
+        "platform": "darwin",
+        "architecture": "arm64"
+      },
+      "profile": {
+        "schema_version": 1
+      },
+      "manifest": {
+        "schema_version": 6,
+        "build_manifest_sha256": "ba7badc2f88a0ac6c3f909d9ccd0a369129be8eee61b88c343f421c3214a5eff",
+        "candidate_manifest_sha256": "ba7badc2f88a0ac6c3f909d9ccd0a369129be8eee61b88c343f421c3214a5eff",
+        "approval_attestation_sha256": "4caaf4ed2bb9e36423c9488502495ad976cabbc6c89fc870bfd33b95b2fc38ae",
+        "artifact_sha256": "3f3c1dc55d6b557af8ce28047cfdf97e66189f1ce243eb791700550d03f6b1bb",
+        "shell_patch_revision": "83b99d53fea0cd4f3bddca6ba1a1eb7be9ef293a0a23c606a7478a997c6d4650",
+        "overlay_sha256": "8eaefc2d80335492d4054e1e5d972383b6a8cfcb8bb3fd005c62e76fee53eca7",
+        "source_snapshot_sha256": "1319a73d869d467b355d37072a2cc7b1b9c1003d2574e0020cf484f9682c788a",
+        "compiled_host_input_id": "compiled-host-582edeb441e3d6c081c6a2c5bd278cab7c65c1f3cd2abd563d6492cc6f1a088d",
+        "packaging_status": "built-and-signed"
+      },
+      "host": {
+        "vscodium_tag": "1.126.04524",
+        "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+        "code_oss_tag": "1.126.0",
+        "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
+      },
+      "dbcode": {
+        "id": "dbcode.dbcode",
+        "version": "1.36.4",
+        "vsix_sha256": "d6264560667a25de8344ba6a2ffe3b1964ffe20bffa758f4415d5269bbdbabf1",
+        "signature_archive_sha256": "64b4cdbc24e9d18c40a546d1e9316e8c8a45c25906f6bd6e1ca5d13ce071d2f6"
+      },
+      "approval": {
+        "approved_at": "2026-07-28T18:30:35Z",
+        "validation_issue": "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130",
+        "proof_sha256": "33dc1d0ff1f800a40ed2461c3d4fa22d3f627fb58a63ff22963bb76d2782005e",
+        "gate_receipt_sha256": "3b1f2abfe6b812d73aaa1f20a60c90a34c5786f67249808b4798c98f6c12e92f",
+        "mode": "prompt-free-public-host-release",
+        "source_tag": "v0.1.3",
+        "compatibility_manifest_sha256": "e30fdd60f3773176f54ffb8d7f92059eb694cf51c327ad7ae5dd7b24e0a19022",
+        "release_lock_sha256": "24677d571165469b9f2c30f2812857a82c33c8a1a05287264ada9bc7621a4134",
+        "production_profile_written": false,
+        "installed_app_changed": false
+      }
     }
   ]
 }
