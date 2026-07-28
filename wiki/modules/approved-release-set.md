@@ -9,13 +9,13 @@ tags:
   - approval
 wiki_profile: public
 wiki_depth: standard
-source_commit: c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8
+source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
 ---
 ## Summary
 
 The Approved Release Set module validates durable approval history and turns a fully verified prompt-free package into an approved compatibility record. Matching version strings alone cannot satisfy the contract. The writer first gets validated purpose records from the Release Specification and Private Personal Release modules, then binds them to the exact package receipt and a no-install attestation.
 
-Maintained history now contains exact private release `v0.1.1`, with DBCode `1.36.4` on Code OSS `1.126.0`. Its record says explicitly that approval did not install the app or write the production profile.
+Maintained history now contains exact private release `v0.1.2`, with DBCode `1.36.4` on Code OSS `1.126.0`. Its record says explicitly that approval did not install the app or write the production profile.
 
 ## Responsibilities
 
@@ -38,7 +38,7 @@ The JavaScript API exposes approved-record and history validators, exact candida
 
 - [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/extensions/dbcode-wrapper-release-status/approved-release-set.js) — approved-history, exact-match, prompt-free record, and package-check logic.
 - [`approved_release_set.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/approved_release_set.cjs) — bounded adapter that obtains validated purpose records before writing.
-- [`host/approved-release-history.json`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/approved-release-history.json) — public history safe to bundle.
+- [`host/approved-release-history.json`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/host/approved-release-history.json) — public history safe to bundle.
 - [`script/test_approved_release_set.mjs`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/test_approved_release_set.mjs) — history, exact-match, prompt-free approval, and retired-entry-point tests.
 
 ## Dependencies

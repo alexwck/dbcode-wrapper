@@ -114,3 +114,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: b40ed3f (was b9186c1)
 - Coverage: one Open VSX verifier shared by Finder first-run and release-script adapters; complete package, engine, signature, manifest, and ZIP checks; fast prompt-free synthetic matrix; focused real-cache verification
 - Pages: [Overview](./OVERVIEW.md) and [Focused Runtime Setup](./modules/focused-runtime-setup.md)
+
+## 2026-07-28: refresh
+
+- Profile: public/standard
+- source_commit: 80fdddd (was b40ed3f)
+- Coverage: exact `v0.1.2` approval; prompt-free cached deployment; materialized-source isolation from foreign generated worktrees; no installation or production-profile write
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set](./modules/approved-release-set.md), [Verification Harness](./modules/verification-harness.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)

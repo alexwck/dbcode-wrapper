@@ -9,7 +9,7 @@ tags:
   - transfer
 wiki_profile: public
 wiki_depth: standard
-source_commit: ea091613c180550d6e6df9120b2a9b4fe66ffcc2
+source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
 ---
 ## Summary
 
@@ -54,7 +54,7 @@ sequenceDiagram
 11. On the target Mac, verify the checksum, install the host, then install the pinned external packages into a new Standalone DBCode Profile.
 12. Handle Gatekeeper, Safe Storage, licence, or account prompts as normal user setup, outside automated deployment.
 
-The current checkpoint completed steps 1–9 for private release `v0.1.1`, with DBCode `1.36.4` on the retained host. The app and production profile were not changed.
+The current checkpoint completed steps 1–9 for private release `v0.1.2`, with DBCode `1.36.4` on the retained host. The app and production profile were not changed.
 
 ## Failure modes
 

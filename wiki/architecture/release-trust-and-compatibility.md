@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
+source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
 ---
 ## Summary
 
@@ -55,6 +55,7 @@ Core transition checks live in [`release_specification.sh`](https://github.com/a
 - Assembly always creates fresh profile, runtime, release, signature, manifest, and release identity records.
 - Static smoke regenerates and compares the packaged profile identity before any rendered launch.
 - Final acceptance re-enters the manifest's materialized source and reruns development and static checks.
+- It may reuse ignored launcher caches and the pinned toolchain, but source checks ignore the launcher's mutable `.build/work` tree.
 - The rendered report is reusable only for the same exact release-set ID.
 - Human prompts and external services are normal app-use gates, not deployment tests.
 - One persistent generated `qa` profile owns automated GUI checks.

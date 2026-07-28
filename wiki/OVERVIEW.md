@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: b40ed3f8f193a0397fd15d298c68f640abc2afde
+source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
 tags:
   - wiki
   - overview
@@ -12,11 +12,13 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`b40ed3f`](https://github.com/alexwck/dbcode-wrapper/tree/b40ed3f8f193a0397fd15d298c68f640abc2afde). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`80fdddd`](https://github.com/alexwck/dbcode-wrapper/tree/80fdddd0bae6cd06edffbf64063124c2d2afd7d1). Check source and tests when details disagree.
 
-The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
+The newest maintained approval is private release `v0.1.2`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
+
+Exact-source acceptance may reuse ignored caches and the pinned toolchain from the launcher checkout. Source checks stay inside the materialized release commit and never treat the launcher's mutable `.build/work` tree as source evidence.
 
 Profile Layout now consumes one small identity generated from the Release Specification. Shell, bundled JavaScript, query storage, recovery, static smoke, and rollback no longer keep competing application or profile constants. Profile-only identity changes stay in fast release assembly, while query storage changes rebuild the host because the focused shell embeds them.
 

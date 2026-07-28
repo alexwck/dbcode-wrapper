@@ -9,11 +9,11 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
+source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
 ---
 ## Summary
 
-Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts, one static signed-host smoke, and one persistent-profile rendered smoke. Optional deeper diagnostics are separate developer work and never block deployment.
+Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts while working, one persistent-profile rendered smoke, exact-source final acceptance, and verified packaging. Final acceptance owns the static signed-host check, and packaging owns mounted-image verification, so the release path does not repeat them. Optional deeper diagnostics are separate developer work and never block deployment.
 
 ## Responsibilities
 
@@ -26,6 +26,7 @@ Verification protects wrapper-owned seams without retesting the whole DBCode pro
 - Reuse one generated `qa` profile for rendered shell checks with a mock Keychain.
 - Render Connections, the unchanged New Connection catalogue, Database Explorer, SQL-file opening, Query Builder, notebook, AI, MCP, and settings routes without activating prompt-prone work.
 - Bind final acceptance to the exact source snapshot, app digest, manifest, signature, extension inventory, and release-set ID.
+- Let a materialized source reuse ignored caches and the pinned toolchain, but never use another checkout's mutable `.build/work` tree as source evidence.
 
 Representative fixtures do not narrow DBCode support. Live databases, kernels, models, accounts, OAuth, secrets, mutation, and macOS prompts stay outside the normal deployment path.
 
@@ -42,6 +43,8 @@ The manual proof recorder, same-Mac generator, debugger fixture, four-pair runne
 - [`host/qa/rendered-session-support.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/qa/rendered-session-support.cjs) — one-profile rendered session support.
 - [`host/qa/ticket-03-rendered.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/qa/ticket-03-rendered.cjs) — focused UI checks.
 - [`script/test_fast_release_acceptance_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/test_fast_release_acceptance_contract.sh) — final exact-release acceptance contract.
+- [`script/test_patch_plan.sh`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/script/test_patch_plan.sh) — committed patch-plan checks that ignore foreign generated worktrees.
+- [`script/test_development_gate_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/script/test_development_gate_contract.sh) — gate composition and foreign-worktree regression.
 
 ## Dependencies
 
