@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: b9186c13138e4da51d4390da4ed04af59b55586f
+source_commit: b40ed3f8f193a0397fd15d298c68f640abc2afde
 tags:
   - wiki
   - overview
@@ -12,13 +12,15 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`b9186c1`](https://github.com/alexwck/dbcode-wrapper/tree/b9186c13138e4da51d4390da4ed04af59b55586f). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`b40ed3f`](https://github.com/alexwck/dbcode-wrapper/tree/b40ed3f8f193a0397fd15d298c68f640abc2afde). Check source and tests when details disagree.
 
 The newest maintained approval is private release `v0.1.1`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
 
 Profile Layout now consumes one small identity generated from the Release Specification. Shell, bundled JavaScript, query storage, recovery, static smoke, and rollback no longer keep competing application or profile constants. Profile-only identity changes stay in fast release assembly, while query storage changes rebuild the host because the focused shell embeds them.
+
+Open VSX package checks also have one owner. Finder first-run setup and the release script keep thin acquisition adapters, but both use the same verifier for package identity, engine compatibility, signatures, manifests, and ZIP safety. The default synthetic matrix is fast and prompt-free; real cached packages are checked only when verification changes.
 
 Generated cleanup is also conservative and prompt-free. [Generated Workspace Retention](modules/generated-workspace-retention.md) keeps inventory and cleanup plans read-only by default. An explicit `--apply` can remove one exact validated expired path, while class-wide apply is refused. The obsolete short-path catalogue profile, abandoned smoke-backup root, and Finder metadata have been removed. Reusable caches, worktrees, current QA evidence, accepted release assets, and historical upgrade evidence remain protected.
 
@@ -72,7 +74,7 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Profile Layout and Setup](modules/profile-layout-and-setup.md) — generated profile identity, safe paths, and one testable setup, migration, and recovery workflow.
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
-- [Focused Runtime Setup](modules/focused-runtime-setup.md) — verified DBCode and notebook package installation.
+- [Focused Runtime Setup](modules/focused-runtime-setup.md) — shared package verification with thin acquisition adapters.
 - [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
 - [Private Personal Release](modules/private-personal-release.md) — owner-only packaging and transfer safeguards.
 - [Generated Workspace Retention](modules/generated-workspace-retention.md) — protected output ownership, dry-run planning, and exact-path cleanup.

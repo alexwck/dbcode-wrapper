@@ -9,18 +9,18 @@ tags:
   - open-vsx
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: b40ed3f8f193a0397fd15d298c68f640abc2afde
 ---
 ## Summary
 
-Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages into the external Standalone DBCode Profile. Packages are not opportunistic marketplace installs: every identity, URL, size, digest, signature, and public-key binding comes from the Release Specification.
+Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages into the external Standalone DBCode Profile. Packages are not opportunistic marketplace installs: every identity, URL, size, digest, signature, and public-key binding comes from the Release Specification. Finder first-run setup and the release script use one shared verifier, so they cannot drift into different security policies.
 
 ## Responsibilities
 
 - Validate the generated runtime-extension configuration exactly.
 - Require official Open VSX API, download, signature, checksum, and public-key URLs.
 - Download within size, redirect, and timeout limits during normal setup.
-- Verify registry metadata, archive identity, SHA-256, signature, and approved public key.
+- Route both acquisition paths through one verifier for registry metadata, Code OSS engine compatibility, package size, digests, approved keys, Ed25519 signatures, signature manifests, safe ZIP entries, and VSIX identity.
 - Compare installed extensions with the exact pinned set.
 - Cache only verified packages in a safe owned directory.
 - Install missing packages externally with extension-pack dependency installation disabled.
@@ -28,18 +28,19 @@ Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages
 
 ## Public API / entry points
 
-`runtimeSetup.js` owns configuration, acquisition, verification, and inventory logic. `runtimeSetupController.js` connects those checks to Code OSS extension management and the setup view.
+`openVsxPackageVerifier.js` owns the deep package checks and safe errors. `runtimeSetup.js` owns Finder first-run configuration, bounded acquisition, private caching, and inventory. `runtimeSetupController.js` connects that adapter to Code OSS extension management and the setup view. `verify_openvsx_package.cjs` is the file adapter used by release scripts.
 
 ## Key files
 
-- [`runtimeSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js) — pure validation and acquisition logic.
-- [`runtimeSetupController.js`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js) — installation orchestration.
-- [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/release-lock.json) — exact DBCode and notebook package records.
-- [`script/verify_openvsx_package.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/verify_openvsx_package.sh) — release-side package verification.
+- [`openVsxPackageVerifier.js`](https://github.com/alexwck/dbcode-wrapper/blob/b40ed3f8f193a0397fd15d298c68f640abc2afde/host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js) — shared security-critical verification.
+- [`runtimeSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/b40ed3f8f193a0397fd15d298c68f640abc2afde/host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js) — Finder first-run acquisition and inventory adapter.
+- [`runtimeSetupController.js`](https://github.com/alexwck/dbcode-wrapper/blob/b40ed3f8f193a0397fd15d298c68f640abc2afde/host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js) — installation orchestration.
+- [`verify_openvsx_package.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/b40ed3f8f193a0397fd15d298c68f640abc2afde/script/verify_openvsx_package.cjs) — release-side file adapter.
+- [`host/release-lock.json`](https://github.com/alexwck/dbcode-wrapper/blob/b40ed3f8f193a0397fd15d298c68f640abc2afde/host/release-lock.json) — exact DBCode and notebook package records.
 
 ## Dependencies
 
-The module depends on Node crypto and HTTPS, Code OSS extension management, approved Open VSX keys, [Release Specification](release-specification.md), and [Profile Layout and Setup](profile-layout-and-setup.md). Default development and rendered deployment checks use local contracts and an existing QA profile; they do not download packages or request kernel permission.
+The module depends on Node crypto and HTTPS, Code OSS extension management, approved Open VSX keys, [Release Specification](release-specification.md), and [Profile Layout and Setup](profile-layout-and-setup.md). The default development gate runs a fast synthetic adversarial matrix through both adapters. The real cached-package gate runs only when verification changes. Rendered deployment checks reuse the generated QA profile; these checks do not request kernel permission or human input.
 
 ## Participates in
 

@@ -107,3 +107,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: b9186c1 (was ddaa6a0)
 - Coverage: prompt-free exact-path cleanup; plan-only class selection; removed Finder metadata, the retired catalogue profile, and the abandoned smoke-backup root; retained QA evidence, screenshots, caches, worktrees, release assets, rollback evidence, and historical upgrade evidence
 - Pages: [Overview](./OVERVIEW.md) and [Generated Workspace Retention](./modules/generated-workspace-retention.md)
+
+## 2026-07-28: refresh
+
+- Profile: public/standard
+- source_commit: b40ed3f (was b9186c1)
+- Coverage: one Open VSX verifier shared by Finder first-run and release-script adapters; complete package, engine, signature, manifest, and ZIP checks; fast prompt-free synthetic matrix; focused real-cache verification
+- Pages: [Overview](./OVERVIEW.md) and [Focused Runtime Setup](./modules/focused-runtime-setup.md)
