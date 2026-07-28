@@ -9,7 +9,7 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
+source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
 ---
 ## Summary
 
@@ -27,6 +27,7 @@ A Private Personal Release is a locally produced host-only package for Macs owne
 - Keep live app signature and architecture checks in packaging and mounted verification.
 - Create a generated approval bundle only after the exact acceptance, package, source tag, final receipt, and confirmation agree. Approval does not accept or recheck a build-app path.
 - Keep approval separate from installation and production-profile writes.
+- When transfer uses GitHub, require an unpublished authenticated draft, exact uploaded sizes and SHA-256 digests, a matching owner download, anonymous denial, and no publication workflow.
 - Keep final assets protected until the owning workflow releases them.
 
 ## Public API / entry points

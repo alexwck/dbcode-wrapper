@@ -121,3 +121,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 80fdddd (was b40ed3f)
 - Coverage: exact `v0.1.2` approval; prompt-free cached deployment; materialized-source isolation from foreign generated worktrees; no installation or production-profile write
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set](./modules/approved-release-set.md), [Verification Harness](./modules/verification-harness.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)
+
+## 2026-07-29: refresh
+
+- Profile: public/standard
+- source_commit: c0126c5 (was 80fdddd)
+- Coverage: authenticated unpublished `v0.1.2` draft transfer; exact five-asset integrity; owner download verification; anonymous denial; no publication workflow; no installation or profile change
+- Pages: [Overview](./OVERVIEW.md), [Private Personal Release](./modules/private-personal-release.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)

@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
 profile: public/standard
-source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
+source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
 tags:
   - wiki
   - overview
@@ -12,9 +12,9 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`80fdddd`](https://github.com/alexwck/dbcode-wrapper/tree/80fdddd0bae6cd06edffbf64063124c2d2afd7d1). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`c0126c5`](https://github.com/alexwck/dbcode-wrapper/tree/c0126c56cb42c18681d6ff2eb36f3834438a021d). Check source and tests when details disagree.
 
-The newest maintained approval is private release `v0.1.2`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
+The newest maintained approval is private release `v0.1.2`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Its five host-only transfer assets remain in an unpublished authenticated draft for the repository owner. Authenticated metadata and download verification matched the accepted local package, while anonymous access was denied. No application release is public, and approval and transfer did not install the app or write the production profile.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
 
