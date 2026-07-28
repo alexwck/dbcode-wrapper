@@ -74,6 +74,10 @@ for required_script in prepare_dbcode.sh verify_openvsx_package.sh test_profile_
     exit 1
   }
 done
+[[ -f "${REPO_ROOT}/script/verify_openvsx_package.cjs" ]] || {
+  echo "Missing Open VSX package verification adapter: script/verify_openvsx_package.cjs" >&2
+  exit 1
+}
 
 for retired_release_harness in \
   script/proof_dbcode.sh \

@@ -26,6 +26,7 @@ The fast source gate should stay comfortably below one minute on the normal deve
 - Keep fixtures local, deterministic, small, and free of private data.
 - Do not add a full rendered test for behaviour already proved by a source contract unless rendering is the risk.
 - Run gate-composition, public-push, private-package, or deep rollback tests only when a change owns that workflow.
+- The focused runtime-setup contract runs the small synthetic Open VSX mutation matrix through both acquisition adapters. The real cached-package verifier runs only when the verifier, an adapter, or the pinned runtime set changes.
 
 ## Prompts and external services
 

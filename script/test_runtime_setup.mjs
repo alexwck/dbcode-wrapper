@@ -16,16 +16,21 @@ const {
   assertManagedRuntimeInstalled,
   downloadBuffer,
   missingRuntimePackages,
-  readZipEntries,
   validateRuntimeConfiguration,
   verifyPackageAcquisition
 } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
+const {
+  readZipEntries
+} = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
 const {
   RuntimeSetupController,
   extensionInventory,
   parseCliInventory
 } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
 const { renderRuntimeSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupView.js');
+const {
+  verifyPackageRoot
+} = require('./verify_openvsx_package.cjs');
 
 function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
@@ -109,20 +114,45 @@ function fixture() {
     sha256Record: Buffer.from(`${packageRecord.sha256}\n`),
     publicKey: Buffer.from(publicKeyPem)
   };
+  const signatureEntries = [
+    { name: '.signature.sig', body: signature },
+    { name: '.signature.manifest', body: signatureManifest },
+    { name: '.signature.p7s', body: Buffer.from('unused compatibility record') }
+  ];
+  const vsixEntries = [
+    { name: 'extension/package.json', body: extensionManifest }
+  ];
   const readZipEntries = async (archive, names) => {
     if (archive === signatureArchive) {
       assert.deepEqual(names.sort(), ['.signature.manifest', '.signature.p7s', '.signature.sig']);
-      return new Map([
-        ['.signature.sig', signature],
-        ['.signature.manifest', signatureManifest],
-        ['.signature.p7s', Buffer.from('unused compatibility record')]
-      ]);
+      return new Map(signatureEntries.map(entry => [entry.name, entry.body]));
     }
     assert.equal(archive, vsix);
     assert.deepEqual(names, ['extension/package.json']);
-    return new Map([['extension/package.json', extensionManifest]]);
+    return new Map(vsixEntries.map(entry => [entry.name, entry.body]));
   };
-  return { acquisition, configuration, packageRecord, readZipEntries };
+  const fromBuffer = (archive, options, callback) => {
+    if (archive.equals(acquisition.signatureArchive)) {
+      fakeZip(signatureEntries)(archive, options, callback);
+      return;
+    }
+    if (archive.equals(acquisition.vsix)) {
+      fakeZip(vsixEntries)(archive, options, callback);
+      return;
+    }
+    callback(new Error('Unexpected synthetic archive.'));
+  };
+  return {
+    acquisition,
+    codeOssVersion: configuration.code_oss_version,
+    configuration,
+    fromBuffer,
+    packageRecord,
+    pinnedPublicKey: Buffer.from(publicKeyPem),
+    readZipEntries,
+    signatureEntries,
+    vsixEntries
+  };
 }
 
 function fakeHttps(routes) {
@@ -171,6 +201,9 @@ function fakeZip(entries) {
       zipFile.emit('entry', {
         fileName: fixtureEntry.name,
         uncompressedSize: fixtureEntry.size ?? fixtureEntry.body.length,
+        externalFileAttributes: fixtureEntry.externalFileAttributes,
+        generalPurposeBitFlag: fixtureEntry.generalPurposeBitFlag,
+        versionMadeBy: fixtureEntry.versionMadeBy,
         fixtureBody: fixtureEntry.body
       });
     });
@@ -181,6 +214,84 @@ function fakeZip(entries) {
   };
 }
 
+async function verifyThroughRuntimeAdapter(state) {
+  return verifyPackageAcquisition(
+    state.packageRecord,
+    state.acquisition,
+    state.configuration.public_keys,
+    {
+      codeOssVersion: state.codeOssVersion,
+      fromBuffer: state.fromBuffer
+    }
+  );
+}
+
+async function verifyThroughScriptAdapter(state) {
+  const testRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'dbcode Open VSX adapter '));
+  const packageRoot = path.join(testRoot, 'package with spaces');
+  const keyRoot = path.join(testRoot, 'approved keys');
+  try {
+    await fs.mkdir(packageRoot, { recursive: true });
+    await fs.mkdir(keyRoot, { recursive: true });
+    await Promise.all([
+      fs.writeFile(
+        path.join(packageRoot, 'registry.json'),
+        JSON.stringify(state.acquisition.registryRecord)
+      ),
+      fs.writeFile(path.join(packageRoot, 'package.vsix'), state.acquisition.vsix),
+      fs.writeFile(
+        path.join(packageRoot, 'signature.sigzip'),
+        state.acquisition.signatureArchive
+      ),
+      fs.writeFile(
+        path.join(packageRoot, 'package.sha256'),
+        state.acquisition.sha256Record
+      ),
+      fs.writeFile(
+        path.join(packageRoot, 'openvsx-public-key.pem'),
+        state.acquisition.publicKey
+      ),
+      fs.writeFile(
+        path.join(keyRoot, `openvsx-${state.packageRecord.public_key_id}.pem`),
+        state.pinnedPublicKey
+      )
+    ]);
+    return await verifyPackageRoot(
+      {
+        packageId: state.packageRecord.id,
+        packageRoot,
+        codeOssVersion: state.codeOssVersion,
+        packages: [state.packageRecord],
+        keyRoot
+      },
+      { fromBuffer: state.fromBuffer }
+    );
+  } finally {
+    await fs.rm(testRoot, { recursive: true, force: true });
+  }
+}
+
+async function assertBothAdaptersReject(mutate, expected, label) {
+  for (const [adapterName, verify] of [
+    ['in-app adapter', verifyThroughRuntimeAdapter],
+    ['script adapter', verifyThroughScriptAdapter]
+  ]) {
+    const state = fixture();
+    mutate(state);
+    await assert.rejects(
+      verify(state),
+      expected,
+      `${adapterName} accepted ${label}`
+    );
+  }
+}
+
+function replaceArchiveEntry(entries, name, body) {
+  const entry = entries.find(candidate => candidate.name === name);
+  assert.ok(entry, `Missing synthetic archive entry: ${name}`);
+  entry.body = body;
+}
+
 test('runtime setup accepts one exact pinned Open VSX package', async () => {
   const { acquisition, configuration, packageRecord, readZipEntries } = fixture();
   assert.deepEqual(validateRuntimeConfiguration(configuration), configuration);
@@ -188,7 +299,10 @@ test('runtime setup accepts one exact pinned Open VSX package', async () => {
     packageRecord,
     acquisition,
     configuration.public_keys,
-    { readZipEntries }
+    {
+      codeOssVersion: configuration.code_oss_version,
+      readZipEntries
+    }
   ));
 });
 
@@ -220,7 +334,10 @@ test('runtime setup rejects registry or package bytes that differ from the pinne
         registryRecord: { ...acquisition.registryRecord, version: '1.36.3' }
       },
       configuration.public_keys,
-      { readZipEntries }
+      {
+        codeOssVersion: configuration.code_oss_version,
+        readZipEntries
+      }
     ),
     /registry record/i
   );
@@ -229,10 +346,284 @@ test('runtime setup rejects registry or package bytes that differ from the pinne
       packageRecord,
       { ...acquisition, vsix: Buffer.from('changed package') },
       configuration.public_keys,
-      { readZipEntries }
+      {
+        codeOssVersion: configuration.code_oss_version,
+        readZipEntries
+      }
     ),
     /VSIX.*SHA-256/i
   );
+});
+
+test('runtime setup rejects a pinned package that needs a newer Code OSS host', async () => {
+  const { acquisition, configuration, packageRecord, readZipEntries } = fixture();
+  const incompatibleEngine = '^1.127.0';
+  const incompatiblePackage = {
+    ...packageRecord,
+    engine: incompatibleEngine
+  };
+  const incompatibleAcquisition = {
+    ...acquisition,
+    registryRecord: {
+      ...acquisition.registryRecord,
+      engines: { vscode: incompatibleEngine }
+    }
+  };
+  const incompatibleZipReader = async (archive, names) => {
+    const entries = await readZipEntries(archive, names);
+    if (archive !== acquisition.vsix) {
+      return entries;
+    }
+    return new Map([[
+      'extension/package.json',
+      Buffer.from(JSON.stringify({
+        publisher: incompatiblePackage.publisher,
+        name: incompatiblePackage.name,
+        version: incompatiblePackage.version,
+        engines: { vscode: incompatibleEngine }
+      }))
+    ]]);
+  };
+
+  await assert.rejects(
+    verifyPackageAcquisition(
+      incompatiblePackage,
+      incompatibleAcquisition,
+      configuration.public_keys,
+      {
+        codeOssVersion: configuration.code_oss_version,
+        readZipEntries: incompatibleZipReader
+      }
+    ),
+    /not compatible with Code OSS/i
+  );
+});
+
+test('both Open VSX acquisition adapters accept the same exact package', async () => {
+  await assert.doesNotReject(verifyThroughRuntimeAdapter(fixture()));
+  await assert.doesNotReject(verifyThroughScriptAdapter(fixture()));
+});
+
+test('both Open VSX acquisition adapters reject every changed registry invariant', async () => {
+  const mutations = [
+    ['namespace', state => { state.acquisition.registryRecord.namespace = 'changed'; }],
+    ['name', state => { state.acquisition.registryRecord.name = 'changed'; }],
+    ['version', state => { state.acquisition.registryRecord.version = '9.9.9'; }],
+    ['engine', state => { state.acquisition.registryRecord.engines.vscode = '^9.0.0'; }],
+    ['target platform', state => { state.acquisition.registryRecord.targetPlatform = 'darwin-arm64'; }],
+    ['timestamp', state => { state.acquisition.registryRecord.timestamp = '2026-01-01T00:00:00Z'; }],
+    ['verified publisher', state => { state.acquisition.registryRecord.verified = false; }],
+    ['pre-release status', state => { state.acquisition.registryRecord.preRelease = true; }],
+    ['deprecation status', state => { state.acquisition.registryRecord.deprecated = true; }],
+    ['download URL', state => { state.acquisition.registryRecord.files.download += '.changed'; }],
+    ['signature URL', state => { state.acquisition.registryRecord.files.signature += '.changed'; }],
+    ['SHA-256 URL', state => { state.acquisition.registryRecord.files.sha256 += '.changed'; }],
+    ['public-key URL', state => { state.acquisition.registryRecord.files.publicKey += '.changed'; }]
+  ];
+  for (const [label, mutate] of mutations) {
+    await assertBothAdaptersReject(mutate, /registry record/i, label);
+  }
+});
+
+test('both Open VSX acquisition adapters reject changed digests, sizes, and keys', async () => {
+  const replacementKey = () => crypto.generateKeyPairSync('ed25519').publicKey
+    .export({ type: 'spki', format: 'pem' });
+  const mutations = [
+    ['pinned VSIX digest', state => { state.packageRecord.sha256 = '0'.repeat(64); }, /VSIX SHA-256/i],
+    [
+      'pinned signature-archive digest',
+      state => { state.packageRecord.signature_archive_sha256 = '0'.repeat(64); },
+      /signature archive/i
+    ],
+    [
+      'pinned public-key digest',
+      state => { state.packageRecord.public_key_sha256 = '0'.repeat(64); },
+      /public key/i
+    ],
+    ['downloaded VSIX bytes', state => { state.acquisition.vsix = Buffer.from('changed'); }, /VSIX SHA-256/i],
+    [
+      'downloaded signature archive',
+      state => { state.acquisition.signatureArchive = Buffer.from('changed'); },
+      /signature archive/i
+    ],
+    [
+      'official SHA-256 record',
+      state => { state.acquisition.sha256Record = Buffer.from(`${'0'.repeat(64)}\n`); },
+      /official SHA-256 record/i
+    ],
+    [
+      'downloaded public key',
+      state => { state.acquisition.publicKey = replacementKey(); },
+      /public key/i
+    ],
+    [
+      'pinned public key',
+      state => {
+        const pem = replacementKey();
+        state.pinnedPublicKey = Buffer.from(pem);
+        state.configuration.public_keys[0].pem = pem.toString('utf8');
+      },
+      /public key/i
+    ],
+    [
+      'pinned package size',
+      state => { state.packageRecord.package_size += 1; },
+      /VSIX size/i
+    ]
+  ];
+  for (const [label, mutate, expected] of mutations) {
+    await assertBothAdaptersReject(mutate, expected, label);
+  }
+});
+
+test('both Open VSX acquisition adapters reject changed signatures and signature manifests', async () => {
+  const mutations = [
+    [
+      'wrong-length Ed25519 signature',
+      state => replaceArchiveEntry(
+        state.signatureEntries,
+        '.signature.sig',
+        Buffer.alloc(63)
+      ),
+      /signature.*invalid size/i
+    ],
+    [
+      'invalid Ed25519 signature',
+      state => replaceArchiveEntry(
+        state.signatureEntries,
+        '.signature.sig',
+        Buffer.alloc(64)
+      ),
+      /signature did not verify/i
+    ],
+    [
+      'invalid signature manifest JSON',
+      state => replaceArchiveEntry(
+        state.signatureEntries,
+        '.signature.manifest',
+        Buffer.from('{')
+      ),
+      /signature manifest.*JSON/i
+    ],
+    [
+      'signature-manifest digest',
+      state => replaceArchiveEntry(
+        state.signatureEntries,
+        '.signature.manifest',
+        Buffer.from(JSON.stringify({
+          package: {
+            digests: { sha256: Buffer.alloc(32).toString('base64') },
+            size: state.packageRecord.package_size
+          }
+        }))
+      ),
+      /signature manifest does not identify/i
+    ],
+    [
+      'signature-manifest size',
+      state => replaceArchiveEntry(
+        state.signatureEntries,
+        '.signature.manifest',
+        Buffer.from(JSON.stringify({
+          package: {
+            digests: {
+              sha256: Buffer.from(state.packageRecord.sha256, 'hex').toString('base64')
+            },
+            size: state.packageRecord.package_size + 1
+          }
+        }))
+      ),
+      /signature manifest does not identify/i
+    ]
+  ];
+  for (const [label, mutate, expected] of mutations) {
+    await assertBothAdaptersReject(mutate, expected, label);
+  }
+});
+
+test('both Open VSX acquisition adapters reject unsafe or incomplete archives', async () => {
+  const mutations = [
+    [
+      'parent traversal entry',
+      state => state.signatureEntries.push({
+        name: '../outside',
+        body: Buffer.from('unsafe')
+      })
+    ],
+    [
+      'duplicate required entry',
+      state => state.signatureEntries.push({
+        name: '.signature.sig',
+        body: Buffer.alloc(64)
+      })
+    ],
+    [
+      'duplicate unrelated entry',
+      state => state.signatureEntries.push(
+        { name: 'extra.txt', body: Buffer.from('one') },
+        { name: 'extra.txt', body: Buffer.from('two') }
+      )
+    ],
+    [
+      'encrypted entry',
+      state => {
+        state.signatureEntries[0].generalPurposeBitFlag = 1;
+      }
+    ],
+    [
+      'symbolic-link entry',
+      state => state.signatureEntries.push({
+        name: 'link',
+        body: Buffer.from('target'),
+        versionMadeBy: 3 << 8,
+        externalFileAttributes: 0o120777 << 16
+      })
+    ],
+    [
+      'missing signature entry',
+      state => {
+        state.signatureEntries.splice(
+          state.signatureEntries.findIndex(entry => entry.name === '.signature.p7s'),
+          1
+        );
+      }
+    ],
+    [
+      'oversized required entry',
+      state => {
+        const manifest = state.signatureEntries.find(
+          entry => entry.name === '.signature.manifest'
+        );
+        manifest.size = (4 * 1024 * 1024) + 1;
+      }
+    ]
+  ];
+  for (const [label, mutate] of mutations) {
+    await assertBothAdaptersReject(mutate, /archive|entry|required/i, label);
+  }
+});
+
+test('both Open VSX acquisition adapters reject every changed VSIX identity field', async () => {
+  const mutations = [
+    ['publisher', manifest => { manifest.publisher = 'changed'; }],
+    ['name', manifest => { manifest.name = 'changed'; }],
+    ['version', manifest => { manifest.version = '9.9.9'; }],
+    ['engine', manifest => { manifest.engines.vscode = '^9.0.0'; }]
+  ];
+  for (const [label, mutateManifest] of mutations) {
+    await assertBothAdaptersReject(
+      state => {
+        const entry = state.vsixEntries.find(
+          candidate => candidate.name === 'extension/package.json'
+        );
+        const manifest = JSON.parse(entry.body.toString('utf8'));
+        mutateManifest(manifest);
+        entry.body = Buffer.from(JSON.stringify(manifest));
+      },
+      /VSIX manifest does not identify/i,
+      `VSIX ${label}`
+    );
+  }
 });
 
 test('runtime downloads follow bounded HTTPS redirects and reject oversized responses', async () => {
@@ -373,6 +764,38 @@ test('runtime ZIP reading enforces the requested entry set and size limit', asyn
     ),
     /missing a required entry/i
   );
+
+  await assert.rejects(
+    readZipEntries(
+      archive,
+      ['required.json'],
+      {
+        fromBuffer: fakeZip([
+          { name: '../outside.txt', body: Buffer.from('unsafe') },
+          { name: 'required.json', body: Buffer.from('{}') }
+        ])
+      }
+    ),
+    /unsafe archive entry/i
+  );
+
+  const privatePath = '/private/example/package.sigzip';
+  await assert.rejects(
+    readZipEntries(
+      archive,
+      ['required.json'],
+      {
+        fromBuffer: () => {
+          throw new Error(privatePath);
+        }
+      }
+    ),
+    error => {
+      assert.match(error.message, /archive could not be opened/i);
+      assert.doesNotMatch(error.message, new RegExp(privatePath));
+      return true;
+    }
+  );
 });
 
 test('runtime acquisition composes all five pinned downloads before verification', async () => {
@@ -389,15 +812,17 @@ test('runtime acquisition composes all five pinned downloads before verification
   const result = await acquireAndVerifyPackage(
     packageRecord,
     configuration.public_keys,
+    configuration.code_oss_version,
     {
       download: async (url, maximumBytes) => {
         calls.push([url, maximumBytes]);
         return downloads.get(url);
       },
-      verify: async (record, downloaded, publicKeys) => {
+      verify: async (record, downloaded, publicKeys, options) => {
         assert.equal(record, packageRecord);
         assert.deepEqual(downloaded, acquisition);
         assert.equal(publicKeys, configuration.public_keys);
+        assert.equal(options.codeOssVersion, configuration.code_oss_version);
         verified = true;
       }
     }

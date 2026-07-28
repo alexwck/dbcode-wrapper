@@ -178,13 +178,17 @@ jq -e '
 runtime_setup_root="${APP_BUNDLE}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
 runtime_setup_manifest="${runtime_setup_root}/runtime-extension-set.json"
 runtime_setup_logic="${runtime_setup_root}/runtimeSetup.js"
+runtime_setup_verifier="${runtime_setup_root}/openVsxPackageVerifier.js"
 profile_identity="${runtime_setup_root}/profile-identity.json"
 profile_layout_logic="${runtime_setup_root}/profile-layout.js"
 runtime_setup_zip_library="${APP_BUNDLE}/Contents/Resources/app/node_modules/yauzl/package.json"
+runtime_setup_semver_library="${APP_BUNDLE}/Contents/Resources/app/node_modules/semver/package.json"
 [[ -f "${runtime_setup_manifest}" && ! -L "${runtime_setup_manifest}" && \
-  -f "${runtime_setup_logic}" && -f "${profile_identity}" && ! -L "${profile_identity}" && \
+  -f "${runtime_setup_logic}" && -f "${runtime_setup_verifier}" && \
+  -f "${profile_identity}" && ! -L "${profile_identity}" && \
   -f "${profile_layout_logic}" && -f "${runtime_setup_zip_library}" && \
-  ! -L "${runtime_setup_zip_library}" ]] || {
+  ! -L "${runtime_setup_zip_library}" && -f "${runtime_setup_semver_library}" && \
+  ! -L "${runtime_setup_semver_library}" ]] || {
   echo "The focused first-run runtime setup is missing from the signed app." >&2
   exit 1
 }
@@ -193,6 +197,13 @@ jq -e '
   and (.version | type == "string" and length > 0)
 ' "${runtime_setup_zip_library}" >/dev/null || {
   echo "The signed app cannot read the verified Open VSX package archives." >&2
+  exit 1
+}
+jq -e '
+  .name == "semver"
+  and (.version | type == "string" and length > 0)
+' "${runtime_setup_semver_library}" >/dev/null || {
+  echo "The signed app cannot verify extension engine compatibility." >&2
   exit 1
 }
 [[ "$(shasum -a 256 "${runtime_setup_manifest}" | awk '{print $1}')" == \

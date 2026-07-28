@@ -228,6 +228,9 @@ printf '%s\n' 'Chromium notices fixture' > "${fixture_app}/Contents/Resources/LI
 cp \
   "${REPO_ROOT}/host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js" \
   "${fixture_app}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js"
+cp \
+  "${REPO_ROOT}/host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js" \
+  "${fixture_app}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" \
   "${fixture_app}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration/runtime-extension-set.json" \
   >/dev/null

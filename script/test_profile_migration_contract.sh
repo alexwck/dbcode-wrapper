@@ -16,6 +16,7 @@ recovery_logic="${extension_root}/profileRecovery.js"
 recovery_worker="${extension_root}/profileRecoveryWorker.js"
 profile_layout="${extension_root}/profile-layout.js"
 runtime_setup="${extension_root}/runtimeSetup.js"
+openvsx_package_verifier="${extension_root}/openVsxPackageVerifier.js"
 runtime_setup_controller="${extension_root}/runtimeSetupController.js"
 runtime_setup_view="${extension_root}/runtimeSetupView.js"
 profile_layout_cli="${REPO_ROOT}/script/profile_layout.cjs"
@@ -42,6 +43,7 @@ for required_file in \
   "${recovery_worker}" \
   "${profile_layout}" \
   "${runtime_setup}" \
+  "${openvsx_package_verifier}" \
   "${runtime_setup_controller}" \
   "${runtime_setup_view}" \
   "${profile_layout_cli}" \
@@ -256,6 +258,7 @@ jq -e '
 "${NODE_BIN_DIR}/node" --check "${recovery_worker}"
 "${NODE_BIN_DIR}/node" --check "${profile_layout}"
 "${NODE_BIN_DIR}/node" --check "${runtime_setup}"
+"${NODE_BIN_DIR}/node" --check "${openvsx_package_verifier}"
 "${NODE_BIN_DIR}/node" --check "${runtime_setup_controller}"
 "${NODE_BIN_DIR}/node" --check "${runtime_setup_view}"
 "${NODE_BIN_DIR}/node" --check "${profile_layout_cli}"

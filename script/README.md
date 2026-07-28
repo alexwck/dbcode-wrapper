@@ -17,7 +17,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 ## Extension and capability preparation
 
 - `prepare_dbcode.sh` verifies and prepares the complete external runtime-extension inventory.
-- `verify_openvsx_package.sh` verifies one exact Open VSX package.
+- `verify_openvsx_package.sh` is the thin file-acquisition adapter for one exact Open VSX package. It calls the same deep verifier as Finder first-run setup.
 - `test_dbcode_feature_contract.sh` checks unchanged DBCode contributions, New Connection ownership, and the no-allowlist rule against wrapper navigation policy.
 
 ## Release sets

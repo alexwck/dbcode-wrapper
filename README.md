@@ -33,7 +33,7 @@ No public app download is provided. Built applications, DBCode packages, licence
 
 The current app targets Apple silicon. It uses a current-user self-signed certificate and is not identified or notarized by Apple. Installation on another owned Mac therefore requires checksum verification and manual approval through macOS Privacy & Security.
 
-A fresh owned Mac does not need the source repository or an extension screen. The release-ready app presents one focused first-run action that obtains only the exact pinned DBCode and Python/Jupyter packages from Open VSX, verifies their public records, sizes, SHA-256 digests, public key, signatures, and manifests, and installs them in that Mac's private profile. DBCode itself, the licence, credentials, connections, and profiles remain outside the app and outside the DMG.
+A fresh owned Mac does not need the source repository or an extension screen. The release-ready app presents one focused first-run action that obtains only the exact pinned DBCode and Python/Jupyter packages from Open VSX, verifies their public records, engine compatibility, sizes, SHA-256 digests, public key, signatures, safe archive entries, and manifests, and installs them in that Mac's private profile. Scripted preparation and the Finder first-run action use the same package verifier. DBCode itself, the licence, credentials, connections, and profiles remain outside the app and outside the DMG.
 
 ## Repository guide
 

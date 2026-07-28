@@ -33,6 +33,8 @@ wrapper_source_digest() {
     script/build_icon.sh \
     script/build_icns.py \
     script/check_vscode_engine.cjs \
+    script/verify_openvsx_package.cjs \
+    script/verify_openvsx_package.sh \
     script/prepare_source.sh \
     script/sign_host.sh \
     script/setup_local_signing_identity.sh \

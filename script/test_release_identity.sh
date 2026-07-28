@@ -17,6 +17,10 @@ rg -Fq 'script/generate_profile_identity.sh' "${source_digest_library}" || {
   echo "Profile identity generation must be part of the immutable wrapper source digest." >&2
   exit 1
 }
+rg -Fq 'script/verify_openvsx_package.cjs' "${source_digest_library}" || {
+  echo "Open VSX package verification must be part of the immutable wrapper source digest." >&2
+  exit 1
+}
 
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-release-identity.XXXXXX")"
 trap 'rm -rf "${test_root}"' EXIT

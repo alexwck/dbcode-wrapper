@@ -221,7 +221,11 @@ class RuntimeSetupController {
           total: missing.length,
           message: `Verifying ${packageRecord.id}@${packageRecord.version} from Open VSX…`
         });
-        const vsix = await this.acquirePackage(packageRecord, this.configuration.public_keys);
+        const vsix = await this.acquirePackage(
+          packageRecord,
+          this.configuration.public_keys,
+          this.configuration.code_oss_version
+        );
         const packagePath = await writeVerifiedPackage(this.cacheRoot, packageRecord, vsix);
         await this.executeCli(this.cli, [
           ...this.profileArguments(),

@@ -1,68 +1,18 @@
 'use strict';
 
-const crypto = require('node:crypto');
 const https = require('node:https');
-
-const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
-const SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9.-]+$/;
-const SAFE_VERSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]+$/;
-const REQUIRED_PACKAGE_FIELDS = [
-  'role',
-  'namespace',
-  'name',
-  'id',
-  'publisher',
-  'version',
-  'engine',
-  'target_platform',
-  'published_at',
-  'verified_publisher',
-  'pre_release',
-  'deprecated',
-  'registry_api_url',
-  'download_url',
-  'signature_url',
-  'sha256_url',
-  'public_key_id',
-  'public_key_url',
-  'sha256',
-  'signature_archive_sha256',
-  'public_key_sha256',
-  'package_size'
-];
+const {
+  SAFE_ID_PATTERN,
+  SAFE_VERSION_PATTERN,
+  exactKeys,
+  requireOfficialUrl,
+  validateOpenVsxPackageRecord,
+  validateOpenVsxPublicKey,
+  verifyOpenVsxPackage
+} = require('./openVsxPackageVerifier');
 
 function fail(message) {
   throw new Error(message);
-}
-
-function sha256(value) {
-  return crypto.createHash('sha256').update(value).digest('hex');
-}
-
-function exactKeys(value, expected) {
-  return value && typeof value === 'object' && !Array.isArray(value) &&
-    JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
-}
-
-function requireOfficialUrl(value, expectedPath, label) {
-  let parsed;
-  try {
-    parsed = new URL(value);
-  } catch {
-    fail(`${label} is not a valid URL.`);
-  }
-  if (
-    parsed.protocol !== 'https:' ||
-    parsed.hostname !== 'open-vsx.org' ||
-    parsed.port !== '' ||
-    parsed.username !== '' ||
-    parsed.password !== '' ||
-    parsed.search !== '' ||
-    parsed.hash !== '' ||
-    parsed.pathname !== expectedPath
-  ) {
-    fail(`${label} is not the exact official Open VSX URL.`);
-  }
 }
 
 function validateRuntimeConfiguration(configuration) {
@@ -93,17 +43,13 @@ function validateRuntimeConfiguration(configuration) {
   const keyIds = new Set();
   const keyDigests = new Map();
   for (const key of configuration.public_keys) {
-    if (
-      !exactKeys(key, ['id', 'sha256', 'pem']) ||
-      typeof key.id !== 'string' ||
-      key.id.length === 0 ||
-      !DIGEST_PATTERN.test(key.sha256) ||
-      typeof key.pem !== 'string' ||
-      !key.pem.includes('BEGIN PUBLIC KEY') ||
-      sha256(Buffer.from(key.pem)) !== key.sha256 ||
-      keyIds.has(key.id)
-    ) {
-      fail('The focused runtime setup contains an invalid or duplicate Open VSX public key.');
+    try {
+      validateOpenVsxPublicKey(key);
+    } catch {
+      fail('The focused runtime setup contains an invalid Open VSX public key.');
+    }
+    if (keyIds.has(key.id)) {
+      fail('The focused runtime setup contains a duplicate Open VSX public key.');
     }
     keyIds.add(key.id);
     keyDigests.set(key.id, key.sha256);
@@ -112,43 +58,14 @@ function validateRuntimeConfiguration(configuration) {
   const packageIds = new Set();
   const usedKeyIds = new Set();
   for (const packageRecord of configuration.packages) {
-    if (!exactKeys(packageRecord, REQUIRED_PACKAGE_FIELDS)) {
-      fail('A focused runtime package has an unexpected shape.');
-    }
-    if (
-      !SAFE_ID_PATTERN.test(packageRecord.id) ||
-      packageRecord.id !== `${packageRecord.publisher}.${packageRecord.name}` ||
-      packageRecord.namespace !== packageRecord.publisher ||
-      !SAFE_VERSION_PATTERN.test(packageRecord.version) ||
-      typeof packageRecord.role !== 'string' ||
-      packageRecord.role.length === 0 ||
-      typeof packageRecord.engine !== 'string' ||
-      packageRecord.engine.length === 0 ||
-      packageRecord.target_platform !== 'universal' ||
-      packageRecord.verified_publisher !== true ||
-      packageRecord.pre_release !== false ||
-      packageRecord.deprecated !== false ||
-      !DIGEST_PATTERN.test(packageRecord.sha256) ||
-      !DIGEST_PATTERN.test(packageRecord.signature_archive_sha256) ||
-      !DIGEST_PATTERN.test(packageRecord.public_key_sha256) ||
-      !Number.isSafeInteger(packageRecord.package_size) ||
-      packageRecord.package_size <= 0 ||
-      !keyIds.has(packageRecord.public_key_id) ||
-      keyDigests.get(packageRecord.public_key_id) !== packageRecord.public_key_sha256 ||
-      packageIds.has(packageRecord.id)
-    ) {
-      fail('A focused runtime package is invalid, duplicated, or not bound to its approved public key.');
-    }
-    requireOfficialUrl(
-      packageRecord.registry_api_url,
-      `/api/${packageRecord.namespace}/${packageRecord.name}/${packageRecord.version}`,
-      `${packageRecord.id} registry URL`
+    validateOpenVsxPackageRecord(
+      packageRecord,
+      configuration.code_oss_version,
+      keyDigests
     );
-    const filePrefix = `/api/${packageRecord.namespace}/${packageRecord.name}/${packageRecord.version}/file/`;
-    requireOfficialUrl(packageRecord.download_url, `${filePrefix}${packageRecord.namespace}.${packageRecord.name}-${packageRecord.version}.vsix`, `${packageRecord.id} download URL`);
-    requireOfficialUrl(packageRecord.signature_url, `${filePrefix}${packageRecord.namespace}.${packageRecord.name}-${packageRecord.version}.sigzip`, `${packageRecord.id} signature URL`);
-    requireOfficialUrl(packageRecord.sha256_url, `${filePrefix}${packageRecord.namespace}.${packageRecord.name}-${packageRecord.version}.sha256`, `${packageRecord.id} SHA-256 URL`);
-    requireOfficialUrl(packageRecord.public_key_url, `/api/-/public-key/${packageRecord.public_key_id}`, `${packageRecord.id} public-key URL`);
+    if (packageIds.has(packageRecord.id)) {
+      fail(`The focused runtime setup contains duplicate package ${packageRecord.id}.`);
+    }
     packageIds.add(packageRecord.id);
     usedKeyIds.add(packageRecord.public_key_id);
   }
@@ -160,64 +77,6 @@ function validateRuntimeConfiguration(configuration) {
     fail('The focused runtime setup contains an unused Open VSX public key.');
   }
   return configuration;
-}
-
-function readZipEntries(archive, requestedNames, options = {}) {
-  const fromBuffer = options.fromBuffer ?? require('yauzl').fromBuffer;
-  const requested = new Set(requestedNames);
-  return new Promise((resolve, reject) => {
-    fromBuffer(archive, { lazyEntries: true }, (openError, zipFile) => {
-      if (openError) {
-        reject(new Error('A signed package archive could not be opened.'));
-        return;
-      }
-      const entries = new Map();
-      const failZip = message => {
-        zipFile.close();
-        reject(new Error(message));
-      };
-      zipFile.on('error', () => reject(new Error('A signed package archive could not be read.')));
-      zipFile.on('entry', entry => {
-        if (!requested.has(entry.fileName)) {
-          zipFile.readEntry();
-          return;
-        }
-        if (entries.has(entry.fileName) || entry.uncompressedSize > 4 * 1024 * 1024) {
-          failZip('A signed package archive contains an unsafe required entry.');
-          return;
-        }
-        zipFile.openReadStream(entry, (streamError, stream) => {
-          if (streamError) {
-            failZip('A signed package archive entry could not be opened.');
-            return;
-          }
-          const chunks = [];
-          let total = 0;
-          stream.on('data', chunk => {
-            total += chunk.length;
-            if (total > 4 * 1024 * 1024) {
-              stream.destroy(new Error('A signed package archive entry is too large.'));
-              return;
-            }
-            chunks.push(chunk);
-          });
-          stream.on('error', () => failZip('A signed package archive entry could not be read.'));
-          stream.on('end', () => {
-            entries.set(entry.fileName, Buffer.concat(chunks));
-            zipFile.readEntry();
-          });
-        });
-      });
-      zipFile.on('end', () => {
-        if (requestedNames.some(name => !entries.has(name))) {
-          reject(new Error('A signed package archive is missing a required entry.'));
-          return;
-        }
-        resolve(entries);
-      });
-      zipFile.readEntry();
-    });
-  });
 }
 
 function parseJson(buffer, label) {
@@ -232,99 +91,24 @@ async function verifyPackageAcquisition(
   packageRecord,
   acquisition,
   publicKeys,
-  { readZipEntries: zipReader = readZipEntries } = {}
+  {
+    codeOssVersion,
+    fromBuffer,
+    readZipEntries: zipReader
+  } = {}
 ) {
-  const registry = acquisition.registryRecord;
-  const registryMatches = registry &&
-    registry.namespace === packageRecord.namespace &&
-    registry.name === packageRecord.name &&
-    registry.version === packageRecord.version &&
-    registry.engines?.vscode === packageRecord.engine &&
-    registry.targetPlatform === packageRecord.target_platform &&
-    registry.timestamp === packageRecord.published_at &&
-    registry.verified === true &&
-    registry.preRelease === false &&
-    registry.deprecated === false &&
-    registry.files?.download === packageRecord.download_url &&
-    registry.files?.signature === packageRecord.signature_url &&
-    registry.files?.sha256 === packageRecord.sha256_url &&
-    registry.files?.publicKey === packageRecord.public_key_url;
-  if (!registryMatches) {
-    fail(`The official registry record does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-
-  if (!Buffer.isBuffer(acquisition.vsix) || sha256(acquisition.vsix) !== packageRecord.sha256) {
-    fail(`The VSIX SHA-256 does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-  if (acquisition.vsix.length !== packageRecord.package_size) {
-    fail(`The VSIX size does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-  if (
-    !Buffer.isBuffer(acquisition.signatureArchive) ||
-    sha256(acquisition.signatureArchive) !== packageRecord.signature_archive_sha256
-  ) {
-    fail(`The signature archive does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-  if (
-    !Buffer.isBuffer(acquisition.sha256Record) ||
-    acquisition.sha256Record.toString('utf8').trim() !== packageRecord.sha256
-  ) {
-    fail(`The official SHA-256 record does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-
-  const publicKeyRecord = publicKeys.find(key => key.id === packageRecord.public_key_id);
-  if (
-    !publicKeyRecord ||
-    publicKeyRecord.sha256 !== packageRecord.public_key_sha256 ||
-    !Buffer.isBuffer(acquisition.publicKey) ||
-    sha256(acquisition.publicKey) !== packageRecord.public_key_sha256 ||
-    !acquisition.publicKey.equals(Buffer.from(publicKeyRecord.pem))
-  ) {
-    fail(`The Open VSX public key does not match pinned package ${packageRecord.id}@${packageRecord.version}.`);
-  }
-
-  const signatureEntries = await zipReader(
-    acquisition.signatureArchive,
-    ['.signature.sig', '.signature.manifest', '.signature.p7s']
+  return verifyOpenVsxPackage(
+    {
+      codeOssVersion,
+      packageRecord,
+      acquisition,
+      publicKeys
+    },
+    {
+      fromBuffer,
+      readZipEntries: zipReader
+    }
   );
-  const signature = signatureEntries.get('.signature.sig');
-  if (!Buffer.isBuffer(signature) || signature.length !== 64) {
-    fail(`The Open VSX signature is invalid for ${packageRecord.id}@${packageRecord.version}.`);
-  }
-  let signatureValid = false;
-  try {
-    signatureValid = crypto.verify(null, acquisition.vsix, publicKeyRecord.pem, signature);
-  } catch {
-    signatureValid = false;
-  }
-  if (!signatureValid) {
-    fail(`The Open VSX signature did not verify for ${packageRecord.id}@${packageRecord.version}.`);
-  }
-
-  const signatureManifest = parseJson(signatureEntries.get('.signature.manifest'), 'The Open VSX signature manifest');
-  let signedDigest;
-  try {
-    signedDigest = Buffer.from(signatureManifest.package.digests.sha256, 'base64').toString('hex');
-  } catch {
-    fail('The Open VSX signature manifest has an invalid digest.');
-  }
-  if (
-    signedDigest !== packageRecord.sha256 ||
-    signatureManifest.package?.size !== packageRecord.package_size
-  ) {
-    fail(`The Open VSX signature manifest does not identify ${packageRecord.id}@${packageRecord.version}.`);
-  }
-
-  const vsixEntries = await zipReader(acquisition.vsix, ['extension/package.json']);
-  const extensionManifest = parseJson(vsixEntries.get('extension/package.json'), 'The VSIX extension manifest');
-  if (
-    extensionManifest.publisher !== packageRecord.publisher ||
-    extensionManifest.name !== packageRecord.name ||
-    extensionManifest.version !== packageRecord.version ||
-    extensionManifest.engines?.vscode !== packageRecord.engine
-  ) {
-    fail(`The VSIX manifest does not identify ${packageRecord.id}@${packageRecord.version}.`);
-  }
 }
 
 function installedVersionMap(installedExtensions) {
@@ -451,6 +235,7 @@ function downloadBuffer(url, maximumBytes, redirectCount = 0, options = {}) {
 async function acquireAndVerifyPackage(
   packageRecord,
   publicKeys,
+  codeOssVersion,
   {
     download = downloadBuffer,
     verify = verifyPackageAcquisition
@@ -470,7 +255,7 @@ async function acquireAndVerifyPackage(
     sha256Record,
     publicKey
   };
-  await verify(packageRecord, acquisition, publicKeys);
+  await verify(packageRecord, acquisition, publicKeys, { codeOssVersion });
   return acquisition.vsix;
 }
 
@@ -479,8 +264,6 @@ module.exports = {
   assertManagedRuntimeInstalled,
   downloadBuffer,
   missingRuntimePackages,
-  readZipEntries,
-  sha256,
   validateRuntimeConfiguration,
   verifyPackageAcquisition
 };
