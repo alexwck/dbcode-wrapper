@@ -137,4 +137,26 @@ require_line_once \
   '"${NODE_BIN_DIR}/node" --test "${rendered_session_support_test}"' \
   "The focused-shell adapter must run its rendered-session support tests with pinned Node"
 
+foreign_generated_root="${trace_root}/foreign-generated"
+foreign_vscodium_tag="$(
+  jq -er '.upstream.vscodium.tag' "${script_root}/../host/release-lock.json"
+)"
+foreign_prepared_source="$(
+  printf '%s/.build/work/vscodium-%s/vscode' \
+    "${foreign_generated_root}" \
+    "${foreign_vscodium_tag}"
+)"
+while IFS= read -r maintained_path; do
+  mkdir -p "${foreign_prepared_source}/$(dirname "${maintained_path}")"
+  printf 'deliberately stale generated source\n' \
+    > "${foreign_prepared_source}/${maintained_path}"
+done < <(
+  jq -er \
+    '.maintained_code_oss_paths[]' \
+    "${script_root}/../host/patches/patch-plan.json"
+)
+
+DBCODE_WRAPPER_GENERATED_REPO_ROOT="${foreign_generated_root}" \
+  "${script_root}/test_patch_plan.sh" >/dev/null
+
 echo "Development gate execution contracts passed."

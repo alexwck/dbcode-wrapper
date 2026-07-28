@@ -61,6 +61,8 @@ The old manual proof recorder, same-Mac acceptance generator, PostgreSQL debugge
 
 Final acceptance does not accept saved development or static-smoke success logs. It materializes the source snapshot in the signed manifest, reruns the fast development contracts there, and reruns static smoke against the exact signed app. The rendered report is reusable only when its exact release-set ID matches.
 
+The materialized source may reuse the launcher checkout's ignored caches and pinned toolchain. It must not inspect the launcher's mutable `.build/work` tree as if that generated tree belonged to the accepted source.
+
 ## Representative rendered coverage
 
 One rendered smoke should cover the wrapper shell and a small set of useful paths:

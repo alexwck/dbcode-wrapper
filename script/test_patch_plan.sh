@@ -39,7 +39,8 @@ jq -e '
 }
 
 prepared_source="${WORK_ROOT}/vscode"
-if [[ -f "${prepared_source}/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts" ]]; then
+if [[ "${GENERATED_REPO_ROOT}" == "${REPO_ROOT}" &&
+  -f "${prepared_source}/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts" ]]; then
   expected_tree_digest="$(jq -er '.expected_maintained_tree_sha256' "${plan_file}")"
   actual_tree_digest="$(patch_plan_maintained_tree_digest "${prepared_source}" "${plan_file}")"
   [[ "${actual_tree_digest}" == "${expected_tree_digest}" ]] || {

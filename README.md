@@ -86,6 +86,8 @@ Build a release candidate only from a clean committed source tree:
 
 The command copies the exact commit to a temporary release-source checkout before it reads build inputs. The first run compiles the pinned Code OSS host. Later runs reuse that verified Compiled Host when its exact compilation inputs have not changed. The cache key records whether a source file is executable, but ignores local permission differences that Git does not track. A cache hit also skips compiler-only tool checks. A DBCode-only version bump or profile-only identity change still gets new wrapper records, signing, a manifest, and acceptance evidence without compiling Code OSS again.
 
+Exact-source checks may reuse ignored caches and toolchains from the launcher checkout. They never use its mutable `.build/work` tree as source evidence. Source checks always describe the materialized release commit.
+
 Run the source contract suite with:
 
 ```sh

@@ -71,6 +71,7 @@ Before changing behaviour, read:
 - Keep the deterministic cross-adapter mutation matrix in the fast source gate. Run the real cached-package verifier only when the shared verifier, an acquisition adapter, or the pinned runtime set changes.
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
 - Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
+- A materialized exact-source gate may reuse the launcher checkout's ignored caches and pinned toolchain. Keep source evidence inside the materialized checkout; never validate the launcher's mutable `.build/work` tree as if it belonged to that source.
 - Keep upstream host compilation separate from release assembly. A DBCode-only bump should reuse the Compiled Host when its content-addressed input ID still matches.
 - Treat a missing or changed input ID as a full-build request. Cache validation must cover file contents, symbolic-link targets, and executable modes. Preserve a damaged cache entry for investigation, rebuild it, and never weaken validation to save time.
 - Store the actual compiler environment in the Compiled Host receipt. On a cache hit, use that receipt in the final manifest and skip compiler-only Python, Clang, SDK, Node, and npm preflights.
