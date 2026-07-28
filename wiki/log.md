@@ -100,3 +100,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: ddaa6a0 (was e20a9a1)
 - Coverage: Release Specification schema 5; generated profile identity; shell and JavaScript path parity; query-storage product identity; profile-only Compiled Host reuse; static identity checks; historical rollback identity
 - Pages: [Overview](./OVERVIEW.md), [Focused host and private profile](./architecture/focused-host-and-private-profile.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Standalone DBCode Profile](./concepts/standalone-dbcode-profile.md), [Release Specification](./modules/release-specification.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Verification Harness](./modules/verification-harness.md), [Build sign and launch](./flows/build-sign-and-launch.md), and [Approval and guarded rollback](./flows/approval-and-guarded-rollback.md)
+
+## 2026-07-28: refresh
+
+- Profile: public/standard
+- source_commit: b9186c1 (was ddaa6a0)
+- Coverage: prompt-free exact-path cleanup; plan-only class selection; removed Finder metadata, the retired catalogue profile, and the abandoned smoke-backup root; retained QA evidence, screenshots, caches, worktrees, release assets, rollback evidence, and historical upgrade evidence
+- Pages: [Overview](./OVERVIEW.md) and [Generated Workspace Retention](./modules/generated-workspace-retention.md)
