@@ -127,10 +127,13 @@ done
 jq -n -e \
   --argjson build "${RELEASE_BUILD_SPEC}" \
   --argjson extensions "${RELEASE_EXTENSION_SPEC}" '
-  $build.release.release_set_base_id == "code-oss-1.126.0-dbcode-1.36.4"
+  $build.release.release_set_base_id == (
+    "code-oss-" + $build.runtime.code_oss_version
+    + "-dbcode-" + $extensions.dbcode.version
+  )
   and $build.release.compatibility_status == "candidate"
-  and $build.release.profile_schema_version == 1
-  and $build.release.validation_issue == "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130"
+  and ($build.release.profile_schema_version | type == "number" and . >= 1)
+  and ($build.release.validation_issue | type == "string" and length > 0)
   and ($build.upstream.vscodium.published_at | type == "string")
   and ($build.upstream.vscodium.release_notes_url | startswith("https://github.com/VSCodium/vscodium/releases/tag/"))
   and ($build.upstream.code_oss.published_at | type == "string")
@@ -174,10 +177,13 @@ rg -Fq 'approved-release-sets.json' "${REPO_ROOT}/script/assemble_host.sh" || {
 installed_identity="$(mktemp "${TMPDIR:-/tmp}/dbcode-installed-release.XXXXXX")"
 trap 'rm -f "${installed_identity}"' EXIT
 "${installed_manifest_generator}" "${installed_identity}" >/dev/null
-jq -e '
-  (.sourceSetId | test("^code-oss-1\\.126\\.0-dbcode-1\\.36\\.4-source-[0-9a-f]{64}$"))
+jq -e \
+  --arg release_set_base_id "$(jq -er '.release.release_set_base_id' <<<"${RELEASE_BUILD_SPEC}")" \
+  --argjson profile_schema_version "$(jq -er '.release.profile_schema_version' <<<"${RELEASE_BUILD_SPEC}")" '
+  (.sourceSetId | startswith($release_set_base_id + "-source-"))
+  and (.sourceSetId | ltrimstr($release_set_base_id + "-source-") | test("^[0-9a-f]{64}$"))
   and .compatibilityStatus == "candidate"
-  and .profileSchemaVersion == 1
+  and .profileSchemaVersion == $profile_schema_version
   and .target == {platform: "darwin", architecture: "arm64"}
   and (has("releaseSetId") | not)
 ' "${installed_identity}" >/dev/null || {

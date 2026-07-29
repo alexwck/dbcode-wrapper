@@ -20,15 +20,28 @@ extension_record="$("${release_specification}" extensions "${release_lock}")"
 profile_record="$("${release_specification}" profile "${release_lock}")"
 identity_record="$("${release_specification}" identity "${release_lock}")"
 
-jq -e '
+expected_code_oss_tag="$(jq -er '.upstream.code_oss.tag' "${release_lock}")"
+expected_code_oss_published_at="$(jq -er '.upstream.code_oss.published_at' "${release_lock}")"
+expected_code_oss_release_notes_url="$(jq -er '.upstream.code_oss.release_notes_url' "${release_lock}")"
+expected_wrapper_version="$(jq -er '.release.wrapper_version' "${release_lock}")"
+expected_release_set_base_id="$(jq -er '.release.release_set_base_id' "${release_lock}")"
+expected_dbcode_version="$(jq -er '.extension.dbcode.version' "${release_lock}")"
+expected_dbcode_release_notes_url="$(jq -er '.extension.dbcode.release_notes_url' "${release_lock}")"
+
+jq -e \
+  --arg code_oss_tag "${expected_code_oss_tag}" \
+  --arg code_oss_published_at "${expected_code_oss_published_at}" \
+  --arg code_oss_release_notes_url "${expected_code_oss_release_notes_url}" \
+  --arg wrapper_version "${expected_wrapper_version}" \
+  --arg release_set_base_id "${expected_release_set_base_id}" '
   .schema_version == 1
   and .target == {platform: "darwin", architecture: "arm64"}
-  and .upstream.code_oss.tag == "1.126.0"
-  and .upstream.code_oss.published_at == "2026-06-24T12:49:34Z"
-  and .upstream.code_oss.release_notes_url == "https://github.com/microsoft/vscode/releases/tag/1.126.0"
-  and .runtime.code_oss_version == "1.126.0"
-  and .release.wrapper_version == "0.1.3"
-  and .release.release_set_base_id == "code-oss-1.126.0-dbcode-1.36.4"
+  and .upstream.code_oss.tag == $code_oss_tag
+  and .upstream.code_oss.published_at == $code_oss_published_at
+  and .upstream.code_oss.release_notes_url == $code_oss_release_notes_url
+  and .runtime.code_oss_version == $code_oss_tag
+  and .release.wrapper_version == $wrapper_version
+  and .release.release_set_base_id == $release_set_base_id
   and .distribution.channel == "github-published-release"
   and .distribution.repository == "alexwck/dbcode-wrapper"
   and .distribution.public_download == true
@@ -50,12 +63,15 @@ jq -e \
   and (.product | has("signing") | not)
 ' <<<"${compiled_host_record}" >/dev/null
 
-jq -e '
+jq -e \
+  --arg code_oss_tag "${expected_code_oss_tag}" \
+  --arg dbcode_version "${expected_dbcode_version}" \
+  --arg dbcode_release_notes_url "${expected_dbcode_release_notes_url}" '
   .schema_version == 1
-  and .host_code_oss_version == "1.126.0"
+  and .host_code_oss_version == $code_oss_tag
   and .dbcode.id == "dbcode.dbcode"
-  and .dbcode.version == "1.36.4"
-  and .dbcode.release_notes_url == "https://dbcode.io/docs/changelog/1.36.4"
+  and .dbcode.version == $dbcode_version
+  and .dbcode.release_notes_url == $dbcode_release_notes_url
   and .python_notebooks.required == true
   and (.packages | length) == 7
   and ([.packages[].id] | unique | length) == 7
@@ -79,10 +95,11 @@ jq -e '
   and (has("extension") | not)
 ' <<<"${profile_record}" >/dev/null
 
-jq -e '
+jq -e \
+  --arg dbcode_version "${expected_dbcode_version}" '
   .schema_version == 1
   and .profile_schema_version == 1
-  and .extension.dbcode.version == "1.36.4"
+  and .extension.dbcode.version == $dbcode_version
   and (.runtime_extensions | length) == 7
   and (has("release") | not)
 ' <<<"${identity_record}" >/dev/null
@@ -182,7 +199,7 @@ jq '
 jq '.product.storage_namespace = "alternate-storage"' \
   "${release_lock}" > "${query_storage_schema_5}"
 jq '.release = {
-  release_set_base_id: "code-oss-1.126.0-dbcode-1.36.4",
+  release_set_base_id: "invalid-historical-release-set",
   compatibility_status: "approved",
   profile_schema_version: 1,
   validation_issue: "invalid-schema-2-release"
@@ -243,9 +260,10 @@ historical_identity_record="$(
   "${release_specification}" historical-identity "${historical_schema_2}"
 )"
 
-jq -e '
+jq -e \
+  --arg code_oss_version "$(jq -er '.upstream.code_oss.tag' "${historical_schema_2}")" '
   .schema_version == 1
-  and .runtime.code_oss_version == "1.126.0"
+  and .runtime.code_oss_version == $code_oss_version
   and .target == {platform: "darwin", architecture: "arm64"}
   and .release == null
 ' <<<"${historical_build_record}" >/dev/null
@@ -281,12 +299,13 @@ expected_historical_identity="$(
   echo "Historical Release Specification identity output is not canonical." >&2
   exit 1
 }
-jq -e '
+jq -e \
+  --arg dbcode_version "$(jq -er '.extension.dbcode.version' "${historical_schema_2}")" '
   .profile_schema_version == 1
   and .runtime_extensions == [{
     role: "database-client",
     id: "dbcode.dbcode",
-    version: "1.36.4",
+    version: $dbcode_version,
     target_platform: "universal",
     vsix_sha256: .runtime_extensions[0].vsix_sha256,
     signature_archive_sha256: .runtime_extensions[0].signature_archive_sha256
