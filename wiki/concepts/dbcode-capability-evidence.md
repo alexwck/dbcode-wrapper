@@ -9,7 +9,7 @@ tags:
   - verification
 wiki_profile: public
 wiki_depth: standard
-source_commit: 03b41f3106f00d64fffa5307ddd2084981972818
+source_commit: 2dbaee59ad243e222541fbea3b5efcc1873a26df
 ---
 ## Definition
 
@@ -28,14 +28,16 @@ Capability status is separate from evidence depth. `supported` means the wrapper
 
 The wrapper should preserve DBCode without copying it or running slow tests against the whole product. Broad declared and reachable checks protect feature breadth. A small rendered smoke protects the shell. Optional live diagnostics are reserved for new, changed, limited, or high-risk features and do not block deployment.
 
+For each DBCode bump, compare added and removed public contributions before approval. Preserve new DBCode-owned commands and settings through existing routes, and update the compatibility policy instead of recreating the feature in wrapper code.
+
 The exact New Connection catalogue remains authoritative. PostgreSQL, SQLite, DuckDB, Parquet, and notebooks are representative checks, not a wrapper database allowlist.
 
 ## Where it lives
 
-- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/host/dbcode-feature-policy.json) — maintained feature groups, routes, evidence, and explicit limits.
-- [`docs/product/dbcode-capability-coverage.md`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/docs/product/dbcode-capability-coverage.md) — public orientation by official DBCode feature family.
-- [`script/test_dbcode_feature_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/test_dbcode_feature_contract.sh) — contribution, approved-history, and policy contract.
-- [`script/test_connection_catalogue_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/test_connection_catalogue_contract.sh) — unchanged catalogue evidence.
+- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/host/dbcode-feature-policy.json) — maintained feature groups, routes, evidence, and explicit limits.
+- [`docs/product/dbcode-capability-coverage.md`](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/docs/product/dbcode-capability-coverage.md) — public orientation by official DBCode feature family.
+- [`script/test_dbcode_feature_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/script/test_dbcode_feature_contract.sh) — contribution, approved-history, and policy contract.
+- [`script/test_connection_catalogue_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/script/test_connection_catalogue_contract.sh) — unchanged catalogue evidence.
 
 ## Current boundary
 

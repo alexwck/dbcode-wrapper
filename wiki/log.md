@@ -170,3 +170,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: d316203 (was 3da4fca)
 - Coverage: exact pinned VSCodium patch applicability through a temporary Git index; corrected source context for the post-preparation verifier hook
 - Pages: [Overview](./OVERVIEW.md) and [Patch Plan and build](./modules/patch-plan-and-build.md)
+
+## 2026-07-29: refresh
+
+- Profile: public/standard
+- source_commit: 2dbaee5 (was d316203)
+- Coverage: DBCode 1.36.6 feature-policy review; added and removed public contributions; latest-compatible VSCodium and Code OSS pairing; unchanged compiled-host reuse; prompt-free rendered acceptance
+- Pages: [Overview](./OVERVIEW.md), [DBCode capability evidence](./concepts/dbcode-capability-evidence.md), [Review an upstream update](./guides/review-an-upstream-update.md), and [Release Specification](./modules/release-specification.md)

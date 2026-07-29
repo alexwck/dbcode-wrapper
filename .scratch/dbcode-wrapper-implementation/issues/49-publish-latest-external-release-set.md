@@ -11,8 +11,8 @@
 - [x] Capture the three official stable records, immutable upstream commits, DBCode package metadata, changelog, and public contribution difference.
 - [x] Bump the wrapper to `0.1.5` and update the exact Release Specification, feature policy, and maintained documentation.
 - [x] Prove whether latest VSCodium can prepare Code OSS `1.130.0`; keep the runtime pin unchanged when doing so would require a broad local VSCodium fork.
-- [ ] Verify the official DBCode `1.36.6` package, signature, public key, contribution surface, and complete rendered connection catalogue.
-- [ ] Run the prompt-free development, cold-build, signed static-smoke, and one-profile rendered release gates.
+- [x] Verify the official DBCode `1.36.6` package, signature, public key, contribution surface, and complete rendered connection catalogue.
+- [x] Run the prompt-free development, cold-build, signed static-smoke, and one-profile rendered release gates.
 - [ ] Create annotated tag `v0.1.5` only after exact-source acceptance passes.
 - [ ] Package, mount, and independently verify the host-only DMG; record and commit approval without installing the app or changing the production profile.
 - [ ] Push `main` and `v0.1.5`, create a normal non-draft, non-prerelease GitHub release, and upload only the DMG and checksum.
@@ -25,6 +25,8 @@
 - 2026-07-29: Code OSS `1.130.0` was previously held because the latest VSCodium release still targeted `1.126.0` and its official patch stage did not apply to `1.130.0`. This task must retest that boundary from clean pinned sources and may rebase maintained integration only when the resulting build remains reproducible and reviewable.
 - 2026-07-29: The clean retest found one stale VSCodium removal path, ten VSCodium patch failures, and failures in all four maintained wrapper patch seams against Code OSS `1.130.0`. Carrying that pair would require a broad local fork of VSCodium's branding, updater, native-module, Copilot-removal, onboarding, and packaging policy. The release candidate therefore keeps Code OSS `1.126.0`; automatic polling continues to show `1.130.0` as available and untested.
 - 2026-07-29: The Release Specification now identifies wrapper `0.1.5` and verified stable DBCode `1.36.6` with the exact package, signature, public-key, contribution, size, publication, and release-note records. The candidate feature policy preserves Library Open With Connection, result-toolbar pins, and the existing DBCode-owned routes. The complete prompt-free development source gate passes.
+- 2026-07-29: Exact-source build reused verified Compiled Host `compiled-host-bb6836aa899581d0091ff026837380529cdbc8edbde6741560b1c2e3bdf3cdc0`, then signed static smoke passed. The isolated rendered gate verified the official DBCode `1.36.6` registry record, VSIX digest, Ed25519 signature, public key, contribution surface, and the unchanged 12-section, 88-item New Connection catalogue. All 13 focused-shell checks passed without starting a database, notebook kernel, AI model, account flow, or other human gate.
+- 2026-07-29: The public wiki now records the latest-compatible host rule and the DBCode contribution-review rule. Its touched pages lint cleanly, its navigation has no dead links, and the only reported orphan is the OpenKnowledge pack skill rather than a public wiki page.
 
 ## Answer
 

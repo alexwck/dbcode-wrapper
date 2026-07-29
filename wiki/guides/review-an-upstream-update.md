@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
+source_commit: 2dbaee59ad243e222541fbea3b5efcc1873a26df
 ---
 ## Goal
 
@@ -20,10 +20,10 @@ Automatic polling and the status UI report official public information. They do 
 ## Steps
 
 1. **Review the notice.** Open the official release page from the status view.
-2. **Map the changed surface.** For DBCode, compare public contributions, settings, menus, views, editors, tools, connection catalogue, and changed documentation. Review AI, Copilot, automatic MCP registration, HTTP MCP, and inferred relationships separately.
+2. **Map the changed surface.** For DBCode, compare public contributions, settings, menus, views, editors, tools, connection catalogue, and changed documentation. Treat added commands or settings and removed routes as compatibility-policy changes. Review AI, Copilot, automatic MCP registration, HTTP MCP, and inferred relationships separately.
 3. **Update canonical records.** Change exact versions, commits, URLs, hashes, signatures, release notes, wrapper version, and only the compatibility policy that changed.
 4. **Run focused source checks.** Validate the Release Specification and affected wrapper seams.
-5. **Reconcile host patches only when host inputs changed.**
+5. **Choose the latest compatible host pair.** Reconcile host patches only when host inputs changed. If the newest Code OSS no longer matches the newest VSCodium build machinery, keep the latest pair that passes clean preparation and patch checks. The status UI can still report a newer available version.
 6. **Check the Compiled Host ID.** A DBCode-only or assembly-only update should reuse the verified host.
 7. **Build and sign once.** Keep the accepted app and rollback material.
 8. **Run only required built checks.** Use static smoke and the one generated `qa` profile. Show changed routes without starting databases, kernels, models, mutation, accounts, or external services.
@@ -39,8 +39,8 @@ Automatic polling and the status UI report official public information. They do 
 - [Compiled Host Cache](../modules/compiled-host-cache.md)
 - [DBCode capability evidence](../concepts/dbcode-capability-evidence.md)
 - [Host Release](../modules/host-release.md)
-- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/release-lock.json)
-- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/dbcode-feature-policy.json)
+- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/host/release-lock.json)
+- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/host/dbcode-feature-policy.json)
 
 ## Gotchas
 

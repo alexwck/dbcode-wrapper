@@ -8,7 +8,7 @@ tags:
   - release
 wiki_profile: public
 wiki_depth: standard
-source_commit: ca6a58c0be798dfb6438f8326417ebd9ba42a354
+source_commit: 2dbaee59ad243e222541fbea3b5efcc1873a26df
 ---
 ## Summary
 
@@ -35,9 +35,9 @@ Consumers ask for a named record such as `build`, `compiled-host`, `extensions`,
 
 ## Key files
 
-- [script/lib/release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/script/lib/release_specification.sh) — current validation, projections, historical reads, and comparison logic.
-- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/release-lock.json) — canonical release declaration.
-- [script/test_release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/script/test_release_specification.sh) — current, distribution, unsafe-input, historical, and host-reuse contracts.
+- [script/lib/release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/script/lib/release_specification.sh) — current validation, projections, historical reads, and comparison logic.
+- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/host/release-lock.json) — canonical release declaration.
+- [script/test_release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/2dbaee59ad243e222541fbea3b5efcc1873a26df/script/test_release_specification.sh) — current, distribution, unsafe-input, historical, and host-reuse contracts.
 
 ## Dependencies
 
