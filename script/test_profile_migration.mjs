@@ -13,8 +13,114 @@ const { createProfileLayout } = require('../host/extensions/dbcode-wrapper-profi
 const { deriveRecoveryLayout, recreateStandaloneProfile, requireMatchingRelaunchPath } = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js');
 const { applicationExecutable, run: runRecoveryWorker, shouldRelaunchApplication, validateWorkerRequest, writeOutcome } = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js');
 const { ProfileSetup } = require('../host/extensions/dbcode-wrapper-profile-migration/profileSetup.js');
+const {
+  START_MIGRATION_COMMAND,
+  START_RUNTIME_SETUP_COMMAND,
+  createFirstRunCommandRouter
+} = require('../host/extensions/dbcode-wrapper-profile-migration/firstRunCommandRouter.js');
 const { cleanupReviewedInventory, stageReviewedInventory } = require('../host/extensions/dbcode-wrapper-profile-migration/staging.js');
 const { renderProfileSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/view.js');
+const {
+  escapeHtml,
+  renderWebviewDocument
+} = require('../host/extensions/dbcode-wrapper-profile-migration/webviewSafety.js');
+
+test('first-run commands register before an activation phase is selected', async () => {
+  const commands = new Map();
+  const subscriptions = [];
+  const errors = [];
+  const router = createFirstRunCommandRouter({
+    registerCommand(command, handler) {
+      commands.set(command, handler);
+      return { dispose() {} };
+    },
+    subscriptions,
+    showError: message => errors.push(message)
+  });
+
+  assert.deepEqual([...commands.keys()].sort(), [
+    START_MIGRATION_COMMAND,
+    START_RUNTIME_SETUP_COMMAND
+  ].sort());
+  assert.equal(subscriptions.length, 2);
+
+  await commands.get(START_MIGRATION_COMMAND)();
+  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+  assert.deepEqual(errors, [
+    'DBCode Wrapper first-run setup is still starting.',
+    'DBCode Wrapper first-run setup is still starting.'
+  ]);
+});
+
+test('Profile Setup routes through the required runtime prerequisite', async () => {
+  const commands = new Map();
+  const events = [];
+  let runtimeRequired = true;
+  const router = createFirstRunCommandRouter({
+    registerCommand: (command, handler) => {
+      commands.set(command, handler);
+      return { dispose() {} };
+    },
+    subscriptions: [],
+    showError: message => events.push(['error', message])
+  });
+  router.setRuntimeSetup({
+    requiresSetup: () => runtimeRequired,
+    open: () => events.push(['runtime'])
+  });
+  router.setProfileSetup({
+    open: () => events.push(['profile'])
+  });
+
+  await commands.get(START_MIGRATION_COMMAND)();
+  runtimeRequired = false;
+  await commands.get(START_MIGRATION_COMMAND)();
+  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+
+  assert.deepEqual(events, [
+    ['runtime'],
+    ['profile'],
+    ['runtime']
+  ]);
+});
+
+test('first-run command failures stay registered and fail with a sanitized message', async () => {
+  const commands = new Map();
+  const errors = [];
+  const router = createFirstRunCommandRouter({
+    registerCommand: (command, handler) => {
+      commands.set(command, handler);
+      return { dispose() {} };
+    },
+    subscriptions: [],
+    showError: message => errors.push(message)
+  });
+  router.setUnavailable('DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.');
+
+  await commands.get(START_MIGRATION_COMMAND)();
+  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+
+  assert.deepEqual(errors, [
+    'DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.',
+    'DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.'
+  ]);
+});
+
+test('first-run webviews share one escaping, CSP, nonce, and action-message policy', () => {
+  assert.equal(escapeHtml(`<script data-value="'">&`), '&lt;script data-value=&quot;&#039;&quot;&gt;&amp;');
+  const page = renderWebviewDocument({
+    title: 'Setup <unsafe>',
+    trustedStylesCss: 'body { color: red; }',
+    trustedBodyHtml: '<main>Trusted body</main>'
+  });
+  const nonce = page.match(/script-src 'nonce-([^']+)'/)?.[1];
+
+  assert.ok(nonce);
+  assert.match(page, /<title>Setup &lt;unsafe&gt;<\/title>/);
+  assert.ok(page.includes(`<script nonce="${nonce}">`));
+  assert.match(page, /acquireVsCodeApi/);
+  assert.match(page, /button\.dataset\.action/);
+});
 
 test('Profile Setup persists start-clean completion before opening connections', async () => {
   const events = [];

@@ -1,19 +1,10 @@
 'use strict';
 
-const crypto = require('node:crypto');
 const path = require('node:path');
 const { REVIEWED_FIELDS } = require('./migration');
+const { escapeHtml, renderWebviewDocument } = require('./webviewSafety');
 
 const DETAIL_FIELDS = REVIEWED_FIELDS.filter(field => field !== 'name');
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
 
 function connectionLabel(connection, index) {
   return connection.name || connection.database || (connection.path ? path.basename(connection.path) : `Connection ${index + 1}`);
@@ -139,10 +130,9 @@ function pageBody(view) {
 }
 
 function renderProfileSetupHtml(view) {
-  const nonce = crypto.randomBytes(18).toString('base64');
-  return `<!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Profile Setup</title>
-<style>
+  return renderWebviewDocument({
+    title: 'Profile Setup',
+    trustedStylesCss: `
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 48px 54px 60px; color: var(--vscode-foreground); background: var(--vscode-editor-background); font: 13px/1.55 var(--vscode-font-family); }
@@ -186,9 +176,9 @@ function renderProfileSetupHtml(view) {
   .detail strong { min-width: 0; overflow-wrap: anywhere; font-weight: 500; }
   .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 24px; }
   @media (max-width: 680px) { body { padding: 28px 22px 44px; } .choice-grid, .summary-grid { grid-template-columns: 1fr; } .detail { grid-template-columns: 100px 1fr; } }
-</style></head><body><main>${pageBody(view)}</main>
-<script nonce="${nonce}">const vscode=acquireVsCodeApi();document.addEventListener('click',event=>{const button=event.target.closest('[data-action]');if(button){button.disabled=true;vscode.postMessage({action:button.dataset.action});}});</script>
-</body></html>`;
+`,
+    trustedBodyHtml: `<main>${pageBody(view)}</main>`
+  });
 }
 
 module.exports = { renderProfileSetupHtml };

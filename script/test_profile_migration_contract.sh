@@ -8,6 +8,8 @@ extension_root="${REPO_ROOT}/host/extensions/dbcode-wrapper-profile-migration"
 extension_manifest="${extension_root}/package.json"
 extension_runtime="${extension_root}/extension.js"
 extension_view="${extension_root}/view.js"
+first_run_command_router="${extension_root}/firstRunCommandRouter.js"
+webview_safety="${extension_root}/webviewSafety.js"
 migration_logic="${extension_root}/migration.js"
 profile_setup="${extension_root}/profileSetup.js"
 profile_identity="${extension_root}/profile-identity.json"
@@ -24,9 +26,10 @@ profile_identity_generator="${REPO_ROOT}/script/generate_profile_identity.sh"
 host_assembler="${REPO_ROOT}/script/assemble_host.sh"
 host_smoke="${REPO_ROOT}/script/smoke_host.sh"
 managed_settings="${extension_root}/managed-settings.json"
-shell_patches=(
+shell_sources=(
   "${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
 )
 profile_paths="${REPO_ROOT}/script/lib/profile_paths.sh"
 host_launcher="${REPO_ROOT}/script/run_host.sh"
@@ -35,6 +38,8 @@ for required_file in \
   "${extension_manifest}" \
   "${extension_runtime}" \
   "${extension_view}" \
+  "${first_run_command_router}" \
+  "${webview_safety}" \
   "${migration_logic}" \
   "${profile_setup}" \
   "${profile_identity}" \
@@ -49,7 +54,7 @@ for required_file in \
   "${profile_layout_cli}" \
   "${profile_identity_generator}" \
   "${managed_settings}" \
-  "${shell_patches[@]}"; do
+  "${shell_sources[@]}"; do
   [[ -f "${required_file}" ]] || {
     echo "Missing focused profile-migration file: ${required_file}" >&2
     exit 1
@@ -201,6 +206,31 @@ rg -Fq 'new ProfileSetup({' "${extension_runtime}" || {
   exit 1
 }
 
+for required_first_run_contract in \
+  'createFirstRunCommandRouter' \
+  'this.registerCommand(START_RUNTIME_SETUP_COMMAND' \
+  'this.registerCommand(START_MIGRATION_COMMAND' \
+  'openProfileSetup' \
+  'setRuntimeSetup' \
+  'setProfileSetup' \
+  'setUnavailable'; do
+  rg -Fq "${required_first_run_contract}" "${extension_runtime}" "${first_run_command_router}" || {
+    echo "First-run commands are not routed through the always-registered command seam: ${required_first_run_contract}" >&2
+    exit 1
+  }
+done
+
+for required_webview_safety_contract in \
+  'renderWebviewDocument' \
+  "default-src 'none'" \
+  'script-src' \
+  'escapeHtml'; do
+  rg -Fq "${required_webview_safety_contract}" "${extension_view}" "${runtime_setup_view}" "${webview_safety}" || {
+    echo "First-run webviews are missing the shared fail-closed safety contract: ${required_webview_safety_contract}" >&2
+    exit 1
+  }
+done
+
 if rg -n '\.vscode|Code/User|VSCodium/User|globalStorage/dbcode\.dbcode|SecretStorage' "${extension_runtime}" "${extension_view}" "${migration_logic}" "${profile_setup}" "${staging_logic}" "${recovery_logic}" "${recovery_worker}"; then
   echo "Profile migration must not inspect or copy another editor profile or secret store." >&2
   exit 1
@@ -233,7 +263,7 @@ done
 for required_shell_contract in \
   'dbcodeWrapper.startProfileMigration' \
   'Profile Setup…'; do
-  rg -Fq "${required_shell_contract}" "${shell_patches[@]}" || {
+  rg -Fq "${required_shell_contract}" "${shell_sources[@]}" || {
     echo "The focused shell is missing profile setup: ${required_shell_contract}" >&2
     exit 1
   }
@@ -251,6 +281,8 @@ jq -e '
 
 "${NODE_BIN_DIR}/node" --check "${extension_runtime}"
 "${NODE_BIN_DIR}/node" --check "${extension_view}"
+"${NODE_BIN_DIR}/node" --check "${first_run_command_router}"
+"${NODE_BIN_DIR}/node" --check "${webview_safety}"
 "${NODE_BIN_DIR}/node" --check "${migration_logic}"
 "${NODE_BIN_DIR}/node" --check "${profile_setup}"
 "${NODE_BIN_DIR}/node" --check "${staging_logic}"

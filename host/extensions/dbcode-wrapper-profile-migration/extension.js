@@ -6,6 +6,9 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const vscode = require('vscode');
+const {
+  createFirstRunCommandRouter
+} = require('./firstRunCommandRouter');
 const { deriveRecoveryLayout } = require('./profileRecovery');
 const { PROFILE_SETUP_STATE_KEY, ProfileSetup } = require('./profileSetup');
 const { cleanupReviewedInventory, stageReviewedInventory } = require('./staging');
@@ -15,8 +18,6 @@ const {
   loadRuntimeConfiguration
 } = require('./runtimeSetupController');
 
-const START_MIGRATION_COMMAND = 'dbcodeWrapper.startProfileMigration';
-const START_RUNTIME_SETUP_COMMAND = 'dbcodeWrapper.startRuntimeSetup';
 const DBCODE_IMPORT_COMMAND = 'dbcode.connections.import';
 const MAX_INVENTORY_BYTES = 2 * 1024 * 1024;
 
@@ -160,11 +161,17 @@ function createProfileSetupController(context) {
 async function activate(context) {
   await fs.mkdir(context.globalStorageUri.fsPath, { recursive: true, mode: 0o700 });
   await fs.chmod(context.globalStorageUri.fsPath, 0o700);
+  const commandRouter = createFirstRunCommandRouter({
+    registerCommand: (command, handler) => vscode.commands.registerCommand(command, handler),
+    subscriptions: context.subscriptions,
+    showError: message => vscode.window.showErrorMessage(message)
+  });
   let runtimeConfiguration;
   try {
     runtimeConfiguration = await loadRuntimeConfiguration(context.extensionPath);
   } catch {
-    void vscode.window.showErrorMessage('DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.');
+    commandRouter.setUnavailable('DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.');
+    void commandRouter.openRuntimeSetup();
     return;
   }
   const runtimeSetup = new RuntimeSetupController({
@@ -173,10 +180,7 @@ async function activate(context) {
     layout: recoveryLayout(context),
     configuration: runtimeConfiguration
   });
-  context.subscriptions.push(vscode.commands.registerCommand(
-    START_RUNTIME_SETUP_COMMAND,
-    () => runtimeSetup.open()
-  ));
+  commandRouter.setRuntimeSetup(runtimeSetup);
   if (runtimeSetup.requiresSetup()) {
     const startupTimer = setTimeout(() => runtimeSetup.open(), 1200);
     context.subscriptions.push({ dispose: () => clearTimeout(startupTimer) });
@@ -184,7 +188,7 @@ async function activate(context) {
   }
 
   const controller = createProfileSetupController(context);
-  context.subscriptions.push(vscode.commands.registerCommand(START_MIGRATION_COMMAND, () => controller.open()));
+  commandRouter.setProfileSetup(controller);
 
   try {
     const { backupRoot } = recoveryLayout(context);
