@@ -79,7 +79,7 @@ done
   exit 1
 }
 
-for retired_release_harness in \
+for retired_maintenance_path in \
   script/proof_dbcode.sh \
   script/verify_same_mac_release.sh \
   script/test_same_mac_release_contract.sh \
@@ -93,12 +93,18 @@ for retired_release_harness in \
   script/check_installed_release_health.sh \
   script/lib/proof_state.sh \
   script/test_proof_state.sh \
+  script/verify_installed_extension_payload.sh \
+  script/restore_installed_extension_payload.sh \
+  script/test_installed_extension_payload.sh \
+  script/test_restore_installed_extension_payload.sh \
+  host/qa/ticket-03-rendered.cjs \
   script/fixtures/test_controlled_upgrade_gate.sh \
   script/fixtures/test_installed_health_gate.sh \
   script/fixtures/test_release_runtime_gate.sh \
-  script/fixtures/test_release_static_gate.sh; do
-  if [[ -e "${REPO_ROOT}/${retired_release_harness}" ]]; then
-    echo "The superseded release harness still exists: ${retired_release_harness}" >&2
+  script/fixtures/test_release_static_gate.sh \
+  docs/design; do
+  if [[ -e "${REPO_ROOT}/${retired_maintenance_path}" ]]; then
+    echo "The superseded maintenance path still exists: ${retired_maintenance_path}" >&2
     exit 1
   fi
 done

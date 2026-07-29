@@ -25,7 +25,6 @@ const {
   executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,
-  readOtherOwnedMacTicketOpen,
   resolveManagedPath
 } = retention;
 
@@ -37,16 +36,7 @@ function makeFixture(t) {
   t.after(() => rmSync(fixtureRoot, { recursive: true, force: true }));
   const repoRoot = join(fixtureRoot, 'repository with spaces');
   const homeDirectory = join(fixtureRoot, 'home with spaces');
-  const issueDirectory = join(
-    repoRoot,
-    '.scratch/dbcode-wrapper-implementation/issues'
-  );
-  mkdirSync(issueDirectory, { recursive: true });
   mkdirSync(homeDirectory, { recursive: true });
-  writeFileSync(
-    join(issueDirectory, '09-publish-public-source-and-private-personal-release.md'),
-    '# Other owned Mac\n\n**Status:** claimed\n'
-  );
 
   mkdirSync(join(repoRoot, '.build/expired/session one'), { recursive: true });
   writeFileSync(join(repoRoot, '.build/expired/session one/old.log'), 'expired evidence');
@@ -99,8 +89,7 @@ function snapshotTree(root) {
 function inventoryOptions(repoRoot, homeDirectory) {
   return {
     repoRoot,
-    homeDirectory,
-    otherOwnedMacTicketOpen: true
+    homeDirectory
   };
 }
 
@@ -113,7 +102,7 @@ test('inventory explains known, protected, private, expired, and unknown roots w
   assert.deepEqual(after, before);
   assert.equal(result.schema_version, 1);
   assert.equal(result.mutation_performed, false);
-  assert.equal(result.other_owned_mac_ticket.open, true);
+  assert.equal(Object.hasOwn(result, 'other_owned_mac_ticket'), false);
 
   const expired = result.entries.find(entry => entry.id === 'expired-output');
   assert.equal(expired.path, join(repoRoot, '.build/expired'));
@@ -124,35 +113,35 @@ test('inventory explains known, protected, private, expired, and unknown roots w
   assert.ok(expired.size_bytes > 0);
   assert.match(expired.reason, /expired/i);
 
-  const retiredCatalogueProfile = result.entries.find(
-    entry => entry.id === 'retired-catalogue-profile'
+  const expiredCatalogueOutput = result.entries.find(
+    entry => entry.id === 'expired-catalogue-output'
   );
-  assert.equal(retiredCatalogueProfile.path, join(repoRoot, '.build/q'));
-  assert.equal(retiredCatalogueProfile.classification, 'expired-output');
-  assert.equal(retiredCatalogueProfile.owner, 'focused-shell-rendered');
-  assert.equal(retiredCatalogueProfile.deletion_allowed, true);
-  assert.ok(retiredCatalogueProfile.size_bytes > 0);
+  assert.equal(expiredCatalogueOutput.path, join(repoRoot, '.build/q'));
+  assert.equal(expiredCatalogueOutput.classification, 'expired-output');
+  assert.equal(expiredCatalogueOutput.owner, 'focused-shell-rendered');
+  assert.equal(expiredCatalogueOutput.deletion_allowed, true);
+  assert.ok(expiredCatalogueOutput.size_bytes > 0);
 
-  const historicalUpgradeEvidence = result.entries.find(
-    entry => entry.id === 'historical-controlled-upgrade-evidence'
+  const retainedReleaseTransition = result.entries.find(
+    entry => entry.id === 'retained-release-transition'
   );
-  assert.equal(historicalUpgradeEvidence.path, join(repoRoot, '.build/u'));
-  assert.equal(historicalUpgradeEvidence.classification, 'active-evidence');
-  assert.equal(historicalUpgradeEvidence.owner, 'controlled-upgrade');
-  assert.equal(historicalUpgradeEvidence.deletion_allowed, false);
-  assert.equal(historicalUpgradeEvidence.size_bytes, null);
+  assert.equal(retainedReleaseTransition.path, join(repoRoot, '.build/u'));
+  assert.equal(retainedReleaseTransition.classification, 'active-evidence');
+  assert.equal(retainedReleaseTransition.owner, 'historical-release-evidence');
+  assert.equal(retainedReleaseTransition.deletion_allowed, false);
+  assert.equal(retainedReleaseTransition.size_bytes, null);
   assert.equal(
-    historicalUpgradeEvidence.size_status,
+    retainedReleaseTransition.size_status,
     'protected-artifact-not-inspected'
   );
 
-  const retiredSmokeBackups = result.entries.find(
-    entry => entry.id === 'retired-smoke-backups'
+  const expiredSmokeOutput = result.entries.find(
+    entry => entry.id === 'expired-smoke-output'
   );
-  assert.equal(retiredSmokeBackups.path, join(repoRoot, '.build/smoke-backups'));
-  assert.equal(retiredSmokeBackups.classification, 'expired-output');
-  assert.equal(retiredSmokeBackups.owner, 'host-smoke');
-  assert.equal(retiredSmokeBackups.deletion_allowed, true);
+  assert.equal(expiredSmokeOutput.path, join(repoRoot, '.build/smoke-backups'));
+  assert.equal(expiredSmokeOutput.classification, 'expired-output');
+  assert.equal(expiredSmokeOutput.owner, 'host-smoke');
+  assert.equal(expiredSmokeOutput.deletion_allowed, true);
 
   const finderMetadata = result.entries.find(
     entry => entry.id === 'finder-metadata'
@@ -167,7 +156,7 @@ test('inventory explains known, protected, private, expired, and unknown roots w
   assert.equal(acceptedHost.deletion_allowed, false);
   assert.equal(acceptedHost.size_bytes, null);
   assert.equal(acceptedHost.size_status, 'protected-artifact-not-inspected');
-  assert.match(acceptedHost.reason, /other-owned-Mac/i);
+  assert.match(acceptedHost.reason, /current signed app/i);
 
   const buildCache = result.entries.find(entry => entry.id === 'build-cache');
   assert.equal(buildCache.classification, 'reusable-cache');
@@ -362,7 +351,7 @@ test('workflow path assertions use the same roots and permit only validated temp
   assert.equal(
     assertManagedPath({
       ...options,
-      id: 'controlled-upgrade-evidence',
+      id: 'retained-release-comparison',
       candidatePath: '.build/controlled-upgrade/candidate'
     }).path,
     join(repoRoot, '.build/controlled-upgrade/candidate')
@@ -370,7 +359,7 @@ test('workflow path assertions use the same roots and permit only validated temp
   assert.throws(
     () => assertManagedPath({
       ...options,
-      id: 'controlled-upgrade-evidence',
+      id: 'retained-release-comparison',
       candidatePath: join(fixtureRoot, 'not-temporary')
     }),
     /managed root/i
@@ -378,7 +367,7 @@ test('workflow path assertions use the same roots and permit only validated temp
   assert.equal(
     assertManagedPath({
       ...options,
-      id: 'controlled-upgrade-evidence',
+      id: 'retained-release-comparison',
       candidatePath: join(fixtureRoot, 'temporary output'),
       allowTemporary: true,
       temporaryRoots: [fixtureRoot]
@@ -388,7 +377,7 @@ test('workflow path assertions use the same roots and permit only validated temp
   assert.throws(
     () => assertManagedPath({
       ...options,
-      id: 'controlled-upgrade-evidence',
+      id: 'retained-release-comparison',
       candidatePath: fixtureRoot,
       allowTemporary: true,
       temporaryRoots: [fixtureRoot]
@@ -409,7 +398,7 @@ test('workflow path assertions use the same roots and permit only validated temp
     assert.equal(
       assertManagedPath({
         ...options,
-        id: 'controlled-upgrade-evidence',
+        id: 'retained-release-comparison',
         candidatePath: temporaryPath,
         allowTemporary: true
       }).temporary_fixture,
@@ -447,11 +436,6 @@ test('workflow path assertions use the same roots and permit only validated temp
 
 test('the task command supports a repository path with spaces and relative or absolute cleanup paths', t => {
   const { fixtureRoot, repoRoot, homeDirectory } = makeFixture(t);
-  const ticketFile = join(
-    repoRoot,
-    '.scratch/dbcode-wrapper-implementation/issues/09-publish-public-source-and-private-personal-release.md'
-  );
-  assert.equal(readOtherOwnedMacTicketOpen(ticketFile), true);
 
   const common = [
     '--repo-root',
@@ -464,7 +448,7 @@ test('the task command supports a repository path with spaces and relative or ab
     'inventory',
     ...common
   ], { cwd: fixtureRoot, encoding: 'utf8' }));
-  assert.equal(inventory.other_owned_mac_ticket.open, true);
+  assert.equal(Object.hasOwn(inventory, 'other_owned_mac_ticket'), false);
 
   for (const selectedPath of [
     '.build/expired/session one',
@@ -514,7 +498,7 @@ test('the task command supports a repository path with spaces and relative or ab
     'assert-path',
     ...common,
     '--id',
-    'controlled-upgrade-evidence',
+    'retained-release-comparison',
     '--path',
     '.build/controlled-upgrade/relative output'
   ], { cwd: fixtureRoot, encoding: 'utf8' }));

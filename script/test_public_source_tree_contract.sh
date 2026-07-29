@@ -19,12 +19,20 @@ third_party_notices="${repo_root}/THIRD_PARTY_NOTICES.md"
 for required_statement in \
   'This is not an official DBCode product' \
   'DBCode is not included' \
-  'Published releases contain only the wrapper host'; do
+  'Published releases contain only the wrapper host' \
+  '[latest published Host Release]' \
+  './script/release_host.sh prepare' \
+  './script/release_host.sh publish --publish'; do
   rg -Fq "${required_statement}" "${readme}" || {
     echo "The public repository README is missing: ${required_statement}" >&2
     exit 1
   }
 done
+
+if rg -Fq '/releases/tag/' "${readme}"; then
+  echo "The public README must link to the latest release instead of freezing one release tag." >&2
+  exit 1
+fi
 
 rg -Fq '**Public Source Repository**:' "${context}" || {
   echo "CONTEXT.md must define the public source and host-release boundary." >&2

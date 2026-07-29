@@ -157,7 +157,7 @@ main_executable="${app}/Contents/MacOS/${bundle_executable}"
   exit 1
 }
 [[ -x "${main_executable}" && "$(lipo -archs "${main_executable}")" == "arm64" ]] || {
-  echo "The automated private release must contain one Apple-silicon executable." >&2
+  echo "The prompt-free Host Release must contain one Apple-silicon executable." >&2
   exit 1
 }
 

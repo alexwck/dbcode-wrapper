@@ -51,7 +51,9 @@ DBCode is unchanged upstream software. A version bump should verify the wrapper 
 7. Build and sign once, then run the one persistent-profile rendered smoke.
 8. Confirm added or changed DBCode routes remain visible. Render a deeper surface only when doing so is prompt-free.
 9. Keep model calls, real credentials, mutation, human prompts, and external-service checks outside deployment.
-10. Package, approve, and publish the normal host-only release only after the automated identity and package checks pass. Verify the public release and its two assets after upload.
+10. Run `./script/release_host.sh prepare` to accept, tag, package, independently verify, and approve the exact release set.
+11. Review and commit its one change to `host/approved-release-history.json`.
+12. Run `./script/release_host.sh publish --publish` as a separate explicit action, then verify the public release and its two assets.
 
 Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion. Do not create a new issue or refresh the wiki for a routine version bump unless wrapper behaviour, compatibility, or the release channel changes.
 

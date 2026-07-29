@@ -68,6 +68,7 @@ for adapter in \
   test_generated_workspace_contract.sh \
   test_connection_catalogue_contract.sh \
   test_fast_release_acceptance_contract.sh \
+  test_release_host_task.sh \
   test_focused_shell_contract.sh; do
   require_line_once \
     "${trace_file}" \

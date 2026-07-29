@@ -34,6 +34,7 @@ for caller in \
   "${REPO_ROOT}/script/preview_release_rollback.sh" \
   "${REPO_ROOT}/script/package_host_release.sh" \
   "${REPO_ROOT}/script/verify_host_release.sh" \
+  "${REPO_ROOT}/script/release_host.sh" \
   "${REPO_ROOT}/script/publish_release.sh"; do
   rg -Fq 'lib/generated_workspace.sh' "${caller}" || {
     echo "A generated-output workflow does not load the retention contract: ${caller}" >&2
@@ -94,9 +95,9 @@ rg -Fq 'qa_root="$(generated_workspace_path "rendered-evidence")"' \
 rg -Fq 'output_root="$(generated_workspace_path "rendered-screenshots")"' \
   "${REPO_ROOT}/script/test_focused_shell_rendered.sh"
 rg -Fq "process.env.DBCODE_WRAPPER_QA_ROOT" \
-  "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+  "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 rg -Fq "process.env.DBCODE_WRAPPER_RENDERED_OUTPUT_ROOT" \
-  "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+  "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 rg -Fq 'snapshot_parent="$(generated_workspace_path "rollback-evidence")"' \
   "${REPO_ROOT}/script/prepare_release_rollback.sh"
 rg -Fq 'worktree_parent="$(generated_workspace_path "rollback-worktrees")"' \

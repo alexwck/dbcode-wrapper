@@ -24,7 +24,7 @@ Before changing behaviour, read:
 2. `CONTEXT.md` for the project's domain language.
 3. `docs/architecture/overview.md` for the maintained seams and data flow.
 4. `wiki/OVERVIEW.md`, when present and current, for derived orientation and links.
-5. The relevant issue under `.scratch/dbcode-wrapper-implementation/issues/`.
+5. The current open or claimed issue under `.scratch/dbcode-wrapper-implementation/issues/`, when one exists.
 6. `host/README.md` and the exact source or test being changed.
 
 ## Sources of truth
@@ -35,7 +35,7 @@ Before changing behaviour, read:
 - Official feature-family orientation: `docs/product/dbcode-capability-coverage.md`.
 - AI and MCP payload guidance: `docs/security/ai-data-sharing.md`.
 - Package slimming and its rollback: `host/slimming-policy.json`.
-- Current task state and evidence: `.scratch/dbcode-wrapper-implementation/`.
+- Current task state: the open or claimed issue linked from `.scratch/dbcode-wrapper-implementation/map.md`. Resolved issues are dated history.
 - Exact behaviour: current source and tests.
 - Learning material: `docs/` and, after it is generated, `wiki/`. Learning material is derived and never overrides source or tests.
 
@@ -67,33 +67,19 @@ Before changing behaviour, read:
 
 ### Release state and macOS prompts
 
-- Put a security rule used by more than one acquisition route in one deep module. Keep shell and in-app adapters limited to download, file, and private-cache work; do not let either adapter grow a second verification policy.
-- Keep the deterministic cross-adapter mutation matrix in the fast source gate. Run the real cached-package verifier only when the shared verifier, an acquisition adapter, or the pinned runtime set changes.
 - Keep automatic update polling, the status icon, review actions, and notifications read-only. They may report public Code OSS, VSCodium, and DBCode records, but they must not change version pins, approve or install a candidate, create a tag, or publish a release.
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
-- Validate the source tag, signed app, release lock, and acceptance evidence once to create one digest-bound Host Release context. A package copy may reuse that context only while its digest, signature, identity, architecture, and notices still match. The mounted-DMG verifier must build its own context and must not trust the package copy shortcut.
 - Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
-- A materialized exact-source gate may reuse the launcher checkout's ignored caches and pinned toolchain. Keep source evidence inside the materialized checkout; never validate the launcher's mutable `.build/work` tree as if it belonged to that source.
-- Keep upstream host compilation separate from release assembly. A DBCode-only bump should reuse the Compiled Host when its content-addressed input ID still matches.
-- Treat a missing or changed input ID as a full-build request. Cache validation must cover file contents, symbolic-link targets, and executable modes. Preserve a damaged cache entry for investigation, rebuild it, and never weaken validation to save time.
-- Store the actual compiler environment in the Compiled Host receipt. On a cache hit, use that receipt in the final manifest and skip compiler-only Python, Clang, SDK, Node, and npm preflights.
-- An accepted source tag is immutable. Package only when the tag, release lock, build manifest, app digest, and final acceptance evidence identify the same release set.
-- Fully quit the DBCode Wrapper App before rebuilding, packaging, or testing profile persistence.
+- Reuse the exact Compiled Host when its content-addressed inputs match. A DBCode-only bump must not recompile unchanged Code OSS.
 - Automated tests must never wait for Keychain, Kernel, Gatekeeper, Safe Storage, sign-in, licence, OAuth, or another person-controlled prompt. Do not approve or bypass those prompts automatically.
-- Treat those prompts as normal app setup or use, not automated test evidence. The fast rendered check must avoid actions that can open them.
-- Use the one persistent generated `qa` profile for rendered checks. Do not create fresh or recovery profiles in the default deployment path.
-- The generated `qa` profile and the user's Standalone DBCode Profile are separate. "One profile" means one automated GUI profile, never the real personal profile.
-- Static smoke must not launch the app. The one-profile rendered smoke owns the only automated GUI launch and checks prompt-gated DBCode routes for reachability without activating them.
+- Use one persistent generated `qa` profile for rendered checks. It is separate from the user's Standalone DBCode Profile and is the only automated GUI profile.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
-- Prompt-free approval accepts only the current validated acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
-- Keep one maintained release path. Remove a helper and its owning test when no maintained caller remains; do not keep a second optional release path.
-- Exact-ref privacy checks must batch Git history objects. Do not start a new Git process for every historical file.
-- A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
-- Publish a release only when the annotated tag, release lock, build manifest, signed app, final acceptance report, package, and approval identify the same release set.
+- Package and approve only when the annotated tag, release lock, build manifest, signed app, final acceptance report, and independent mounted verification identify the same release set.
+- Use `script/release_host.sh` as the normal owner-facing release interface. `prepare` may create the annotated tag only after acceptance passes and leaves one tracked approval-history change to commit. Publication remains the separate explicit `publish --publish` action.
 - Publish a normal GitHub release with only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
 - Never upload DBCode, profiles, compatibility evidence, verification receipts, or other local release evidence. DBCode remains external and each user obtains it from its official source under their own licence.
+- Keep one maintained release path. When a helper has no maintained product, build, release, rollback, user, or documentation caller and survives only through its own test, remove the helper and test together.
 - Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing and the complete source gate once from the final exact source.
-- Use one persistent generated QA profile and no human-required deployment tests. Do not add personal-profile, second-device, database, kernel, model, sign-in, licence, or macOS prompt checks for an unchanged wrapper boundary.
 
 ### Paths and temporary work
 
@@ -101,6 +87,7 @@ Before changing behaviour, read:
 - When a path contract returns a normalized absolute output path, the caller must use that returned value. Do not validate a relative path against the repository and then use the original value against the process working directory.
 - Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary evidence folders in the repository root or user home directory.
 - Use `./script/generated_workspace.sh inventory` and a cleanup plan before changing generated state. Apply cleanup only to one exact validated expired path. Do not replace the retention contract with ad hoc `rm` commands.
+- Classify generated output by its current artifact purpose and explicit expiry. Do not make retention depend on a resolved issue status or emit a retired workflow as current guidance.
 - Remove only temporary paths created by the current task. Follow the maintained and generated file rules below for all existing evidence.
 
 ## Public and private data
@@ -113,7 +100,7 @@ Do not use OpenKnowledge sync, share links, or another publishing route to bypas
 
 Maintain wrapper sources, policies, tests, wrapper extensions, and patches under `host/` and `script/`. Never hand-edit `dist/`, generated Code OSS/VSCodium checkouts under `.build/`, installed profile content, or rendered test output.
 
-Keep current acceptance evidence, approved rollback backups, the current signed app, and reusable caches until the owning ticket says they can be removed. Rebuildable worktrees, smoke output, and screenshots may be removed only after their evidence is no longer needed.
+Keep current acceptance evidence, approved rollback backups, the current signed app, and reusable caches until the owning workflow explicitly records their expiry. Rebuildable worktrees, smoke output, and screenshots may be removed only after their evidence is no longer needed.
 
 The Generated Workspace Retention module is the source of truth for ignored build, test, acceptance, rollback, cache, and package roots. Cleanup is a dry run unless one exact validated path is passed with `--apply`; a class cannot be applied. Only deliberately expired output can be removed. Unknown paths, private profiles, active evidence, reusable caches, rebuildable work, symbolic links, broad roots, and protected release assets are not cleanup candidates. Do not traverse protected or unknown roots merely to calculate their size.
 
@@ -135,6 +122,9 @@ When wrapper behaviour changes, update the root README, the relevant maintained 
 
 - Keep maintained public documentation forward-facing. Describe the one supported workflow instead of cataloguing removed scripts or retired release paths. Keep historical detail in dated issue comments, the append-only wiki log, and Git history.
 - Use simple plain English in public documentation. Keep `README.md` focused on the product, privacy boundary, update status, current release flow, and the shortest useful commands.
+- Do not hardcode the current wrapper or upstream versions in maintained guidance. Read them from the Release Specification or link to the latest published release. Version-specific compatibility evidence and release notes may name exact versions.
+- Keep operational detail behind the host, command, architecture, and verification guides instead of copying it into the root README.
+- A historical or generated visual is not a current source of truth. Remove it when maintained source, tests, or product guidance has moved on.
 
 ## OpenKnowledge
 

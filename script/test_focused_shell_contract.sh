@@ -7,7 +7,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 focused_shell_patch="${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
 integration_patch="${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
 focused_patches=("${focused_shell_patch}" "${integration_patch}")
-rendered_test="${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+rendered_test="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 profile_settings="${REPO_ROOT}/host/profile/settings.json"
 manifest_generator="${REPO_ROOT}/script/generate_manifest.sh"
 smoke_test="${REPO_ROOT}/script/smoke_host.sh"

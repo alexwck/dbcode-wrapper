@@ -81,8 +81,8 @@ const timeout = Number(process.env.DBCODE_WRAPPER_QA_TIMEOUT_MS ?? 60000);
 const reportPath = path.join(
 	outputRoot,
 	renderedMode === 'connection-catalogue'
-		? 'ticket-22-connection-catalogue-report.json'
-		: 'ticket-03-rendered-report.json'
+		? 'connection-catalogue-rendered-report.json'
+		: 'focused-shell-rendered-report.json'
 );
 
 const obsoleteExtensionDirectories = fs.existsSync(path.join(qaExtensions, '.obsolete'))
@@ -747,7 +747,7 @@ async function verifyFocusedShell(app, page) {
 	const homeState = await geometry(page);
 	assert.equal(homeState.dataset.dbcodeWrapperConnectionsHome, 'open');
 	assert.equal(homeState.terminalVisible, false);
-	await page.screenshot({ path: path.join(outputRoot, 'ticket-03-persistent-qa-smoke.png') });
+	await page.screenshot({ path: path.join(outputRoot, 'focused-shell-persistent-qa-smoke.png') });
 	await closeConnectionsHome(page);
 	record('Connections Home owns the main canvas without opening Terminal');
 

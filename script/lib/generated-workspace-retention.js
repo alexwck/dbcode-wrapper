@@ -16,7 +16,6 @@ const CLASSIFICATIONS = Object.freeze([
   'unknown'
 ]);
 const CLASSIFICATION_SET = new Set(CLASSIFICATIONS);
-const OTHER_OWNED_MAC_ISSUE = '09-publish-public-source-and-private-personal-release';
 
 function fail(message) {
   throw new Error(message);
@@ -131,27 +130,16 @@ function privateProfileRoot(id, profilePath, reason) {
 
 function createRetentionContract({
   repoRoot,
-  homeDirectory,
-  otherOwnedMacTicketOpen
+  homeDirectory
 }) {
   const checkedRepoRoot = checkedExistingDirectory(repoRoot, 'Repository root');
   const checkedHome = checkedExistingDirectory(homeDirectory, 'Current user home directory');
-  if (typeof otherOwnedMacTicketOpen !== 'boolean') {
-    fail('The other-owned-Mac ticket state must be explicit.');
-  }
   const buildRoot = path.join(checkedRepoRoot, '.build');
   const currentProfile = profileLayout.createProfileLayout({
     profileName: 'default',
     homeDirectory: checkedHome,
     buildRoot
   });
-  const protectedTransferReason = otherOwnedMacTicketOpen
-    ? 'The legacy private transfer assets must remain available while the other-owned-Mac ticket is open.'
-    : 'The legacy private transfer assets remain protected until their original workflow explicitly releases them.';
-  const protectedRollbackReason = otherOwnedMacTicketOpen
-    ? 'Approved rollback backups must remain available while the other-owned-Mac ticket is open.'
-    : 'The other-owned-Mac ticket is closed, but the rollback workflow must still explicitly release these approved backups.';
-
   const roots = [
     managedRoot(
       checkedRepoRoot,
@@ -219,7 +207,7 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
-      'retired-catalogue-profile',
+      'expired-catalogue-output',
       '.build/q',
       'expired-output',
       'focused-shell-rendered',
@@ -238,7 +226,7 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
-      'retired-smoke-backups',
+      'expired-smoke-output',
       '.build/smoke-backups',
       'expired-output',
       'host-smoke',
@@ -258,11 +246,11 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
-      'proof-evidence',
+      'retained-release-proof',
       '.build/proof',
       'active-evidence',
-      'dbcode-proof',
-      'The current DBCode proof profile and sanitized acceptance summaries remain active evidence.',
+      'historical-release-evidence',
+      'Historical release proof output remains protected until an explicit expiry record names it.',
       false
     ),
     managedRoot(
@@ -285,20 +273,20 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
-      'controlled-upgrade-evidence',
+      'retained-release-comparison',
       '.build/controlled-upgrade',
       'active-evidence',
-      'controlled-upgrade',
-      'Controlled-upgrade matrices, receipts, health checks, and rollback evidence remain active.',
+      'historical-release-evidence',
+      'Historical release comparison and rollback output remains protected until an explicit expiry record names it.',
       false
     ),
     managedRoot(
       checkedRepoRoot,
-      'historical-controlled-upgrade-evidence',
+      'retained-release-transition',
       '.build/u',
       'active-evidence',
-      'controlled-upgrade',
-      'The short-path promotion, rollback, installed-set, and restart-health receipts remain protected historical evidence.',
+      'historical-release-evidence',
+      'Historical short-path release evidence remains protected until an explicit expiry record names it.',
       false
     ),
     managedRoot(
@@ -306,8 +294,8 @@ function createRetentionContract({
       'acceptance-evidence',
       '.build/acceptance',
       'active-evidence',
-      'same-mac-acceptance',
-      'The final acceptance report must remain available while the other-owned-Mac ticket is open.',
+      'release-acceptance',
+      'Current and retained prompt-free acceptance reports remain protected until explicitly expired.',
       false
     ),
     managedRoot(
@@ -316,7 +304,7 @@ function createRetentionContract({
       'dist',
       'active-evidence',
       'accepted-release-set',
-      'The accepted app and build manifest must remain available while the other-owned-Mac ticket is open.',
+      'The current signed app and build manifest remain protected until a newer accepted release explicitly replaces them.',
       false
     ),
     managedRoot(
@@ -325,16 +313,16 @@ function createRetentionContract({
       '.build/approved-release-backups',
       'rollback-evidence',
       'release-rollback',
-      protectedRollbackReason,
+      'Approved rollback backups remain protected until the rollback workflow explicitly records their expiry.',
       false
     ),
     managedRoot(
       checkedRepoRoot,
-      'legacy-private-release-assets',
+      'retained-release-transfer',
       '.build/private-release',
       'final-transfer-assets',
-      OTHER_OWNED_MAC_ISSUE,
-      protectedTransferReason,
+      'historical-release-evidence',
+      'Historical release-transfer assets remain protected until an explicit expiry record names them.',
       false
     ),
     managedRoot(
@@ -372,10 +360,6 @@ function createRetentionContract({
     schema_version: 1,
     repository_root: checkedRepoRoot,
     home_directory: checkedHome,
-    other_owned_mac_ticket: {
-      id: OTHER_OWNED_MAC_ISSUE,
-      open: otherOwnedMacTicketOpen
-    },
     roots
   };
 }
@@ -556,7 +540,6 @@ function inventoryGeneratedWorkspace(options) {
     command: 'inventory',
     generated_at: new Date().toISOString(),
     repository_root: contract.repository_root,
-    other_owned_mac_ticket: contract.other_owned_mac_ticket,
     mutation_performed: false,
     entries
   };
@@ -624,13 +607,11 @@ function exactCleanupEntry(contract, candidatePath) {
 function planCleanup({
   repoRoot,
   homeDirectory,
-  otherOwnedMacTicketOpen,
   selector
 }) {
   const contract = createRetentionContract({
     repoRoot,
-    homeDirectory,
-    otherOwnedMacTicketOpen
+    homeDirectory
   });
   if (!selector || typeof selector !== 'object' || Array.isArray(selector)) {
     fail('Cleanup requires one explicit class or exact path.');
@@ -677,7 +658,6 @@ function planCleanup({
     command: 'cleanup',
     generated_at: new Date().toISOString(),
     repository_root: contract.repository_root,
-    other_owned_mac_ticket: contract.other_owned_mac_ticket,
     selection,
     dry_run: true,
     execution_supported: selection.kind === 'exact-path',
@@ -689,7 +669,6 @@ function planCleanup({
 function executeCleanup({
   repoRoot,
   homeDirectory,
-  otherOwnedMacTicketOpen,
   selector
 }) {
   if (
@@ -705,13 +684,11 @@ function executeCleanup({
   const plan = planCleanup({
     repoRoot,
     homeDirectory,
-    otherOwnedMacTicketOpen,
     selector
   });
   const contract = createRetentionContract({
     repoRoot,
-    homeDirectory,
-    otherOwnedMacTicketOpen
+    homeDirectory
   });
   const planned = plan.items[0];
   const validated = exactCleanupEntry(contract, planned.path);
@@ -767,13 +744,11 @@ function rootById(contract, id) {
 function resolveManagedPath({
   repoRoot,
   homeDirectory,
-  otherOwnedMacTicketOpen,
   id
 }) {
   const contract = createRetentionContract({
     repoRoot,
-    homeDirectory,
-    otherOwnedMacTicketOpen
+    homeDirectory
   });
   const managed = rootById(contract, id);
   if (managed.scope !== 'repository') {
@@ -842,7 +817,6 @@ function assertNoSymbolicLinkBelowRoot(rootPath, candidatePath) {
 function assertManagedPath({
   repoRoot,
   homeDirectory,
-  otherOwnedMacTicketOpen,
   id,
   candidatePath,
   allowTemporary = false,
@@ -850,8 +824,7 @@ function assertManagedPath({
 }) {
   const contract = createRetentionContract({
     repoRoot,
-    homeDirectory,
-    otherOwnedMacTicketOpen
+    homeDirectory
   });
   const managed = rootById(contract, id);
   const resolved = resolveCandidatePath(contract.repository_root, candidatePath);
@@ -896,37 +869,13 @@ function assertManagedPath({
   fail(`Workflow output is outside the ${id} managed root: ${resolved}`);
 }
 
-function readOtherOwnedMacTicketOpen(ticketFile) {
-  const checkedTicketFile = checkedAbsolutePath(ticketFile, 'Other-owned-Mac ticket');
-  let metadata;
-  try {
-    metadata = fs.lstatSync(checkedTicketFile);
-  } catch (error) {
-    if (error?.code === 'ENOENT') {
-      fail(`Other-owned-Mac ticket is missing: ${checkedTicketFile}`);
-    }
-    throw error;
-  }
-  if (!metadata.isFile() || metadata.isSymbolicLink()) {
-    fail(`Other-owned-Mac ticket must be a plain file: ${checkedTicketFile}`);
-  }
-  const contents = fs.readFileSync(checkedTicketFile, 'utf8');
-  const status = contents.match(/^\*\*Status:\*\*\s*([^\s]+)\s*$/m)?.[1]?.toLowerCase();
-  if (!status) {
-    fail('Other-owned-Mac ticket has no readable status.');
-  }
-  return !['closed', 'resolved'].includes(status);
-}
-
 module.exports = {
   CLASSIFICATIONS,
-  OTHER_OWNED_MAC_ISSUE,
   assertManagedPath,
   contains,
   createRetentionContract,
   executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,
-  readOtherOwnedMacTicketOpen,
   resolveManagedPath
 };

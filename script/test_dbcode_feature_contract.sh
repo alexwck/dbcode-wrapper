@@ -11,7 +11,7 @@ focused_feature_patches=(
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
 )
 catalogue_contract_module="${REPO_ROOT}/host/qa/connection-catalogue-contract.cjs"
-rendered_test="${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+rendered_test="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 manifest_file=""
 dbcode_id="${DBCODE_ID}"
 dbcode_version="${DBCODE_VERSION}"
@@ -280,7 +280,7 @@ for required_catalogue_contract in \
   'verifyConnectionCatalogueSnapshot' \
   'captureConnectionCatalogueSnapshot' \
   'unchanged DBCode exposes the reviewed New Connection catalogue' \
-  'ticket-22-connection-catalogue-report.json' \
+  'connection-catalogue-rendered-report.json' \
   'rawLabelsStored: false'; do
   rg -Fq -- "${required_catalogue_contract}" "${catalogue_contract_module}" "${rendered_test}" || {
     echo "The complete DBCode connection-catalogue gate is missing: ${required_catalogue_contract}" >&2

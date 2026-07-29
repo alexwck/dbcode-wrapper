@@ -20,7 +20,7 @@
 
 Generated state now has one maintained Retention Contract and one public task command. `./script/generated_workspace.sh inventory` reports registered and unknown paths without changing them. Only explicitly registered expired output is measured; protected artifacts, caches, worktrees, unknown paths, and private profile contents are not traversed. `cleanup --class` and `cleanup --path` validate only explicit eligible selections and return a dry-run plan by default. Ticket 31 later added `cleanup --path PATH --apply`, which revalidates and removes one exact expired path. Class-wide apply remains refused.
 
-Build, smoke, rendered, proof, controlled-upgrade, same-Mac acceptance, rollback, private packaging, and independent package-verification callers now resolve their normalized output roots through the same contract. Current release evidence, caches, worktrees, rollback backups, transfer assets, the accepted host, and the private profile remain protected. Ticket 31 removed the three confirmed expired paths. The current inventory has no unknown root, protects the historical short-path controlled-upgrade receipts, and produces an empty expired-output plan.
+Build, smoke, rendered, acceptance, rollback, cache, and Host Release callers resolve their normalized output roots through the same contract. Roots are classified by current artifact purpose and explicit expiry, without reading resolved issue state or presenting an old workflow as current. Current and historical release evidence, caches, worktrees, rollback backups, transfer assets, the accepted host, and the private profile remain protected. The current inventory has no deletion-eligible path.
 
 ## Comments
 

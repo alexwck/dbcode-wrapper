@@ -20,7 +20,7 @@ Start at the Profile Layout interface. Follow the record into the normal app pro
 
 ## 5. Trace an Approved Release Set
 
-Start with `host/release-lock.json`. Follow the Release Specification into the immutable source snapshot, Compiled Host identity, source-set identity, build manifest, prompt-free acceptance, approval history, package identity, and rollback notes. Explain why a version string alone cannot authorize an update.
+Start with `host/release-lock.json`. Follow the Release Specification into the immutable source snapshot, Compiled Host identity, source-set identity, build manifest, prompt-free acceptance, approval history, package identity, and rollback notes. Then inspect `script/release_host.sh` to see how the owner-facing task derives those paths while keeping publication explicit. Explain why a version string alone cannot authorize an update.
 
 ## 6. Compare verification levels
 

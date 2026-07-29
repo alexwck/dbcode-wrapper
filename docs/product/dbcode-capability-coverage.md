@@ -51,7 +51,7 @@ Coverage: declared and reachable; rendered profile navigation; live checks only 
 
 Official features include the SQL editor, visual Query Builder, Universal SQL, schema-aware completion, query parameters, inline AI completion, transaction control, history, history sync and backup, execution plans, stored-routine debugging, run tabs, favourites, the query library, scratch files, formatting, idle timeout, and missing-`WHERE` detection. See the [SQL editor](https://dbcode.io/docs/query/sql-editor), [Query Builder](https://dbcode.io/docs/query/query-builder), and [execution plans](https://dbcode.io/docs/query/execution-plans).
 
-The wrapper keeps New Query, Open SQL, DBCode SQL context actions, History, Library, Scratch Files, Query Builder, and DBCode settings. It also keeps the DBCode `1.36.4` stored-routine debugger contribution. The prompt-free release does not claim a rendered or live debugging session; that remains optional user validation.
+The wrapper keeps New Query, Open SQL, DBCode SQL context actions, History, Library, Scratch Files, Query Builder, DBCode settings, and the installed DBCode release's stored-routine debugger contribution when present. The prompt-free release does not claim a rendered or live debugging session; that remains optional user validation.
 
 Coverage: broad declared and reachable coverage; rendered SQL, Query Builder, History, and Library; live representative query checks; debugger declared and retained without a deployment-time live check.
 
@@ -61,7 +61,7 @@ Official features include editing, copying, exploring, exporting, importing, com
 
 The wrapper keeps DBCode's table and result grids, their toolbars, and DBCode-owned context actions. Focused source contracts protect the wrapper layout, while the fast rendered smoke checks the owning routes without reading or changing a database. Mutations, secure sharing, large copies, backup, restore, and remote streaming remain normal user-directed work.
 
-Direct CSV, Excel, Parquet, and Avro file opening is a known compatibility gap. DBCode declares its custom data-file editor, but the prior approved host pair did not register the provider. The approved DBCode `1.36.4` release does not claim this route because the prompt-free gate did not activate the custom editor. The wrapper keeps the guaranteed-failure shortcut hidden, while an optional focused check may prove the route later. Opening the same data through Connections is useful but is not feature-equivalent.
+Direct CSV, Excel, Parquet, and Avro file opening is a known compatibility gap. DBCode declares its custom data-file editor, but the maintained compatibility policy does not claim that route until the prompt-free gate activates the custom editor on an approved host pair. The wrapper keeps a known failing shortcut hidden, while an optional focused check may prove the route for a later release. Opening the same data through Connections is useful but is not feature-equivalent.
 
 Coverage: broad declared and reachable grid coverage; route-level rendered evidence; direct-file editing is limited; live, destructive, and external workflows are not deployment tests.
 

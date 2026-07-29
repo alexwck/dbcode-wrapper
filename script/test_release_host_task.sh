@@ -1,0 +1,273 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+
+task="${REPO_ROOT}/script/release_host.sh"
+[[ -x "${task}" ]] || {
+  echo "Missing executable owner-facing Host Release task: script/release_host.sh" >&2
+  exit 1
+}
+
+plan="$("${task}" plan)"
+release_tag="v${WRAPPER_VERSION}"
+
+jq -e \
+  --arg repository "${REPO_ROOT}" \
+  --arg release_tag "${release_tag}" \
+  --arg app "${APP_BUNDLE}" \
+  --arg manifest "${BUILD_MANIFEST}" \
+  --arg release_lock "${LOCK_FILE}" \
+  --arg rendered_report "${BUILD_ROOT}/qa/focused-shell-rendered-report.json" \
+  --arg acceptance "${BUILD_ROOT}/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
+  --arg assets "${BUILD_ROOT}/host-release/${release_tag}" \
+  --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval" \
+  --arg approved_history_candidate "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval/approved-release-sets.json" \
+  --arg history "${REPO_ROOT}/host/approved-release-history.json" '
+    .schema_version == 1
+    and .release_tag == $release_tag
+    and .source_repository == $repository
+    and .paths == {
+      app: $app,
+      manifest: $manifest,
+      release_lock: $release_lock,
+      rendered_report: $rendered_report,
+      acceptance: $acceptance,
+      assets: $assets,
+      approval: $approval,
+      approved_history_candidate: $approved_history_candidate,
+      approved_history: $history
+    }
+    and .stages == ["accept", "tag", "package", "approve", "record", "publish"]
+    and .tag_created_after_acceptance == true
+    and .approval_history_commit_required == true
+    and .exact_evidence_resume_supported == true
+    and .explicit_publish_required == true
+    and .automatic_publish == false
+  ' <<<"${plan}" >/dev/null
+
+for required_release_step in \
+  'approved-release-sets.json' \
+  'approved_release_history_record_approval' \
+  'approval_history_commit_required' \
+  'Record and commit host/approved-release-history.json before publication.'; do
+  rg -Fq "${required_release_step}" "${task}" || {
+    echo "The owner-facing release task is missing: ${required_release_step}" >&2
+    exit 1
+  }
+done
+
+if "${task}" publish >/dev/null 2>&1; then
+  echo "The owner-facing release task published without --publish." >&2
+  exit 1
+fi
+if "${task}" plan --publish >/dev/null 2>&1; then
+  echo "The owner-facing release task accepted --publish outside publication." >&2
+  exit 1
+fi
+
+fixture_parent="${TMPDIR:-/private/tmp}"
+fixture_root="$(mktemp -d "${fixture_parent%/}/dbcode-release-task.XXXXXX")"
+cleanup_fixture() {
+  case "${fixture_root}" in
+    "${fixture_parent%/}/dbcode-release-task."*) rm -rf "${fixture_root}" ;;
+    *)
+      echo "Refusing to remove an unexpected release-task fixture: ${fixture_root}" >&2
+      return 1
+      ;;
+  esac
+}
+trap cleanup_fixture EXIT INT TERM
+
+mkdir -p \
+  "${fixture_root}/script/lib" \
+  "${fixture_root}/host" \
+  "${fixture_root}/dist/DBCode Wrapper.app"
+cp "${task}" "${fixture_root}/script/release_host.sh"
+chmod 755 "${fixture_root}/script/release_host.sh"
+
+cat > "${fixture_root}/script/lib/host_config.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+WRAPPER_VERSION="9.9.9"
+APP_BUNDLE="${REPO_ROOT}/dist/DBCode Wrapper.app"
+BUILD_MANIFEST="${REPO_ROOT}/dist/build-manifest.json"
+LOCK_FILE="${REPO_ROOT}/host/release-lock.json"
+EOF
+
+cat > "${fixture_root}/script/lib/generated_workspace.sh" <<'EOF'
+#!/usr/bin/env bash
+fixture_generated_root="${REPO_ROOT}/.${FIXTURE_GENERATED_DIRECTORY_NAME:-build}"
+generated_workspace_path() {
+  case "$1" in
+    rendered-evidence) printf '%s\n' "${fixture_generated_root}/qa" ;;
+    acceptance-evidence) printf '%s\n' "${fixture_generated_root}/acceptance" ;;
+    host-release-assets) printf '%s\n' "${fixture_generated_root}/host-release" ;;
+    *) return 1 ;;
+  esac
+}
+EOF
+
+cat > "${fixture_root}/script/lib/approved_release_set.sh" <<'EOF'
+#!/usr/bin/env bash
+approved_release_set_validate_recorded_approval() {
+  printf 'validate-approval\n' >> "${RELEASE_TASK_LOG}"
+}
+approved_release_history_record_approval() {
+  [[ "$1" == "$4" ]]
+  printf 'record\n' >> "${RELEASE_TASK_LOG}"
+  cp "$3" "$4"
+}
+EOF
+
+cat > "${fixture_root}/script/verify_fast_release.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+output=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output) output="$2"; shift ;;
+  esac
+  shift
+done
+[[ -n "${output}" ]]
+printf 'accept\n' >> "${RELEASE_TASK_LOG}"
+mkdir -p "$(dirname "${output}")"
+jq -n \
+  --arg status "${MOCK_ACCEPTANCE_STATUS:-passed}" '
+    {
+      schema_version: 3,
+      status: $status,
+      gates: {complete: (if $status == "passed" then "passed" else "failed" end)}
+    }
+  ' > "${output}"
+EOF
+
+cat > "${fixture_root}/script/host_release_contract.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == "prompt-free-acceptance-record" && $# -eq 4 ]]
+printf 'validate-acceptance\n' >> "${RELEASE_TASK_LOG}"
+jq -e '
+  .schema_version == 3
+  and .status == "passed"
+  and .gates.complete == "passed"
+' "$4" >/dev/null
+EOF
+
+cat > "${fixture_root}/script/package_host_release.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+output_dir=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output-dir) output_dir="$2"; shift ;;
+  esac
+  shift
+done
+[[ -n "${output_dir}" ]]
+printf 'package\n' >> "${RELEASE_TASK_LOG}"
+mkdir -p "${output_dir}"
+: > "${output_dir}/fixture.dmg"
+printf '{}\n' > "${output_dir}/fixture-compatibility.json"
+printf '{}\n' > "${output_dir}/fixture-verification.json"
+EOF
+
+cat > "${fixture_root}/script/approve_host_release.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+output_dir=""
+source_tag=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output-dir) output_dir="$2"; shift ;;
+    --source-tag) source_tag="$2"; shift ;;
+  esac
+  shift
+done
+[[ -n "${output_dir}" && -n "${source_tag}" ]]
+printf 'approve\n' >> "${RELEASE_TASK_LOG}"
+mkdir -p "${output_dir}"
+jq -n --arg tag "${source_tag}" '
+  {
+    schema_version: 2,
+    release_set_id: "fixture-release-set",
+    source_tag: $tag
+  }
+' > "${output_dir}/approval-attestation.json"
+printf '{"schema_version":2,"id":"fixture-release-set"}\n' \
+  > "${output_dir}/approved-release-set.json"
+printf '{"schema_version":2,"approved_release_sets":[{"id":"fixture-release-set"}]}\n' \
+  > "${output_dir}/approved-release-sets.json"
+EOF
+
+cat > "${fixture_root}/script/publish_release.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'publish\n' >> "${RELEASE_TASK_LOG}"
+EOF
+
+chmod 755 \
+  "${fixture_root}/script/verify_fast_release.sh" \
+  "${fixture_root}/script/host_release_contract.sh" \
+  "${fixture_root}/script/package_host_release.sh" \
+  "${fixture_root}/script/approve_host_release.sh" \
+  "${fixture_root}/script/publish_release.sh"
+
+printf '{}\n' > "${fixture_root}/host/release-lock.json"
+printf '{"schema_version":2,"approved_release_sets":[]}\n' \
+  > "${fixture_root}/host/approved-release-history.json"
+printf '.build/\ndist/\n' > "${fixture_root}/.gitignore"
+
+git -C "${fixture_root}" init -q
+git -C "${fixture_root}" branch -M main
+git -C "${fixture_root}" config user.name "Release Task Test"
+git -C "${fixture_root}" config user.email "release-task@example.invalid"
+git -C "${fixture_root}" add .
+git -C "${fixture_root}" commit -qm "fixture source"
+fixture_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
+jq -n \
+  --arg revision "${fixture_revision}" '
+    {
+      source: {snapshot: {repository_revision: $revision}},
+      release: {release_set_id: "fixture-release-set"},
+      artifact: {sha256: ("a" * 64)}
+    }
+  ' > "${fixture_root}/dist/build-manifest.json"
+
+export RELEASE_TASK_LOG="${fixture_root}/.build/release-task.log"
+mkdir -p "${fixture_root}/.build"
+export MOCK_ACCEPTANCE_STATUS="failed"
+if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
+  echo "The release task accepted an incomplete report." >&2
+  exit 1
+fi
+[[ -z "$(git -C "${fixture_root}" tag --list v9.9.9)" ]] || {
+  echo "The release task created a tag before full acceptance validation." >&2
+  exit 1
+}
+rm -f "${fixture_root}/.build/acceptance/fast-release/v9.9.9/final-acceptance-report.json"
+
+unset MOCK_ACCEPTANCE_STATUS
+: > "${RELEASE_TASK_LOG}"
+"${fixture_root}/script/release_host.sh" prepare >/dev/null
+[[ "$(git -C "${fixture_root}" rev-parse 'v9.9.9^{commit}')" == "${fixture_revision}" ]]
+[[ "$(paste -sd, "${RELEASE_TASK_LOG}")" == \
+  "accept,validate-acceptance,package,approve,validate-approval,record" ]]
+[[ "$(git -C "${fixture_root}" status --porcelain)" == \
+  " M host/approved-release-history.json" ]]
+
+: > "${RELEASE_TASK_LOG}"
+"${fixture_root}/script/release_host.sh" prepare >/dev/null
+[[ "$(paste -sd, "${RELEASE_TASK_LOG}")" == \
+  "validate-acceptance,validate-approval,record" ]]
+
+git -C "${fixture_root}" add host/approved-release-history.json
+git -C "${fixture_root}" commit -qm "record approval"
+: > "${RELEASE_TASK_LOG}"
+"${fixture_root}/script/release_host.sh" publish --publish >/dev/null
+[[ "$(paste -sd, "${RELEASE_TASK_LOG}")" == "validate-approval,publish" ]]
+
+echo "Owner-facing Host Release task contract passed."

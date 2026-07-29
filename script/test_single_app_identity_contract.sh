@@ -83,7 +83,7 @@ rg -Fq -- '--profile qa' "${REPO_ROOT}/script/test_focused_shell_rendered.sh" ||
   exit 1
 }
 
-if rg -Fq 'os.homedir()' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"; then
+if rg -Fq 'os.homedir()' "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"; then
   echo "Rendered shell tests must not read extensions from the real user profile." >&2
   exit 1
 fi
@@ -112,7 +112,7 @@ for runtime_file in \
   fi
 done
 
-rg -Fq -- '--use-mock-keychain' "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
+rg -Fq -- '--use-mock-keychain' "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs" || {
   echo "Rendered shell tests must not use the real macOS Keychain." >&2
   exit 1
 }

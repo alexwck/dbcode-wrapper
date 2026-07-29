@@ -646,7 +646,7 @@ test('disposable recovery paths stay next to the active QA profile', () => {
 });
 
 test('disposable recovery preserves the separately verified QA extension set', () => {
-  const profileRoot = '/private/tmp/dbcode-wrapper-qa/ticket-03-persistent';
+  const profileRoot = '/private/tmp/dbcode-wrapper-qa/focused-shell-persistent';
   const verifiedExtensionsRoot = '/private/tmp/dbcode-wrapper-qa/profile/extensions';
   const layout = deriveRecoveryLayout({
     userDataRoot: path.join(profileRoot, 'user-data'),

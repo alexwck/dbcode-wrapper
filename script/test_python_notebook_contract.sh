@@ -73,7 +73,7 @@ for rendered_notebook_contract in \
   'the DBCode notebook route remains reachable without starting a kernel' \
   'kernelStarted: false' \
   'permissionPromptExpected: false'; do
-  rg -Fq "${rendered_notebook_contract}" "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" || {
+  rg -Fq "${rendered_notebook_contract}" "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs" || {
     echo "The rendered smoke is missing its prompt-free notebook route check: ${rendered_notebook_contract}" >&2
     exit 1
   }
@@ -97,7 +97,7 @@ for forbidden_interactive_notebook_contract in \
   'findNotebookPythonOutput' \
   'chooseQaPythonKernel'; do
   if rg -Fq "${forbidden_interactive_notebook_contract}" \
-    "${REPO_ROOT}/host/qa/ticket-03-rendered.cjs" \
+    "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs" \
     "${REPO_ROOT}/script/test_focused_shell_rendered.sh"; then
     echo "The fast rendered smoke still contains an interactive Kernel workflow: ${forbidden_interactive_notebook_contract}" >&2
     exit 1

@@ -2,81 +2,41 @@
 
 ## Destination
 
-Ship a maintainable, DBCode-only Apple-silicon application that runs the unchanged licensed DBCode extension on the smallest proven compatible host. The focused interface, profile migration, controlled update, rollback, slimming, persistent signing, architecture modules, complete connection-catalogue boundary, prompt-free acceptance, public source, verified host-only package, and normal public release channel are complete. `v0.1.3` is the first published Host Release.
+Maintain a small Apple-silicon host for the official unchanged DBCode extension. The wrapper owns application identity, a focused shell, private profile handling, compatibility checks, prompt-free verification, rollback, and host-only publication. DBCode owns database, notebook, AI, MCP, account, and licence behaviour.
 
-## Notes
+## Current state
 
-- DBCode remains unchanged and installed outside the signed application bundle.
-- The Public Source Repository contains only the wrapper's own source, patches, tests, notices, and project notes. It does not contain a built app, copied DBCode content, licence or account data, credentials, profiles, local databases, signing secrets, or raw real-profile evidence. Sanitized issue notes may retain versions, artifact digests, and pass or fail summaries.
-- A published Host Release contains only the independently verified wrapper DMG and checksum, not DBCode, licence keys, database credentials, user profiles, compatibility manifests, or verification receipts. A fresh Finder launch offers one focused action that obtains and verifies the exact approved unchanged DBCode and Python/Jupyter packages from Open VSX into the current-user profile.
-- The normal release is published in this repository after the exact tag, release lock, signed app, acceptance report, package, and approval agree. The publisher verifies public state, server sizes, and SHA-256 digests after upload.
-- Releases use the current-user self-signed identity and document checksum verification plus macOS `Open Anyway`. The project does not depend on a paid Apple developer membership, Developer ID, or Apple notarization.
-- Code OSS is the current extension-host and workbench runtime. VSCodium is its reproducible macOS build and packaging layer, not a second runtime.
-- The current signed application is the accepted database-client checkpoint: Connections Home, Database Explorer, automatic DBCode result layout, focused query routes, and no generic Code OSS bottom panel.
-- The exact `v0.1.0` source was rebuilt after the focused first-run runtime installer landed, passed renewed full acceptance, and produced a verified host-only DMG without moving the annotated source tag.
-- The exact `v0.1.2` package approves unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not replace the installed app or write the production profile.
-- The exact `v0.1.3` source is published as a normal host-only release with only its independently verified DMG and checksum. It does not bundle DBCode or change the production profile.
-- Open work lives in child tickets and is found from their `Status`, `Blocked by`, and `Type` fields rather than being repeated on this map.
-- This implementation map carries execution as well as decisions. Work one ticket at a time, record focused and full verification before resolution, and commit each dependency-complete slice separately.
-- The other-owned-Mac acceptance is complete. Generated-artifact cleanup still follows the retention contract, and new release candidates must preserve the retained `v0.1.0` evidence and rollback path.
+- The normal release channel is a published GitHub Host Release containing only the independently verified DMG and checksum.
+- The exact wrapper and upstream versions live only in `host/release-lock.json` and generated release evidence.
+- Automatic Code OSS, VSCodium, and DBCode polling remains read-only. It reports updates but cannot change a pin, create a tag, approve or install a candidate, publish a release, or change a profile.
+- Routine deployment uses the fast source gate, an exact Compiled Host cache, static smoke, and one persistent generated `qa` profile.
+- `script/release_host.sh` derives the normal release tag and paths. Acceptance and tagging happen before packaging and approval; publication remains a separate explicit action.
+- Generated output is classified by artifact purpose and explicit expiry. Historical output stays protected without making its retired process current again.
+- The Public Source Repository never includes DBCode, private profiles, credentials, databases, signing secrets, built apps, raw real-profile evidence, or local release receipts.
 
-## Decisions so far
+## Maintained modules
 
-- [Build the reproducible private macOS host](./issues/01-build-reproducible-private-macos-host-and-smoke-harness.md) — Use VSCodium as the reproducible packaging layer around a pinned Code OSS runtime, then build, sign, and verify an independent Apple-silicon application with private product identity and profiles.
-- [Load unchanged DBCode in the isolated host](./issues/02-load-unchanged-dbcode-in-isolated-host-profile.md) — Install the verified official DBCode `1.36.1` package outside the app bundle and use the app's natural private macOS profile paths so scripted and Finder launches share the same licence and connection state.
-- [Ship the DBCode-focused redesign](./issues/03-ship-dbcode-focused-redesign.md) — Present DBCode as a dedicated database application, with Results on the right or below and project SQL files opening as query tabs through one SQL-only native command.
-- [Clarify the host and streamline ongoing development](./issues/10-clarify-host-and-streamline-development.md) — Keep VSCodium packaging around the Code OSS runtime, make SQL the only query-document entry, remove obsolete exploration material, and batch Appshot feedback before the next full build.
-- [Keep the compatible host and slim it before considering a rewrite](./issues/11-decide-minimum-maintainable-dbcode-host.md) — Open VSX distributes DBCode but does not run it; keep the Code OSS extension-host interface, refine the UI with Appshot, then remove only packaged host content proven unnecessary by the complete DBCode compatibility gate.
-- [Accept the focused DBCode application shell](./issues/12-refine-database-client-redesign-with-appshot.md) — Use DBCode-owned Connections Home, database navigation, queries, account, tables, and result grids inside a focused shell; hide generic IDE panels and let the window width place new results beside or below the query automatically.
-- [Ship the slim compatible Code OSS host](./issues/13-slim-compatible-code-oss-host.md) — Omit source maps and package only SQL, the active color and icon themes, and standard notebook renderers; keep DBCode external and unchanged, with one policy switch that restores every upstream built-in if compatibility ever requires it.
-- [Keep advanced DBCode features reachable](./issues/05-keep-advanced-dbcode-features-reachable.md) — Keep seven proven DBCode Tools routes, reveal scratch files through Finder, remove guaranteed-failure and duplicate actions, lock settings to DBCode, and require exact contribution plus rendered checks for every approved host-and-DBCode release set.
-- [Guide safe first-run profile migration](./issues/04-guide-safe-first-run-profile-migration.md) — Start with a clean Standalone DBCode Profile, import only reviewed non-secret connection details through DBCode's own workflow, defer a hyphenated DuckDB connection unless its exact read-only preflight succeeds, and provide profile-only backup and recreation that reopens exactly once.
-- [Show safe update availability](./issues/06-show-update-availability-from-official-metadata.md) — Check only official stable VSCodium and DBCode metadata, show each component separately, and call an exact pair ready only when a complete local approval binds its source identity to the signed artifact; discovery never installs or promotes anything.
-- [Promote and roll back complete approved release sets](./issues/07-promote-and-roll-back-approved-release-sets.md) — Keep the accepted rollback set intact and verify it before an explicit user-controlled restore. The older four-pair, controlled-promotion, and real-Keychain workflow is retained evidence; its obsolete executable harnesses are removed.
-- [Accept the same-Mac personal release](./issues/08-produce-same-mac-personal-release-and-run-full-acceptance.md) — The original release passed the older full same-Mac proof. New releases use prompt-free acceptance based on source contracts, static smoke, and the one persistent-profile rendered smoke.
-- [Publish public source and establish the Host Release boundary](./issues/09-publish-public-source-and-private-personal-release.md) — Keep the wrapper source public and DBCode external. The legacy private drafts remain historical, while new versions use a normal published host-only release with checksum verification and the documented macOS `Open Anyway` path.
-- [Preserve documented DBCode capability while keeping the host focused and slim](./issues/14-audit-official-dbcode-feature-coverage.md) — Consolidate only proved duplicate routes; treat direct data files, project-aware workflows, HTTP MCP, advanced SQL actions, and the DBCode debugger as compatibility work, keep Copilot Chat out when HTTP MCP proves the same database tools, and make Python/Jupyter part of the tested base capability.
-- [Approve DBCode 1.36.2 with core Python notebooks](./issues/15-approve-dbcode-1-36-2-with-core-python-notebooks.md) — Approve the exact seven-extension DBCode `1.36.2` and Code OSS `1.126.0` release set after rendered, licensed, database, persistence, size, signature, inventory, and rollback gates; retain a runnable DBCode `1.36.1` snapshot while tickets 07 and 08 finish installed rollback and persistent signing.
-- [Document and clean the maintainable source tree](./issues/16-document-and-clean-the-maintainable-source-tree.md) — Add the public architecture, maintenance, privacy, verification, and learning contracts before changing release identities.
-- [Deepen the Release Specification module](./issues/17-deepen-the-release-specification-module.md) — Validate the lock once and return complete build, extension, profile/product, and release-identity records instead of leaking its JSON layout across scripts.
-- [Deepen the Approved Release Set contract](./issues/18-deepen-the-approved-release-set-contract.md) — Centralize canonical release-set identity, history validation, update matching, package-check vocabulary, and prompt-free approval behind shell and JavaScript adapters.
-- [Unify the Standalone DBCode Profile layout](./issues/19-unify-the-standalone-dbcode-profile-layout.md) — Derive one validated profile record for shell launch/proof code and JavaScript recovery code.
-- [Replace launch helpers with a Host Session module](./issues/20-replace-launch-helpers-with-a-host-session-module.md) — Put launch, renderer and DBCode readiness, logs, timeout, and complete quit behind one policy-driven session interface.
-- [Consolidate the Code OSS patch stack by semantic seam](./issues/21-consolidate-the-code-oss-patch-stack.md) — Replace chronological UI patch history with a small semantic plan and prove the final pinned Code OSS tree is unchanged.
-- [Preserve every DBCode connection capability](./issues/22-preserve-all-dbcode-connection-capabilities.md) — Keep the unchanged installed DBCode catalogue authoritative; use PostgreSQL, DuckDB, Parquet, SQLite, and notebooks as optional depth checks rather than a wrapper allowlist.
-- [Discover Code OSS updates independently](./issues/23-discover-code-oss-updates-independently.md) — Check Microsoft, VSCodium, and DBCode separately, show Code OSS `1.130.0` as not tested, and never install or approve a release from discovery alone.
-- [Open each component's official release page](./issues/24-open-official-release-pages-from-every-update-row.md) — Keep Open VSX as DBCode's verified metadata source while sending Code OSS and VSCodium rows to their exact GitHub tags and the DBCode row to its exact official changelog version page.
-- [Read frozen Release Specifications for rollback](./issues/25-read-frozen-release-specifications-for-rollback.md) — Keep new candidates on the strict current schema while allowing only exact manifest-bound schema-2 and earlier schema-4 current sets through a read-only historical adapter.
-- [Require every compatibility pairing before promotion](./issues/26-require-every-compatibility-pairing-before-promotion.md) — Treat all four current/candidate host and DBCode receipts as promotion gates so no failed mixed pairing can be hidden by a passing baseline and intended pair.
-- [Canonicalize proof extension inventory](./issues/27-canonicalize-proof-extension-inventory.md) — Record the exact external extension set in canonical ID order so host CLI display ordering cannot make current acceptance evidence look stale.
-- [Establish the learning wiki and repository hygiene](./issues/28-establish-the-learning-wiki-and-repository-hygiene.md) — Keep the public source and local issue tracker authoritative, add a source-anchored public OpenKnowledge wiki for learning, retain only local ignored OpenKnowledge state, and protect release evidence while later cleanup waits for its retention contract.
-- [Run each development test through one owner](./issues/29-remove-duplicate-development-test-executions.md) — Keep the fast default development gate while letting each focused adapter run its pinned Node tests exactly once; deep legacy workflows run only when changed.
-- [Put generated state behind one retention contract](./issues/30-add-a-generated-workspace-retention-contract.md) — Register ignored build, test, acceptance, rollback, cache, and package roots in one inspectable module; protect current release evidence and private profiles; plan by class or exact path; and apply only one exact validated expired path.
-- [Prune superseded generated artifacts safely](./issues/31-prune-superseded-generated-artifacts-safely.md) — Remove only confirmed expired output after other-owned-Mac acceptance while preserving the accepted release, rollback assets, private profiles, current evidence, worktrees, and caches.
-- [Unify Open VSX package verification](./issues/32-unify-open-vsx-package-verification.md) — Keep scripted and Finder acquisition as separate adapters while one deep module owns registry identity, engine compatibility, sizes, digests, keys, signatures, archive safety, and manifests.
-- [Concentrate atomic release-set switching](./issues/33-concentrate-atomic-release-set-switching.md) — Closed as superseded after the controlled-promotion and real-profile switching harnesses were removed; prompt-free approval does not install, while guarded rollback only prepares, verifies, and previews isolated data.
-- [Centralize the Private Personal Release acceptance record](./issues/34-centralize-the-private-release-acceptance-record.md) — Validate the prompt-free schema-3 acceptance record once for packaging, independent verification, and approval while keeping older accepted records readable.
-- [Deepen Profile Setup orchestration](./issues/35-deepen-profile-setup-orchestration.md) — Put Profile Setup state and ordering behind one testable module while keeping Code OSS, DBCode, file, clipboard, process, and quit operations as adapters.
-- [Derive Profile Layout identity from the Release Specification](./issues/36-derive-profile-layout-identity-from-the-release-specification.md) — Generate the validated profile and product record once for shell, bundled JavaScript, query storage, recovery, and rollback while keeping profile-only changes out of the Compiled Host key.
-- [Dismiss transient database surfaces consistently](./issues/37-dismiss-transient-database-surfaces-consistently.md) — Keep Database Explorer persistent until its toolbar toggle or a same-sidebar DBCode action closes or replaces it, while giving quick inputs, context menus, temporary DBCode drawers, connection routes, and AI-provider actions one coherent dismissal and focus contract.
-- [Approve DBCode 1.36.4 and hold Code OSS 1.130.0 safely](./issues/38-approve-dbcode-1-36-4-and-hold-code-oss-1-130.md) — Test DBCode `1.36.4` on the retained compatible host with the prompt-free one-profile gate, keep its new debugger route visible without making a live debugger session block deployment, record final package approval without installing it, and keep Code OSS `1.130.0` untested until matching VSCodium packaging exists.
-- [Separate host compilation from release assembly](./issues/39-separate-host-compilation-from-release-assembly.md) — Build from one clean immutable source snapshot, normalize source permissions to Git's regular-or-executable distinction, reuse only an exact digest-verified Compiled Host, then inject the current runtime records, sign, and verify without repeating Code OSS compilation for a DBCode-only release.
-- [Retire manual acceptance harnesses](./issues/40-retire-manual-acceptance-harnesses.md) — Keep prompt-free schema-3 acceptance and one generated `qa` profile as the maintained release path; remove the superseded proof, four-pair, controlled-promotion, and real-profile health harnesses without deleting retained evidence or the guarded rollback tools.
-- [Remove the retired prepared-release API](./issues/41-remove-the-retired-prepared-release-api.md) — Delete the unused prepared-set validator, member resolver, and legacy approval writer after their controlled-upgrade callers are gone; keep history, update matching, and prompt-free approval.
-- [Prepare the v0.1.2 wrapper-only Private Personal Release](./issues/42-prepare-v0-1-2-wrapper-only-private-release.md) — Reuse the unchanged verified host to assemble, sign, accept, package, and locally approve the completed wrapper maintenance without pushing, publishing, installing, or changing the personal profile.
-- [Transfer v0.1.2 through an authenticated draft](./issues/43-transfer-v0-1-2-through-an-authenticated-draft.md) — Keep the five exact host-only assets in an unpublished owner-only draft, prove authenticated integrity and anonymous denial, and leave installation outside the transfer.
-- [Prune inert maintenance and speed public readiness](./issues/44-prune-inert-maintenance-and-speed-public-readiness.md) — Remove unused human-assisted proof and signing paths, derive routine version-test expectations from the release lock, fail stale patch trees at compilation, and scan exact Git history through bounded batch streams without deleting retained evidence.
-- [Concentrate release validation while keeping update discovery](./issues/45-concentrate-release-validation-with-update-discovery.md) — Keep automatic Code OSS, VSCodium, and DBCode polling plus the read-only status UI, while packaging validates one digest-bound release context and the mounted-DMG verifier independently rebuilds its own.
+- [Architecture overview](../../docs/architecture/overview.md) — current seams and data flow.
+- [Release Specification](../../host/release-lock.json) — exact build, upstream, profile, product, and distribution input.
+- [DBCode feature policy](../../host/dbcode-feature-policy.json) — supported routes and compatibility gaps.
+- [Verification policy](../../docs/agents/verification-policy.md) — the smallest prompt-free gate for each change.
+- [Host guide](../../host/README.md) — build, runtime, profile, update, and diagnostic behaviour.
+- [Command guide](../../script/README.md) — maintained task commands and lower-level adapters.
+- [Generated Workspace Retention](../../script/lib/generated-workspace-retention.js) — ignored artifact classification and exact-path cleanup.
 
-## Not yet specified
+## Current work
 
-- Any further visual refinements requested after the current Appshot acceptance checkpoint.
-- Whether DBCode offers a supported standalone engine, SDK, or service API for licensed customers in the future.
+- [Remove stale maintenance and deepen the release workflow](./issues/46-remove-stale-maintenance-and-deepen-release-workflow.md) — delete no-caller maintenance, make retention artifact-based, add the owner-facing release task, and keep maintained guidance forward-facing.
+
+## History
+
+Resolved issues under `issues/` preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 
-- Modifying or reverse engineering DBCode.
-- Reimplementing DBCode's database engine and features while presenting the result as DBCode.
-- Replacing Code OSS with a different host without a bounded size and full-feature compatibility proof.
-- Mac App Store distribution or presenting the wrapper as an official DBCode application.
-- Paid Apple Developer Program membership, Developer ID distribution signing, and Apple notarization.
+- Modifying, redistributing, or reverse engineering DBCode.
+- Reimplementing DBCode features in the wrapper.
+- Replacing Code OSS without a bounded compatibility proof.
+- Presenting the app as an official DBCode product.
+- Automatic update installation or publication.
+- Paid Developer ID signing, Apple notarization, or Mac App Store distribution.

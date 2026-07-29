@@ -16,7 +16,7 @@ status_patches=(
 )
 installed_manifest_generator="${REPO_ROOT}/script/generate_installed_release_status.sh"
 approved_history="${REPO_ROOT}/host/approved-release-history.json"
-rendered_qa="${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+rendered_qa="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 
 for required_file in \
   "${extension_manifest}" \

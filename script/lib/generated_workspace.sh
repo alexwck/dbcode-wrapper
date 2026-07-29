@@ -14,8 +14,7 @@ generated_workspace_path() {
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
     path \
     --id "$1" \
-    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
-    --source-root "${REPO_ROOT}"
+    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}"
 }
 
 generated_workspace_resolve_path() {
@@ -28,8 +27,7 @@ generated_workspace_resolve_path() {
   if managed_result="$(
     "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
       "${arguments[@]}" \
-      --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
-      --source-root "${REPO_ROOT}" 2>&1
+      --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" 2>&1
   )"; then
     jq -er '.path' <<<"${managed_result}"
     return
@@ -54,8 +52,7 @@ generated_workspace_resolve_path() {
   esac
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/generated_workspace.cjs" \
     "${arguments[@]}" \
-    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" \
-    --source-root "${REPO_ROOT}" |
+    --repo-root "${GENERATED_REPO_ROOT:-${REPO_ROOT}}" |
     jq -er '.path'
 }
 

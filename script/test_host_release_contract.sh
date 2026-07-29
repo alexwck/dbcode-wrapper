@@ -678,7 +678,7 @@ if host_release_validate_source_tag \
   "${source_tag}" \
   "${tampered_snapshot_manifest}" \
   "${release_lock}" >/dev/null 2>&1; then
-  echo "The private release accepted a source snapshot that did not match its tag." >&2
+  echo "The Host Release accepted a source snapshot that did not match its tag." >&2
   exit 1
 fi
 
@@ -980,7 +980,7 @@ if PATH="${stub_bin}:${PATH}" bash "${packager}" \
   --source-repository "${fixture_repository}" \
   --source-tag "${source_tag}" \
   --output-dir "${test_root}/invalid-package" >/dev/null 2>&1; then
-  echo "The task-level packager accepted an incomplete same-Mac acceptance receipt." >&2
+  echo "The task-level packager accepted an incomplete prompt-free acceptance receipt." >&2
   exit 1
 fi
 

@@ -24,7 +24,7 @@ source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/profile_paths.sh"
 
-qa_script="${REPO_ROOT}/host/qa/ticket-03-rendered.cjs"
+qa_script="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 [[ -x "${NODE_BIN_DIR}/node" ]] || {
   echo "Build the pinned host before running the rendered focused-shell checks." >&2
   exit 1

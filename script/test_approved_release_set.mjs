@@ -873,4 +873,91 @@ test('prompt-free approval binds accepted package evidence without installing it
   assert.equal(writtenRecord.id, releaseSetId);
   assert.equal(writtenRecord.approval.mode, 'prompt-free-public-host-release');
   assert.deepEqual(writtenHistory.approved_release_sets, [writtenRecord]);
+
+  const validateRecordedApprovalArguments = [
+    contractCli,
+    'validate-recorded-approval',
+    manifestPath,
+    lockPath,
+    attestationPath,
+    recordPath,
+    outputHistoryPath,
+    compatibility.source.tag
+  ];
+  execFileSync(process.execPath, validateRecordedApprovalArguments);
+  const mismatchedRecordedApprovalPath = join(root, 'mismatched-recorded-approval.json');
+  writeJson(mismatchedRecordedApprovalPath, {
+    ...writtenRecord,
+    source_commit: 'f'.repeat(40)
+  });
+  assert.throws(
+    () => execFileSync(
+      process.execPath,
+      validateRecordedApprovalArguments.map(value =>
+        value === recordPath ? mismatchedRecordedApprovalPath : value
+      ),
+      { stdio: 'pipe' }
+    ),
+    /Command failed/
+  );
+  for (const [name, approval] of [
+    ['mode', {
+      ...writtenRecord.approval,
+      mode: 'prompt-free-private-release'
+    }],
+    ['timestamp', {
+      ...writtenRecord.approval,
+      approved_at: '2026-08-01T00:00:00Z'
+    }]
+  ]) {
+    const mismatchedRecord = { ...writtenRecord, approval };
+    const mismatchedRecordPath = join(root, `mismatched-${name}-record.json`);
+    const mismatchedHistoryPath = join(root, `mismatched-${name}-history.json`);
+    writeJson(mismatchedRecordPath, mismatchedRecord);
+    writeJson(mismatchedHistoryPath, {
+      ...writtenHistory,
+      approved_release_sets: [mismatchedRecord]
+    });
+    assert.throws(
+      () => execFileSync(
+        process.execPath,
+        validateRecordedApprovalArguments.map(value => {
+          if (value === recordPath) return mismatchedRecordPath;
+          if (value === outputHistoryPath) return mismatchedHistoryPath;
+          return value;
+        }),
+        { stdio: 'pipe' }
+      ),
+      /Command failed/
+    );
+  }
+
+  const trackedHistoryPath = join(root, 'tracked-approved-release-history.json');
+  const staleCandidatePath = join(root, 'stale-approved-release-history.json');
+  writeJson(trackedHistoryPath, { schema_version: 2, approved_release_sets: [] });
+  writeJson(staleCandidatePath, { schema_version: 2, approved_release_sets: [] });
+  const recordHistoryArguments = [
+    contractCli,
+    'record-approved-history',
+    trackedHistoryPath,
+    recordPath,
+    outputHistoryPath,
+    trackedHistoryPath
+  ];
+  execFileSync(process.execPath, recordHistoryArguments);
+  assert.deepEqual(
+    JSON.parse(readFileSync(trackedHistoryPath, 'utf8')),
+    writtenHistory
+  );
+  execFileSync(process.execPath, recordHistoryArguments);
+  assert.throws(
+    () => execFileSync(
+      process.execPath,
+      recordHistoryArguments.map(value =>
+        value === outputHistoryPath ? staleCandidatePath : value
+      ),
+      { stdio: 'pipe' }
+    ),
+    /Command failed/
+  );
 });

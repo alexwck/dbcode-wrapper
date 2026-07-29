@@ -10,7 +10,7 @@
 .env.*
 !.env.example
 
-# Local DBCode profiles and legacy temporary profiles
+# Private DBCode profiles and temporary evidence
 .dbcode-wrapper/
 .dbcode-wrapper-shared/
 .dbcode-proof-*/
