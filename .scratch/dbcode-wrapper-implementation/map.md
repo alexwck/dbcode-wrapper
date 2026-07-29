@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Issue 48](issues/48-publish-v0-1-4-bottom-results-host-release.md) — publish the committed bottom-results change as normal host-only `v0.1.4`.
+No implementation issue is currently active.
 
 ## History
 
