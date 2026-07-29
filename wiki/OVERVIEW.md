@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
+source_commit: ca6a58c0be798dfb6438f8326417ebd9ba42a354
 tags:
   - wiki
   - overview
@@ -12,7 +12,9 @@ tags:
 
 DBCode Wrapper is a focused macOS host for the official, unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build, update status, and release safety. DBCode still owns database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This wiki is a learning map, not a second source of truth. It is anchored to source commit [`afc5fe7`](https://github.com/alexwck/dbcode-wrapper/tree/afc5fe7666bf88007bcf4956f05928e3d93c8e2f). Check current source and tests when details disagree.
+DBCode's own query results open below the query at every window width. The wrapper sets that one result-location preference and leaves the result grid, Inspector, copy, and export behavior with DBCode.
+
+This wiki is a learning map, not a second source of truth. It is anchored to source commit [`ca6a58c`](https://github.com/alexwck/dbcode-wrapper/tree/ca6a58c0be798dfb6438f8326417ebd9ba42a354). Check current source and tests when details disagree.
 
 Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases/latest) for the current published Host Release. Releases are normal published releases in this repository. Public assets contain only the verified wrapper-host DMG and checksum; DBCode is not included.
 

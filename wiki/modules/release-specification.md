@@ -8,13 +8,15 @@ tags:
   - release
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: ca6a58c0be798dfb6438f8326417ebd9ba42a354
 ---
 ## Summary
 
 Release Specification is the main read boundary around `host/release-lock.json`. It validates the complete lock before returning smaller records for builds, Compiled Host identity, extensions, profiles, release status, approval, packaging, publication, and rollback.
 
-Current schema 6 adds the wrapper version and normal GitHub distribution policy. It fixes the repository, public host-only channel, DMG-and-checksum asset set, approved author identity, licence digest, and the rule that DBCode is not bundled. Product and profile identity remain in one validated record.
+Current schema 7 keeps the normal GitHub distribution policy and replaces the old responsive result-layout record with one `below` result location. Product and profile identity remain in one validated record.
+
+Released schema-6 locks remain readable only through the historical adapter. Their wide-window `beside` placement is not equivalent to schema 7, so an old responsive host cannot be reused for the new bottom-results contract.
 
 ## Responsibilities
 
@@ -33,9 +35,9 @@ Consumers ask for a named record such as `build`, `compiled-host`, `extensions`,
 
 ## Key files
 
-- [script/lib/release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/release_specification.sh) — current validation, projections, historical reads, and comparison logic.
-- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/release-lock.json) — canonical release declaration.
-- [script/test_release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_release_specification.sh) — current, distribution, unsafe-input, historical, and host-reuse contracts.
+- [script/lib/release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/script/lib/release_specification.sh) — current validation, projections, historical reads, and comparison logic.
+- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/release-lock.json) — canonical release declaration.
+- [script/test_release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/script/test_release_specification.sh) — current, distribution, unsafe-input, historical, and host-reuse contracts.
 
 ## Dependencies
 

@@ -149,3 +149,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: afc5fe7 (was e02160a)
 - Coverage: thin-wrapper boundary; automatic read-only upstream polling; one owner-facing Host Release task; acceptance before tag; exact evidence resume; tracked approval history; explicit normal publication; artifact-purpose retention; one prompt-free `qa` profile; AI and MCP data boundaries; retired live fixture guidance
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [AI and MCP data boundaries](./concepts/ai-and-mcp-data-boundaries.md), [Approved Release Set concept](./concepts/approved-release-set.md), [Prompt-free acceptance boundary](./concepts/representative-acceptance-fixtures.md), [Approval and guarded rollback](./flows/approval-and-guarded-rollback.md), [Package and publish a Host Release](./flows/package-and-publish-host-release.md), [Review an upstream update](./guides/review-an-upstream-update.md), [Approved Release Set module](./modules/approved-release-set.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [Generated Workspace Retention](./modules/generated-workspace-retention.md), [Host Release](./modules/host-release.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-07-29: refresh
+
+- Profile: public/standard
+- source_commit: ca6a58c (was afc5fe7)
+- Coverage: DBCode query results below the editor at every width; one public result-location preference; no wrapper result renderer; Release Specification schema 7; exact read-only schema-6 compatibility; old responsive hosts excluded from reuse
+- Pages: [Overview](./OVERVIEW.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Release Specification](./modules/release-specification.md)
