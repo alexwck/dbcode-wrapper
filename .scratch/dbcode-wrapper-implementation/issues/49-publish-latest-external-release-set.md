@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 - [x] Capture the three official stable records, immutable upstream commits, DBCode package metadata, changelog, and public contribution difference.
 - [x] Bump the wrapper to `0.1.5` and update the exact Release Specification, feature policy, and maintained documentation.
@@ -15,8 +15,8 @@
 - [x] Run the prompt-free development, cold-build, signed static-smoke, and one-profile rendered release gates.
 - [x] Create annotated tag `v0.1.5` only after exact-source acceptance passes.
 - [x] Package, mount, and independently verify the host-only DMG; record and commit approval without installing the app or changing the production profile.
-- [ ] Push `main` and `v0.1.5`, create a normal non-draft, non-prerelease GitHub release, and upload only the DMG and checksum.
-- [ ] Verify the public release, asset sizes and downloaded digests, remote refs, latest-release pointer, and final clean Git state.
+- [x] Push `main` and `v0.1.5`, create a normal non-draft, non-prerelease GitHub release, and upload only the DMG and checksum.
+- [x] Verify the public release, asset sizes and downloaded digests, remote refs, latest-release pointer, and final clean Git state.
 
 ## Comments
 
@@ -28,7 +28,12 @@
 - 2026-07-29: Exact-source build reused verified Compiled Host `compiled-host-bb6836aa899581d0091ff026837380529cdbc8edbde6741560b1c2e3bdf3cdc0`, then signed static smoke passed. The isolated rendered gate verified the official DBCode `1.36.6` registry record, VSIX digest, Ed25519 signature, public key, contribution surface, and the unchanged 12-section, 88-item New Connection catalogue. All 13 focused-shell checks passed without starting a database, notebook kernel, AI model, account flow, or other human gate.
 - 2026-07-29: The public wiki now records the latest-compatible host rule and the DBCode contribution-review rule. Its touched pages lint cleanly, its navigation has no dead links, and the only reported orphan is the OpenKnowledge pack skill rather than a public wiki page.
 - 2026-07-29: Prompt-free release acceptance passed for source commit `68d43e61f1715a12cf88236abd9ed4221315189d`, then the release task created annotated tag `v0.1.5`. The mounted host-only DMG is 187,964,248 bytes with SHA-256 `ff0f989755ff37f29f692b89c0f63c77a79f01f160b376ac14a65e3c86004a97`; its embedded app digest is `108e6a5ffdee7100928a15abe0626704929172e10259823081e1145f7fb8f0fe`. Approval history now records the exact tuple without changing the installed app or production profile.
+- 2026-07-29: Published [DBCode Wrapper v0.1.5](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.5) as the normal, non-draft, non-prerelease latest release with only the DMG and checksum. GitHub reports the expected asset sizes and digests; an independent download passed its checksum; remote `main` matches the approval commit; and remote `v0.1.5` peels to the accepted source commit.
 
 ## Answer
 
-In progress.
+Published DBCode Wrapper `v0.1.5` with VSCodium `1.126.04524`, compatible Code OSS `1.126.0`, and DBCode `1.36.6`.
+
+Code OSS `1.130.0` remains visible through automatic update polling, but it is not in this release because current VSCodium preparation and all four wrapper patch seams fail against it. Using it now would turn the wrapper into a broad VSCodium fork.
+
+DBCode `1.36.6` adds Library Open With Connection and result-toolbar pins, removes the separate Truncate Cascade command, and includes editor, MCP OAuth, driver-extraction, SQL-for-MongoDB-and-Stripe, and database-support changes. The wrapper preserves these DBCode-owned routes and settings without adding a second implementation.

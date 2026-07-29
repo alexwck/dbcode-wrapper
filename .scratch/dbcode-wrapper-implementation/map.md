@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Issue 49](issues/49-publish-latest-external-release-set.md) — publish DBCode `1.36.6` on the latest compatible stable host as `v0.1.5`.
+No implementation issue is currently claimed.
 
 ## History
 
-Resolved issues under `issues/` preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 49](issues/49-publish-latest-external-release-set.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 
