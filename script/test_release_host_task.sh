@@ -19,7 +19,7 @@ jq -e \
   --arg app "${APP_BUNDLE}" \
   --arg manifest "${BUILD_MANIFEST}" \
   --arg release_lock "${LOCK_FILE}" \
-  --arg rendered_report "${BUILD_ROOT}/qa/focused-shell-rendered-report.json" \
+  --arg rendered_report "${REPO_ROOT}/output/playwright/focused-shell-rendered-report.json" \
   --arg acceptance "${BUILD_ROOT}/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
   --arg assets "${BUILD_ROOT}/host-release/${release_tag}" \
   --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval" \
@@ -103,6 +103,7 @@ fixture_generated_root="${REPO_ROOT}/.${FIXTURE_GENERATED_DIRECTORY_NAME:-build}
 generated_workspace_path() {
   case "$1" in
     rendered-evidence) printf '%s\n' "${fixture_generated_root}/qa" ;;
+    rendered-screenshots) printf '%s\n' "${REPO_ROOT}/output/playwright" ;;
     acceptance-evidence) printf '%s\n' "${fixture_generated_root}/acceptance" ;;
     host-release-assets) printf '%s\n' "${fixture_generated_root}/host-release" ;;
     *) return 1 ;;

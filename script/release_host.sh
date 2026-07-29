@@ -43,11 +43,11 @@ source "${script_root}/lib/generated_workspace.sh"
 source "${script_root}/lib/approved_release_set.sh"
 
 release_tag="v${WRAPPER_VERSION}"
-rendered_root="$(generated_workspace_path "rendered-evidence")"
+rendered_output_root="$(generated_workspace_path "rendered-screenshots")"
 acceptance_root="$(generated_workspace_path "acceptance-evidence")"
 assets_root="$(generated_workspace_path "host-release-assets")"
 
-rendered_report="${rendered_root}/focused-shell-rendered-report.json"
+rendered_report="${rendered_output_root}/focused-shell-rendered-report.json"
 acceptance_file="${acceptance_root}/fast-release/${release_tag}/final-acceptance-report.json"
 assets_dir="${assets_root}/${release_tag}"
 approval_dir="${acceptance_root}/fast-release/${release_tag}-approval"
