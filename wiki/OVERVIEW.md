@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 34275d911c10266c8fd2988e734dab9a5c648120
+source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
 tags:
   - wiki
   - overview
@@ -16,7 +16,9 @@ DBCode's own query results open below the query at every window width. The wrapp
 
 DBCode side drawers stay open while the user works elsewhere. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent DBCode drawer used in the app session.
 
-This wiki is a learning map, not a second source of truth. It is anchored to source commit [`34275d9`](https://github.com/alexwck/dbcode-wrapper/tree/34275d911c10266c8fd2988e734dab9a5c648120). Check current source and tests when details disagree.
+Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
+
+This wiki is a learning map, not a second source of truth. It is anchored to source commit [`5f77cbe`](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27). Check current source and tests when details disagree.
 
 Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases/latest) for the current published Host Release. Releases are normal published releases in this repository. Public assets contain only the verified wrapper-host DMG and checksum; DBCode is not included.
 
@@ -25,6 +27,8 @@ Automatic read-only polling keeps Code OSS, VSCodium, and DBCode update status v
 The maintained release path has one owner-facing command. `plan` shows the derived tag and paths, `prepare` runs or reuses exact prompt-free evidence and records one approval-history change, and `publish --publish` performs the explicit public release after that history change is committed.
 
 Normal development uses the fast prompt-free source gate. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
+
+Wrapper-owned focused-shell TypeScript and CSS are maintained as normal source. Small patches connect them to pinned Code OSS, then the build materializes and verifies the exact prepared tree before compilation.
 
 Generated cleanup follows artifact purpose and explicit expiry. It is a dry run by default. Only one exact validated expired path can be applied; caches, worktrees, QA evidence, release assets, rollback data, private profiles, unknown paths, and broad roots stay protected.
 

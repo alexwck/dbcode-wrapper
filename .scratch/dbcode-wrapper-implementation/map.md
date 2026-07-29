@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-[Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md) is claimed. It makes visible first-run commands reachable, removes stale maintenance remnants, and deepens active wrapper seams without changing DBCode-owned behaviour.
+No issue is currently open or claimed.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 50](issues/50-keep-dbcode-drawers-persistent-and-collapsible.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md) and [Issue 50](issues/50-keep-dbcode-drawers-persistent-and-collapsible.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 

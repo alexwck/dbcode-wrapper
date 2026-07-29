@@ -10,7 +10,7 @@ tags:
   - privacy
 wiki_profile: public
 wiki_depth: standard
-source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
+source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
 ---
 ## Definition
 
@@ -33,6 +33,10 @@ Automatic MCP registration and the HTTP MCP server are different features. Provi
 - DML, DDL, data copy, and inferred-relationship writes require an explicit user action.
 - API keys belong in SecretStorage and the operating-system Keychain, never in settings, logs, tests, or Git.
 
+## Invisible security boundaries
+
+OAuth redirect matching and safe archive or driver extraction are intentionally invisible when they succeed. They reject an unsafe callback or path before credentials or files can cross the boundary. The wrapper preserves those fail-closed checks and verifies rejection paths through focused contracts. It does not add a bypass, dialog, or status badge only to make the hardening visible.
+
 ## Safe defaults
 
 - Keep the HTTP MCP server off by default and bound to localhost.
@@ -43,9 +47,9 @@ Automatic MCP registration and the HTTP MCP server are different features. Provi
 
 ## Where it lives
 
-- [docs/security/ai-data-sharing.md](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/docs/security/ai-data-sharing.md) — provider and payload guidance.
-- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/dbcode-feature-policy.json) — separate evidence for each AI, Copilot, and MCP capability.
-- [host/qa/focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/qa/focused-shell-rendered.cjs) — prompt-free route checks.
+- [ai-data-sharing.md](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/docs/security/ai-data-sharing.md) — provider, payload, and invisible-security guidance.
+- [dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/dbcode-feature-policy.json) — separate evidence for each AI, Copilot, and MCP capability.
+- [focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/qa/focused-shell-rendered.cjs) — prompt-free route checks.
 
 ## Related
 
