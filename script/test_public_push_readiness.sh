@@ -189,4 +189,47 @@ rm "${deleted_database_repository}/customer.sqlite"
 commit_all "${deleted_database_repository}" "Remove unsafe local database"
 expect_fail "${deleted_database_repository}"
 
+deleted_local_artifacts_repository="${fixture_root}/deleted-local-artifacts"
+initialize_repository "${deleted_local_artifacts_repository}" "${approved_email}"
+for unsafe_name in \
+  customer.accdb \
+  customer.avro \
+  customer.csv \
+  customer.ddb \
+  customer.mdb \
+  customer.xlsx \
+  analysis.ipynb \
+  package.sigzip \
+  release.sha256; do
+  printf '%s\n' 'test-only local artifact' >"${deleted_local_artifacts_repository}/${unsafe_name}"
+done
+commit_all "${deleted_local_artifacts_repository}" "Add unsafe local artifacts"
+for unsafe_name in \
+  customer.accdb \
+  customer.avro \
+  customer.csv \
+  customer.ddb \
+  customer.mdb \
+  customer.xlsx \
+  analysis.ipynb \
+  package.sigzip \
+  release.sha256; do
+  rm "${deleted_local_artifacts_repository}/${unsafe_name}"
+done
+commit_all "${deleted_local_artifacts_repository}" "Remove unsafe local artifacts"
+expect_fail "${deleted_local_artifacts_repository}"
+
+rg -Fq "cat-file --batch-check='%(objectname) %(objecttype)'" "${checker}" || {
+  echo "The public-readiness check must classify history objects in one Git batch." >&2
+  exit 1
+}
+rg -Fq 'cat-file --batch' "${checker}" || {
+  echo "The public-readiness check must stream history blobs in one Git batch." >&2
+  exit 1
+}
+if rg -Fq 'cat-file blob "${object_id}"' "${checker}"; then
+  echo "The public-readiness check must not spawn Git once per history object." >&2
+  exit 1
+fi
+
 echo "Exact-ref public-push readiness checks passed."

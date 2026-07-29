@@ -34,6 +34,8 @@ venv/
 .idea/
 *.code-workspace
 *.code-profile
+.ok/
+.okignore
 .codex/environments/
 
 # Generated application and test output
@@ -52,7 +54,7 @@ test-results/
 
 # Public-repository release and signing material
 *.dmg
-*.dmg.sha256
+*.sha256
 *.db
 *.db3
 *.sqlite
@@ -71,6 +73,14 @@ test-results/
 *.keychain-db
 *.duckdb
 *.parquet
+*.accdb
+*.avro
+*.csv
+*.ddb
+*.ipynb
+*.mdb
+*.sigzip
+*.xlsx
 *.db-journal
 *.db-shm
 *.db-wal

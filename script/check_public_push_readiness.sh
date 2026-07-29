@@ -167,7 +167,7 @@ fi
 historical_paths="$(git -C "${repository}" log --name-only --format= "${commit}" | sed '/^$/d' | LC_ALL=C sort -u)"
 forbidden_paths="$(
   printf '%s\n' "${historical_paths}" |
-    rg -i '(^|/)host/dbcode-public-contributions-[^/]+\.json$|(^|/)comparator-design-audit/[^/]+\.png$|(^|/)assets/codicon\.ttf$|(^|/)(dist|\.build|output|real-profile|acceptance-profile|user-data)/|\.(dmg|db|db3|sqlite|sqlite3|vsix|p12|pfx|key|duckdb|parquet)$' || true
+    rg -i '(^|/)host/dbcode-public-contributions-[^/]+\.json$|(^|/)comparator-design-audit/[^/]+\.png$|(^|/)assets/codicon\.ttf$|(^|/)(dist|\.build|output|real-profile|acceptance-profile|user-data)/|\.(dmg|sha256|db|db3|sqlite|sqlite3|vsix|p12|pfx|key|duckdb|parquet|accdb|avro|csv|ddb|ipynb|mdb|sigzip|xlsx)$' || true
 )"
 if [[ -n "${forbidden_paths}" ]]; then
   echo "The selected history contains files that must not be published:" >&2
@@ -201,22 +201,32 @@ if [[ "${resolved_object_type}" == "tag" ]]; then
   fi
 fi
 
-if ! git -C "${repository}" rev-list --objects "${commit}" |
-  awk '{print $1}' |
-  LC_ALL=C sort -u |
-  while IFS= read -r object_id; do
-    [[ "$(git -C "${repository}" cat-file -t "${object_id}")" == "blob" ]] || continue
+history_blob_ids() {
+  git -C "${repository}" rev-list --objects "${commit}" |
+    awk '{print $1}' |
+    LC_ALL=C sort -u |
+    git -C "${repository}" cat-file --batch-check='%(objectname) %(objecttype)' |
+    awk '$2 == "blob" { print $1 }'
+}
 
-    if git -C "${repository}" cat-file blob "${object_id}" | LC_ALL=C rg -a -q -- "${sensitive_pattern}"; then
-      echo "The selected history contains a private-key or live-token pattern." >&2
-      exit 1
-    fi
+history_blob_stream() {
+  history_blob_ids |
+    git -C "${repository}" cat-file --batch
+}
 
-    if git -C "${repository}" cat-file blob "${object_id}" | LC_ALL=C rg -a -F -q -e "${mac_private_home}" -e "${linux_private_home}"; then
-      echo "The selected history contains an absolute personal home path." >&2
-      exit 1
-    fi
-  done; then
+if (
+  set +o pipefail
+  history_blob_stream | LC_ALL=C rg -a -q -- "${sensitive_pattern}"
+); then
+  echo "The selected history contains a private-key or live-token pattern." >&2
+  exit 1
+fi
+
+if (
+  set +o pipefail
+  history_blob_stream | LC_ALL=C rg -a -F -q -e "${mac_private_home}" -e "${linux_private_home}"
+); then
+  echo "The selected history contains an absolute personal home path." >&2
   exit 1
 fi
 
