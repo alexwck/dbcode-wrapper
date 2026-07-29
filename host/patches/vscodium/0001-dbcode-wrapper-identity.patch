@@ -47,7 +47,7 @@ index 2d9ef12..5888c3d 100755
  
  jsonTmp=$( jq -s '.[0] * .[1]' product.json ../product.json )
 @@ -292,4 +329,12 @@ elif [[ "${OS_NAME}" == "windows" ]]; then
-   replace 's|Microsoft Corporation|VSCodium|' build/win32/code.iss
+   sed -i 's|Microsoft Corporation|VSCodium|' build/win32/code.iss
  fi
  
 +if [[ "${DBCODE_WRAPPER_OVERLAY}" == "yes" ]]; then

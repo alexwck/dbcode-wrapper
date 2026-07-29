@@ -21,6 +21,7 @@
 - 2026-07-29: Claimed after the user asked to publish the committed bottom-results change. This is a wrapper-only release: upstream versions, the DBCode package, profile schema, connection catalogue, AI/MCP boundary, and product scope remain unchanged.
 - 2026-07-29: The repository is clean on `main` and the Host Release plan is available. GitHub CLI is installed, but its saved token is currently invalid; local preparation can continue, while the final push and publication require renewed authentication.
 - 2026-07-29: The first cold build stopped before compilation because `compile_host.sh` inspected the maintained Code OSS paths before VSCodium applied the wrapper patches. A focused regression now requires VSCodium to run the tree verifier after preparation and before compilation. The patch-plan and source-only host contracts pass with the corrected order.
+- 2026-07-29: The next source guard found that the new VSCodium hook hunk used the wrong pinned Windows-script context. The patch now uses the exact pinned source line, and the host contract applies the maintained VSCodium patch stage to a temporary Git index backed by the pinned source cache. This catches applicability errors without rebuilding, changing a generated checkout, or contacting a service. Code OSS patches still validate against the VSCodium-prepared tree at the real cold-build boundary.
 
 ## Answer
 

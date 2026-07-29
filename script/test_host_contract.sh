@@ -142,28 +142,32 @@ plutil -convert json -o - "${REPO_ROOT}/host/entitlements/helper.plist" |
 rg -q 'darwinBundleDocumentTypes: product\.darwinBundleDocumentTypes' \
   "${REPO_ROOT}/host/patches/code-oss/100-product-identity-and-macos-packaging.patch"
 
-reference_vscodium="${BUILD_ROOT}/upstream/vscodium"
-reference_code_oss="${reference_vscodium}/vscode"
-if [[ -d "${reference_vscodium}/.git" ]]; then
-  while IFS= read -r vscodium_patch; do
-    git -C "${reference_vscodium}" apply --check "${vscodium_patch}"
-  done < <(patch_plan_files vscodium)
-fi
-if [[ -d "${reference_code_oss}/.git" ]]; then
-  patch_index="$(mktemp "${BUILD_ROOT}/code-oss-patch-index.XXXXXX")"
+check_cached_patch_stage() {
+  local cache_repository="${1}"
+  local source_commit="${2}"
+  local stage="${3}"
+  local patch_index stage_patch
+
+  [[ -d "${cache_repository}" ]] || return 0
+  git --git-dir="${cache_repository}" cat-file -e "${source_commit}^{commit}"
+
+  patch_index="$(mktemp "${BUILD_ROOT}/${stage}-patch-index.XXXXXX")"
   rm -f "${patch_index}"
-  cleanup_patch_index() {
-    rm -f "${patch_index}"
-  }
-  trap cleanup_patch_index EXIT
-  GIT_INDEX_FILE="${patch_index}" git -C "${reference_code_oss}" read-tree HEAD
-  while IFS= read -r code_oss_patch; do
-    GIT_INDEX_FILE="${patch_index}" git -C "${reference_code_oss}" apply --cached --check "${code_oss_patch}"
-    GIT_INDEX_FILE="${patch_index}" git -C "${reference_code_oss}" apply --cached "${code_oss_patch}"
-  done < <(patch_plan_files code-oss)
-  cleanup_patch_index
-  trap - EXIT
-fi
+  GIT_INDEX_FILE="${patch_index}" \
+    git --git-dir="${cache_repository}" read-tree "${source_commit}"
+  while IFS= read -r stage_patch; do
+    GIT_INDEX_FILE="${patch_index}" \
+      git --git-dir="${cache_repository}" apply --cached --check "${stage_patch}"
+    GIT_INDEX_FILE="${patch_index}" \
+      git --git-dir="${cache_repository}" apply --cached "${stage_patch}"
+  done < <(patch_plan_files "${stage}")
+  rm -f "${patch_index}"
+}
+
+check_cached_patch_stage \
+  "${BUILD_ROOT}/cache/vscodium.git" \
+  "${VSCODIUM_COMMIT}" \
+  vscodium
 
 if [[ "${check_built_artifact}" == "yes" && -d "${APP_BUNDLE}" ]]; then
   load_local_signing_identity
