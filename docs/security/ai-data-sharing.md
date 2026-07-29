@@ -39,6 +39,7 @@ When a person enables it:
 
 - keep it on localhost unless external access is deliberate;
 - use OAuth with Authorization Code and PKCE;
+- require the OAuth redirect URI to match a URI registered by the client;
 - require approval for a new client;
 - use no-auth mode only for a trusted local client;
 - require OAuth when external connections are allowed;

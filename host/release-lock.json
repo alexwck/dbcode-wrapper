@@ -36,11 +36,11 @@
     "electron_version": "42.2.0"
   },
   "release": {
-    "wrapper_version": "0.1.4",
-    "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.4",
+    "wrapper_version": "0.1.5",
+    "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.6",
     "compatibility_status": "candidate",
     "profile_schema_version": 1,
-    "validation_issue": "38-approve-dbcode-1-36-4-and-hold-code-oss-1-130"
+    "validation_issue": "49-publish-latest-external-release-set"
   },
   "distribution": {
     "channel": "github-published-release",
@@ -60,25 +60,25 @@
       "name": "dbcode",
       "id": "dbcode.dbcode",
       "publisher": "dbcode",
-      "version": "1.36.4",
+      "version": "1.36.6",
       "engine": "^1.95.0",
       "target_platform": "universal",
-      "published_at": "2026-07-24T05:34:58.057818Z",
-      "release_notes_url": "https://dbcode.io/docs/changelog/1.36.4",
+      "published_at": "2026-07-29T06:55:37.890939Z",
+      "release_notes_url": "https://dbcode.io/docs/changelog/1.36.6",
       "verified_publisher": true,
       "pre_release": false,
       "deprecated": false,
-      "registry_api_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.4",
-      "download_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.4/file/dbcode.dbcode-1.36.4.vsix",
-      "signature_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.4/file/dbcode.dbcode-1.36.4.sigzip",
-      "sha256_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.4/file/dbcode.dbcode-1.36.4.sha256",
+      "registry_api_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.6",
+      "download_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.6/file/dbcode.dbcode-1.36.6.vsix",
+      "signature_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.6/file/dbcode.dbcode-1.36.6.sigzip",
+      "sha256_url": "https://open-vsx.org/api/dbcode/dbcode/1.36.6/file/dbcode.dbcode-1.36.6.sha256",
       "public_key_id": "14ccb407-4e79-41ed-be5a-6d608325c45a",
       "public_key_url": "https://open-vsx.org/api/-/public-key/14ccb407-4e79-41ed-be5a-6d608325c45a",
-      "sha256": "d6264560667a25de8344ba6a2ffe3b1964ffe20bffa758f4415d5269bbdbabf1",
-      "signature_archive_sha256": "64b4cdbc24e9d18c40a546d1e9316e8c8a45c25906f6bd6e1ca5d13ce071d2f6",
+      "sha256": "ec0923b51ce53bda0c11a2559e2646833eb727f39efd9e61114becf122e3b949",
+      "signature_archive_sha256": "234873cca677864a8e26f15e85b88179ca85b6f8a9bbd54f5aef908d8c6e2fc9",
       "public_key_sha256": "ef5759c51be559f00443ab7d568d26304430bdd422592bfa63e6ac584bfe983b",
-      "jq_sorted_compact_contributes_sha256": "8564abd6d8e7c33489a634c64f50decaf22a59192c87574f11b5b09ab9e8c937",
-      "package_size": 43444519
+      "jq_sorted_compact_contributes_sha256": "1a3093dbf560203b193a6e8298ca7198abae7246c4833aba2403d6baa23c93d3",
+      "package_size": 43933611
     },
     "python_notebooks": {
       "required": true,

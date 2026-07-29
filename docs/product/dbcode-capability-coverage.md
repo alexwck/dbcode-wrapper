@@ -51,9 +51,9 @@ Coverage: declared and reachable; rendered profile navigation; live checks only 
 
 Official features include the SQL editor, visual Query Builder, Universal SQL, schema-aware completion, query parameters, inline AI completion, transaction control, history, history sync and backup, execution plans, stored-routine debugging, run tabs, favourites, the query library, scratch files, formatting, idle timeout, and missing-`WHERE` detection. See the [SQL editor](https://dbcode.io/docs/query/sql-editor), [Query Builder](https://dbcode.io/docs/query/query-builder), and [execution plans](https://dbcode.io/docs/query/execution-plans).
 
-The wrapper keeps New Query, Open SQL, DBCode SQL context actions, History, Library, Scratch Files, Query Builder, DBCode settings, and the installed DBCode release's stored-routine debugger contribution when present. The prompt-free release does not claim a rendered or live debugging session; that remains optional user validation.
+The wrapper keeps New Query, Open SQL, DBCode SQL context actions, History, Library, Scratch Files, Query Builder, DBCode settings, and the installed DBCode release's stored-routine debugger contribution when present. DBCode's Library context menu can open a saved item against a connection selected by the user. The prompt-free release does not claim a rendered or live debugging session; that remains optional user validation.
 
-Keyboard execution, statement selection, and SQL comments remain DBCode behavior. The current official [SQL Editor guide](https://dbcode.io/docs/query/sql-editor) documents `Ctrl+Enter` for running queries, while the [getting-started guide](https://dbcode.io/docs/get-started/execute-a-query) also lists `Ctrl/Cmd+D+E`. DBCode does not document `Cmd+Enter` (`⌘Return`) as a default. The wrapper does not replace these shortcuts. DBCode supports comments and multi-statement SQL files. Select the exact statement when execution scope is unclear, use comment syntax supported by the connected database, and terminate separate statements as that database expects.
+Keyboard execution, statement selection, and SQL comments remain DBCode behavior. The current official [SQL Editor guide](https://dbcode.io/docs/query/sql-editor) documents `Ctrl+Enter` for running queries, while the [getting-started guide](https://dbcode.io/docs/get-started/execute-a-query) also lists `Ctrl/Cmd+D+E`. DBCode does not document `Cmd+Enter` (`⌘Return`) as a default. The wrapper does not replace these shortcuts. DBCode supports comments and multi-statement SQL files, and current releases include improved statement-boundary and active-statement handling. Select the exact statement when execution scope is unclear, use comment syntax supported by the connected database, and terminate separate statements as that database expects.
 
 Coverage: broad declared and reachable coverage; rendered SQL, Query Builder, History, and Library; live representative query checks; debugger declared and retained without a deployment-time live check.
 
@@ -61,7 +61,7 @@ Coverage: broad declared and reachable coverage; rendered SQL, Query Builder, Hi
 
 Official features include editing, copying, exploring, exporting, importing, comparing and synchronizing, joining and unioning results, relationships, secure sharing, charts, the data inspector, row limits, search, formatters, tab behaviour, backup and restore, saved filters, and streaming. See the [data docs](https://dbcode.io/docs/data/edit).
 
-The wrapper keeps DBCode's table and result grids, their toolbars, and DBCode-owned context actions. Focused source contracts protect the wrapper layout, while the fast rendered smoke checks the owning routes without reading or changing a database. Mutations, secure sharing, large copies, backup, restore, and remote streaming remain normal user-directed work.
+The wrapper keeps DBCode's table and result grids, their toolbars, and DBCode-owned context actions. DBCode lets the user pin common copy, export, open, share, select-all, and filter actions to a results toolbar from its `+` menu. The wrapper preserves that setting and does not create another toolbar. Focused source contracts protect the wrapper layout, while the fast rendered smoke checks the owning routes without reading or changing a database. Mutations, secure sharing, large copies, backup, restore, and remote streaming remain normal user-directed work.
 
 New results open in DBCode's own result editor below the query. [Inspector](https://dbcode.io/docs/data/inspector) Form, JSON, and Map views describe one selected row. For several rows, use the result grid's [Copy](https://dbcode.io/docs/data/copy) or [Export](https://dbcode.io/docs/data/export) action and choose JSON or JSON Pretty. The official result-grid docs do not describe a full-result JSON or tree toggle, so the wrapper does not add a competing renderer.
 
@@ -73,7 +73,7 @@ Coverage: broad declared and reachable grid coverage; route-level rendered evide
 
 Official features include creating or editing tables, rename, truncate, drop, relationship diagrams, stored procedures, SQL-file execution, filtering, shortcuts, and quick open. See the [Database Explorer docs](https://dbcode.io/docs/db-explorer/create-or-edit-tables).
 
-The wrapper keeps DBCode-owned Explorer views and object actions, the relationship-diagram route, and the new debugger contribution. The fast smoke renders Database Explorer without running DDL, debugger, or destructive data actions.
+The wrapper keeps DBCode-owned Explorer views and object actions, the relationship-diagram route, and the debugger contribution. DBCode owns the cascade option for Drop and Truncate on databases that support it. The fast smoke renders Database Explorer without running DDL, debugger, or destructive data actions.
 
 Coverage: declared and reachable; rendered Explorer navigation; live and destructive actions are normal user work.
 

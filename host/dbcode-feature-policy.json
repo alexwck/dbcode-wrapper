@@ -1,9 +1,9 @@
 {
   "schema_version": 2,
-  "approval_status": "approved",
+  "approval_status": "candidate",
   "extension": {
     "id": "dbcode.dbcode",
-    "version": "1.36.4",
+    "version": "1.36.6",
     "engine": "^1.95.0",
     "source": "public-package-manifest"
   },
@@ -41,7 +41,7 @@
     ],
     "catalogue_snapshot": {
       "source": "rendered-new-connection-picker",
-      "extension": "dbcode.dbcode@1.36.4",
+      "extension": "dbcode.dbcode@1.36.6",
       "normalization": "Unicode NFC, collapsed whitespace, case-sensitive code-point sort",
       "section_count": 12,
       "item_count": 88,
@@ -142,14 +142,15 @@
         "dbcode.table.open",
         "dbcode.table.openLimit",
         "dbcode.export",
-        "dbcode.editor.exportQuery"
+        "dbcode.editor.exportQuery",
+        "dbcode.grid.toolbarPins"
       ],
       "focused_routes": [
         "Automatic DBCode result editor",
         "Database Explorer table actions",
         "DBCode-owned grid toolbar and context actions"
       ],
-      "evidence": "The wrapper retains DBCode's result and table-editor contributions, automatic result placement, and DBCode-owned grid routes. The fast deployment gate does not execute SQL or open live table data."
+      "evidence": "The wrapper retains DBCode's result and table-editor contributions, automatic result placement, DBCode-owned grid routes, and the setting for pinning actions from the result grid's + menu. The fast deployment gate does not execute SQL or open live table data."
     },
     {
       "id": "history",
@@ -173,14 +174,15 @@
       "declared_contributions": [
         "dbcode.library.view",
         "dbcode.library.addScript",
-        "dbcode.library.openItem"
+        "dbcode.library.openItem",
+        "dbcode.library.openItemWith"
       ],
       "focused_routes": [
         "Queries > Library",
         "SQL editor Add to DBCode Library action",
         "DBCode Library tree actions"
       ],
-      "evidence": "The rendered shell test opens only the DBCode Library drawer and verifies the SQL editor keeps Add to DBCode Library."
+      "evidence": "The rendered shell test opens only the DBCode Library drawer and verifies the SQL editor keeps Add to DBCode Library. DBCode owns the item action that opens a saved script against a connection selected by the user."
     },
     {
       "id": "notebooks",
@@ -227,7 +229,7 @@
         "Connections Home > New connection",
         "DBCode table data grid"
       ],
-      "evidence": "DBCode 1.36.4 still declares the custom editor. The prior pair did not register its provider, and the approved prompt-free release did not activate this route. The wrapper therefore keeps the guaranteed-failure shortcut hidden. Direct CSV, Excel, Parquet, and Avro opening remains an optional focused check; Connections is usable but is not claimed as feature-equivalent.",
+      "evidence": "DBCode 1.36.6 still declares the custom editor. The prior pair did not register its provider, and the prompt-free candidate does not activate this route. The wrapper therefore keeps the guaranteed-failure shortcut hidden. Direct CSV, Excel, Parquet, and Avro opening remains an optional focused check; Connections is usable but is not claimed as feature-equivalent.",
       "prior_compatibility_failure": {
         "extension": "dbcode.dbcode@1.36.1",
         "host": "Code OSS 1.126.0",
@@ -246,7 +248,7 @@
         "Database Explorer table context action",
         "DBCode tools > Query Builder"
       ],
-      "evidence": "The DBCode 1.36.4 one-profile smoke confirms that the context-free Query Builder route remains visible and keeps the relationship-diagram action in Database Explorer without generic IDE actions. It does not accept terms or start a live model. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
+      "evidence": "The DBCode 1.36.6 candidate keeps the context-free Query Builder route and relationship-diagram action in Database Explorer without generic IDE actions. The one-profile smoke must confirm those routes without accepting terms or starting a live model. The duplicate Query Builder tree shortcuts remain suppressed because their forwarded tree context was not a reliable host contract."
     },
     {
       "id": "stored-routine-debugger",
@@ -263,7 +265,7 @@
         "contextual DBCode debugger session"
       ],
       "validation_boundary": "A real PostgreSQL PL/pgSQL debugging session is optional user validation, not a deployment gate.",
-      "evidence": "DBCode 1.36.4 declares its database-routine debugger, SQL breakpoints, and DBCode-owned Debug actions. The wrapper retains those DBCode-owned routes. Prompt-free deployment does not start a database or debugger, so rendered and live debugger behaviour are not claimed."
+      "evidence": "DBCode 1.36.6 declares its database-routine debugger, SQL breakpoints, and DBCode-owned Debug actions. The wrapper retains those DBCode-owned routes. Prompt-free deployment does not start a database or debugger, so rendered and live debugger behaviour are not claimed."
     },
     {
       "id": "account-and-license",
@@ -485,7 +487,7 @@
     }
   ],
   "public_contribution_contract": {
-    "jq_sorted_compact_contributes_sha256": "8564abd6d8e7c33489a634c64f50decaf22a59192c87574f11b5b09ab9e8c937",
+    "jq_sorted_compact_contributes_sha256": "1a3093dbf560203b193a6e8298ca7198abae7246c4833aba2403d6baa23c93d3",
     "contribution_keys": [
       "breakpoints",
       "colors",
@@ -508,7 +510,7 @@
     ],
     "commands": {
       "count": 171,
-      "sorted_ids_sha256": "c05c7132942d9413869dde670bc2402d79e43876ec14e4eba347aaa320b90db5"
+      "sorted_ids_sha256": "f9a0d6833c12d58ff37ec6704ca3ca2bcabca8291f96541f2aa9476066d92d70"
     },
     "views": [
       "dbcode.connections.view",
@@ -589,7 +591,8 @@
       "dbcode.ai.customModel.endpoint",
       "dbcode.ai.customModel.model",
       "dbcode.ai.customModel.only",
-      "dbcode.ai.customModel.timeout"
+      "dbcode.ai.customModel.timeout",
+      "dbcode.grid.toolbarPins"
     ]
   },
   "focused_routes": {
@@ -649,6 +652,10 @@
       {
         "id": "dbcode.library.addScript",
         "route": "SQL editor context menu"
+      },
+      {
+        "id": "dbcode.library.openItemWith",
+        "route": "DBCode Library item context menu"
       },
       {
         "id": "dbcode.history.loadQuery",
@@ -750,11 +757,11 @@
     {
       "contribution": "dbcode.mcp.start, dbcode.mcp.stop, dbcode.mcp.oauth.revokeTokens",
       "reason": "The isolated 1.36.1 audit did not open the configured HTTP port or report an outcome, so that pair could not present the controls as working.",
-      "fallback": "Automatic registration is not equivalent. The approved prompt-free 1.36.4 release leaves the HTTP lifecycle limited; validate it separately only when that workflow is needed."
+      "fallback": "Automatic registration is not equivalent. The prompt-free 1.36.6 candidate leaves the HTTP lifecycle limited; validate it separately only when that workflow is needed."
     },
     {
       "contribution": "dbcode.dataFileViewer",
-      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the approved prompt-free 1.36.4 release does not claim direct-file compatibility.",
+      "reason": "The prior DBCode pair declared the custom editor but did not register its provider with the approved Code OSS 1.126 host; the prompt-free 1.36.6 candidate does not claim direct-file compatibility.",
       "fallback": "Connections remains usable but is not feature-equivalent. Keep the route hidden until an optional focused direct-file check proves a working replacement."
     }
   ]
