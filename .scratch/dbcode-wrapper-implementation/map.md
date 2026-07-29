@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No implementation issue is currently active.
+- [Issue 49](issues/49-publish-latest-external-release-set.md) — test and publish the latest VSCodium, Code OSS, and DBCode release tuple as `v0.1.5`.
 
 ## History
 
