@@ -9,13 +9,13 @@ tags:
   - patches
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: 3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d
 ---
 ## Summary
 
 The build does not keep a permanent upstream fork. It materializes one clean wrapper commit, applies a small ordered patch plan to pinned upstream sources, compiles Code OSS only when compilation inputs changed, then assembles and signs a fresh DBCode Wrapper release.
 
-Fast source checks validate the maintained patch plan without depending on a stale generated checkout. The real compile step checks the applied Code OSS tree immediately before it calls the upstream build.
+Fast source checks validate the maintained patch plan without depending on a stale generated checkout. On a cold build, VSCodium applies its official patches and the wrapper patches, then the wrapper verifies the final Code OSS tree before compilation starts.
 
 ## Responsibilities
 
@@ -30,15 +30,16 @@ Fast source checks validate the maintained patch plan without depending on a sta
 
 ## Public API / entry points
 
-[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/build_host.sh) creates a [Release Source Snapshot](release-source-snapshot.md) and runs assembly inside the materialized source. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/compile_host.sh) verifies the applied tree before compilation. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/assemble_host.sh) adds release-specific records and signs the final app.
+[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/build_host.sh) creates a [Release Source Snapshot](release-source-snapshot.md) and runs assembly inside the materialized source. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/compile_host.sh) gives VSCodium the patch plan and verifier. [verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/verify_prepared_patch_tree.sh) checks the prepared tree before compilation. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/assemble_host.sh) adds release-specific records and signs the final app.
 
 ## Key files
 
-- [host/patches/patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/patch-plan.json) — ordered patch inventory and expected maintained-tree digest.
-- [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/code-oss) — runtime and focused-shell patches.
-- [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/vscodium) — build-repository patches.
-- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_patch_plan.sh) — plan and compile-boundary contracts.
-- [host/slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/slimming-policy.json) — kept and removed host capabilities.
+- [host/patches/patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/patch-plan.json) — ordered patch inventory and expected maintained-tree digest.
+- [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/code-oss) — runtime and focused-shell patches.
+- [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/vscodium) — build-repository patches and the post-preparation verification hook.
+- [script/verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/verify_prepared_patch_tree.sh) — final prepared-tree verifier.
+- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/test_patch_plan.sh) — plan and compile-boundary contracts.
+- [host/slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/slimming-policy.json) — kept and removed host capabilities.
 
 ## Dependencies
 

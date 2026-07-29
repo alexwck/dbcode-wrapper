@@ -156,3 +156,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: ca6a58c (was afc5fe7)
 - Coverage: DBCode query results below the editor at every width; one public result-location preference; no wrapper result renderer; Release Specification schema 7; exact read-only schema-6 compatibility; old responsive hosts excluded from reuse
 - Pages: [Overview](./OVERVIEW.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Release Specification](./modules/release-specification.md)
+
+## 2026-07-29: refresh
+
+- Profile: public/standard
+- source_commit: 3da4fca (was ca6a58c)
+- Coverage: cold-build patch verification after VSCodium preparation and before Code OSS compilation; focused regression for approved and changed prepared trees
+- Pages: [Overview](./OVERVIEW.md) and [Patch Plan and build](./modules/patch-plan-and-build.md)
