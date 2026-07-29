@@ -14,6 +14,27 @@ publisher="${script_root}/publish_release.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-host-release-test.XXXXXX")"
 export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
 
+if rg -Fq 'host_release_validate_sources' "${packager}"; then
+  echo "The packager must use the validated Host Release context instead of repeating its lower-level source validator." >&2
+  exit 1
+fi
+[[ "$(rg -c '^[[:space:]]*host_release_context_record \\' "${packager}")" == "1" ]] || {
+  echo "The packager must derive release metadata from exactly one validated Host Release context." >&2
+  exit 1
+}
+rg -Fq 'host_release_validate_copied_app' "${packager}" || {
+  echo "The copied app must be checked against the validated Host Release context." >&2
+  exit 1
+}
+[[ "$(rg -c '^[[:space:]]*host_release_context_record \\' "${verifier}")" == "1" ]] || {
+  echo "The independent verifier must derive its own Host Release context from the mounted app." >&2
+  exit 1
+}
+if rg -Fq 'host_release_validate_copied_app' "${verifier}"; then
+  echo "The independent verifier must not trust the packager's copied-app shortcut." >&2
+  exit 1
+fi
+
 [[ -x "${publisher}" ]] || {
   echo "Missing executable public-release publisher: ${publisher}" >&2
   exit 1
@@ -587,11 +608,47 @@ if PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   exit 1
 fi
 
-PATH="${stub_bin}:${PATH}" host_release_validate_sources \
-  "${fixture_app}" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${fast_acceptance_file}"
+release_context="$(
+  PATH="${stub_bin}:${PATH}" host_release_context_record \
+    "${fixture_app}" \
+    "${manifest_file}" \
+    "${release_lock}" \
+    "${fast_acceptance_file}" \
+    "${fixture_repository}" \
+    "${source_tag}"
+)"
+jq -e \
+  --arg source_tag "${source_tag}" \
+  --arg source_commit "${source_commit}" \
+  --arg release_set_id "${release_set_id}" \
+  --arg app_sha256 "${app_sha256}" '
+    .schema_version == 1
+    and .source.tag == $source_tag
+    and .source.repository_revision == $source_commit
+    and .release.release_set_id == $release_set_id
+    and .app.filename == "DBCode Wrapper.app"
+    and .app.sha256 == $app_sha256
+    and .external_runtime.bundled == false
+    and .evidence.final_acceptance_status == "passed"
+  ' <<<"${release_context}" >/dev/null || {
+  echo "The Host Release context does not bind the validated source, app, and evidence." >&2
+  exit 1
+}
+
+copied_fixture_root="${test_root}/copied-fixture"
+mkdir -p "${copied_fixture_root}"
+cp -R "${fixture_app}" "${copied_fixture_root}/DBCode Wrapper.app"
+PATH="${stub_bin}:${PATH}" host_release_validate_copied_app \
+  "${copied_fixture_root}/DBCode Wrapper.app" \
+  "${release_context}"
+printf '%s\n' 'changed after validation' \
+  >> "${copied_fixture_root}/DBCode Wrapper.app/Contents/Resources/app/LICENSE.txt"
+if PATH="${stub_bin}:${PATH}" host_release_validate_copied_app \
+  "${copied_fixture_root}/DBCode Wrapper.app" \
+  "${release_context}" >/dev/null 2>&1; then
+  echo "The content-bound copy check accepted a changed application." >&2
+  exit 1
+fi
 
 package_source_arguments=(
   --manifest "${manifest_file}"

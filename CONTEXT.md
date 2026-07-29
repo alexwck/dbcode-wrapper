@@ -49,8 +49,8 @@ The automated release check for wrapper-owned behaviour. It combines source cont
 _Avoid_: full DBCode product test, real-profile proof, prompt-driven deployment
 
 **Upgrade Prompt**:
-A notice that a newer Code OSS runtime, VSCodium packaging release, or DBCode release is available and invites the user to begin a Controlled DBCode Upgrade. It never installs an update silently.
-_Avoid_: automatic update, forced upgrade
+An automatic or manual notice that a newer Code OSS runtime, VSCodium packaging release, or DBCode release is available and invites the repository owner to begin a Controlled DBCode Upgrade. Polling may refresh the status UI, but it never changes a version pin, approves a candidate, creates a tag, publishes a release, or installs an update.
+_Avoid_: automatic installation, forced upgrade
 
 **Unmodified Extension Boundary**:
 The wrapper host may be published because DBCode is not bundled. Each user obtains the official unchanged extension separately under their own valid licence. The project must not modify, mirror, redistribute, reverse engineer, or bypass the licensing of DBCode.

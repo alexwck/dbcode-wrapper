@@ -494,57 +494,289 @@ host_release_validate_sources() {
   done
 }
 
+host_release_validate_context_record() {
+  local context_json="$1"
+
+  jq -e '
+    .schema_version == 1
+    and (.source.tag | type == "string" and length > 1)
+    and (.source.repository_revision | test("^[0-9a-f]{40}$"))
+    and (.source.tree_oid | test("^[0-9a-f]{40}$"))
+    and (.source.snapshot_sha256 | test("^[0-9a-f]{64}$"))
+    and (.source.compiled_host_input_id | test("^compiled-host-[0-9a-f]{64}$"))
+    and (.source.release_lock_sha256 | test("^[0-9a-f]{64}$"))
+    and (.release.wrapper_version | type == "string" and length > 0)
+    and (.release.release_set_id | type == "string" and length > 0)
+    and (.release.source_set_id | type == "string" and length > 0)
+    and (.release.code_oss_version | type == "string" and length > 0)
+    and (.release.vscodium_version | type == "string" and length > 0)
+    and (.release.dbcode_version | type == "string" and length > 0)
+    and .release.architecture == "arm64"
+    and (.release.minimum_macos | type == "string" and length > 0)
+    and .source.tag == ("v" + .release.wrapper_version)
+    and .app.filename == "DBCode Wrapper.app"
+    and (.app.sha256 | test("^[0-9a-f]{64}$"))
+    and .app.bundle_identifier == "io.alexabelle.dbcodewrapper"
+    and .app.signature.kind == "current-user-self-signed-certificate"
+    and (.app.signature.designated_requirement | type == "string" and length > 0)
+    and .app.signature.developer_id == false
+    and .app.signature.notarized == false
+    and .external_runtime.bundled == false
+    and .external_runtime.setup == "focused-pinned-official-sources"
+    and .external_runtime.source == "official-open-vsx"
+    and (.external_runtime.packages | type == "array" and length > 0)
+    and all(.external_runtime.packages[];
+      (.id | type == "string" and length > 0)
+      and (.version | type == "string" and length > 0)
+      and (.target_platform | type == "string" and length > 0)
+      and (.vsix_sha256 | test("^[0-9a-f]{64}$"))
+      and (.signature_archive_sha256 | test("^[0-9a-f]{64}$"))
+      and (.public_key_id | type == "string" and length > 0)
+      and (.public_key_sha256 | test("^[0-9a-f]{64}$"))
+    )
+    and (.evidence.build_manifest_sha256 | test("^[0-9a-f]{64}$"))
+    and (.evidence.release_lock_sha256 | test("^[0-9a-f]{64}$"))
+    and (.evidence.final_acceptance_sha256 | test("^[0-9a-f]{64}$"))
+    and .evidence.final_acceptance_status == "passed"
+    and .source.release_lock_sha256 == .evidence.release_lock_sha256
+  ' <<<"${context_json}" >/dev/null || {
+    echo "The Host Release context is invalid or incomplete." >&2
+    return 1
+  }
+}
+
+host_release_context_record() {
+  local app_path="$1"
+  local manifest_file="$2"
+  local release_lock="$3"
+  local acceptance_file="$4"
+  local source_repository="$5"
+  local source_tag="$6"
+  local source_commit context_json
+
+  host_release_validate_sources \
+    "${app_path}" \
+    "${manifest_file}" \
+    "${release_lock}" \
+    "${acceptance_file}" || return 1
+  source_commit="$(
+    host_release_validate_source_tag \
+      "${source_repository}" \
+      "${source_tag}" \
+      "${manifest_file}" \
+      "${release_lock}"
+  )" || return 1
+
+  context_json="$(
+    jq -n \
+      --arg source_tag "${source_tag}" \
+      --arg source_commit "${source_commit}" \
+      --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
+      --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
+      --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
+      --arg release_lock_sha256 "$(shasum -a 256 "${release_lock}" | awk '{print $1}')" \
+      --arg wrapper_version "$(jq -er '.release.wrapper_version' "${release_lock}")" \
+      --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" \
+      --arg source_set_id "$(jq -er '.release.source_set_id' "${manifest_file}")" \
+      --arg code_oss_version "$(jq -er '.runtime.code_oss' "${manifest_file}")" \
+      --arg vscodium_version "$(jq -er '.runtime.host' "${manifest_file}")" \
+      --arg dbcode_version "$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")" \
+      --arg architecture "$(jq -er '.artifact.architecture' "${manifest_file}")" \
+      --arg minimum_macos "$(plutil -extract LSMinimumSystemVersion raw "${app_path}/Contents/Info.plist")" \
+      --arg app_sha256 "$(jq -er '.artifact.sha256' "${manifest_file}")" \
+      --arg bundle_identifier "$(jq -er '.artifact.bundle_identifier' "${manifest_file}")" \
+      --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
+      --arg build_manifest_sha256 "$(shasum -a 256 "${manifest_file}" | awk '{print $1}')" \
+      --arg final_acceptance_sha256 "$(shasum -a 256 "${acceptance_file}" | awk '{print $1}')" \
+      --argjson runtime_extensions "$(jq '[.runtime_extensions[] | {id, version, target_platform, vsix_sha256, signature_archive_sha256, public_key_id, public_key_sha256}] | sort_by(.id)' "${manifest_file}")" '
+        {
+          schema_version: 1,
+          source: {
+            tag: $source_tag,
+            repository_revision: $source_commit,
+            tree_oid: $source_tree_oid,
+            snapshot_sha256: $source_snapshot_sha256,
+            compiled_host_input_id: $compiled_host_input_id,
+            release_lock_sha256: $release_lock_sha256
+          },
+          release: {
+            wrapper_version: $wrapper_version,
+            release_set_id: $release_set_id,
+            source_set_id: $source_set_id,
+            code_oss_version: $code_oss_version,
+            vscodium_version: $vscodium_version,
+            dbcode_version: $dbcode_version,
+            architecture: $architecture,
+            minimum_macos: $minimum_macos
+          },
+          app: {
+            filename: "DBCode Wrapper.app",
+            sha256: $app_sha256,
+            bundle_identifier: $bundle_identifier,
+            signature: {
+              kind: "current-user-self-signed-certificate",
+              designated_requirement: $signature_requirement,
+              developer_id: false,
+              notarized: false
+            }
+          },
+          external_runtime: {
+            bundled: false,
+            setup: "focused-pinned-official-sources",
+            source: "official-open-vsx",
+            packages: $runtime_extensions
+          },
+          evidence: {
+            build_manifest_sha256: $build_manifest_sha256,
+            release_lock_sha256: $release_lock_sha256,
+            final_acceptance_sha256: $final_acceptance_sha256,
+            final_acceptance_status: "passed"
+          }
+        }
+      '
+  )" || return 1
+  host_release_validate_context_record "${context_json}" || return 1
+  printf '%s\n' "${context_json}"
+}
+
+host_release_validate_copied_app() {
+  local app_path="$1"
+  local context_json="$2"
+  local info_plist="${app_path}/Contents/Info.plist"
+  local expected_sha actual_sha expected_requirement actual_requirement
+  local signature_details architectures notice_path
+
+  host_release_validate_context_record "${context_json}" || return 1
+  [[ -d "${app_path}" && ! -L "${app_path}" ]] || {
+    echo "The copied Host Release application is missing or unsafe: ${app_path}" >&2
+    return 1
+  }
+  [[ "$(basename "${app_path}")" == "$(jq -er '.app.filename' <<<"${context_json}")" ]] || {
+    echo "The copied application name does not match the validated Host Release context." >&2
+    return 1
+  }
+  host_release_assert_file "${info_plist}" "The copied application Info.plist" || return 1
+
+  expected_sha="$(jq -er '.app.sha256' <<<"${context_json}")"
+  actual_sha="$(artifact_digest "${app_path}")"
+  [[ "${actual_sha}" == "${expected_sha}" ]] || {
+    echo "The copied application bytes do not match the validated Host Release context." >&2
+    return 1
+  }
+  [[ "$(plutil -extract CFBundleName raw "${info_plist}")" == "DBCode Wrapper" ]] || {
+    echo "The copied application has an unexpected name." >&2
+    return 1
+  }
+  [[ "$(plutil -extract CFBundleIdentifier raw "${info_plist}")" == "$(jq -er '.app.bundle_identifier' <<<"${context_json}")" ]] || {
+    echo "The copied application has an unexpected bundle identifier." >&2
+    return 1
+  }
+  architectures="$(lipo -archs "${app_path}/Contents/MacOS/$(plutil -extract CFBundleExecutable raw "${info_plist}")")"
+  [[ "${architectures}" == "$(jq -er '.release.architecture' <<<"${context_json}")" ]] || {
+    echo "The copied Host Release has an unexpected architecture." >&2
+    return 1
+  }
+
+  codesign --verify --deep --strict --verbose=2 "${app_path}" || return 1
+  expected_requirement="$(jq -er '.app.signature.designated_requirement' <<<"${context_json}")"
+  actual_requirement="$(codesign -d -r- "${app_path}" 2>&1 | sed -n '/^designated => /p')"
+  [[ "${actual_requirement}" == "${expected_requirement}" ]] || {
+    echo "The copied application has an unexpected signing requirement." >&2
+    return 1
+  }
+  signature_details="$(codesign -dvvv "${app_path}" 2>&1)"
+  [[ "${signature_details}" != *'Signature=adhoc'* ]] || {
+    echo "The copied application is ad-hoc signed." >&2
+    return 1
+  }
+
+  for notice_path in \
+    "${app_path}/Contents/Resources/app/LICENSE.txt" \
+    "${app_path}/Contents/Resources/app/ThirdPartyNotices.txt" \
+    "${app_path}/Contents/Resources/LICENSES.chromium.html"; do
+    host_release_assert_file "${notice_path}" "A copied upstream notice" || return 1
+  done
+}
+
+host_release_package_record() {
+  local dmg_name="$1"
+  local dmg_sha256="$2"
+  local dmg_size_bytes="$3"
+  local guide_name="$4"
+  local guide_sha256="$5"
+  local checksum_name="$6"
+  local compatibility_name="$7"
+  local notes_name="$8"
+  local verification_name="$9"
+  local package_json
+
+  package_json="$(
+    jq -n \
+      --arg dmg_name "${dmg_name}" \
+      --arg dmg_sha256 "${dmg_sha256}" \
+      --argjson dmg_size_bytes "${dmg_size_bytes}" \
+      --arg guide_name "${guide_name}" \
+      --arg guide_sha256 "${guide_sha256}" \
+      --arg checksum_name "${checksum_name}" \
+      --arg compatibility_name "${compatibility_name}" \
+      --arg notes_name "${notes_name}" \
+      --arg verification_name "${verification_name}" '
+        {
+          schema_version: 1,
+          disk_image: {
+            filename: $dmg_name,
+            sha256: $dmg_sha256,
+            size_bytes: $dmg_size_bytes
+          },
+          install_guide: {
+            filename: $guide_name,
+            sha256: $guide_sha256
+          },
+          assets: {
+            checksum: $checksum_name,
+            compatibility: $compatibility_name,
+            install_and_rollback: $notes_name,
+            verification: $verification_name
+          }
+        }
+      '
+  )" || return 1
+  host_release_validate_package_record "${package_json}" || return 1
+  printf '%s\n' "${package_json}"
+}
+
+host_release_validate_package_record() {
+  local package_json="$1"
+
+  jq -e '
+    .schema_version == 1
+    and (.disk_image.filename | type == "string" and test("\\.dmg$") and (test("/") | not))
+    and (.disk_image.sha256 | test("^[0-9a-f]{64}$"))
+    and (.disk_image.size_bytes | type == "number" and . > 0 and . < 2147483648)
+    and .install_guide.filename == "Install DBCode Wrapper.txt"
+    and (.install_guide.sha256 | test("^[0-9a-f]{64}$"))
+    and .assets.checksum == (.disk_image.filename + ".sha256")
+    and (.assets.compatibility | type == "string" and test("-compatibility\\.json$") and (test("/") | not))
+    and (.assets.install_and_rollback | type == "string" and test("-install-and-rollback\\.txt$") and (test("/") | not))
+    and (.assets.verification | type == "string" and test("-verification\\.json$") and (test("/") | not))
+  ' <<<"${package_json}" >/dev/null || {
+    echo "The Host Release package record is invalid or incomplete." >&2
+    return 1
+  }
+}
+
 host_release_write_compatibility_manifest() {
   local output_file="$1"
   local created_at_utc="$2"
-  local manifest_file="$3"
-  local release_lock="$4"
-  local acceptance_file="$5"
-  local source_tag="$6"
-  local source_commit="$7"
-  local dmg_name="$8"
-  local dmg_sha256="$9"
-  local dmg_size_bytes="${10}"
-  local guide_name="${11}"
-  local guide_sha256="${12}"
-  local checksum_name="${13}"
-  local compatibility_name="${14}"
-  local notes_name="${15}"
-  local verification_name="${16}"
-  local minimum_macos="${17}"
+  local context_json="$3"
+  local package_json="$4"
 
+  host_release_validate_context_record "${context_json}" || return 1
+  host_release_validate_package_record "${package_json}" || return 1
   jq -n \
     --arg created_at_utc "${created_at_utc}" \
-    --arg source_tag "${source_tag}" \
-    --arg source_commit "${source_commit}" \
-    --arg source_tree_oid "$(jq -er '.source.snapshot.tree_oid' "${manifest_file}")" \
-    --arg source_snapshot_sha256 "$(jq -er '.source.snapshot.snapshot_sha256' "${manifest_file}")" \
-    --arg compiled_host_input_id "$(jq -er '.source.compiled_host.input_id' "${manifest_file}")" \
-    --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" \
-    --arg source_set_id "$(jq -er '.release.source_set_id' "${manifest_file}")" \
-    --arg wrapper_version "$(jq -er '.release.wrapper_version' "${release_lock}")" \
-    --arg code_oss_version "$(jq -er '.runtime.code_oss' "${manifest_file}")" \
-    --arg vscodium_version "$(jq -er '.runtime.host' "${manifest_file}")" \
-    --arg dbcode_version "$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")" \
-    --arg architecture "$(jq -er '.artifact.architecture' "${manifest_file}")" \
-    --arg minimum_macos "${minimum_macos}" \
-    --arg app_name "DBCode Wrapper.app" \
-    --arg app_sha256 "$(jq -er '.artifact.sha256' "${manifest_file}")" \
-    --arg bundle_identifier "$(jq -er '.artifact.bundle_identifier' "${manifest_file}")" \
-    --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
-    --arg dmg_name "${dmg_name}" \
-    --arg dmg_sha256 "${dmg_sha256}" \
-    --argjson dmg_size_bytes "${dmg_size_bytes}" \
-    --arg guide_name "${guide_name}" \
-    --arg guide_sha256 "${guide_sha256}" \
-    --arg checksum_name "${checksum_name}" \
-    --arg compatibility_name "${compatibility_name}" \
-    --arg notes_name "${notes_name}" \
-    --arg verification_name "${verification_name}" \
-    --arg manifest_sha256 "$(shasum -a 256 "${manifest_file}" | awk '{print $1}')" \
-    --arg release_lock_sha256 "$(shasum -a 256 "${release_lock}" | awk '{print $1}')" \
-    --arg acceptance_sha256 "$(shasum -a 256 "${acceptance_file}" | awk '{print $1}')" \
-    --argjson runtime_extensions "$(jq '[.runtime_extensions[] | {id, version, target_platform, vsix_sha256, signature_archive_sha256, public_key_id, public_key_sha256}] | sort_by(.id)' "${manifest_file}")" '
+    --argjson context "${context_json}" \
+    --argjson package "${package_json}" '
       {
         schema_version: 1,
         created_at_utc: $created_at_utc,
@@ -556,62 +788,52 @@ host_release_write_compatibility_manifest() {
           owned_devices_only: false
         },
         source: {
-          tag: $source_tag,
-          repository_revision: $source_commit,
-          tree_oid: $source_tree_oid,
-          snapshot_sha256: $source_snapshot_sha256,
-          release_lock_sha256: $release_lock_sha256,
-          compiled_host_input_id: $compiled_host_input_id
+          tag: $context.source.tag,
+          repository_revision: $context.source.repository_revision,
+          tree_oid: $context.source.tree_oid,
+          snapshot_sha256: $context.source.snapshot_sha256,
+          release_lock_sha256: $context.source.release_lock_sha256,
+          compiled_host_input_id: $context.source.compiled_host_input_id
         },
         release: {
-          wrapper_version: $wrapper_version,
-          release_set_id: $release_set_id,
-          source_set_id: $source_set_id,
-          code_oss_version: $code_oss_version,
-          vscodium_version: $vscodium_version,
-          dbcode_version: $dbcode_version,
-          architecture: $architecture,
-          minimum_macos: $minimum_macos
+          wrapper_version: $context.release.wrapper_version,
+          release_set_id: $context.release.release_set_id,
+          source_set_id: $context.release.source_set_id,
+          code_oss_version: $context.release.code_oss_version,
+          vscodium_version: $context.release.vscodium_version,
+          dbcode_version: $context.release.dbcode_version,
+          architecture: $context.release.architecture,
+          minimum_macos: $context.release.minimum_macos
         },
         app: {
-          filename: $app_name,
-          sha256: $app_sha256,
-          bundle_identifier: $bundle_identifier,
-          signature: {
-            kind: "current-user-self-signed-certificate",
-            designated_requirement: $signature_requirement,
-            developer_id: false,
-            notarized: false
-          }
+          filename: $context.app.filename,
+          sha256: $context.app.sha256,
+          bundle_identifier: $context.app.bundle_identifier,
+          signature: $context.app.signature
         },
         disk_image: {
-          filename: $dmg_name,
-          sha256: $dmg_sha256,
-          size_bytes: $dmg_size_bytes,
+          filename: $package.disk_image.filename,
+          sha256: $package.disk_image.sha256,
+          size_bytes: $package.disk_image.size_bytes,
           format: "UDZO",
           filesystem: "HFS+",
           read_only: true,
           volume_name: "DBCode Wrapper",
-          contents: [$app_name, $guide_name],
-          install_guide_sha256: $guide_sha256
+          contents: [$context.app.filename, $package.install_guide.filename],
+          install_guide_sha256: $package.install_guide.sha256
         },
-        external_runtime: {
-          bundled: false,
-          setup: "focused-pinned-official-sources",
-          source: "official-open-vsx",
-          packages: $runtime_extensions
-        },
+        external_runtime: $context.external_runtime,
         evidence: {
-          build_manifest_sha256: $manifest_sha256,
-          release_lock_sha256: $release_lock_sha256,
-          final_acceptance_sha256: $acceptance_sha256,
-          final_acceptance_status: "passed"
+          build_manifest_sha256: $context.evidence.build_manifest_sha256,
+          release_lock_sha256: $context.evidence.release_lock_sha256,
+          final_acceptance_sha256: $context.evidence.final_acceptance_sha256,
+          final_acceptance_status: $context.evidence.final_acceptance_status
         },
         assets: {
-          checksum: $checksum_name,
-          compatibility: $compatibility_name,
-          install_and_rollback: $notes_name,
-          verification: $verification_name
+          checksum: $package.assets.checksum,
+          compatibility: $package.assets.compatibility,
+          install_and_rollback: $package.assets.install_and_rollback,
+          verification: $package.assets.verification
         },
         claims: {
           unofficial_wrapper: true,

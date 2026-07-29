@@ -89,13 +89,7 @@ output_parent="$(cd "$(dirname "${output_file}")" 2>/dev/null && pwd -P)"
   exit 1
 }
 
-source_commit="$(
-  host_release_validate_source_tag \
-    "${source_repository}" \
-    "${source_tag}" \
-    "${manifest_file}" \
-    "${release_lock}"
-)"
+source_commit="$(jq -er '.source.repository_revision' "${manifest_file}")"
 host_release_assert_sanitized_metadata \
   "${checksum_file}" \
   "${compatibility_file}" \
@@ -210,11 +204,19 @@ guide_name="$(jq -er '.disk_image.contents[] | select(endswith(".txt"))' "${comp
   --root "${mounted_path}" \
   --app-name "${app_name}" \
   --guide-name "${guide_name}"
-host_release_validate_sources \
-  "${mounted_path}/${app_name}" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}"
+release_context="$(
+  host_release_context_record \
+    "${mounted_path}/${app_name}" \
+    "${manifest_file}" \
+    "${release_lock}" \
+    "${acceptance_file}" \
+    "${source_repository}" \
+    "${source_tag}"
+)"
+[[ "${source_commit}" == "$(jq -er '.source.repository_revision' <<<"${release_context}")" ]] || {
+  echo "The mounted release context has an unexpected source revision." >&2
+  exit 1
+}
 
 guide_sha256="$(shasum -a 256 "${mounted_path}/${guide_name}" | awk '{print $1}')"
 [[ "${guide_sha256}" == "$(jq -er '.disk_image.install_guide_sha256' "${compatibility_file}")" ]] || {
@@ -227,25 +229,23 @@ guide_sha256="$(shasum -a 256 "${mounted_path}/${guide_name}" | awk '{print $1}'
 }
 
 expected_compatibility="${mount_root}/expected-compatibility.json"
-minimum_macos="$(plutil -extract LSMinimumSystemVersion raw "${mounted_path}/${app_name}/Contents/Info.plist")"
+package_record="$(
+  host_release_package_record \
+    "$(basename "${dmg_file}")" \
+    "${dmg_sha256}" \
+    "${dmg_size_bytes}" \
+    "${guide_name}" \
+    "${guide_sha256}" \
+    "$(basename "${checksum_file}")" \
+    "$(basename "${compatibility_file}")" \
+    "$(basename "${notes_file}")" \
+    "$(basename "${output_file}")"
+)"
 host_release_write_compatibility_manifest \
   "${expected_compatibility}" \
   "$(jq -er '.created_at_utc' "${compatibility_file}")" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}" \
-  "${source_tag}" \
-  "${source_commit}" \
-  "$(basename "${dmg_file}")" \
-  "${dmg_sha256}" \
-  "${dmg_size_bytes}" \
-  "${guide_name}" \
-  "${guide_sha256}" \
-  "$(basename "${checksum_file}")" \
-  "$(basename "${compatibility_file}")" \
-  "$(basename "${notes_file}")" \
-  "$(basename "${output_file}")" \
-  "${minimum_macos}"
+  "${release_context}" \
+  "${package_record}"
 host_release_validate_compatibility_manifest \
   "${compatibility_file}" \
   "${expected_compatibility}"

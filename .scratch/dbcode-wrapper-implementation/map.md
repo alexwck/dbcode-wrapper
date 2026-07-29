@@ -66,6 +66,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - [Prepare the v0.1.2 wrapper-only Private Personal Release](./issues/42-prepare-v0-1-2-wrapper-only-private-release.md) — Reuse the unchanged verified host to assemble, sign, accept, package, and locally approve the completed wrapper maintenance without pushing, publishing, installing, or changing the personal profile.
 - [Transfer v0.1.2 through an authenticated draft](./issues/43-transfer-v0-1-2-through-an-authenticated-draft.md) — Keep the five exact host-only assets in an unpublished owner-only draft, prove authenticated integrity and anonymous denial, and leave installation outside the transfer.
 - [Prune inert maintenance and speed public readiness](./issues/44-prune-inert-maintenance-and-speed-public-readiness.md) — Remove unused human-assisted proof and signing paths, derive routine version-test expectations from the release lock, fail stale patch trees at compilation, and scan exact Git history through bounded batch streams without deleting retained evidence.
+- [Concentrate release validation while keeping update discovery](./issues/45-concentrate-release-validation-with-update-discovery.md) — Keep automatic Code OSS, VSCodium, and DBCode polling plus the read-only status UI, while packaging validates one digest-bound release context and the mounted-DMG verifier independently rebuilds its own.
 
 ## Not yet specified
 

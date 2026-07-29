@@ -69,7 +69,9 @@ Before changing behaviour, read:
 
 - Put a security rule used by more than one acquisition route in one deep module. Keep shell and in-app adapters limited to download, file, and private-cache work; do not let either adapter grow a second verification policy.
 - Keep the deterministic cross-adapter mutation matrix in the fast source gate. Run the real cached-package verifier only when the shared verifier, an acquisition adapter, or the pinned runtime set changes.
+- Keep automatic update polling, the status icon, review actions, and notifications read-only. They may report public Code OSS, VSCodium, and DBCode records, but they must not change version pins, approve or install a candidate, create a tag, or publish a release.
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
+- Validate the source tag, signed app, release lock, and acceptance evidence once to create one digest-bound Host Release context. A package copy may reuse that context only while its digest, signature, identity, architecture, and notices still match. The mounted-DMG verifier must build its own context and must not trust the package copy shortcut.
 - Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
 - A materialized exact-source gate may reuse the launcher checkout's ignored caches and pinned toolchain. Keep source evidence inside the materialized checkout; never validate the launcher's mutable `.build/work` tree as if it belonged to that source.
 - Keep upstream host compilation separate from release assembly. A DBCode-only bump should reuse the Compiled Host when its content-addressed input ID still matches.

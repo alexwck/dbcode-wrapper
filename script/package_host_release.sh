@@ -59,18 +59,16 @@ for command in cmp codesign ditto git hdiutil jq lipo plutil rg shasum stat; do
   require_command "${command}"
 done
 
-host_release_validate_sources \
-  "${app_path}" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}"
-source_commit="$(
-  host_release_validate_source_tag \
-    "${source_repository}" \
-    "${source_tag}" \
+release_context="$(
+  host_release_context_record \
+    "${app_path}" \
     "${manifest_file}" \
-    "${release_lock}"
+    "${release_lock}" \
+    "${acceptance_file}" \
+    "${source_repository}" \
+    "${source_tag}"
 )"
+source_commit="$(jq -er '.source.repository_revision' <<<"${release_context}")"
 
 [[ ! -L "${output_dir}" ]] || {
   echo "The host-release output directory must not be a symbolic link." >&2
@@ -87,17 +85,17 @@ chmod 700 "${output_dir}"
   exit 1
 }
 
-release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
-wrapper_version="$(jq -er '.release.wrapper_version' "${release_lock}")"
+release_set_id="$(jq -er '.release.release_set_id' <<<"${release_context}")"
+wrapper_version="$(jq -er '.release.wrapper_version' <<<"${release_context}")"
 [[ "${source_tag}" == "v${wrapper_version}" ]] || {
   echo "The source tag must match wrapper version ${wrapper_version}: v${wrapper_version}" >&2
   exit 1
 }
-code_oss_version="$(jq -er '.runtime.code_oss' "${manifest_file}")"
-vscodium_version="$(jq -er '.runtime.host' "${manifest_file}")"
-dbcode_version="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")"
-architecture="$(jq -er '.artifact.architecture' "${manifest_file}")"
-app_sha256="$(jq -er '.artifact.sha256' "${manifest_file}")"
+code_oss_version="$(jq -er '.release.code_oss_version' <<<"${release_context}")"
+vscodium_version="$(jq -er '.release.vscodium_version' <<<"${release_context}")"
+dbcode_version="$(jq -er '.release.dbcode_version' <<<"${release_context}")"
+architecture="$(jq -er '.release.architecture' <<<"${release_context}")"
+app_sha256="$(jq -er '.app.sha256' <<<"${release_context}")"
 package_stem="DBCode-Wrapper-${wrapper_version}-${vscodium_version}-dbcode-${dbcode_version}-src-${source_commit:0:12}-app-${app_sha256:0:12}-${architecture}"
 dmg_name="${package_stem}.dmg"
 checksum_name="${dmg_name}.sha256"
@@ -146,11 +144,9 @@ cp "${release_tree}/${guide_name}" "${temporary_root}/${notes_name}"
   --root "${release_tree}" \
   --app-name "DBCode Wrapper.app" \
   --guide-name "${guide_name}"
-host_release_validate_sources \
+host_release_validate_copied_app \
   "${release_tree}/DBCode Wrapper.app" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}"
+  "${release_context}"
 
 hdiutil create \
   -quiet \
@@ -164,31 +160,29 @@ hdiutil verify "${temporary_root}/${dmg_name}" >/dev/null
 dmg_sha256="$(shasum -a 256 "${temporary_root}/${dmg_name}" | awk '{print $1}')"
 dmg_size_bytes="$(stat -f '%z' "${temporary_root}/${dmg_name}")"
 guide_sha256="$(shasum -a 256 "${release_tree}/${guide_name}" | awk '{print $1}')"
-minimum_macos="$(plutil -extract LSMinimumSystemVersion raw "${app_path}/Contents/Info.plist")"
 
 [[ "${dmg_size_bytes}" -lt 2147483648 ]] || {
   echo "The host-release disk image exceeds GitHub's 2 GiB asset limit." >&2
   exit 1
 }
 
+package_record="$(
+  host_release_package_record \
+    "${dmg_name}" \
+    "${dmg_sha256}" \
+    "${dmg_size_bytes}" \
+    "${guide_name}" \
+    "${guide_sha256}" \
+    "${checksum_name}" \
+    "${compatibility_name}" \
+    "${notes_name}" \
+    "${verification_name}"
+)"
 host_release_write_compatibility_manifest \
   "${temporary_root}/${compatibility_name}" \
   "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-  "${manifest_file}" \
-  "${release_lock}" \
-  "${acceptance_file}" \
-  "${source_tag}" \
-  "${source_commit}" \
-  "${dmg_name}" \
-  "${dmg_sha256}" \
-  "${dmg_size_bytes}" \
-  "${guide_name}" \
-  "${guide_sha256}" \
-  "${checksum_name}" \
-  "${compatibility_name}" \
-  "${notes_name}" \
-  "${verification_name}" \
-  "${minimum_macos}"
+  "${release_context}" \
+  "${package_record}"
 
 printf '%s  %s\n' "${dmg_sha256}" "${dmg_name}" > "${temporary_root}/${checksum_name}"
 

@@ -32,8 +32,8 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 
 - `verify_fast_release.sh` runs from the manifest's materialized source, reruns the fast development contracts and static smoke itself, and combines those exact results with the signed app, release identity, and one-profile rendered smoke.
 - `generate_runtime_setup_manifest.sh` turns the Release Specification into the public package-and-key record used by the focused first-run installer.
-- `package_host_release.sh` creates the five local host-release files after an annotated source tag, signed app, release lock, and prompt-free acceptance report agree.
-- `verify_host_release.sh` treats the DMG as untrusted input, mounts it read-only, checks its source and acceptance identity, scans its contents, verifies the app and metadata, and writes a sanitized receipt.
+- `package_host_release.sh` fully validates the annotated source tag, signed app, release lock, and prompt-free acceptance report once, then creates one digest-bound release context. It uses that context for the five local host-release files and accepts the staging copy only while its digest, signature, identity, architecture, and notices still match.
+- `verify_host_release.sh` treats the DMG as untrusted input. It mounts it read-only, creates its own fully validated release context from the mounted app, compares the complete compatibility record, and writes a sanitized receipt.
 - `approve_host_release.sh` accepts schema-3 prompt-free acceptance and the matching final package verification. It writes an attestation, approved record, and merged history under generated acceptance evidence without installing the app or writing the production profile.
 - `host_release_contract.sh` exposes the Host Release module's validated prompt-free acceptance record to the approval writer. It does not create evidence or change release state.
 - `inspect_host_release_tree.sh` rejects DBCode, extension caches, profiles, licence or activation state, credentials, databases, Keychain exports, signing material, and escaping links.
