@@ -397,6 +397,23 @@ async function geometry(page) {
 	});
 }
 
+async function waitForDrawerView(page, viewId) {
+	try {
+		await page.waitForFunction(expectedViewId => {
+			const root = document.querySelector('.monaco-workbench');
+			return root?.dataset.dbcodeWrapperDrawer === 'open'
+				&& root.dataset.dbcodeWrapperDrawerView === expectedViewId;
+		}, viewId, { timeout: 15000 });
+	} catch (error) {
+		const state = await geometry(page);
+		const sidebarText = (await page.locator('.part.sidebar').textContent().catch(() => '')).slice(0, 500);
+		throw new Error(
+			`DBCode drawer ${viewId} did not open. Rendered state: ${JSON.stringify({ state, sidebarText })}`,
+			{ cause: error }
+		);
+	}
+}
+
 async function visibleContextMenuText(page) {
 	return page.evaluate(() => [...document.querySelectorAll('.context-view')]
 		.filter(element => {
@@ -754,11 +771,7 @@ async function verifyFocusedShell(app, page) {
 
 	const explorer = page.locator('[data-dbcode-wrapper-action="database-explorer"]');
 	await explorer.click();
-	await page.waitForFunction(() => {
-		const root = document.querySelector('.monaco-workbench');
-		return root?.dataset.dbcodeWrapperDrawer === 'open'
-			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.connections.view';
-	});
+	await waitForDrawerView(page, 'dbcode.connections.view');
 	await clickMainCanvas(page);
 	let drawerState = await geometry(page);
 	assert.equal(drawerState.dataset.dbcodeWrapperDrawer, 'open');
@@ -773,12 +786,9 @@ async function verifyFocusedShell(app, page) {
 	record('Database Explorer remains persistent across outside click and Escape');
 
 	await openToolbarMenu(page, 'queries');
-	await page.locator('.context-view:visible .action-label', { hasText: 'History' }).click();
-	await page.waitForFunction(() => {
-		const root = document.querySelector('.monaco-workbench');
-		return root?.dataset.dbcodeWrapperDrawer === 'open'
-			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.history.view';
-	});
+	await page.keyboard.press('Home');
+	await page.keyboard.press('Enter');
+	await waitForDrawerView(page, 'dbcode.history.view');
 	await clickMainCanvas(page);
 	drawerState = await geometry(page);
 	assert.equal(drawerState.dataset.dbcodeWrapperDrawer, 'open');
@@ -795,18 +805,11 @@ async function verifyFocusedShell(app, page) {
 	assert.equal(await drawerToggle.getAttribute('aria-label'), 'Expand drawer');
 	assert.equal(await drawerToggle.getAttribute('aria-expanded'), 'false');
 	await drawerToggle.click();
-	await page.waitForFunction(() => {
-		const root = document.querySelector('.monaco-workbench');
-		return root?.dataset.dbcodeWrapperDrawer === 'open'
-			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.history.view';
-	});
+	await waitForDrawerView(page, 'dbcode.history.view');
 	await openToolbarMenu(page, 'queries');
-	await page.locator('.context-view:visible .action-label', { hasText: 'Library' }).click();
-	await page.waitForFunction(() => {
-		const root = document.querySelector('.monaco-workbench');
-		return root?.dataset.dbcodeWrapperDrawer === 'open'
-			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.library.view';
-	});
+	await page.keyboard.press('End');
+	await page.keyboard.press('Enter');
+	await waitForDrawerView(page, 'dbcode.library.view');
 	await drawerToggle.click();
 	await page.waitForFunction(
 		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawer === 'closed'
