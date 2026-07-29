@@ -38,7 +38,6 @@ wrapper_source_digest() {
     script/prepare_source.sh \
     script/sign_host.sh \
     script/setup_local_signing_identity.sh \
-    script/verify_local_signing_continuity.sh \
     script/generate_manifest.sh \
     script/generate_installed_release_status.sh \
     script/generate_profile_identity.sh \

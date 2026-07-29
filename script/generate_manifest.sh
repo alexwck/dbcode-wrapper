@@ -173,37 +173,6 @@ safe_storage_access_stable_across_rebuilds="null"
 safe_storage_rebuild_behavior="pending-manual-rebuild-observation"
 signing_continuity_evidence="pending-rebuilt-release-comparison"
 signing_continuity_receipt_sha256=""
-signing_continuity_receipt="${DBCODE_WRAPPER_SIGNING_CONTINUITY_EVIDENCE:-}"
-if [[ -n "${signing_continuity_receipt}" ]]; then
-  [[ -f "${signing_continuity_receipt}" && ! -L "${signing_continuity_receipt}" ]] || {
-    echo "The signing-continuity receipt is missing or unsafe." >&2
-    exit 1
-  }
-  jq -e \
-    --arg artifact_sha256 "${artifact_sha256}" \
-    --arg release_set_id "${release_set_id}" \
-    --arg certificate_sha1 "${LOCAL_SIGNING_CERTIFICATE_SHA1}" \
-    --arg certificate_sha256 "${LOCAL_SIGNING_CERTIFICATE_SHA256}" \
-    --arg requirement "${signature_requirement}" '
-      .schema_version == 1
-      and .cryptographic_identity_stable == true
-      and .current.artifact_sha256 == $artifact_sha256
-      and .current.release_set_id == $release_set_id
-      and .signing_certificate == {sha1: $certificate_sha1, sha256: $certificate_sha256}
-      and .designated_requirement == $requirement
-      and .safe_storage_access_stable_across_rebuilds == false
-      and .safe_storage_rebuild_behavior == "manual-approval-may-repeat-after-host-rebuild"
-      and .safe_storage_prompt_observation == "accepted-new-approval-after-distinct-rebuild"
-    ' "${signing_continuity_receipt}" >/dev/null || {
-    echo "The signing-continuity receipt does not cover this signed artifact." >&2
-    exit 1
-  }
-  cryptographic_update_identity_stable="true"
-  safe_storage_access_stable_across_rebuilds="false"
-  safe_storage_rebuild_behavior="manual-approval-may-repeat-after-host-rebuild"
-  signing_continuity_evidence="verified-distinct-rebuilt-artifacts"
-  signing_continuity_receipt_sha256="$(shasum -a 256 "${signing_continuity_receipt}" | awk '{print $1}')"
-fi
 
 release_source_snapshot_verify_record "${REPO_ROOT}" "${release_source_record}"
 mkdir -p "$(dirname "${manifest_output}")"

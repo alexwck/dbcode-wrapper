@@ -18,16 +18,10 @@ jq -e '
   exit 1
 }
 
-qa_kernel_preparer="${REPO_ROOT}/script/prepare_python_notebook_qa.sh"
-[[ -x "${qa_kernel_preparer}" ]] || {
-  echo "The rendered proof needs a project-local Python-kernel preparer." >&2
+if [[ -e "${REPO_ROOT}/script/prepare_python_notebook_qa.sh" ]]; then
+  echo "The prompt-free release path must not maintain a separate QA kernel installer." >&2
   exit 1
-}
-
-rg -Fq 'ipykernel==7.3.0' "${qa_kernel_preparer}" || {
-  echo "The QA Python kernel must pin its top-level ipykernel dependency." >&2
-  exit 1
-}
+fi
 jq -e '
   .publisher == "dbcode-wrapper"
   and .name == "python-kernel-bridge"

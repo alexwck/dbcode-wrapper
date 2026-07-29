@@ -17,14 +17,17 @@ trap cleanup_test_root EXIT INT TERM
 
 signing_library="${script_root}/lib/local_signing_identity.sh"
 setup_script="${script_root}/setup_local_signing_identity.sh"
-continuity_script="${script_root}/verify_local_signing_continuity.sh"
 
-for required_file in "${signing_library}" "${setup_script}" "${continuity_script}"; do
+for required_file in "${signing_library}" "${setup_script}"; do
   [[ -f "${required_file}" ]] || {
     echo "Missing local-signing component: ${required_file}" >&2
     exit 1
   }
 done
+if [[ -e "${script_root}/verify_local_signing_continuity.sh" ]]; then
+  echo "The release path must not retain the manual signing-continuity recorder." >&2
+  exit 1
+fi
 
 jq -e '
   .product.signing == {

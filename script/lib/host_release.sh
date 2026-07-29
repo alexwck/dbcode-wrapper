@@ -265,10 +265,9 @@ host_release_validate_sources() {
   local release_lock="$3"
   local acceptance_file="$4"
   local info_plist="${app_path}/Contents/Info.plist"
-  local app_sha manifest_sha lock_sha
+  local app_sha lock_sha
   local expected_requirement actual_requirement signature_details
   local expected_extensions accepted_extensions architectures
-  local code_oss_version dbcode_version dbcode_sha256
   local runtime_setup_manifest runtime_setup_logic runtime_setup_sha256
   local release_build_spec release_extension_spec release_profile_spec
   local expected_setup_packages actual_setup_packages
@@ -295,7 +294,6 @@ host_release_validate_sources() {
   release_profile_spec="$(release_specification_record profile "${release_lock}")" || return 1
 
   app_sha="$(artifact_digest "${app_path}")"
-  manifest_sha="$(shasum -a 256 "${manifest_file}" | awk '{print $1}')"
   lock_sha="$(shasum -a 256 "${release_lock}" | awk '{print $1}')"
 
   jq -e \
@@ -446,153 +444,10 @@ host_release_validate_sources() {
     return 1
   }
 
-  code_oss_version="$(jq -er '.runtime.code_oss' "${manifest_file}")"
-  dbcode_version="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .version' "${manifest_file}")"
-  dbcode_sha256="$(jq -er '.runtime_extensions[] | select(.id == "dbcode.dbcode") | .vsix_sha256' "${manifest_file}")"
-
-  acceptance_schema="$(jq -er '.schema_version' "${acceptance_file}")"
-  if [[ "${acceptance_schema}" == "3" ]]; then
-    host_release_validate_prompt_free_acceptance \
-      "${manifest_file}" \
-      "${release_lock}" \
-      "${acceptance_file}" || return 1
-  else
-    jq -e \
-    --arg app_sha "${app_sha}" \
-    --arg manifest_sha "${manifest_sha}" \
-    --arg lock_sha "${lock_sha}" \
-    --arg code_oss_version "${code_oss_version}" \
-    --arg dbcode_version "${dbcode_version}" \
-    --arg dbcode_sha256 "${dbcode_sha256}" \
-    --arg signature_requirement "$(jq -er '.artifact.signature_requirement' "${manifest_file}")" \
-    --arg certificate_sha1 "$(jq -er '.artifact.signing_certificate_sha1' "${manifest_file}")" \
-    --arg certificate_sha256 "$(jq -er '.artifact.signing_certificate_sha256' "${manifest_file}")" \
-    --arg release_set_id "$(jq -er '.release.release_set_id' "${manifest_file}")" '
-      (.schema_version == 1 or .schema_version == 2)
-      and .status == "passed"
-      and .scope == "current-user-private-use"
-      and .release.release_set_id == $release_set_id
-      and .release.app_sha256 == $app_sha
-      and .release.platform == "darwin"
-      and .release.architecture == "arm64"
-      and .release.code_oss_version == $code_oss_version
-      and .release.dbcode.id == "dbcode.dbcode"
-      and .release.dbcode.version == $dbcode_version
-      and .release.dbcode.vsix_sha256 == $dbcode_sha256
-      and .evidence_sha256.build_manifest == $manifest_sha
-      and .evidence_sha256.release_lock == $lock_sha
-      and (.evidence_sha256 | keys | sort) == [
-        "build_manifest",
-        "compatibility_matrix",
-        "development_log",
-        "real_profile_proof",
-        "release_lock",
-        "rendered_report",
-        "restart_health",
-        "rollback",
-        "signing_continuity",
-        "smoke_log"
-      ]
-      and all(.evidence_sha256[]; type == "string" and test("^[0-9a-f]{64}$"))
-      and (
-        if .schema_version == 1 then
-          .gates == {
-            development_contracts: "passed",
-            strict_signature_and_manifest: "passed",
-            rebuilt_host_safe_storage_behavior: "accepted-limitation",
-            independent_launch_and_profile_isolation: "passed",
-            dbcode_focused_rendered_interface: "passed",
-            exact_external_extension_inventory: "passed",
-            lifetime_entitlement_and_persistence: "passed",
-            protected_credential_reentry: "passed",
-            read_only_update_discovery: "passed",
-            postgresql_read_only: "passed",
-            duckdb_and_parquet: "passed",
-            first_run_migration_and_hyphen_path: "passed",
-            four_way_update_compatibility: "passed",
-            promotion_restart_health: "passed",
-            complete_set_rollback: "passed",
-            owner_only_profile_permissions: "passed",
-            bundle_unchanged_after_use: "passed"
-          }
-          and (.manual_evidence | keys | sort) == [
-            "activation",
-            "credential_reentry",
-            "duckdb",
-            "parquet",
-            "persistence",
-            "postgresql",
-            "update_discovery"
-          ]
-        else
-          .gates == {
-            development_contracts: "passed",
-            strict_signature_and_manifest: "passed",
-            rebuilt_host_safe_storage_behavior: "accepted-limitation",
-            independent_launch_and_profile_isolation: "passed",
-            dbcode_focused_rendered_interface: "passed",
-            exact_external_extension_inventory: "passed",
-            lifetime_entitlement_and_persistence: "passed",
-            protected_credential_reentry: "passed",
-            read_only_update_discovery: "passed",
-            postgresql_read_only: "passed",
-            stored_routine_debugger: "passed",
-            duckdb_and_parquet: "passed",
-            first_run_migration_and_hyphen_path: "passed",
-            four_way_update_compatibility: "passed",
-            promotion_restart_health: "passed",
-            complete_set_rollback: "passed",
-            owner_only_profile_permissions: "passed",
-            bundle_unchanged_after_use: "passed"
-          }
-          and (.manual_evidence | keys | sort) == [
-            "activation",
-            "credential_reentry",
-            "debugger",
-            "duckdb",
-            "parquet",
-            "persistence",
-            "postgresql",
-            "update_discovery"
-          ]
-        end
-      )
-      and all(.manual_evidence[];
-        .status == "passed"
-        and .launch_kind == "relaunch"
-        and (.expected_result | type == "string" and length > 0)
-        and (.note | type == "string" and length > 0)
-        and (.recorded_at | type == "string" and length > 0)
-      )
-      and (.rendered_evidence.check_count | type == "number" and . >= 35)
-      and (.rendered_evidence.known_warning_count | type == "number" and . >= 0)
-      and .rendered_evidence.unexpected_error_count == 0
-      and .signing.kind == "certificate"
-      and .signing.scope == "current-user-private-use"
-      and .signing.designated_requirement == $signature_requirement
-      and .signing.certificate.sha1 == $certificate_sha1
-      and .signing.certificate.sha256 == $certificate_sha256
-      and .signing.cryptographic_identity_stable_across_rebuilds == true
-      and .signing.safe_storage_access_stable_across_rebuilds == false
-      and .signing.safe_storage_prompt_observation == "accepted-new-approval-after-distinct-rebuild"
-      and .signing.safe_storage_rebuild_behavior == "manual-approval-may-repeat-after-host-rebuild"
-      and .failures == []
-      and .waivers == []
-      and .distribution_claims == {
-        developer_id: false,
-        notarized: false,
-        public_distribution_ready: false,
-        intel_support: false,
-        multi_user_support: false,
-        official_dbcode_endorsement: false
-      }
-      and (.completed_at_utc | type == "string" and length > 0)
-      and (.private_use_risks | type == "array" and length >= 6)
-    ' "${acceptance_file}" >/dev/null || {
-    echo "The final acceptance report is incomplete or does not approve this exact private-use artifact." >&2
-    return 1
-    }
-  fi
+  host_release_validate_prompt_free_acceptance \
+    "${manifest_file}" \
+    "${release_lock}" \
+    "${acceptance_file}" || return 1
 
   expected_extensions="$(
     jq -c '[.runtime_extensions[] | "\(.id)@\(.version)"] | sort' "${manifest_file}"

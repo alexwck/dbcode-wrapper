@@ -146,18 +146,14 @@ rg -Fq 'cryptographic_update_identity_stable="null"' "${REPO_ROOT}/script/genera
   echo "A certificate-signed build must not claim signing continuity without comparing releases." >&2
   exit 1
 }
-rg -Fq 'safe_storage_access_stable_across_rebuilds="false"' "${REPO_ROOT}/script/generate_manifest.sh" || {
-  echo "A verified rebuilt pair must record the observed Safe Storage limitation." >&2
+if rg -Fq 'DBCODE_WRAPPER_SIGNING_CONTINUITY_EVIDENCE' "${REPO_ROOT}/script/generate_manifest.sh"; then
+  echo "Manifest generation must not accept a retired manual signing receipt." >&2
   exit 1
-}
-rg -Fq 'safe_storage_rebuild_behavior="manual-approval-may-repeat-after-host-rebuild"' "${REPO_ROOT}/script/generate_manifest.sh" || {
-  echo "The manifest must explain the accepted approval behavior after a host rebuild." >&2
+fi
+if rg -Fq 'verified-distinct-rebuilt-artifacts' "${REPO_ROOT}/script/generate_manifest.sh"; then
+  echo "Manifest generation must not retain the retired manual signing branch." >&2
   exit 1
-}
-rg -Fq '.current.release_set_id == $release_set_id' "${REPO_ROOT}/script/generate_manifest.sh" || {
-  echo "A signing-continuity receipt must belong to the exact current release set." >&2
-  exit 1
-}
+fi
 fi
 
 echo "Single-app identity and Keychain-isolated test contracts passed."

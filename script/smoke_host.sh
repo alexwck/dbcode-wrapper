@@ -105,17 +105,11 @@ current_digest="$(artifact_digest "${APP_BUNDLE}")"
 [[ "$(jq -er '.artifact.signing_certificate_sha1' "${BUILD_MANIFEST}")" == "${LOCAL_SIGNING_CERTIFICATE_SHA1}" ]] || { echo "Manifest signing certificate SHA-1 mismatch." >&2; exit 1; }
 [[ "$(jq -er '.artifact.signing_certificate_sha256' "${BUILD_MANIFEST}")" == "${LOCAL_SIGNING_CERTIFICATE_SHA256}" ]] || { echo "Manifest signing certificate SHA-256 mismatch." >&2; exit 1; }
 jq -e '
-  (.artifact.cryptographic_update_identity_stable == null
-    and .artifact.signing_continuity_evidence == "pending-rebuilt-release-comparison"
-    and .artifact.signing_continuity_receipt_sha256 == null
-    and .artifact.safe_storage_access_stable_across_rebuilds == null
-    and .artifact.safe_storage_rebuild_behavior == "pending-manual-rebuild-observation")
-  or
-  (.artifact.cryptographic_update_identity_stable == true
-    and .artifact.signing_continuity_evidence == "verified-distinct-rebuilt-artifacts"
-    and (.artifact.signing_continuity_receipt_sha256 | test("^[0-9a-f]{64}$"))
-    and .artifact.safe_storage_access_stable_across_rebuilds == false
-    and .artifact.safe_storage_rebuild_behavior == "manual-approval-may-repeat-after-host-rebuild")
+  .artifact.cryptographic_update_identity_stable == null
+  and .artifact.signing_continuity_evidence == "pending-rebuilt-release-comparison"
+  and .artifact.signing_continuity_receipt_sha256 == null
+  and .artifact.safe_storage_access_stable_across_rebuilds == null
+  and .artifact.safe_storage_rebuild_behavior == "pending-manual-rebuild-observation"
 ' "${BUILD_MANIFEST}" >/dev/null || { echo "Manifest signing and Safe Storage evidence is inconsistent." >&2; exit 1; }
 [[ "$(jq -er '.artifact.shared_data_folder_name' "${BUILD_MANIFEST}")" == "${SHARED_DATA_FOLDER_NAME}" ]] || { echo "Manifest shared-data folder mismatch." >&2; exit 1; }
 [[ "$(jq -er '.artifact.focused_shell.enabled' "${BUILD_MANIFEST}")" == "true" ]] || { echo "Manifest focused-shell state mismatch." >&2; exit 1; }

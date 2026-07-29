@@ -398,7 +398,7 @@ jq -n \
 manifest_sha256="$(shasum -a 256 "${manifest_file}" | awk '{print $1}')"
 release_set_id="$(jq -er '.release.release_set_id' "${manifest_file}")"
 
-acceptance_file="${test_root}/final-acceptance.json"
+fast_acceptance_file="${test_root}/prompt-free-final-acceptance.json"
 jq -n \
   --arg release_set_id "${release_set_id}" \
   --arg source_commit "${source_commit}" \
@@ -412,30 +412,8 @@ jq -n \
   --arg dbcode_version "${fixture_dbcode_version}" \
   --arg dbcode_sha256 "${fixture_dbcode_sha256}" \
   --argjson installed_extensions "${fixture_installed_extensions}" '
-    def evidence:
-      {
-        build_manifest: $manifest_sha256,
-        release_lock: $release_lock_sha256,
-        signing_continuity: ("1" * 64),
-        real_profile_proof: ("2" * 64),
-        compatibility_matrix: ("3" * 64),
-        restart_health: ("4" * 64),
-        rollback: ("5" * 64),
-        rendered_report: ("6" * 64),
-        development_log: ("7" * 64),
-        smoke_log: ("8" * 64)
-      };
-    def manual:
-      {
-        status: "passed",
-        expected_result: "fixture expected result",
-        note: "fixture note",
-        launch_id: "launch-2",
-        launch_kind: "relaunch",
-        recorded_at: "2026-07-24T00:00:00Z"
-      };
     {
-      schema_version: 2,
+      schema_version: 3,
       status: "passed",
       completed_at_utc: "2026-07-24T00:00:00Z",
       scope: "current-user-private-use",
@@ -461,51 +439,49 @@ jq -n \
         kind: "certificate",
         scope: "current-user-private-use",
         designated_requirement: "designated => fixture requirement",
-        certificate: {sha1: ("b" * 40), sha256: ("c" * 64)},
-        cryptographic_identity_stable_across_rebuilds: true,
-        safe_storage_access_stable_across_rebuilds: false,
-        safe_storage_prompt_observation: "accepted-new-approval-after-distinct-rebuild",
-        safe_storage_rebuild_behavior: "manual-approval-may-repeat-after-host-rebuild"
+        certificate: {sha1: ("b" * 40), sha256: ("c" * 64)}
+      },
+      automation: {
+        profile_name: "qa",
+        persistent_profile: true,
+        person_controlled_actions: "not-invoked",
+        kernel_started: false,
+        sql_executed: false,
+        model_called: false,
+        secret_entered: false
       },
       gates: {
         development_contracts: "passed",
         strict_signature_and_manifest: "passed",
-        rebuilt_host_safe_storage_behavior: "accepted-limitation",
-        independent_launch_and_profile_isolation: "passed",
+        signed_app_one_profile_launch: "passed",
         dbcode_focused_rendered_interface: "passed",
         exact_external_extension_inventory: "passed",
-        lifetime_entitlement_and_persistence: "passed",
-        protected_credential_reentry: "passed",
-        read_only_update_discovery: "passed",
-        postgresql_read_only: "passed",
-        stored_routine_debugger: "passed",
-        duckdb_and_parquet: "passed",
-        first_run_migration_and_hyphen_path: "passed",
-        four_way_update_compatibility: "passed",
-        promotion_restart_health: "passed",
-        complete_set_rollback: "passed",
-        owner_only_profile_permissions: "passed",
+        prompt_free_automation: "passed",
         bundle_unchanged_after_use: "passed"
       },
-      manual_evidence: {
-        activation: manual,
-        credential_reentry: manual,
-        update_discovery: manual,
-        postgresql: manual,
-        debugger: manual,
-        duckdb: manual,
-        parquet: manual,
-        persistence: manual
+      gate_execution: {
+        source_snapshot_sha256: $source_snapshot_sha256,
+        release_set_id: $release_set_id,
+        app_sha256: $app_sha256,
+        build_manifest_sha256: $manifest_sha256,
+        development_runner: "script/check_development.sh",
+        static_smoke_runner: "script/smoke_host.sh"
       },
       rendered_evidence: {
-        check_count: 36,
+        check_count: 8,
         known_warning_count: 0,
         unexpected_error_count: 0
       },
-      evidence_sha256: evidence,
+      evidence_sha256: {
+        build_manifest: $manifest_sha256,
+        release_lock: $release_lock_sha256,
+        rendered_report: ("6" * 64),
+        development_log: ("7" * 64),
+        smoke_log: ("8" * 64)
+      },
       failures: [],
       waivers: [],
-      private_use_risks: ["1", "2", "3", "4", "5", "6"],
+      private_use_risks: ["1", "2", "3", "4", "5"],
       distribution_claims: {
         developer_id: false,
         notarized: false,
@@ -515,7 +491,7 @@ jq -n \
         official_dbcode_endorsement: false
       }
     }
-  ' > "${acceptance_file}"
+  ' > "${fast_acceptance_file}"
 
 stub_bin="${test_root}/bin"
 mkdir -p "${stub_bin}"
@@ -600,76 +576,17 @@ printf '%s\n' \
   > "${stub_bin}/hdiutil"
 
 legacy_acceptance_file="${test_root}/historical-final-acceptance.json"
-jq '
-  .schema_version = 1
-  | del(.gates.stored_routine_debugger)
-  | del(.manual_evidence.debugger)
-' "${acceptance_file}" > "${legacy_acceptance_file}"
-PATH="${stub_bin}:${PATH}" host_release_validate_sources \
+jq '.schema_version = 2 | .manual_evidence = {status: "passed"}' \
+  "${fast_acceptance_file}" > "${legacy_acceptance_file}"
+if PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
-  "${legacy_acceptance_file}"
+  "${legacy_acceptance_file}" >/dev/null 2>&1; then
+  echo "Host packaging accepted a retired human-evidence report." >&2
+  exit 1
+fi
 
-fast_acceptance_file="${test_root}/prompt-free-final-acceptance.json"
-jq '
-  {
-    schema_version: 3,
-    status,
-    completed_at_utc,
-    scope,
-    source,
-    release,
-    signing: {
-      kind: .signing.kind,
-      scope: .signing.scope,
-      designated_requirement: .signing.designated_requirement,
-      certificate: .signing.certificate
-    },
-    automation: {
-      profile_name: "qa",
-      persistent_profile: true,
-      person_controlled_actions: "not-invoked",
-      kernel_started: false,
-      sql_executed: false,
-      model_called: false,
-      secret_entered: false
-    },
-    gates: {
-      development_contracts: "passed",
-      strict_signature_and_manifest: "passed",
-      signed_app_one_profile_launch: "passed",
-      dbcode_focused_rendered_interface: "passed",
-      exact_external_extension_inventory: "passed",
-      prompt_free_automation: "passed",
-      bundle_unchanged_after_use: "passed"
-    },
-    gate_execution: {
-      source_snapshot_sha256: .source.snapshot_sha256,
-      release_set_id: .release.release_set_id,
-      app_sha256: .release.app_sha256,
-      build_manifest_sha256: .evidence_sha256.build_manifest,
-      development_runner: "script/check_development.sh",
-      static_smoke_runner: "script/smoke_host.sh"
-    },
-    rendered_evidence: {
-      check_count: 8,
-      known_warning_count: 0,
-      unexpected_error_count: 0
-    },
-    evidence_sha256: {
-      build_manifest: .evidence_sha256.build_manifest,
-      release_lock: .evidence_sha256.release_lock,
-      rendered_report: .evidence_sha256.rendered_report,
-      development_log: .evidence_sha256.development_log,
-      smoke_log: .evidence_sha256.smoke_log
-    },
-    failures,
-    waivers,
-    private_use_risks: ["1", "2", "3", "4", "5"],
-    distribution_claims
-  }
-' "${acceptance_file}" > "${fast_acceptance_file}"
 PATH="${stub_bin}:${PATH}" host_release_validate_sources \
   "${fixture_app}" \
   "${manifest_file}" \
@@ -764,7 +681,7 @@ if malformed_lock_output="$(
     --app "${fixture_app}" \
     --manifest "${manifest_file}" \
     --release-lock "${malformed_lock}" \
-    --acceptance "${acceptance_file}" \
+    --acceptance "${fast_acceptance_file}" \
     --source-repository "${fixture_repository}" \
     --source-tag "${source_tag}" \
     --output-dir "${test_root}/malformed-lock-package" 2>&1
@@ -804,7 +721,7 @@ jq \
     .release.app_sha256 = $app_sha256
     | .release.release_set_id = $release_set_id
     | .evidence_sha256.build_manifest = $manifest_sha256
-  ' "${acceptance_file}" > "${malformed_acceptance}"
+  ' "${fast_acceptance_file}" > "${malformed_acceptance}"
 if malformed_runtime_output="$(
   PATH="${stub_bin}:${PATH}" bash "${packager}" \
     --app "${malformed_runtime_app}" \
@@ -927,7 +844,7 @@ legacy_acceptance_output="${test_root}/legacy-acceptance-approval"
 if DBCODE_WRAPPER_TEST_FAIL_SIGNATURE_TOOLS=yes PATH="${stub_bin}:${PATH}" bash "${approver}" \
   --manifest "${manifest_file}" \
   --release-lock "${release_lock}" \
-  --acceptance "${acceptance_file}" \
+  --acceptance "${legacy_acceptance_file}" \
   --dmg "${dmg_file}" \
   --compatibility "${compatibility_file}" \
   --verification "${packaged_verification}" \
@@ -997,7 +914,7 @@ fi
 }
 
 incomplete_acceptance="${test_root}/incomplete-acceptance.json"
-jq 'del(.gates)' "${acceptance_file}" > "${incomplete_acceptance}"
+jq 'del(.gates)' "${fast_acceptance_file}" > "${incomplete_acceptance}"
 if PATH="${stub_bin}:${PATH}" bash "${packager}" \
   --app "${fixture_app}" \
   --manifest "${manifest_file}" \

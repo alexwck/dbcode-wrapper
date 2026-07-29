@@ -87,9 +87,14 @@ set -e
   exit 1
 }
 
-rg -Fq '[[ "${acceptance_schema}" == "3" ]]' "${host_release_module}" || {
-  echo "Private packaging must accept prompt-free schema 3 evidence." >&2
+rg -Fq 'host_release_validate_prompt_free_acceptance \' "${host_release_module}" || {
+  echo "Host packaging must validate the prompt-free acceptance record." >&2
   exit 1
 }
+if rg -Fq 'acceptance_schema=' "${host_release_module}" || \
+  rg -Fq '.schema_version == 1 or .schema_version == 2' "${host_release_module}"; then
+  echo "Host packaging must not accept retired human-evidence schemas." >&2
+  exit 1
+fi
 
 echo "Prompt-free release acceptance contracts passed."
