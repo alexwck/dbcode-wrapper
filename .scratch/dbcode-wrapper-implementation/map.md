@@ -65,6 +65,7 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - [Remove the retired prepared-release API](./issues/41-remove-the-retired-prepared-release-api.md) — Delete the unused prepared-set validator, member resolver, and legacy approval writer after their controlled-upgrade callers are gone; keep history, update matching, and prompt-free approval.
 - [Prepare the v0.1.2 wrapper-only Private Personal Release](./issues/42-prepare-v0-1-2-wrapper-only-private-release.md) — Reuse the unchanged verified host to assemble, sign, accept, package, and locally approve the completed wrapper maintenance without pushing, publishing, installing, or changing the personal profile.
 - [Transfer v0.1.2 through an authenticated draft](./issues/43-transfer-v0-1-2-through-an-authenticated-draft.md) — Keep the five exact host-only assets in an unpublished owner-only draft, prove authenticated integrity and anonymous denial, and leave installation outside the transfer.
+- [Prune inert maintenance and speed public readiness](./issues/44-prune-inert-maintenance-and-speed-public-readiness.md) — Remove unused human-assisted proof and signing paths, derive routine version-test expectations from the release lock, fail stale patch trees at compilation, and scan exact Git history through bounded batch streams without deleting retained evidence.
 
 ## Not yet specified
 
@@ -76,5 +77,5 @@ Ship a maintainable, DBCode-only Apple-silicon application that runs the unchang
 - Modifying or reverse engineering DBCode.
 - Reimplementing DBCode's database engine and features while presenting the result as DBCode.
 - Replacing Code OSS with a different host without a bounded size and full-feature compatibility proof.
-- A published public application or DMG release, Mac App Store distribution, or application distribution to third parties.
+- Mac App Store distribution or presenting the wrapper as an official DBCode application.
 - Paid Apple Developer Program membership, Developer ID distribution signing, and Apple notarization.

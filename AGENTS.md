@@ -85,6 +85,8 @@ Before changing behaviour, read:
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - Prompt-free approval accepts only the schema-3 acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
 - The old manual proof recorder, same-Mac acceptance generator, debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are retired. Keep their generated historical evidence protected, but do not restore a person-driven release system.
+- When a retired workflow leaves a helper with no maintained caller, remove that helper and its owning test. Do not keep a second optional release path just in case.
+- Exact-ref privacy checks must batch Git history objects. Do not start a new Git process for every historical file.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
 - Publish a release only when the annotated tag, release lock, build manifest, signed app, final acceptance report, package, and approval identify the same release set.
 - A public release is a normal GitHub release, not a draft or prerelease. Upload only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
