@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
+source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
 task="${REPO_ROOT}/script/release_host.sh"
 [[ -x "${task}" ]] || {
@@ -12,6 +13,9 @@ task="${REPO_ROOT}/script/release_host.sh"
 
 plan="$("${task}" plan)"
 release_tag="v${WRAPPER_VERSION}"
+expected_rendered_report="$(
+  generated_workspace_path "rendered-screenshots"
+)/focused-shell-rendered-report.json"
 
 jq -e \
   --arg repository "${REPO_ROOT}" \
@@ -19,7 +23,7 @@ jq -e \
   --arg app "${APP_BUNDLE}" \
   --arg manifest "${BUILD_MANIFEST}" \
   --arg release_lock "${LOCK_FILE}" \
-  --arg rendered_report "${REPO_ROOT}/output/playwright/focused-shell-rendered-report.json" \
+  --arg rendered_report "${expected_rendered_report}" \
   --arg acceptance "${BUILD_ROOT}/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
   --arg assets "${BUILD_ROOT}/host-release/${release_tag}" \
   --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval" \
@@ -46,6 +50,39 @@ jq -e \
     and .explicit_publish_required == true
     and .automatic_publish == false
   ' <<<"${plan}" >/dev/null
+
+alternate_fixture_parent="$(cd "${TMPDIR:-/tmp}" && pwd -P)"
+alternate_generated_root="$(
+  mktemp -d "${alternate_fixture_parent%/}/dbcode-release-task-generated.XXXXXX"
+)"
+alternate_node_bin="$(
+  printf '%s/.build/toolchains/node-v%s-darwin-%s/bin\n' \
+    "${alternate_generated_root}" \
+    "${NODE_VERSION}" \
+    "${TARGET_ARCH}"
+)"
+mkdir -p "${alternate_node_bin}"
+ln -s "${NODE_BIN_DIR}/node" "${alternate_node_bin}/node"
+alternate_plan="$(
+  DBCODE_WRAPPER_GENERATED_REPO_ROOT="${alternate_generated_root}" \
+    "${task}" plan
+)"
+jq -e \
+  --arg rendered_report "${alternate_generated_root}/output/playwright/focused-shell-rendered-report.json" \
+  '.paths.rendered_report == $rendered_report' \
+  <<<"${alternate_plan}" >/dev/null || {
+  echo "The owner-facing release task ignored the launcher generated-workspace root." >&2
+  exit 1
+}
+case "${alternate_generated_root}" in
+  "${alternate_fixture_parent%/}"/dbcode-release-task-generated.*)
+    rm -rf "${alternate_generated_root}"
+    ;;
+  *)
+    echo "Refusing to remove an unexpected alternate generated root." >&2
+    exit 1
+    ;;
+esac
 
 for required_release_step in \
   'approved-release-sets.json' \
