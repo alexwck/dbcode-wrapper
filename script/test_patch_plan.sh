@@ -38,15 +38,10 @@ jq -e '
   exit 1
 }
 
-prepared_source="${WORK_ROOT}/vscode"
-if [[ "${GENERATED_REPO_ROOT}" == "${REPO_ROOT}" &&
-  -f "${prepared_source}/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts" ]]; then
-  expected_tree_digest="$(jq -er '.expected_maintained_tree_sha256' "${plan_file}")"
-  actual_tree_digest="$(patch_plan_maintained_tree_digest "${prepared_source}" "${plan_file}")"
-  [[ "${actual_tree_digest}" == "${expected_tree_digest}" ]] || {
-    echo "The applied Code OSS tree does not match the approved semantic patch plan." >&2
-    exit 1
-  }
-fi
+compile_script="${REPO_ROOT}/script/compile_host.sh"
+rg -Fq 'patch_plan_maintained_tree_digest "${WORK_ROOT}/vscode"' "${compile_script}" || {
+  echo "The compile step must verify the applied Code OSS patch tree." >&2
+  exit 1
+}
 
 echo "Maintained patch-plan checks passed."

@@ -4,6 +4,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
+source "${REPO_ROOT}/script/lib/patch_plan.sh"
 
 usage() {
   echo "Usage: ./script/compile_host.sh [--environment-record FILE]" >&2
@@ -99,6 +100,17 @@ echo "Compiling ${APP_NAME} for darwin-${TARGET_ARCH}"
 echo "VSCodium ${VSCODIUM_TAG} (${VSCODIUM_COMMIT})"
 echo "Code OSS ${CODE_OSS_TAG} (${CODE_OSS_COMMIT})"
 echo "Node $(node --version), npm $(npm --version)"
+
+expected_patch_tree_digest="$(
+  jq -er '.expected_maintained_tree_sha256' "$(patch_plan_file)"
+)"
+actual_patch_tree_digest="$(
+  patch_plan_maintained_tree_digest "${WORK_ROOT}/vscode"
+)"
+[[ "${actual_patch_tree_digest}" == "${expected_patch_tree_digest}" ]] || {
+  echo "The Code OSS tree does not match the approved semantic patch plan." >&2
+  exit 1
+}
 
 (
   cd "${WORK_ROOT}"
