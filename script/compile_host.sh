@@ -84,6 +84,8 @@ export DBCODE_WRAPPER_TUNNEL_APPLICATION_NAME="${TUNNEL_APPLICATION_NAME}"
 export DBCODE_WRAPPER_NARROW_BREAKPOINT="${FOCUSED_SHELL_NARROW_BREAKPOINT}"
 export DBCODE_WRAPPER_DARWIN_PROFILE_UUID="${DARWIN_PROFILE_UUID}"
 export DBCODE_WRAPPER_DARWIN_PROFILE_PAYLOAD_UUID="${DARWIN_PROFILE_PAYLOAD_UUID}"
+export DBCODE_WRAPPER_PATCH_PLAN_FILE="$(patch_plan_file)"
+export DBCODE_WRAPPER_PATCH_TREE_VERIFIER="${REPO_ROOT}/script/verify_prepared_patch_tree.sh"
 export DBCODE_WRAPPER_STRIP_SOURCE_MAPS="yes"
 export DBCODE_WRAPPER_BUILTIN_EXTENSION_ALLOWLIST="${dbcode_wrapper_builtin_extension_allowlist}"
 export RELEASE_VERSION="${VSCODIUM_TAG}"
@@ -100,17 +102,6 @@ echo "Compiling ${APP_NAME} for darwin-${TARGET_ARCH}"
 echo "VSCodium ${VSCODIUM_TAG} (${VSCODIUM_COMMIT})"
 echo "Code OSS ${CODE_OSS_TAG} (${CODE_OSS_COMMIT})"
 echo "Node $(node --version), npm $(npm --version)"
-
-expected_patch_tree_digest="$(
-  jq -er '.expected_maintained_tree_sha256' "$(patch_plan_file)"
-)"
-actual_patch_tree_digest="$(
-  patch_plan_maintained_tree_digest "${WORK_ROOT}/vscode"
-)"
-[[ "${actual_patch_tree_digest}" == "${expected_patch_tree_digest}" ]] || {
-  echo "The Code OSS tree does not match the approved semantic patch plan." >&2
-  exit 1
-}
 
 (
   cd "${WORK_ROOT}"

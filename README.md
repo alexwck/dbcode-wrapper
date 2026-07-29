@@ -68,6 +68,8 @@ Build or reuse the exact Compiled Host from a clean committed source:
 ./script/build_host.sh
 ```
 
+On a cold build, the wrapper checks the final patched Code OSS tree before compilation starts.
+
 Signed-host changes also run static smoke and the one persistent-profile rendered check. The rendered check opens representative DBCode routes without starting a database or kernel, calling a model, entering a secret, signing in, activating a licence, or approving a macOS prompt.
 
 Inspect ignored generated state with:
