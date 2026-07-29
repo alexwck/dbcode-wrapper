@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: ca6a58c0be798dfb6438f8326417ebd9ba42a354
+source_commit: 34275d911c10266c8fd2988e734dab9a5c648120
 ---
 ## Summary
 
@@ -22,7 +22,7 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 - Present Connections, Database Explorer, SQL files, queries, history, library, scratch files, notebooks, Query Builder, settings, AI, and MCP routes.
 - Keep DBCode-owned editors, grids, actions, diagrams, exports, and account surfaces available.
 - Open DBCode's own result editor below each query at every window width through its public result-location preference.
-- Keep Database Explorer stable during editor, canvas, grid, and Escape interactions.
+- Keep every DBCode-owned side drawer open during editor, canvas, grid, and Escape interactions. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent drawer used in the app session.
 - Open file-backed scratch queries in the generated query folder without overwriting existing files.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
 - Provide profile safety, kernel permission, and release status around DBCode.
@@ -37,13 +37,13 @@ The current feature policy keeps capability status separate from evidence depth.
 
 ## Key files
 
-- [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing, query storage, and result placement.
+- [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/34275d911c10266c8fd2988e734dab9a5c648120/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing, query storage, and result placement.
 - [0001-dbcode-wrapper-identity.patch](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/patches/vscodium/0001-dbcode-wrapper-identity.patch) — product identity injection.
 - [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/extensions/dbcode-wrapper-profile-migration) — setup, import, profile identity, runtime installation, and recovery.
 - [dbcode-wrapper-python-kernel](https://github.com/alexwck/dbcode-wrapper/tree/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
 - [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/extensions/dbcode-wrapper-release-status) — official update discovery, read-only review UI, and approved-set status.
-- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/dbcode-feature-policy.json) — capability and route policy.
-- [host/qa/focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/ca6a58c0be798dfb6438f8326417ebd9ba42a354/host/qa/focused-shell-rendered.cjs) — maintained rendered route runner.
+- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/34275d911c10266c8fd2988e734dab9a5c648120/host/dbcode-feature-policy.json) — capability and route policy.
+- [host/qa/focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/34275d911c10266c8fd2988e734dab9a5c648120/host/qa/focused-shell-rendered.cjs) — maintained rendered route runner.
 
 ## Dependencies
 
