@@ -13,13 +13,13 @@ source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
-Generated Workspace Retention is the ownership and safety boundary for ignored output from builds, tests, rollback, caches, current Host Releases, and legacy private transfers. It is not a general disk cleaner. Protected and unknown paths are reported without traversal, and cleanup is a dry run unless one exact validated expired path is selected with `--apply`.
+Generated Workspace Retention is the ownership and safety boundary for ignored output from builds, tests, rollback, caches, current Host Releases, and retained evidence. It is not a general disk cleaner. Protected and unknown paths are reported without traversal, and cleanup is a dry run unless one exact validated expired path is selected with `--apply`.
 
-The current inventory has no deletion-eligible path. Reusable caches, worktrees, the persistent QA profile, accepted apps, current Host Release assets, rollback evidence, and the historical `v0.1.2` draft remain protected.
+The current inventory has no deletion-eligible path. Reusable caches, worktrees, the persistent QA profile, accepted apps, current Host Release assets, retained evidence, and rollback material remain protected.
 
 ## Responsibilities
 
-- Register rebuildable work, reusable caches, active evidence, rollback evidence, current Host Release assets, legacy private assets, expired output, and unknown output.
+- Register rebuildable work, reusable caches, active and retained evidence, rollback evidence, current Host Release assets, expired output, and unknown output.
 - Protect content-addressed Compiled Host entries and their rejected-entry quarantine.
 - Normalize relative paths, absolute paths, and paths containing spaces before callers use them.
 - Refuse broad roots, home roots, symbolic links, paths outside the safety root, and unregistered targets.
@@ -52,8 +52,8 @@ flowchart LR
 
 - Retention follows declared ownership, not age or a guessed folder name.
 - Reusable compiled hosts stay protected because deleting them can turn a quick release into a full build.
-- Current Host Release output has its own protected root; the older private-release root remains separate historical state.
-- Retiring an executable harness does not expire its accepted evidence.
+- Current Host Release output has its own protected root.
+- Retained evidence stays protected until its owning workflow records expiry.
 - Protected artifacts use an uninspected size status.
 - Cleanup mutation is limited to one exact validated expired path.
 

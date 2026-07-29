@@ -60,8 +60,6 @@ sequenceDiagram
 9. Verify every retained digest and signature, then optionally preview with a disposable profile.
 10. Fully quit the app before any owner-controlled install or restore.
 
-Retired human-assisted release harnesses remain historical evidence only. Their generated output stays protected.
-
 ## Failure modes
 
 - Discovery has a newer version but no approved release set.

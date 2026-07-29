@@ -1,62 +1,16 @@
 ---
-title: Private Personal Release
-description: The owner-only packaging and verification path for one exact accepted DBCode Wrapper build.
-type: module
+title: Use the Host Release module
+description: A forward pointer to the only maintained release module.
+type: reference
 tags:
   - wiki
-  - module
+  - reference
   - release
-  - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 > [!NOTE]
-> This page records the completed `v0.1.2` authenticated-draft path. New versions use the [Host Release](host-release.md) module and a normal published release in this repository.
+> This page no longer contains a release module.
 
-## Summary
-
-A Private Personal Release is a locally produced host-only package for Macs owned by the same person. The public repository supplies build and verification logic. The owner's machine supplies the signed app and private release output. DBCode, notebook packages, licences, credentials, and profile state are installed separately and are not placed in the DMG.
-
-## Responsibilities
-
-- Require an annotated source tag at the exact immutable source commit that built the app.
-- Match the tag's release lock, source snapshot, compiled-host receipt, signed app, manifest, and prompt-free acceptance report.
-- Verify bundle identity and nested signatures.
-- Validate the complete schema-3 acceptance report once and expose a compact validated record to the approval adapter.
-- Generate sanitized compatibility metadata without credentials, licences, profile contents, or local paths.
-- Build the host-only DMG and external checksum.
-- Mount and verify the final image independently before transfer.
-- Keep live app signature and architecture checks in packaging and mounted verification.
-- Create a generated approval bundle only after the exact acceptance, package, source tag, final receipt, and confirmation agree. Approval does not accept or recheck a build-app path.
-- Keep approval separate from installation and production-profile writes.
-- When transfer uses GitHub, require an unpublished authenticated draft, exact uploaded sizes and SHA-256 digests, a matching owner download, anonymous denial, and no publication workflow.
-- Keep final assets protected until the owning workflow releases them.
-
-## Public API / entry points
-
-[`package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/package_private_release.sh) builds the package. [`verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_private_release.sh) mounts and verifies it. [`approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/approve_private_release.sh) consumes that final receipt and writes the generated approval bundle without installing. Shared checks and compatibility-record construction live in [`script/lib/private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/lib/private_release.sh).
-
-## Key files
-
-- [`script/verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_fast_release.sh) — exact-source and exact-app acceptance.
-- [`script/package_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/package_private_release.sh) — task-level packager.
-- [`script/verify_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/verify_private_release.sh) — independent mounted-image verifier.
-- [`script/private_release_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/private_release_contract.sh) — read-only schema-3 acceptance adapter for the approval writer.
-- [`script/approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ea091613c180550d6e6df9120b2a9b4fe66ffcc2/script/approve_private_release.sh) — prompt-free approval evidence writer.
-- The retired same-Mac generator is not a current entry point. Historical generated evidence remains protected, while new releases use schema-3 prompt-free acceptance.
-
-## Dependencies
-
-The module consumes [Release Source Snapshot](release-source-snapshot.md), [Compiled Host Cache](compiled-host-cache.md), [Approved Release Set](approved-release-set.md), [Verification Harness](verification-harness.md), the signed app, macOS packaging tools, and [Generated Workspace Retention](generated-workspace-retention.md).
-
-## Participates in
-
-- [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
-- [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
-
-## Related
-
-- [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
-- [Standalone DBCode Profile](../concepts/standalone-dbcode-profile.md)
-- [Choose a verification level](../guides/choose-a-verification-level.md)
+Use [Host Release](host-release.md) for packaging, independent mounted verification, approval, and publication. Historical implementation details remain in Git and the local issue tracker, not in maintained public instructions.

@@ -27,7 +27,6 @@ The module keeps automatic update discovery separate. Polling may refresh the st
 - Mount the DMG below a private temporary root and create a separate fully validated context from the mounted app.
 - Approve the exact package without installing the app or writing the production profile.
 - Publish only the DMG and checksum as a normal GitHub release, then verify public state, sizes, and SHA-256 digests.
-- Keep the legacy unpublished `v0.1.2` draft as historical evidence, not as the maintained release channel.
 
 ## Public API / entry points
 
@@ -52,5 +51,4 @@ The module consumes [Release Specification](release-specification.md), [Release 
 ## Related
 
 - [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
-- [Historical Private Personal Release](private-personal-release.md)
 - [Choose a verification level](../guides/choose-a-verification-level.md)

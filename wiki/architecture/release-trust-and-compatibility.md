@@ -70,4 +70,3 @@ Core transition checks live in [release_specification.sh](https://github.com/ale
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
 - [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
 - [Package and publish a Host Release](../flows/package-and-publish-host-release.md)
-- [Historical private transfer](../flows/package-and-transfer-private-release.md)

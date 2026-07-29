@@ -43,7 +43,7 @@ A fresh Mac does not need the source repository or an extension screen. The app 
 - `.scratch/` is the local Markdown issue tracker and implementation history.
 - `.build/`, `dist/`, and `output/` are generated locally and never belong in the public source repository. Inspect or plan cleanup through `./script/generated_workspace.sh`; do not remove these paths ad hoc.
 
-The legacy `v0.1.2` package remains an unpublished owner-only draft. It will not be republished because its immutable metadata records a private transfer. [`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the first normal public host release. It keeps DBCode `1.36.4`, Code OSS `1.126.0`, and VSCodium packaging `1.126.04524` for Apple silicon. Code OSS `1.130.0` remains visible as **Not tested** until compatible VSCodium packaging exists. These are compatibility statements for exact release sets, not permanent promises about future upstream versions. PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are useful optional checks, not a deployment allowlist. Every connection type contributed by the installed unchanged DBCode version must remain available.
+[`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the current published Host Release. It keeps DBCode `1.36.4`, Code OSS `1.126.0`, and VSCodium packaging `1.126.04524` for Apple silicon. Code OSS `1.130.0` remains visible as **Not tested** until compatible VSCodium packaging exists. These are compatibility statements for exact release sets, not permanent promises about future upstream versions. PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are useful optional checks, not a deployment allowlist. Every connection type contributed by the installed unchanged DBCode version must remain available.
 
 The [DBCode capability coverage guide](docs/product/dbcode-capability-coverage.md) maps the official feature families to wrapper evidence and known gaps. The [AI data-sharing guide](docs/security/ai-data-sharing.md) explains what AI and MCP features may send outside the database. These guides describe the wrapper boundary; the installed DBCode version and maintained feature policy remain authoritative.
 
@@ -115,7 +115,7 @@ After reviewing the inventory and exact-path plan, remove one expired target wit
   --apply
 ```
 
-`--apply` accepts one exact path only. It cannot apply a whole class. Unknown paths, symbolic links, repository and home roots, active evidence, caches, worktrees, the accepted app, current profile, final transfer assets, acceptance receipts, controlled-upgrade evidence, and rollback backups remain refused until their owning workflow explicitly records expiry.
+`--apply` accepts one exact path only. It cannot apply a whole class. Unknown paths, symbolic links, repository and home roots, active evidence, caches, worktrees, the accepted app, current profile, Host Release assets, acceptance receipts, approval history, and rollback backups remain refused until their owning workflow explicitly records expiry.
 
 Before any public push, inspect the exact ref that will be published rather than only the current files:
 
@@ -130,15 +130,17 @@ Before any public push, inspect the exact ref that will be published rather than
 
 The exact `LICENSE` file reserves all rights in the original wrapper code. This gate accepts only its approved SHA-256 and the GitHub noreply address selected for the public commit; it rejects any different licence or author identity.
 
-Create the prompt-free acceptance report from the exact signed app and rendered result. The command materializes the manifest's source commit, reruns the fast development contracts from that source, and reruns static smoke against that exact app:
+Set `release_tag` to the candidate's real tag, then create the prompt-free acceptance report from the exact signed app and rendered result. The command materializes the manifest's source commit, reruns the fast development contracts from that source, and reruns static smoke against that exact app:
 
 ```sh
+release_tag="v$(jq -er '.release.wrapper_version' host/release-lock.json)"
+
 ./script/verify_fast_release.sh \
   --app "dist/DBCode Wrapper.app" \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
   --rendered-report <rendered-report> \
-  --output .build/acceptance/fast-release/final-acceptance-report.json
+  --output ".build/acceptance/fast-release/${release_tag}/final-acceptance-report.json"
 ```
 
 After an annotated source tag, its exact signed app, and that automated acceptance report agree, create the five local host-release files:
@@ -148,10 +150,10 @@ After an annotated source tag, its exact signed app, and that automated acceptan
   --app "dist/DBCode Wrapper.app" \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
-  --acceptance .build/acceptance/fast-release/v0.1.3/final-acceptance-report.json \
+  --acceptance ".build/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
   --source-repository . \
-  --source-tag v0.1.3 \
-  --output-dir .build/host-release/v0.1.3
+  --source-tag "${release_tag}" \
+  --output-dir ".build/host-release/${release_tag}"
 ```
 
 The package command produces one read-only DMG, its SHA-256 file, a compatibility manifest, install and rollback notes, and an independent verification receipt. It refuses a source tag that does not identify the manifest's exact source revision, incomplete automated evidence, an app without focused first-run runtime setup, a DMG at or above GitHub's 2 GiB asset limit, or any bundled DBCode package, profile, extension cache, licence state, credential, database, Keychain export, or signing secret. All five files stay outside Git. Only the DMG and checksum are public release assets; the compatibility and verification evidence remains local.
@@ -162,15 +164,15 @@ After the mounted package verification passes, record the exact package as appro
 ./script/approve_host_release.sh \
   --manifest dist/build-manifest.json \
   --release-lock host/release-lock.json \
-  --acceptance .build/acceptance/fast-release/v0.1.3/final-acceptance-report.json \
+  --acceptance ".build/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
   --dmg <host-release.dmg> \
   --compatibility <compatibility-manifest.json> \
   --verification <verification-receipt.json> \
   --source-repository . \
-  --source-tag v0.1.3 \
+  --source-tag "${release_tag}" \
   --history host/approved-release-history.json \
   --confirm-release-set <exact-release-set-id> \
-  --output-dir .build/acceptance/fast-release/v0.1.3-approval
+  --output-dir ".build/acceptance/fast-release/${release_tag}-approval"
 ```
 
 Approval writes an attestation, one Approved Release Set record, and the merged approved history under ignored generated output. It does not launch or install the app, approve a macOS prompt, or write the Standalone DBCode Profile. Installation remains a separate user-controlled step.
@@ -180,13 +182,13 @@ Publish the approved candidate as a normal release in this repository:
 ```sh
 ./script/publish_release.sh \
   --source-repository . \
-  --source-tag v0.1.3 \
+  --source-tag "${release_tag}" \
   --release-lock host/release-lock.json \
-  --assets-dir .build/host-release/v0.1.3 \
+  --assets-dir ".build/host-release/${release_tag}" \
   --publish
 ```
 
-The publisher pushes `main` and the annotated tag, uploads only the DMG and checksum, and then checks the public release state, asset sizes, and SHA-256 digests. It does not create a draft or prerelease.
+The publisher pushes `main` and the annotated tag, creates a normal published release with only the DMG and checksum, and then checks the public state, asset sizes, and SHA-256 digests.
 
 ## Rights and third-party software
 

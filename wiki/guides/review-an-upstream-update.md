@@ -47,7 +47,6 @@ Automatic polling and the status UI remain useful. They report official public i
 - Automatic MCP registration and the HTTP MCP server require separate evidence.
 - Re-signing can cause a new macOS prompt even when code is unchanged.
 - Representative database checks do not prove or limit the complete connection catalogue.
-- Do not restore retired human-assisted release harnesses.
 
 ## Related
 

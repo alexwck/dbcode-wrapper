@@ -85,22 +85,21 @@ Before changing behaviour, read:
 - The generated `qa` profile and the user's Standalone DBCode Profile are separate. "One profile" means one automated GUI profile, never the real personal profile.
 - Static smoke must not launch the app. The one-profile rendered smoke owns the only automated GUI launch and checks prompt-gated DBCode routes for reachability without activating them.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
-- Prompt-free approval accepts only the schema-3 acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
-- The old manual proof recorder, same-Mac acceptance generator, debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are retired. Keep their generated historical evidence protected, but do not restore a person-driven release system.
-- When a retired workflow leaves a helper with no maintained caller, remove that helper and its owning test. Do not keep a second optional release path just in case.
+- Prompt-free approval accepts only the current validated acceptance report and the independently verified host-only package for the same exact release set. It may write generated approval evidence, but it must not install the app or write the production profile.
+- Keep one maintained release path. Remove a helper and its owning test when no maintained caller remains; do not keep a second optional release path.
 - Exact-ref privacy checks must batch Git history objects. Do not start a new Git process for every historical file.
 - A distinct host build may need one new approval. A repeated prompt from the exact unchanged app requires investigation before accepting the test result.
 - Publish a release only when the annotated tag, release lock, build manifest, signed app, final acceptance report, package, and approval identify the same release set.
-- A public release is a normal GitHub release, not a draft or prerelease. Upload only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
+- Publish a normal GitHub release with only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
 - Never upload DBCode, profiles, compatibility evidence, verification receipts, or other local release evidence. DBCode remains external and each user obtains it from its official source under their own licence.
 - Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing and the complete source gate once from the final exact source.
-- Use one persistent generated QA profile and no human-required deployment tests. Do not repeat real-profile, second-Mac, database, kernel, model, sign-in, licence, or macOS prompt checks for an unchanged wrapper boundary.
+- Use one persistent generated QA profile and no human-required deployment tests. Do not add personal-profile, second-device, database, kernel, model, sign-in, licence, or macOS prompt checks for an unchanged wrapper boundary.
 
 ### Paths and temporary work
 
 - Scripts that accept paths must support documented relative paths, absolute paths, and spaces in filenames. Cover those forms with focused automated tests that exercise the script's public interface.
 - When a path contract returns a normalized absolute output path, the caller must use that returned value. Do not validate a relative path against the repository and then use the original value against the process working directory.
-- Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary proof folders in the repository root or user home directory.
+- Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary evidence folders in the repository root or user home directory.
 - Use `./script/generated_workspace.sh inventory` and a cleanup plan before changing generated state. Apply cleanup only to one exact validated expired path. Do not replace the retention contract with ad hoc `rm` commands.
 - Remove only temporary paths created by the current task. Follow the maintained and generated file rules below for all existing evidence.
 
@@ -133,6 +132,9 @@ Full builds are expensive. Prefer `build_host.sh`, which reuses an exact Compile
 ## Documentation sync
 
 When wrapper behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the current `## Answer` of affected resolved issues. A routine version bump updates only the release specification, changed compatibility policy, public release notes, and required evidence; do not reopen or rewrite resolved issues for unchanged behaviour. Preserve dated issue comments as historical evidence even when they describe an older state.
+
+- Keep maintained public documentation forward-facing. Describe the one supported workflow instead of cataloguing removed scripts or retired release paths. Keep historical detail in dated issue comments, the append-only wiki log, and Git history.
+- Use simple plain English in public documentation. Keep `README.md` focused on the product, privacy boundary, update status, current release flow, and the shortest useful commands.
 
 ## OpenKnowledge
 

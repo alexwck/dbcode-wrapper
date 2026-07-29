@@ -27,8 +27,6 @@ Verification protects wrapper-owned seams without retesting the whole DBCode pro
 - Run the focused Host Release contract only when release packaging changes.
 - Keep live databases, kernels, models, accounts, OAuth, secrets, mutation, and macOS prompts outside deployment.
 
-The manual proof recorder, same-Mac generator, debugger fixture, four-pair runner, controlled promotion, and real-profile health harness are retired. Their accepted generated output remains protected.
-
 ## Public API / entry points
 
 [check_development.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/check_development.sh) runs the fast source contracts. [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/smoke_host.sh) validates a signed app without launching it. [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_focused_shell_rendered.sh) owns the single rendered launch. [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/verify_fast_release.sh) reruns final checks from the manifest source.

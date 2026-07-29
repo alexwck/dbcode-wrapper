@@ -14,11 +14,11 @@ DBCode Wrapper is a focused macOS database application built from a slim Code OS
 
 This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`e02160a`](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d). Check source and tests when details disagree.
 
-[`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the first normal public Host Release. It keeps unchanged DBCode `1.36.4` on Code OSS `1.126.0` with VSCodium packaging `1.126.04524`. Only the verified host DMG and checksum are public assets. The earlier `v0.1.2` authenticated draft remains unpublished historical evidence.
+[`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the current published Host Release. It keeps unchanged DBCode `1.36.4` on Code OSS `1.126.0` with VSCodium packaging `1.126.04524`. Only the verified host DMG and checksum are public assets.
 
 Automatic polling keeps the Code OSS, VSCodium, and DBCode update-status UI current. Discovery is read-only: the repository owner still starts the version bump, tests, approval, tag, and publication.
 
-The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
+The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. It checks wrapper-owned routes without starting databases, kernels, models, sign-in, licence, or macOS permission flows.
 
 Exact-source acceptance may reuse ignored caches and the pinned toolchain from the launcher checkout. Source checks stay inside the materialized release commit and never treat the launcher's mutable `.build/work` tree as source evidence.
 
@@ -26,7 +26,7 @@ Profile Layout now consumes one small identity generated from the Release Specif
 
 Open VSX package checks also have one owner. Finder first-run setup and the release script keep thin acquisition adapters, but both use the same verifier for package identity, engine compatibility, signatures, manifests, and ZIP safety. The default synthetic matrix is fast and prompt-free; real cached packages are checked only when verification changes.
 
-Generated cleanup is also conservative and prompt-free. [Generated Workspace Retention](modules/generated-workspace-retention.md) keeps inventory and cleanup plans read-only by default. An explicit `--apply` can remove one exact validated expired path, while class-wide apply is refused. The obsolete short-path catalogue profile, abandoned smoke-backup root, and Finder metadata have been removed. Reusable caches, worktrees, current QA evidence, accepted release assets, and historical upgrade evidence remain protected.
+Generated cleanup is also conservative and prompt-free. [Generated Workspace Retention](modules/generated-workspace-retention.md) keeps inventory and cleanup plans read-only by default. An explicit `--apply` can remove one exact validated expired path, while class-wide apply is refused. Reusable caches, worktrees, current QA evidence, accepted Host Release assets, and rollback evidence remain protected.
 
 > [!NOTE]
 > The wiki excludes licence material, credentials, private profiles, generated apps, raw local evidence, and proprietary DBCode implementation. Representative database and notebook checks do not limit the unchanged DBCode connection catalogue.
@@ -83,7 +83,6 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — shared package verification with thin acquisition adapters.
 - [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
 - [Host Release](modules/host-release.md) — normal public packaging, verification, approval, and publication.
-- [Historical Private Personal Release](modules/private-personal-release.md) — the frozen `v0.1.2` authenticated-draft path.
 - [Generated Workspace Retention](modules/generated-workspace-retention.md) — protected output ownership, dry-run planning, and exact-path cleanup.
 - [Verification Harness](modules/verification-harness.md) — fast source, static host, one-profile rendered, and release checks.
 
@@ -93,7 +92,6 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [First run, activation, and query](flows/first-run-activate-and-query.md) — from an empty profile to persisted real results.
 - [Approval and guarded rollback](flows/approval-and-guarded-rollback.md) — approve without installing, then prepare, verify, or preview a known-good rollback set when needed.
 - [Package and publish a Host Release](flows/package-and-publish-host-release.md) — publish the verified host DMG and checksum in this repository.
-- [Historical private transfer](flows/package-and-transfer-private-release.md) — the completed unpublished `v0.1.2` draft flow.
 
 ## Concepts
 

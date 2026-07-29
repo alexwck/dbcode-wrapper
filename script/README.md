@@ -23,9 +23,9 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 
 ## Release sets
 
-- `release_specification.sh` exposes strict build, Compiled Host, extension, profile, and identity records for new candidates, plus an explicit historical read mode for manifest-bound frozen rollback records. Historical schema 2 maps its pre-versioned profile to baseline profile schema 1; the adapter does not edit the archive or invent approval.
+- `release_specification.sh` exposes strict build, Compiled Host, extension, profile, and identity records for new candidates, plus an explicit read-only mode for supported manifest-bound rollback records. The adapter does not edit retained records or invent approval.
 - The Compiled Host input ID covers only compilation inputs, including the active Release Specification functions. DBCode package metadata, release-status content, documentation, tests, and historical readers do not force an unchanged Code OSS host to compile again. Cache validation includes executable modes, and a hit uses the stored compiler environment instead of rerunning compiler-only preflights.
-- The superseded manual proof, same-Mac acceptance, debugger fixture, four-pair compatibility, controlled-promotion, real-profile health, separate QA-kernel preparation, and manual signing-continuity helpers have been removed. Their accepted generated evidence remains protected and readable where compatibility requires it.
+- The Host Release commands below are the only maintained packaging and publication path. Retained evidence remains protected where rollback compatibility requires it.
 - `prepare_release_rollback.sh`, `verify_release_rollback.sh`, and `preview_release_rollback.sh` retain and inspect the known-good rollback set.
 
 ## Host release
@@ -34,10 +34,10 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 - `generate_runtime_setup_manifest.sh` turns the Release Specification into the public package-and-key record used by the focused first-run installer.
 - `package_host_release.sh` fully validates the annotated source tag, signed app, release lock, and prompt-free acceptance report once, then creates one digest-bound release context. It uses that context for the five local host-release files and accepts the staging copy only while its digest, signature, identity, architecture, and notices still match.
 - `verify_host_release.sh` treats the DMG as untrusted input. It mounts it read-only, creates its own fully validated release context from the mounted app, compares the complete compatibility record, and writes a sanitized receipt.
-- `approve_host_release.sh` accepts schema-3 prompt-free acceptance and the matching final package verification. It writes an attestation, approved record, and merged history under generated acceptance evidence without installing the app or writing the production profile.
+- `approve_host_release.sh` accepts the current prompt-free acceptance record and the matching final package verification. It writes an attestation, approved record, and merged history under generated acceptance evidence without installing the app or writing the production profile.
 - `host_release_contract.sh` exposes the Host Release module's validated prompt-free acceptance record to the approval writer. It does not create evidence or change release state.
 - `inspect_host_release_tree.sh` rejects DBCode, extension caches, profiles, licence or activation state, credentials, databases, Keychain exports, signing material, and escaping links.
-- `publish_release.sh` requires an explicit `--publish`, pushes `main` and the annotated tag, creates a normal GitHub release with only the DMG and checksum, and verifies the public release state, server sizes, and SHA-256 digests. It never creates a draft or prerelease.
+- `publish_release.sh` requires an explicit `--publish`, pushes `main` and the annotated tag, creates a normal published GitHub release with only the DMG and checksum, and verifies the public state, server sizes, and SHA-256 digests.
 - Host package and public-push commands keep DBCode, profiles, credentials, databases, signing secrets, compatibility manifests, and verification receipts outside Git and public release assets.
 
 Files under `script/lib/` are internal module implementations or compatibility adapters. `host_release.sh` owns source, acceptance, compatibility, and metadata validation; `host_release_guide.sh` owns the user-facing install and rollback text. Their interfaces are documented in `docs/architecture/overview.md` and tested through the task-level commands.

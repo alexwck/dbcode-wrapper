@@ -54,8 +54,6 @@ sequenceDiagram
 10. Verify the public release state, asset names, server sizes, and downloaded SHA-256 digests.
 11. Treat installation, Gatekeeper, Safe Storage, licence, and account prompts as separate user setup.
 
-Release `v0.1.3` is the first normal public Host Release. The earlier `v0.1.2` authenticated draft remains unpublished historical evidence.
-
 ## Failure modes
 
 - The source tag, release lock, snapshot, app, manifest, rendered report, or acceptance report identify different sets.
@@ -70,4 +68,3 @@ Release `v0.1.3` is the first normal public Host Release. The earlier `v0.1.2` a
 - [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
 - [Approved Release Set](../modules/approved-release-set.md)
 - [Verification Harness](../modules/verification-harness.md)
-- [Historical private transfer flow](package-and-transfer-private-release.md)

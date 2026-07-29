@@ -55,7 +55,7 @@ DBCode is unchanged upstream software. A version bump should verify the wrapper 
 
 Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion. Do not create a new issue or refresh the wiki for a routine version bump unless wrapper behaviour, compatibility, or the release channel changes.
 
-The old manual proof recorder, same-Mac acceptance generator, PostgreSQL debugger fixture, four-pair compatibility runner, controlled promotion, and real-profile health harness are not maintained release paths. Their accepted generated evidence remains protected, but new releases must use the prompt-free schema-3 path.
+The prompt-free final acceptance command is the only maintained release acceptance path. Retained evidence and rollback records remain protected, but they do not define another test or release workflow.
 
 `build_host.sh` requires one clean immutable release commit and materializes it before reading build inputs. It reuses the Compiled Host when its exact compilation input ID and mode-sensitive app digest match, then performs the smaller extension, release-record, signing, and manifest assembly. A cache hit uses the compiler environment stored in the receipt and skips compiler-only preflights. A documentation, test, historical-adapter, or DBCode-only change still receives a new auditable source snapshot and final manifest, but it does not recompile Code OSS unless a real compilation input changed.
 

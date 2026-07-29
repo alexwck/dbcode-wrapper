@@ -30,7 +30,7 @@ Find one example of each:
 - the static signed-host smoke;
 - a rendered focused-shell check using the persistent QA profile and mock Keychain;
 - a prompt-free release acceptance report;
-- a private-package check.
+- an independently mounted Host Release package check.
 
 Explain which failure each level can see that the previous level cannot.
 
@@ -40,7 +40,7 @@ Open DBCode's current supported-databases documentation, then inspect `host/dbco
 
 ## 8. Trace generated state
 
-Run `./script/generated_workspace.sh inventory`, then trace one registered root from `script/lib/generated-workspace-retention.js` into its owning build, smoke, rendered, acceptance, rollback, or private-release workflow. Explain why unknown output, caches, and worktrees stay protected until their owner records expiry, and why the cleanup command produces a plan without deleting anything. Confirm that protected artifacts and private profile contents are not traversed for size.
+Run `./script/generated_workspace.sh inventory`, then trace one registered root from `script/lib/generated-workspace-retention.js` into its owning build, smoke, rendered, acceptance, rollback, or Host Release workflow. Explain why unknown output, caches, and worktrees stay protected until their owner records expiry, and why the cleanup command produces a plan without deleting anything. Confirm that protected artifacts and private profile contents are not traversed for size.
 
 ## 9. Make one safe change
 
