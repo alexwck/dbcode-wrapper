@@ -1,6 +1,6 @@
 ---
 title: Verification Harness
-description: The fast prompt-free checks that protect wrapper source, the signed host, DBCode routes, and releases.
+description: The fast prompt-free checks that protect wrapper source, the signed host, DBCode routes, and Host Releases.
 type: module
 tags:
   - wiki
@@ -9,52 +9,47 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
-Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts while working, one persistent-profile rendered smoke, exact-source final acceptance, and verified packaging. Final acceptance owns the static signed-host check, and packaging owns mounted-image verification, so the release path does not repeat them. Optional deeper diagnostics are separate developer work and never block deployment.
+Verification protects wrapper-owned seams without retesting the whole DBCode product. The default path is fast, deterministic, and prompt-free: focused source contracts while working, one persistent-profile rendered smoke, exact-source final acceptance, Host Release packaging, and independent mounted verification.
 
 ## Responsibilities
 
 - Keep the aggregate source gate below one minute and free of app launches, network calls, questions, or human input.
 - Give each test module one maintained runner using the pinned Node runtime.
-- Verify current release-lock fields, immutable source, cache rules, patches, feature policy, profile identity and paths, signing policy, and public-source safety.
-- Compare the tracked and packaged Profile Layout identity with a fresh Release Specification projection.
-- Validate product query-storage fields and generated profile identity during static smoke before any rendered launch.
+- Verify release-lock fields, immutable source, cache rules, patches, feature policy, profile identity, signing policy, update status, and public-source safety.
 - Inspect the exact signed app without launching it.
 - Reuse one generated `qa` profile for rendered shell checks with a mock Keychain.
 - Render Connections, the unchanged New Connection catalogue, Database Explorer, SQL-file opening, Query Builder, notebook, AI, MCP, and settings routes without activating prompt-prone work.
 - Bind final acceptance to the exact source snapshot, app digest, manifest, signature, extension inventory, and release-set ID.
-- Let a materialized source reuse ignored caches and the pinned toolchain, but never use another checkout's mutable `.build/work` tree as source evidence.
+- Run the focused Host Release contract only when release packaging changes.
+- Keep live databases, kernels, models, accounts, OAuth, secrets, mutation, and macOS prompts outside deployment.
 
-Representative fixtures do not narrow DBCode support. Live databases, kernels, models, accounts, OAuth, secrets, mutation, and macOS prompts stay outside the normal deployment path.
-
-The manual proof recorder, same-Mac generator, debugger fixture, four-pair runner, controlled promotion, and real-profile health harness are removed. Their accepted generated output remains protected under the retention policy.
+The manual proof recorder, same-Mac generator, debugger fixture, four-pair runner, controlled promotion, and real-profile health harness are retired. Their accepted generated output remains protected.
 
 ## Public API / entry points
 
-[`check_development.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/check_development.sh) runs the fast source contracts. [`smoke_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/smoke_host.sh) validates a signed app without launching it. [`test_focused_shell_rendered.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/test_focused_shell_rendered.sh) owns the single rendered launch. [`verify_fast_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/verify_fast_release.sh) reruns final checks from the manifest source.
+[check_development.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/check_development.sh) runs the fast source contracts. [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/smoke_host.sh) validates a signed app without launching it. [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_focused_shell_rendered.sh) owns the single rendered launch. [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/verify_fast_release.sh) reruns final checks from the manifest source.
 
 ## Key files
 
-- [`docs/agents/verification-policy.md`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/docs/agents/verification-policy.md) — risk and prompt policy.
-- [`script/test_profile_migration_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/test_profile_migration_contract.sh) — identity generation, shell/JavaScript parity, setup, migration, and recovery checks.
-- [`host/qa/rendered-session-support.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/qa/rendered-session-support.cjs) — one-profile rendered session support.
-- [`host/qa/ticket-03-rendered.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/qa/ticket-03-rendered.cjs) — focused UI checks.
-- [`script/test_fast_release_acceptance_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/test_fast_release_acceptance_contract.sh) — final exact-release acceptance contract.
-- [`script/test_patch_plan.sh`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/script/test_patch_plan.sh) — committed patch-plan checks that ignore foreign generated worktrees.
-- [`script/test_development_gate_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/script/test_development_gate_contract.sh) — gate composition and foreign-worktree regression.
+- [docs/agents/verification-policy.md](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/docs/agents/verification-policy.md) — risk, speed, and prompt policy.
+- [script/test_fast_release_acceptance_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_fast_release_acceptance_contract.sh) — final exact-release acceptance.
+- [script/test_host_release_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_host_release_contract.sh) — package, mounted verification, approval, and tamper checks.
+- [script/test_update_status_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_update_status_contract.sh) — automatic polling, read-only status, and exact approval matching.
+- [host/qa/rendered-session-support.cjs](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/qa/rendered-session-support.cjs) — one-profile rendered session support.
 
 ## Dependencies
 
-Source checks need shell, the pinned Node runtime, and local fixtures. Built checks need the signed app and macOS inspection tools. The rendered smoke uses only its ignored generated profile and evidence roots under [Generated Workspace Retention](generated-workspace-retention.md).
+Source checks need shell, the pinned Node runtime, and local fixtures. Built checks need the signed app and macOS inspection tools. Rendered smoke uses ignored generated profile and evidence roots under [Generated Workspace Retention](generated-workspace-retention.md).
 
 ## Participates in
 
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
 - [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
-- [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
+- [Package and publish a Host Release](../flows/package-and-publish-host-release.md)
 
 ## Related
 

@@ -128,3 +128,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: c0126c5 (was 80fdddd)
 - Coverage: authenticated unpublished `v0.1.2` draft transfer; exact five-asset integrity; owner download verification; anonymous denial; no publication workflow; no installation or profile change
 - Pages: [Overview](./OVERVIEW.md), [Private Personal Release](./modules/private-personal-release.md), and [Package and transfer a private release](./flows/package-and-transfer-private-release.md)
+
+## 2026-07-29: refresh
+
+- Profile: public/standard
+- source_commit: e02160a (was c0126c5)
+- Coverage: normal same-repository `v0.1.3` Host Release; automatic read-only update polling; schema-6 public distribution policy; one digest-bound package context; independent mounted-DMG validation; compile-bound patch-tree checks; protected current Host Release assets; retained historical `v0.1.2` draft pages
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Approved Release Set concept](./concepts/approved-release-set.md), [Approval and guarded rollback](./flows/approval-and-guarded-rollback.md), [Package and publish a Host Release](./flows/package-and-publish-host-release.md), [Historical private transfer](./flows/package-and-transfer-private-release.md), [Review an upstream update](./guides/review-an-upstream-update.md), [Approved Release Set module](./modules/approved-release-set.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [Generated Workspace Retention](./modules/generated-workspace-retention.md), [Host Release](./modules/host-release.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Historical Private Personal Release](./modules/private-personal-release.md), [Release Source Snapshot](./modules/release-source-snapshot.md), [Release Specification](./modules/release-specification.md), and [Verification Harness](./modules/verification-harness.md)

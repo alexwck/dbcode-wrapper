@@ -11,6 +11,9 @@ wiki_profile: public
 wiki_depth: standard
 source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
 ---
+> [!NOTE]
+> This page records the completed `v0.1.2` authenticated-draft path. New versions use the [Host Release](host-release.md) module and a normal published release in this repository.
+
 ## Summary
 
 A Private Personal Release is a locally produced host-only package for Macs owned by the same person. The public repository supplies build and verification logic. The owner's machine supplies the signed app and private release output. DBCode, notebook packages, licences, credentials, and profile state are installed separately and are not placed in the DMG.

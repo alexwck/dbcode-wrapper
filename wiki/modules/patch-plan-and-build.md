@@ -9,34 +9,36 @@ tags:
   - patches
 wiki_profile: public
 wiki_depth: standard
-source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
 The build does not keep a permanent upstream fork. It materializes one clean wrapper commit, applies a small ordered patch plan to pinned upstream sources, compiles Code OSS only when compilation inputs changed, then assembles and signs a fresh DBCode Wrapper release.
 
-Compilation and assembly have different identity inputs. Query storage values are compiled into the host. Profile-only folders and schema are generated during assembly, so they do not force a Code OSS rebuild.
+Fast source checks validate the maintained patch plan without depending on a stale generated checkout. The real compile step checks the applied Code OSS tree immediately before it calls the upstream build.
 
 ## Responsibilities
 
 - Declare every VSCodium and Code OSS patch in one ordered plan with an exact digest.
 - Validate each patch and its intended source layer.
 - Apply identity, macOS packaging, focused-shell, slimming, and profile/release integration changes.
-- Build only the required macOS desktop target.
+- Keep unrelated source checks independent of ignored `.build/work` output.
+- Refuse compilation when the prepared Code OSS tree differs from the approved semantic result.
 - Reuse only a verified [Compiled Host Cache](compiled-host-cache.md) entry.
 - Copy wrapper extensions and generate profile, runtime, and release-status records after compilation.
 - Sign the assembled app and generate the exact manifest.
 
 ## Public API / entry points
 
-[`build_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/build_host.sh) is the public build entry point. It creates a [Release Source Snapshot](release-source-snapshot.md) and runs [`assemble_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/assemble_host.sh) inside the materialized source. Assembly calls [`compile_host.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/compile_host.sh) only on a cache miss, then runs [`generate_profile_identity.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/generate_profile_identity.sh) before signing.
+[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/build_host.sh) creates a [Release Source Snapshot](release-source-snapshot.md) and runs assembly inside the materialized source. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/compile_host.sh) verifies the applied tree before compilation. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/assemble_host.sh) adds release-specific records and signs the final app.
 
 ## Key files
 
-- [`host/patches/patch-plan.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/patch-plan.json) — ordered patch inventory and exact digests.
-- [`host/patches/code-oss`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/code-oss) — runtime and focused-shell patches.
-- [`host/patches/vscodium`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/vscodium) — build-repository patches.
-- [`host/slimming-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/slimming-policy.json) — kept and removed host capabilities.
+- [host/patches/patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/patch-plan.json) — ordered patch inventory and expected maintained-tree digest.
+- [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/code-oss) — runtime and focused-shell patches.
+- [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/patches/vscodium) — build-repository patches.
+- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_patch_plan.sh) — plan and compile-boundary contracts.
+- [host/slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/slimming-policy.json) — kept and removed host capabilities.
 
 ## Dependencies
 

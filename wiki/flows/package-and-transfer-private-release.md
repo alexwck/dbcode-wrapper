@@ -11,6 +11,9 @@ wiki_profile: public
 wiki_depth: standard
 source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
 ---
+> [!NOTE]
+> This page records the completed unpublished `v0.1.2` transfer. New versions follow [Package and publish a Host Release](package-and-publish-host-release.md).
+
 ## Summary
 
 This flow packages one locally signed, prompt-free accepted host for private use on another Mac owned by the same person. It separates public source, host-only package contents, approval evidence, installation, and private profile state. The final mounted image is verified independently before approval can be recorded.

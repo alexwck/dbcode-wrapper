@@ -9,46 +9,44 @@ tags:
   - approval
 wiki_profile: public
 wiki_depth: standard
-source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
-The Approved Release Set module validates durable approval history and turns a fully verified prompt-free package into an approved compatibility record. Matching version strings alone cannot satisfy the contract. The writer first gets validated purpose records from the Release Specification and Private Personal Release modules, then binds them to the exact package receipt and a no-install attestation.
+The Approved Release Set module validates durable approval history and turns a fully verified prompt-free Host Release package into an approved compatibility record. Matching version strings alone cannot satisfy the contract. The writer receives validated records from the [Release Specification](release-specification.md) and [Host Release](host-release.md) modules, then binds them to the exact package receipt and a no-install attestation.
 
-Maintained history now contains exact private release `v0.1.2`, with DBCode `1.36.4` on Code OSS `1.126.0`. Its record says explicitly that approval did not install the app or write the production profile.
+Maintained history includes public release `v0.1.3`, with unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Approval did not install the app or write the production profile.
 
 ## Responsibilities
 
 - Validate approved history and installed release-set records.
-- Bind the release-set ID to the source-set ID and exact signed app digest.
-- Require the immutable source-snapshot digest and compiled-host input ID for current approvals.
-- Find exact discovered candidates in approved history without treating update metadata as approval.
-- Create one compact approved record only from fully validated prompt-free package and acceptance evidence.
-- Accept prompt-free approval only after the owning modules validate the complete release lock and schema-3 acceptance report.
-- Require the exact mounted-package check set, exact release-set confirmation, and an attestation that installation and profile writes did not occur.
-- Provide the package verifier's canonical check names so producer and consumer cannot drift.
-- Upsert history without silently retaining another record with the same identity.
+- Bind release-set identity to immutable source, compiled-host input, signed app digest, external package inventory, and profile schema.
+- Find exact discovered candidates without treating update metadata as approval.
+- Create one compact approved record only from validated prompt-free acceptance and mounted-package evidence.
+- Require the exact package-check set, release-set confirmation, and no-install attestation.
+- Keep canonical package-check names shared by producer and consumer.
+- Upsert history without silently retaining a duplicate identity.
 - Keep legacy records readable without letting them define a new candidate.
 
 ## Public API / entry points
 
-The JavaScript API exposes approved-record and history validators, exact candidate lookup, package-check vocabulary, prompt-free record creation, and history upsert. Shell consumers use [`approved_release_set.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/lib/approved_release_set.sh). [`approve_private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/approve_private_release.sh) is the task-level prompt-free approval command. It consumes the final package receipt instead of accepting or rechecking a build-app path. There is no maintained prepared-directory validator, member resolver, or proof-based approval command.
+The JavaScript API exposes approved-record and history validators, exact candidate lookup, package-check vocabulary, prompt-free record creation, and history upsert. Shell consumers use [approved_release_set.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/approved_release_set.sh). [approve_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/approve_host_release.sh) is the task-level approval command. It consumes final package evidence instead of accepting a build-app path.
 
 ## Key files
 
-- [`approved-release-set.js`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/host/extensions/dbcode-wrapper-release-status/approved-release-set.js) — approved-history, exact-match, prompt-free record, and package-check logic.
-- [`approved_release_set.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/approved_release_set.cjs) — bounded adapter that obtains validated purpose records before writing.
-- [`host/approved-release-history.json`](https://github.com/alexwck/dbcode-wrapper/blob/80fdddd0bae6cd06edffbf64063124c2d2afd7d1/host/approved-release-history.json) — public history safe to bundle.
-- [`script/test_approved_release_set.mjs`](https://github.com/alexwck/dbcode-wrapper/blob/c72b801d36d9c7c2f881fbc74ed4e619ac2b5ec8/script/test_approved_release_set.mjs) — history, exact-match, prompt-free approval, and retired-entry-point tests.
+- [approved-release-set.js](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/extensions/dbcode-wrapper-release-status/approved-release-set.js) — history, exact matching, approval records, and package checks.
+- [approved_release_set.cjs](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/approved_release_set.cjs) — bounded shell-to-JavaScript adapter.
+- [host/approved-release-history.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/approved-release-history.json) — public history safe to bundle.
+- [script/test_approved_release_set.mjs](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_approved_release_set.mjs) — history, exact-match, approval, and legacy contracts.
 
 ## Dependencies
 
-The module consumes [Release Specification](release-specification.md), [Release Source Snapshot](release-source-snapshot.md), [Compiled Host Cache](compiled-host-cache.md), build manifests, acceptance digests, and profile inventories.
+The module consumes [Release Source Snapshot](release-source-snapshot.md), [Compiled Host Cache](compiled-host-cache.md), build manifests, acceptance digests, package receipts, and profile inventories.
 
 ## Participates in
 
 - [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
-- [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
+- [Package and publish a Host Release](../flows/package-and-publish-host-release.md)
 
 ## Related
 

@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
@@ -26,6 +26,7 @@ Query storage is part of the product identity. The shell reads the storage names
 - Open a file-backed scratch query in the Release Specification's query folder without overwriting it.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
 - Provide profile safety, kernel permission, and release status without modifying DBCode.
+- Automatically poll official Code OSS, VSCodium, and DBCode records and keep the status icon, review actions, and notifications read-only.
 - Show prompt-prone AI, MCP, notebook, and account routes in smoke checks without activating them.
 
 ## Public API / entry points
@@ -40,7 +41,7 @@ The approved DBCode `1.36.4` policy keeps capability status separate from eviden
 - [`0001-dbcode-wrapper-identity.patch`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/vscodium/0001-dbcode-wrapper-identity.patch) — product identity injection.
 - [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration) — setup, import, generated profile identity, runtime installation, and recovery.
 - [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-release-status) — discovery and approved-set status.
+- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/extensions/dbcode-wrapper-release-status) — automatic official-metadata discovery, read-only review UI, and approved-set status.
 - [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/dbcode-feature-policy.json) — DBCode capability and route policy.
 
 ## Dependencies

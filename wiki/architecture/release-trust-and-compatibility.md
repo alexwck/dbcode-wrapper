@@ -1,6 +1,6 @@
 ---
 title: Release trust and compatibility
-description: How immutable source, cached compilation, exact identity, evidence, approval, and rollback protect a release.
+description: How immutable source, cached compilation, exact identity, evidence, approval, publication, and rollback protect a release.
 type: architecture
 tags:
   - wiki
@@ -9,13 +9,13 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 80fdddd0bae6cd06edffbf64063124c2d2afd7d1
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 ---
 ## Summary
 
-A version number is not enough to approve a release. DBCode Wrapper treats the immutable wrapper source, Code OSS and VSCodium inputs, compiled host, generated profile identity, DBCode and notebook packages, signed app, and acceptance evidence as one compatibility unit.
+A version number is not enough to approve a release. DBCode Wrapper treats the immutable wrapper source, Code OSS and VSCodium inputs, compiled host, generated profile identity, DBCode and notebook packages, signed app, acceptance evidence, final DMG, and public asset digests as one compatibility unit.
 
-The design keeps deployment fast. Every release gets a new auditable source snapshot and final artifact, but unchanged Code OSS compilation can come from a verified content-addressed cache. Profile-only identity changes happen during assembly; only values embedded in the host invalidate compilation. The default acceptance path is automated and prompt-free.
+The design keeps deployment fast. Every release gets a new auditable source snapshot and final artifact, but unchanged Code OSS compilation can come from a verified content-addressed cache. The default acceptance path is automated and prompt-free.
 
 ## Diagram
 
@@ -29,38 +29,39 @@ flowchart LR
   A --> E[Exact source app and identity checks]
   E --> R[Prompt free acceptance]
   R --> K[Host only package]
-  K --> V[Mounted verification]
+  K --> V[Independent mounted verification]
   V --> P[Approved Release Set]
+  P --> G[Normal GitHub release]
   P --> X[Separate install or rollback]
 ```
 
 ## Key components
 
-- [Release Specification](../modules/release-specification.md) validates and projects the canonical lock.
+- [Release Specification](../modules/release-specification.md) validates and projects the canonical lock, including public distribution policy.
 - [Release Source Snapshot](../modules/release-source-snapshot.md) binds one clean commit to the release.
 - [Compiled Host Cache](../modules/compiled-host-cache.md) reuses unchanged compilation safely.
-- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) validates the generated profile identity before profile work.
-- [Approved Release Set](../modules/approved-release-set.md) validates approved history, exact update matches, and prompt-free approval identities.
+- [Profile Layout and Setup](../modules/profile-layout-and-setup.md) validates generated profile identity before profile work.
+- [Approved Release Set](../modules/approved-release-set.md) validates history, exact update matches, and prompt-free approval.
 - [Verification Harness](../modules/verification-harness.md) reruns source contracts and static smoke against the exact release inputs.
-- [Private Personal Release](../modules/private-personal-release.md) binds an annotated source tag and final acceptance to the host-only package.
+- [Host Release](../modules/host-release.md) packages, verifies, approves, and publishes the host-only release.
 
-Core transition checks live in [`release_specification.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/release_specification.sh), [`release_source_snapshot.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/release_source_snapshot.sh), [`compiled_host_cache.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/compiled_host_cache.sh), and [`private_release.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/private_release.sh).
+Core transition checks live in [release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/release_specification.sh), [release_source_snapshot.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/release_source_snapshot.sh), [compiled_host_cache.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/compiled_host_cache.sh), and [host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/host_release.sh).
 
 ## Design decisions
 
-- Update discovery is advisory. It cannot approve or install a release.
+- Automatic polling and the update-status UI are advisory. They cannot change pins, approve, tag, publish, or install a release.
 - Accepted source tags are immutable and must identify the commit that built the app.
 - The compiled-host ID changes only when real compilation inputs change.
-- Profile-only names and profile schema stay in assembly; query storage names change compilation because the shell embeds them.
-- Assembly always creates fresh profile, runtime, release, signature, manifest, and release identity records.
-- Static smoke regenerates and compares the packaged profile identity before any rendered launch.
+- Profile-only names and schema stay in assembly; query storage names change compilation because the shell embeds them.
 - Final acceptance re-enters the manifest's materialized source and reruns development and static checks.
-- It may reuse ignored launcher caches and the pinned toolchain, but source checks ignore the launcher's mutable `.build/work` tree.
-- The rendered report is reusable only for the same exact release-set ID.
-- Human prompts and external services are normal app-use gates, not deployment tests.
 - One persistent generated `qa` profile owns automated GUI checks.
+- The packager performs one full validation and creates one digest-bound release context.
+- The staging copy may reuse that context only while its exact app checks still match.
+- The mounted-DMG verifier creates its own full context and does not trust the staging shortcut.
 - Prompt-free approval writes generated evidence only. It never installs the app or writes the production profile.
-- The previous complete set stays protected for rollback. Its own current or historical Release Specification provides the retained app and bundle identity.
+- Publication uploads only the DMG and checksum as a normal release, then checks public state, sizes, and digests.
+- Human prompts and external services are normal app-use gates, not deployment tests.
+- The previous complete set stays protected for rollback. Historical release records remain readable without defining a new candidate.
 
 ## Related
 
@@ -68,4 +69,5 @@ Core transition checks live in [`release_specification.sh`](https://github.com/a
 - [Review an upstream update](../guides/review-an-upstream-update.md)
 - [Build, sign, and launch](../flows/build-sign-and-launch.md)
 - [Approval and guarded rollback](../flows/approval-and-guarded-rollback.md)
-- [Package and transfer a private release](../flows/package-and-transfer-private-release.md)
+- [Package and publish a Host Release](../flows/package-and-publish-host-release.md)
+- [Historical private transfer](../flows/package-and-transfer-private-release.md)

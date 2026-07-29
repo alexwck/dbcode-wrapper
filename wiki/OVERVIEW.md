@@ -1,8 +1,8 @@
 ---
 title: DBCode Wrapper codebase wiki
-description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, build, verification, and personal release flow.
+description: A public, source-grounded guide to the focused host, standalone profile, DBCode capability boundary, fast verification, and normal Host Release flow.
 profile: public/standard
-source_commit: c0126c56cb42c18681d6ff2eb36f3834438a021d
+source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
 tags:
   - wiki
   - overview
@@ -12,9 +12,11 @@ tags:
 
 DBCode Wrapper is a focused macOS database application built from a slim Code OSS host and the official unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build and release contracts, and verification. DBCode continues to own database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
-This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`c0126c5`](https://github.com/alexwck/dbcode-wrapper/tree/c0126c56cb42c18681d6ff2eb36f3834438a021d). Check source and tests when details disagree.
+This public wiki is a generated learning map, not a second source of product truth. It is anchored to source commit [`e02160a`](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d). Check source and tests when details disagree.
 
-The newest maintained approval is private release `v0.1.2`: unchanged DBCode `1.36.4` on Code OSS `1.126.0` and VSCodium packaging `1.126.04524`. Its five host-only transfer assets remain in an unpublished authenticated draft for the repository owner. Authenticated metadata and download verification matched the accepted local package, while anonymous access was denied. No application release is public, and approval and transfer did not install the app or write the production profile.
+[`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) is the first normal public Host Release. It keeps unchanged DBCode `1.36.4` on Code OSS `1.126.0` with VSCodium packaging `1.126.04524`. Only the verified host DMG and checksum are public assets. The earlier `v0.1.2` authenticated draft remains unpublished historical evidence.
+
+Automatic polling keeps the Code OSS, VSCodium, and DBCode update-status UI current. Discovery is read-only: the repository owner still starts the version bump, tests, approval, tag, and publication.
 
 The maintained release process uses one persistent generated `qa` profile and no person-controlled test step. The old manual proof, four-pair compatibility, controlled-promotion, and real-profile health harnesses have been removed; their generated historical evidence remains protected.
 
@@ -44,9 +46,11 @@ flowchart LR
   P --> F
   F --> Q[DBCode features]
   A --> V[Prompt-free acceptance]
-  V --> R[Private package and mounted verification]
-  R --> G[Prompt-free approval bundle]
-  G --> I[Separate install or rollback]
+  V --> R[Host only DMG]
+  R --> G[Independent mounted verification]
+  G --> H[Prompt-free approval]
+  H --> N[Normal GitHub release]
+  H --> I[Separate install or rollback]
 ```
 
 The app bundle is a replaceable host and the private profile is durable owner-controlled state. A release is trusted only when its immutable source, compiled host, signed app, external packages, profile schema, and acceptance evidence identify the same [Approved Release Set](concepts/approved-release-set.md).
@@ -78,7 +82,8 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — shared package verification with thin acquisition adapters.
 - [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
-- [Private Personal Release](modules/private-personal-release.md) — owner-only packaging and transfer safeguards.
+- [Host Release](modules/host-release.md) — normal public packaging, verification, approval, and publication.
+- [Historical Private Personal Release](modules/private-personal-release.md) — the frozen `v0.1.2` authenticated-draft path.
 - [Generated Workspace Retention](modules/generated-workspace-retention.md) — protected output ownership, dry-run planning, and exact-path cleanup.
 - [Verification Harness](modules/verification-harness.md) — fast source, static host, one-profile rendered, and release checks.
 
@@ -87,7 +92,8 @@ The app bundle is a replaceable host and the private profile is durable owner-co
 - [Build, sign, and launch](flows/build-sign-and-launch.md) — from immutable source to an observed signed session.
 - [First run, activation, and query](flows/first-run-activate-and-query.md) — from an empty profile to persisted real results.
 - [Approval and guarded rollback](flows/approval-and-guarded-rollback.md) — approve without installing, then prepare, verify, or preview a known-good rollback set when needed.
-- [Package and transfer a private release](flows/package-and-transfer-private-release.md) — safely move an owner-only build to another personal Mac.
+- [Package and publish a Host Release](flows/package-and-publish-host-release.md) — publish the verified host DMG and checksum in this repository.
+- [Historical private transfer](flows/package-and-transfer-private-release.md) — the completed unpublished `v0.1.2` draft flow.
 
 ## Concepts
 
