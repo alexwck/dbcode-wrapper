@@ -113,7 +113,10 @@ jq -e '
 ' "${BUILD_MANIFEST}" >/dev/null || { echo "Manifest signing and Safe Storage evidence is inconsistent." >&2; exit 1; }
 [[ "$(jq -er '.artifact.shared_data_folder_name' "${BUILD_MANIFEST}")" == "${SHARED_DATA_FOLDER_NAME}" ]] || { echo "Manifest shared-data folder mismatch." >&2; exit 1; }
 [[ "$(jq -er '.artifact.focused_shell.enabled' "${BUILD_MANIFEST}")" == "true" ]] || { echo "Manifest focused-shell state mismatch." >&2; exit 1; }
-jq -e '.artifact.focused_shell.automatic_result_layout == {wide: "beside", narrow: "below"}' "${BUILD_MANIFEST}" >/dev/null || { echo "Manifest automatic DBCode result layout mismatch." >&2; exit 1; }
+jq -e '
+  .artifact.focused_shell.result_location == "below"
+  and (.artifact.focused_shell | has("automatic_result_layout") | not)
+' "${BUILD_MANIFEST}" >/dev/null || { echo "Manifest DBCode result location mismatch." >&2; exit 1; }
 expected_runtime_extensions="$(
   jq -c '
     .packages

@@ -213,6 +213,6 @@ The work stays as one final implementation batch inside issue 12. The changes sh
 
 ## Answer
 
-Keep the unchanged licensed DBCode extension on the pinned Code OSS host, but present it as a focused database application. The accepted shell uses DBCode Connections Home for connection entry, Database Explorer for database objects, Queries for History and Library, Account on the right, and DBCode's own result editors beside or below SQL automatically. Generic IDE navigation, duplicate Results controls, empty editor groups, and the Code OSS bottom panel stay out of the normal application.
+Keep the unchanged licensed DBCode extension on the pinned Code OSS host, but present it as a focused database application. The accepted shell uses DBCode Connections Home for connection entry, Database Explorer for database objects, Queries for History and Library, Account on the right, and DBCode's own result editor below each query. Generic IDE navigation, duplicate Results controls, empty editor groups, and the Code OSS bottom panel stay out of the normal application.
 
 The user accepted the rebuilt normal-profile application on 20 July 2026. Issue 13 now owns the next compatibility gate: measure and slim the host only where a complete signed rebuild still preserves licence and Keychain persistence, saved connections, PostgreSQL, DuckDB, Parquet, project SQL files, result grids, and retained DBCode surfaces.

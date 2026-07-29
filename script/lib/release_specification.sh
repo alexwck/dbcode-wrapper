@@ -52,7 +52,7 @@ release_specification_validate() {
       and (.public_key_sha256 | sha256)
       and (.package_size | type == "number" and . > 0);
 
-    .schema_version == 6
+    .schema_version == 7
     and .target == {platform: "darwin", architecture: "arm64"}
     and (.upstream.vscodium.repository | https_url)
     and (.upstream.vscodium.tag | version)
@@ -115,7 +115,8 @@ release_specification_validate() {
     and (.product.signing.identity_common_name | nonempty)
     and (.product.signing.scope == "current-user-private-use")
     and (.product.focused_shell.enabled == true)
-    and (.product.focused_shell.automatic_result_layout == {wide: "beside", narrow: "below"})
+    and (.product.focused_shell.result_location == "below")
+    and (.product.focused_shell | has("automatic_result_layout") | not)
     and (.product.focused_shell.narrow_breakpoint | type == "number" and . > 0 and floor == .)
     and (.product.darwin_profile_uuid | nonempty)
     and (.product.darwin_profile_payload_uuid | nonempty)
@@ -136,6 +137,18 @@ release_specification_historical_validate() {
 
   jq -e '
     def nonempty: type == "string" and length > 0;
+    def folder_name:
+      nonempty
+      and . != "."
+      and . != ".."
+      and (test("[/\\\\]") | not)
+      and (explode | all(. >= 32));
+    def executable_name:
+      type == "string" and test("^[a-z0-9][a-z0-9._-]*$");
+    def bundle_identifier:
+      type == "string" and test("^[A-Za-z0-9][A-Za-z0-9.-]*\\.[A-Za-z0-9.-]+$");
+    def url_scheme:
+      type == "string" and test("^[a-z][a-z0-9+.-]*$");
     def timestamp: type == "string" and (try (fromdateiso8601 | type == "number") catch false);
     def version: nonempty and test("^[0-9]+(?:\\.[0-9]+)*(?:[-+][0-9A-Za-z.-]+)?$");
     def git_commit: type == "string" and test("^[0-9a-f]{40}$");
@@ -277,12 +290,64 @@ release_specification_historical_validate() {
       and .product.signing.mode == "local-certificate"
       and (.product.signing.identity_common_name | nonempty)
       and .product.signing.scope == "current-user-private-use";
+    def schema_6_contract:
+      .schema_version == 6
+      and (.upstream.vscodium.published_at | timestamp)
+      and (
+        .upstream.vscodium.release_notes_url
+          == ("https://github.com/VSCodium/vscodium/releases/tag/" + .upstream.vscodium.tag)
+      )
+      and (.upstream.code_oss.published_at | timestamp)
+      and (
+        .upstream.code_oss.release_notes_url
+          == ("https://github.com/microsoft/vscode/releases/tag/" + .upstream.code_oss.tag)
+      )
+      and (.release.wrapper_version | version)
+      and (
+        .release.release_set_base_id
+          == ("code-oss-" + .runtime.code_oss_version + "-dbcode-" + .extension.dbcode.version)
+      )
+      and (.release.compatibility_status | IN("candidate", "approved"))
+      and (.release.profile_schema_version | type == "number" and . > 0 and floor == .)
+      and (.release.validation_issue | nonempty)
+      and .distribution.channel == "github-published-release"
+      and (.distribution.repository | nonempty and test("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"))
+      and .distribution.public_download == true
+      and .distribution.dbcode_bundled == false
+      and .distribution.release_assets == ["dmg", "checksum"]
+      and (.distribution.approved_author_email | nonempty)
+      and (.distribution.approved_license_sha256 | sha256)
+      and (.extension.dbcode.target_platform | nonempty)
+      and (
+        .extension.dbcode.release_notes_url
+          == ("https://dbcode.io/docs/changelog/" + .extension.dbcode.version)
+      )
+      and (.extension.dbcode.jq_sorted_compact_contributes_sha256 | sha256)
+      and historical_notebook_contract
+      and (.product.app_name | folder_name)
+      and (.product.application_name | executable_name)
+      and (.product.bundle_identifier | bundle_identifier)
+      and (.product.url_scheme | url_scheme)
+      and (.product.data_folder_name | folder_name)
+      and (.product.user_data_folder_name | folder_name)
+      and (.product.extensions_folder_name | folder_name)
+      and (.product.shared_data_folder_name | folder_name)
+      and (.product.backup_folder_name | folder_name)
+      and (.product.storage_namespace | folder_name)
+      and (.product.query_folder_name | folder_name)
+      and (.product.server_application_name | executable_name)
+      and (.product.server_data_folder_name | folder_name)
+      and (.product.tunnel_application_name | executable_name)
+      and .product.signing.mode == "local-certificate"
+      and (.product.signing.identity_common_name | nonempty)
+      and .product.signing.scope == "current-user-private-use";
 
     common_historical_contract
     and (
       schema_2_contract
       or schema_4_contract
       or schema_5_contract
+      or schema_6_contract
     )
   ' "${release_lock}" >/dev/null || {
     echo "Historical Release Specification is invalid or unsupported: ${release_lock}" >&2
@@ -553,6 +618,19 @@ release_specification_same_host_build_contract() {
 
   jq -e \
     --slurpfile compared "${compared_release_lock}" '
+      def focused_shell_contract:
+        .product.focused_shell
+        | {
+            enabled,
+            result_location: (
+              .result_location //
+              if .automatic_result_layout.wide == .automatic_result_layout.narrow
+              then .automatic_result_layout.wide
+              else "responsive"
+              end
+            ),
+            narrow_breakpoint
+          };
       def host_contract:
         {
           target,
@@ -583,7 +661,7 @@ release_specification_same_host_build_contract() {
             server_data_folder_name: .product.server_data_folder_name,
             tunnel_application_name: .product.tunnel_application_name,
             signing: .product.signing,
-            focused_shell: .product.focused_shell,
+            focused_shell: focused_shell_contract,
             darwin_profile_uuid: .product.darwin_profile_uuid,
             darwin_profile_payload_uuid: .product.darwin_profile_payload_uuid,
             document_extensions: .product.document_extensions

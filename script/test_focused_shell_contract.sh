@@ -16,8 +16,8 @@ rendered_session_support_test="${REPO_ROOT}/host/qa/rendered-session-support.tes
 
 jq -e '
   .product.focused_shell.enabled == true and
-  .product.focused_shell.automatic_result_layout.wide == "beside" and
-  .product.focused_shell.automatic_result_layout.narrow == "below" and
+  .product.focused_shell.result_location == "below" and
+  (.product.focused_shell | has("automatic_result_layout") | not) and
   (.product.focused_shell | has("default_result_location") | not) and
   (.product.focused_shell | has("supported_result_locations") | not) and
   (.product.focused_shell | has("default_results_position") | not) and
@@ -27,12 +27,15 @@ jq -e '
 ' <<<"${RELEASE_PROFILE_SPEC}" >/dev/null
 
 for release_contract in "${manifest_generator}" "${smoke_test}"; do
-  rg -Fq 'automatic_result_layout' "${release_contract}" || {
-    echo "The release contract does not describe automatic result layout: ${release_contract}" >&2
+  rg -Fq 'result_location' "${release_contract}" || {
+    echo "The release contract does not describe the DBCode result location: ${release_contract}" >&2
     exit 1
   }
-  if rg -Fq 'default_result_location' "${release_contract}" || rg -Fq 'supported_result_locations' "${release_contract}"; then
-    echo "The release contract still describes removed manual result-layout metadata: ${release_contract}" >&2
+  if rg -Fq 'automatic_result_layout:' "${release_contract}" ||
+    rg -Fq 'focused_shell_automatic_result_layout' "${release_contract}" ||
+    rg -Fq 'default_result_location' "${release_contract}" ||
+    rg -Fq 'supported_result_locations' "${release_contract}"; then
+    echo "The release contract still describes removed responsive or manual result-layout metadata: ${release_contract}" >&2
     exit 1
   fi
 done
@@ -57,7 +60,7 @@ for focused_patch in "${focused_patches[@]}"; do
 done
 
 for required_shell_simplification in \
-  'applyAutomaticResultLocation' \
+  'applyDefaultResultLocation' \
   'showConnectionsMenu' \
   'showQueriesMenu' \
   'EventHelper.stop(event, true)' \
@@ -76,9 +79,7 @@ for required_shell_simplification in \
   'activeViewDescriptors' \
   'DBCODE_STREAMS_VIEW' \
   'isPersistentDrawerView' \
-  "this.root.dataset.dbcodeWrapperDbcodeState === 'active'" \
   'dbcodeWrapperResultLocationState' \
-  'resultLocationUpdateSequence' \
   'enforcePanelOwnership' \
   'isConnectionsHomePanelVisible' \
   'this.viewsService.getVisibleViewContainer(ViewContainerLocation.Panel)' \
@@ -93,6 +94,31 @@ for required_shell_simplification in \
     exit 1
   }
 done
+
+for required_bottom_result_contract in \
+  "private resultLocation: ResultLocation = 'below';" \
+  'applyDefaultResultLocation()'; do
+  rg -Fq -- "${required_bottom_result_contract}" "${focused_shell_patch}" || {
+    echo "The focused shell does not keep new DBCode results below the query: ${required_bottom_result_contract}" >&2
+    exit 1
+  }
+done
+
+for removed_responsive_result_contract in \
+  'applyAutomaticResultLocation' \
+  'resultLocationUpdateSequence' \
+  'resultLocationUpdate:' \
+  'private isNarrow:'; do
+  if rg -Fq -- "${removed_responsive_result_contract}" "${focused_shell_patch}"; then
+    echo "The focused shell still carries the removed responsive result-layout process: ${removed_responsive_result_contract}" >&2
+    exit 1
+  fi
+done
+
+if rg -Fq "nextNarrow ? 'below' : 'beside'" "${focused_shell_patch}"; then
+  echo "The focused shell still changes DBCode result placement with window width." >&2
+  exit 1
+fi
 
 if rg -Fq "joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries')" "${focused_shell_patch}"; then
   echo "The focused shell must not duplicate the Release Specification query storage identity." >&2
@@ -440,7 +466,7 @@ fi
 
 jq -e '
   ."breadcrumbs.enabled" == false and
-	."dbcode.resultLocation" == "beside" and
+	."dbcode.resultLocation" == "below" and
   ."window.commandCenter" == false and
   ."workbench.layoutControl.enabled" == false and
   ."workbench.activityBar.location" == "hidden" and

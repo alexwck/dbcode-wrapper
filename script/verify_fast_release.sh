@@ -179,7 +179,8 @@ jq -e \
     and .artifact.signature_scope == "current-user-private-use"
     and .artifact.signature_requirement == $signature_requirement
     and .artifact.focused_shell.enabled == true
-    and .artifact.focused_shell.automatic_result_layout == {wide: "beside", narrow: "below"}
+    and .artifact.focused_shell.result_location == "below"
+    and (.artifact.focused_shell | has("automatic_result_layout") | not)
     and .source.release_lock_sha256 == $release_lock_sha256
     and .source.repository_revision == .source.snapshot.repository_revision
     and .source.release_lock_sha256 == .source.snapshot.release_lock_sha256

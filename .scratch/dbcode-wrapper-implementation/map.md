@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No implementation issue is open. Create one under `issues/` before changing behaviour.
+- [Issue 47](issues/47-open-query-results-below-the-editor.md) — make DBCode's own query result editor open below the query at every supported window width and document the upstream execution, comment, and JSON routes.
 
 ## History
 

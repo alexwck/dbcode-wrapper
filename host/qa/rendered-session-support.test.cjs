@@ -53,13 +53,13 @@ test('the persistent rendered profile gets deterministic QA settings without los
 	try {
 		fs.writeFileSync(settingsPath, `${JSON.stringify({
 			'window.titleBarStyle': 'custom',
-			'dbcode.resultLocation': 'beside'
+			'dbcode.resultLocation': 'below'
 		}, null, 2)}\n`, { mode: 0o600 });
 
 		assert.equal(preparePersistentQaSettings(settingsPath, scratchFilesPath), true);
 		assert.deepEqual(JSON.parse(fs.readFileSync(settingsPath, 'utf8')), {
 			'window.titleBarStyle': 'custom',
-			'dbcode.resultLocation': 'beside',
+			'dbcode.resultLocation': 'below',
 			'window.menuStyle': 'custom',
 			'workbench.list.openMode': 'doubleClick',
 			'dbcode.scratchFiles.path': scratchFilesPath

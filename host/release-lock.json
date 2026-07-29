@@ -1,5 +1,5 @@
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "target": {
     "platform": "darwin",
     "architecture": "arm64"
@@ -254,10 +254,7 @@
     },
     "focused_shell": {
       "enabled": true,
-      "automatic_result_layout": {
-        "wide": "beside",
-        "narrow": "below"
-      },
+      "result_location": "below",
       "narrow_breakpoint": 1050
     },
     "darwin_profile_uuid": "5E92251C-DB19-46DA-BA13-C1A9E6F9704B",

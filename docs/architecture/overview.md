@@ -29,6 +29,7 @@ macOS build machinery       identity, patches, policy, tests
 - DBCode owns database connections, dialects, object browsing, editors, results, notebooks, AI, MCP, account, and licensing.
 - The wrapper owns the standalone application identity, focused navigation, profile isolation, compatibility gates, signing, update approval, rollback, and host-only packaging and publishing.
 - Database Explorer is the focused shell's persistent workspace navigation: editor, canvas, result-grid, and Escape interactions do not dismiss it. Its direct toolbar action toggles it, while another DBCode action can replace it in the shared sidebar. Other DBCode-only drawers remain temporary.
+- DBCode's own result editor opens below the query at every window width. The wrapper sets the public result-location preference but does not create another result panel or renderer.
 
 ## Deep modules
 

@@ -12,7 +12,7 @@ release_lock="${repo_root}/host/release-lock.json"
 }
 
 "${release_specification}" validate "${release_lock}" >/dev/null
-jq -e '.schema_version == 6' "${release_lock}" >/dev/null
+jq -e '.schema_version == 7' "${release_lock}" >/dev/null
 
 build_record="$("${release_specification}" build "${release_lock}")"
 compiled_host_record="$("${release_specification}" compiled-host "${release_lock}")"
@@ -92,6 +92,8 @@ jq -e '
   and .product.query_folder_name == "queries"
   and .product.document_extensions == ["sql"]
   and .product.focused_shell.enabled == true
+  and .product.focused_shell.result_location == "below"
+  and (.product.focused_shell | has("automatic_result_layout") | not)
   and (has("extension") | not)
 ' <<<"${profile_record}" >/dev/null
 
@@ -126,6 +128,7 @@ historical_schema_2_with_notebooks="${test_root}/historical-schema-2-with-notebo
 malformed_historical_schema_2="${test_root}/malformed-historical-schema-2.json"
 historical_schema_4="${test_root}/historical-schema-4.json"
 historical_schema_5="${test_root}/historical-schema-5.json"
+historical_schema_6="${test_root}/historical-schema-6.json"
 different_historical_schema_4="${test_root}/different-historical-schema-4.json"
 different_host_schema_4="${test_root}/different-host-schema-4.json"
 profile_only_schema_5="${test_root}/profile-only-schema-5.json"
@@ -154,6 +157,8 @@ jq '.upstream.code_oss.published_at = "not-a-date"' \
 ln -s "${release_lock}" "${symlinked_lock}"
 jq '
   .schema_version = 2
+  | .product.focused_shell.automatic_result_layout = {wide: "beside", narrow: "below"}
+  | del(.product.focused_shell.result_location)
   | del(
       .release,
       .product.signing,
@@ -175,6 +180,8 @@ jq 'del(.extension.dbcode.sha256)' \
   "${historical_schema_2}" > "${malformed_historical_schema_2}"
 jq '
   .schema_version = 4
+  | .product.focused_shell.automatic_result_layout = {wide: "beside", narrow: "below"}
+  | del(.product.focused_shell.result_location)
   |
   del(
     .upstream.code_oss.published_at,
@@ -184,8 +191,15 @@ jq '
 ' "${release_lock}" > "${historical_schema_4}"
 jq '
   .schema_version = 5
+  | .product.focused_shell.automatic_result_layout = {wide: "beside", narrow: "below"}
+  | del(.product.focused_shell.result_location)
   | del(.distribution, .release.wrapper_version)
 ' "${release_lock}" > "${historical_schema_5}"
+jq '
+  .schema_version = 6
+  | .product.focused_shell.automatic_result_layout = {wide: "beside", narrow: "below"}
+  | del(.product.focused_shell.result_location)
+' "${release_lock}" > "${historical_schema_6}"
 jq '.extension.dbcode.version = "1.36.1"' \
   "${historical_schema_4}" > "${different_historical_schema_4}"
 jq '.upstream.code_oss.commit = ("0" * 40)' \
@@ -195,9 +209,9 @@ jq '
   | .product.extensions_folder_name = "alternate-extensions"
   | .product.backup_folder_name = "Alternate Profile Backups"
   | .release.profile_schema_version += 1
-' "${release_lock}" > "${profile_only_schema_5}"
+' "${historical_schema_5}" > "${profile_only_schema_5}"
 jq '.product.storage_namespace = "alternate-storage"' \
-  "${release_lock}" > "${query_storage_schema_5}"
+  "${historical_schema_5}" > "${query_storage_schema_5}"
 jq '.release = {
   release_set_base_id: "invalid-historical-release-set",
   compatibility_status: "approved",
@@ -234,11 +248,16 @@ if "${release_specification}" validate "${historical_schema_5}" >/dev/null 2>&1;
   echo "Strict Release Specification validation accepted the public host-release schema." >&2
   exit 1
 fi
+if "${release_specification}" validate "${historical_schema_6}" >/dev/null 2>&1; then
+  echo "Strict Release Specification validation accepted the previous release schema." >&2
+  exit 1
+fi
 
 "${release_specification}" historical-validate "${historical_schema_2}" >/dev/null
 "${release_specification}" historical-validate \
   "${historical_schema_2_with_notebooks}" >/dev/null
 "${release_specification}" historical-validate "${historical_schema_5}" >/dev/null
+"${release_specification}" historical-validate "${historical_schema_6}" >/dev/null
 historical_notebook_extension_record="$(
   "${release_specification}" historical-extensions \
     "${historical_schema_2_with_notebooks}"
@@ -340,10 +359,21 @@ if "${release_specification}" same-dbcode-payload \
   exit 1
 fi
 
-"${release_specification}" same-host-build-contract \
-  "${release_lock}" "${historical_schema_4}" >/dev/null
-"${release_specification}" same-host-build-contract \
-  "${release_lock}" "${profile_only_schema_5}" >/dev/null
+if "${release_specification}" same-host-build-contract \
+  "${release_lock}" "${historical_schema_4}" >/dev/null 2>&1; then
+  echo "Release Specification reused a host with the removed responsive result layout." >&2
+  exit 1
+fi
+if "${release_specification}" same-host-build-contract \
+  "${release_lock}" "${historical_schema_6}" >/dev/null 2>&1; then
+  echo "Release Specification reused the previous responsive host build." >&2
+  exit 1
+fi
+if "${release_specification}" same-host-build-contract \
+  "${release_lock}" "${profile_only_schema_5}" >/dev/null 2>&1; then
+  echo "Release Specification reused a historical responsive profile host." >&2
+  exit 1
+fi
 if "${release_specification}" same-host-build-contract \
   "${release_lock}" "${different_host_schema_4}" >/dev/null 2>&1; then
   echo "Release Specification treated a different Code OSS commit as the same host runtime." >&2

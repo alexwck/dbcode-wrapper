@@ -24,7 +24,7 @@ jq -e '
   ."extensions.autoUpdate" == false
   and ."security.workspace.trust.enabled" == false
   and ."dbcode.connections" == [{"name": "preserve-me"}]
-  and ."dbcode.resultLocation" == "beside"
+  and ."dbcode.resultLocation" == "below"
 ' "${settings_file}" >/dev/null
 
 echo "Managed host settings are enforced without removing DBCode connection settings."

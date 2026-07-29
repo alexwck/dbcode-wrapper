@@ -1,5 +1,5 @@
 diff --git a/src/vs/base/common/product.ts b/src/vs/base/common/product.ts
-index 85064c8c..c1834a1d 100644
+index 85064c8c..c5fc62fb 100644
 --- a/src/vs/base/common/product.ts
 +++ b/src/vs/base/common/product.ts
 @@ -100,6 +100,10 @@ export interface IProductConfiguration {
@@ -70,10 +70,10 @@ index 4b7412d7..642690f6 100644
  		if (wcoEnabled) {
 diff --git a/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
 new file mode 100644
-index 00000000..66f01dd3
+index 00000000..f66efcc9
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
-@@ -0,0 +1,911 @@
+@@ -0,0 +1,893 @@
 +/*---------------------------------------------------------------------------------------------
 + *  Copyright (c) Microsoft Corporation. All rights reserved.
 + *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -199,10 +199,7 @@ index 00000000..66f01dd3
 +
 +	private readonly root!: HTMLElement;
 +	private readonly narrowBreakpoint = product.dbcodeWrapperFocusedShellNarrowBreakpoint ?? 1050;
-+	private resultLocation: ResultLocation = 'beside';
-+	private resultLocationUpdate: Promise<void> = Promise.resolve();
-+	private resultLocationUpdateSequence = 0;
-+	private isNarrow: boolean | undefined;
++	private resultLocation: ResultLocation = 'below';
 +	private surfaceOpeningCount = 0;
 +	private connectionsHomeOpen = false;
 +	private connectionsHomeTitle: HTMLElement | undefined;
@@ -679,44 +676,29 @@ index 00000000..66f01dd3
 +	}
 +
 +	private applyResponsiveLayout(width: number): void {
-+		const nextNarrow = width < this.narrowBreakpoint;
-+		this.root.classList.toggle('dbcode-wrapper-narrow', nextNarrow);
-+		this.root.dataset.dbcodeWrapperNarrow = String(nextNarrow);
-+		if (this.isNarrow !== nextNarrow) {
-+			this.isNarrow = nextNarrow;
-+			if (this.root.dataset.dbcodeWrapperDbcodeState === 'active') {
-+				void this.applyAutomaticResultLocation(nextNarrow ? 'below' : 'beside');
-+			}
-+		}
++		const isNarrow = width < this.narrowBreakpoint;
++		this.root.classList.toggle('dbcode-wrapper-narrow', isNarrow);
++		this.root.dataset.dbcodeWrapperNarrow = String(isNarrow);
 +		this.updateControlState();
 +	}
 +
-+	private async applyAutomaticResultLocation(location: ResultLocation): Promise<void> {
-+		const updateSequence = ++this.resultLocationUpdateSequence;
++	private async applyDefaultResultLocation(): Promise<void> {
 +		this.root.dataset.dbcodeWrapperResultLocationState = 'updating';
-+		const currentUpdate = this.resultLocationUpdate.then(async () => {
-+			try {
-+				await this.configurationService.updateValue(DBCODE_RESULT_LOCATION_SETTING, location, ConfigurationTarget.USER);
-+			} catch {
-+				if (updateSequence === this.resultLocationUpdateSequence) {
-+					this.root.dataset.dbcodeWrapperResultLocationState = 'error';
-+				}
-+				return;
-+			}
++		try {
++			await this.configurationService.updateValue(DBCODE_RESULT_LOCATION_SETTING, 'below', ConfigurationTarget.USER);
++		} catch {
++			this.root.dataset.dbcodeWrapperResultLocationState = 'error';
++			return;
++		}
 +
-+			if (updateSequence === this.resultLocationUpdateSequence) {
-+				this.resultLocation = location;
-+				this.root.dataset.dbcodeWrapperResultLocationState = 'ready';
-+				this.updateControlState();
-+			}
-+		});
-+		this.resultLocationUpdate = currentUpdate;
-+		await currentUpdate;
++		this.resultLocation = 'below';
++		this.root.dataset.dbcodeWrapperResultLocationState = 'ready';
++		this.updateControlState();
 +	}
 +
 +	private async restoreDbcodeSurface(): Promise<void> {
 +		await this.extensionService.whenInstalledExtensionsRegistered();
-+		await this.applyAutomaticResultLocation(this.isNarrow ? 'below' : 'beside');
++		await this.applyDefaultResultLocation();
 +		if (!this.editorService.activeEditor) {
 +			await this.openScratchQuery();
 +		}
@@ -987,7 +969,7 @@ index 00000000..66f01dd3
 +registerWorkbenchContribution2(DbcodeWrapperFocusedShellContribution.ID, DbcodeWrapperFocusedShellContribution, WorkbenchPhase.AfterRestored);
 diff --git a/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css b/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css
 new file mode 100644
-index 00000000..905c5534
+index 00000000..49d1d5bb
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css
 @@ -0,0 +1,502 @@

@@ -21,6 +21,8 @@ Code OSS is the extension host and application runtime. VSCodium supplies the re
 
 Database Explorer stays open while the user works in a query editor, the main canvas, or a DBCode result grid. Its toolbar action toggles it, and another DBCode action may replace it when that action uses the same sidebar. Temporary DBCode drawers still dismiss on an outside click or Escape.
 
+New DBCode query results open below the query at every window width. DBCode still owns the result editor, grid, Inspector, copy, and export behavior; the wrapper does not add a second Results panel.
+
 ## Public source and releases
 
 This repository contains the wrapper source, reviewed patches, policies, tests, documentation, and normal published host-only releases. DBCode is not included. Each user needs a valid DBCode licence and obtains the official unchanged extension from its approved Open VSX source into their private profile.

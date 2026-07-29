@@ -53,6 +53,8 @@ Official features include the SQL editor, visual Query Builder, Universal SQL, s
 
 The wrapper keeps New Query, Open SQL, DBCode SQL context actions, History, Library, Scratch Files, Query Builder, DBCode settings, and the installed DBCode release's stored-routine debugger contribution when present. The prompt-free release does not claim a rendered or live debugging session; that remains optional user validation.
 
+Keyboard execution, statement selection, and SQL comments remain DBCode behavior. The current official [SQL Editor guide](https://dbcode.io/docs/query/sql-editor) documents `Ctrl+Enter` for running queries, while the [getting-started guide](https://dbcode.io/docs/get-started/execute-a-query) also lists `Ctrl/Cmd+D+E`. DBCode does not document `Cmd+Enter` (`⌘Return`) as a default. The wrapper does not replace these shortcuts. DBCode supports comments and multi-statement SQL files. Select the exact statement when execution scope is unclear, use comment syntax supported by the connected database, and terminate separate statements as that database expects.
+
 Coverage: broad declared and reachable coverage; rendered SQL, Query Builder, History, and Library; live representative query checks; debugger declared and retained without a deployment-time live check.
 
 ### Results and data work
@@ -60,6 +62,8 @@ Coverage: broad declared and reachable coverage; rendered SQL, Query Builder, Hi
 Official features include editing, copying, exploring, exporting, importing, comparing and synchronizing, joining and unioning results, relationships, secure sharing, charts, the data inspector, row limits, search, formatters, tab behaviour, backup and restore, saved filters, and streaming. See the [data docs](https://dbcode.io/docs/data/edit).
 
 The wrapper keeps DBCode's table and result grids, their toolbars, and DBCode-owned context actions. Focused source contracts protect the wrapper layout, while the fast rendered smoke checks the owning routes without reading or changing a database. Mutations, secure sharing, large copies, backup, restore, and remote streaming remain normal user-directed work.
+
+New results open in DBCode's own result editor below the query. [Inspector](https://dbcode.io/docs/data/inspector) Form, JSON, and Map views describe one selected row. For several rows, use the result grid's [Copy](https://dbcode.io/docs/data/copy) or [Export](https://dbcode.io/docs/data/export) action and choose JSON or JSON Pretty. The official result-grid docs do not describe a full-result JSON or tree toggle, so the wrapper does not add a competing renderer.
 
 Direct CSV, Excel, Parquet, and Avro file opening is a known compatibility gap. DBCode declares its custom data-file editor, but the maintained compatibility policy does not claim that route until the prompt-free gate activates the custom editor on an approved host pair. The wrapper keeps a known failing shortcut hidden, while an optional focused check may prove the route for a later release. Opening the same data through Connections is useful but is not feature-equivalent.
 

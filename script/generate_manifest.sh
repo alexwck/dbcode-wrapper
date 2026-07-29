@@ -226,7 +226,7 @@ jq -n \
   --argjson packaging_installed_kib "${packaging_installed_kib}" \
   --argjson built_in_extension_count "${packaging_built_in_extension_count}" \
   --argjson source_map_file_count "${packaging_source_map_file_count}" \
-  --argjson focused_shell_automatic_result_layout "${FOCUSED_SHELL_AUTOMATIC_RESULT_LAYOUT}" \
+  --arg focused_shell_result_location "${FOCUSED_SHELL_RESULT_LOCATION}" \
   --argjson focused_shell_enabled "${FOCUSED_SHELL_ENABLED}" \
   --argjson focused_shell_narrow_breakpoint "${FOCUSED_SHELL_NARROW_BREAKPOINT}" \
   --argjson runtime_extensions "${runtime_extensions}" \
@@ -323,7 +323,7 @@ jq -n \
       },
       focused_shell: {
         enabled: $focused_shell_enabled,
-        automatic_result_layout: $focused_shell_automatic_result_layout,
+        result_location: $focused_shell_result_location,
         narrow_breakpoint: $focused_shell_narrow_breakpoint
       },
       sha256: $artifact_sha256
