@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No implementation issue is currently claimed.
+- [Issue 50](issues/50-keep-dbcode-drawers-persistent-and-collapsible.md) keeps DBCode side drawers persistent, leaves Account temporary, and adds one collapse and expand control.
 
 ## History
 

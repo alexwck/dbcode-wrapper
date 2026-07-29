@@ -40,6 +40,6 @@
 
 ## Answer
 
-Temporary database surfaces now follow one rule. Quick inputs, context menus, and temporary DBCode drawers stay open while used and close on an outside click or Escape. Database Explorer is different: it remains persistent until its own toolbar action closes it or another DBCode view replaces it.
+Quick inputs and context menus stay open while used and close on an outside click or Escape. DBCode side drawers now remain persistent while the user works elsewhere; another DBCode view may replace the current one, and the shared drawer control collapses or restores it. Account is the only temporary drawer and still closes on an outside click or Escape.
 
 Connections Home remains the primary connection route, and the adjacent tools menu no longer repeats it. DBCode Tools keeps clear routes for DBCode AI, Custom Model settings, and the DBCode-owned API-key command. Deployment verifies those routes without accepting terms, entering secrets, or making model calls.

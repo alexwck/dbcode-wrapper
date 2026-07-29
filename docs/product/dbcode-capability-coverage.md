@@ -29,7 +29,7 @@ Coverage: declared, reachable, rendered, and representative live checks.
 
 Official features include create, edit, connect, roles, refresh, copy, groups, colours, delete, schema loading, variables, watched folders, folder connections, monitoring, automatic SSL, import, SSH tunnels, and zero-configuration connections. See the [connection docs](https://dbcode.io/docs/connections/create).
 
-The wrapper keeps Connections Home, Database Explorer, import, tunnels, authentication profiles, streams, and DBCode-owned context actions. It does not retest every database or connection action.
+The wrapper keeps Connections Home, Database Explorer, import, tunnels, authentication profiles, streams, and DBCode-owned context actions. DBCode side drawers remain open until the user collapses one or chooses another DBCode view. Account remains temporary. The wrapper does not retest every database or connection action.
 
 Known limits:
 

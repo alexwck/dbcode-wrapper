@@ -97,7 +97,7 @@
         "Connection tools menu",
         "DBCode-owned tree context actions"
       ],
-      "evidence": "The one-profile smoke opens Connections Home, fingerprints every counted item in DBCode's unchanged New Connection catalogue without storing its labels, and renders the isolated Database Explorer. Import, Tunnels, Authentication Profiles, connections, and DBCode-owned object actions remain declared or reachable without live database work."
+      "evidence": "The one-profile smoke opens Connections Home, fingerprints every counted item in DBCode's unchanged New Connection catalogue without storing its labels, and renders the isolated Database Explorer. Every non-Account DBCode sidebar view uses the same persistent collapse and restore rule. Import, Tunnels, Authentication Profiles, connections, and DBCode-owned object actions remain declared or reachable without live database work."
     },
     {
       "id": "profile-setup-and-connection-import",
@@ -165,7 +165,7 @@
         "Queries > History",
         "DBCode History tree actions"
       ],
-      "evidence": "The rendered shell test opens only the DBCode History drawer and keeps its DBCode-owned actions available."
+      "evidence": "The rendered shell test opens only the DBCode History drawer, keeps it open across canvas focus and Escape, collapses and restores it through the shared control, and keeps its DBCode-owned actions available."
     },
     {
       "id": "library",
@@ -182,7 +182,7 @@
         "SQL editor Add to DBCode Library action",
         "DBCode Library tree actions"
       ],
-      "evidence": "The rendered shell test opens only the DBCode Library drawer and verifies the SQL editor keeps Add to DBCode Library. DBCode owns the item action that opens a saved script against a connection selected by the user."
+      "evidence": "The one-profile smoke opens the persistent DBCode History drawer and replaces it with Library before collapsing the sidebar. The SQL editor keeps Add to DBCode Library. DBCode owns the item action that opens a saved script against a connection selected by the user."
     },
     {
       "id": "notebooks",
@@ -279,7 +279,7 @@
         "Account toolbar action",
         "DBCode Account view actions"
       ],
-      "evidence": "The one-profile smoke opens and dismisses DBCode's Account drawer. Licence activation and account persistence remain normal user actions, not deployment tests."
+      "evidence": "The one-profile smoke confirms that DBCode Account remains the only temporary drawer and dismisses it on an outside click or Escape. Licence activation and account persistence remain normal user actions, not deployment tests."
     },
     {
       "id": "ai-provider-configuration",

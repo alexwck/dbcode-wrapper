@@ -73,7 +73,7 @@ new file mode 100644
 index 00000000..f66efcc9
 --- /dev/null
 +++ b/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts
-@@ -0,0 +1,893 @@
+@@ -0,0 +1,946 @@
 +/*---------------------------------------------------------------------------------------------
 + *  Copyright (c) Microsoft Corporation. All rights reserved.
 + *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -206,6 +206,8 @@ index 00000000..f66efcc9
 +	private connectionsHomeCloseButton: HTMLButtonElement | undefined;
 +	private connectionsButton: HTMLButtonElement | undefined;
 +	private databaseExplorerButton: HTMLButtonElement | undefined;
++	private drawerToggleButton: HTMLButtonElement | undefined;
++	private lastPersistentDrawerView: string | undefined;
 +	private dbcodeExtensionStatus: HTMLElement | undefined;
 +	private releaseStatusButton: HTMLButtonElement | undefined;
 +	private readonly emptyGroupCleanup = this._register(new MutableDisposable());
@@ -284,6 +286,9 @@ index 00000000..f66efcc9
 +		databaseActions.append(this.createButton('connection-tools', localize('dbcodeWrapper.connectionTools', "Connection tools"), 'chevron-down', false, button => this.showConnectionsMenu(button)));
 +		this.databaseExplorerButton = this.createButton('database-explorer', localize('dbcodeWrapper.databaseExplorer', "Database Explorer"), 'list-tree', false, () => this.toggleDrawer(DBCODE_CONNECTIONS_VIEW));
 +		databaseActions.append(this.databaseExplorerButton);
++		this.drawerToggleButton = this.createButton('drawer-toggle', localize('dbcodeWrapper.collapseDrawer', "Collapse drawer"), 'chevron-left', true, () => this.togglePersistentDrawer());
++		this.drawerToggleButton.hidden = true;
++		databaseActions.append(this.drawerToggleButton);
 +		databaseActions.append(this.createButton('open-sql', localize('dbcodeWrapper.openSqlFile', "Open SQL"), 'folder-opened', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand(OPEN_SQL_FILE_COMMAND))));
 +		databaseActions.append(this.createButton('new-query', localize('dbcodeWrapper.newQuery', "New query"), 'new-file', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand('dbcode.connections.sqlFile'))));
 +		databaseActions.append(this.createButton('queries', localize('dbcodeWrapper.queries', "Queries"), 'library', true, button => this.showQueriesMenu(button)));
@@ -515,7 +520,7 @@ index 00000000..f66efcc9
 +	}
 +
 +	private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {
-+		return viewId === DBCODE_CONNECTIONS_VIEW;
++		return Boolean(viewId && viewId !== DBCODE_ACCOUNT_VIEW);
 +	}
 +
 +	private closeTransientSurfacesFromPointer(event: PointerEvent): void {
@@ -852,8 +857,7 @@ index 00000000..f66efcc9
 +
 +	private async toggleDrawer(viewId: string): Promise<void> {
 +		this.closeConnectionsHome();
-+		const visibleContainer = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
-+		if (this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER && this.viewsService.isViewVisible(viewId)) {
++		if (this.isDbcodeDrawerOpen() && this.viewsService.isViewVisible(viewId)) {
 +			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
 +		} else {
 +			await this.openDrawerView(viewId);
@@ -861,9 +865,29 @@ index 00000000..f66efcc9
 +		this.updateControlState();
 +	}
 +
-+	private closeDbcodeDrawer(): void {
++	private isDbcodeDrawerOpen(): boolean {
 +		const visibleContainer = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
-+		if (this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER) {
++		return this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER;
++	}
++
++	private async togglePersistentDrawer(): Promise<void> {
++		const activeDrawerView = this.isDbcodeDrawerOpen()
++			? this.activeDrawerView()
++			: undefined;
++		if (activeDrawerView && this.isPersistentDrawerView(activeDrawerView)) {
++			this.lastPersistentDrawerView = activeDrawerView;
++			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++			this.updateControlState();
++			return;
++		}
++
++		if (this.lastPersistentDrawerView) {
++			await this.openDrawerView(this.lastPersistentDrawerView);
++		}
++	}
++
++	private closeDbcodeDrawer(): void {
++		if (this.isDbcodeDrawerOpen()) {
 +			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
 +			this.updateControlState();
 +		}
@@ -899,9 +923,11 @@ index 00000000..f66efcc9
 +	}
 +
 +	private updateControlState(): void {
-+		const visibleSidebar = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
-+		const drawerOpen = this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleSidebar?.id === DBCODE_ACTIVITY_CONTAINER;
++		const drawerOpen = this.isDbcodeDrawerOpen();
 +		const drawerView = drawerOpen ? this.activeDrawerView() : undefined;
++		if (drawerView && this.isPersistentDrawerView(drawerView)) {
++			this.lastPersistentDrawerView = drawerView;
++		}
 +
 +		this.root.classList.toggle('dbcode-wrapper-drawer-open', drawerOpen);
 +		this.root.dataset.dbcodeWrapperDrawer = drawerOpen ? 'open' : 'closed';
@@ -915,7 +941,34 @@ index 00000000..f66efcc9
 +		this.connectionsButton?.classList.toggle('active', this.connectionsHomeOpen);
 +		this.databaseExplorerButton?.setAttribute('aria-expanded', String(drawerView === DBCODE_CONNECTIONS_VIEW));
 +		this.databaseExplorerButton?.classList.toggle('active', drawerView === DBCODE_CONNECTIONS_VIEW);
++		this.updateDrawerToggleButton(drawerView);
 +		this.refreshWebviewDismissLayers();
++	}
++
++	private updateDrawerToggleButton(drawerView: string | undefined): void {
++		const button = this.drawerToggleButton;
++		if (!button) {
++			return;
++		}
++
++		const persistentDrawerOpen = Boolean(drawerView && this.isPersistentDrawerView(drawerView));
++		const controlAvailable = drawerView !== DBCODE_ACCOUNT_VIEW && Boolean(persistentDrawerOpen || this.lastPersistentDrawerView);
++		const label = persistentDrawerOpen
++			? localize('dbcodeWrapper.collapseDrawer', "Collapse drawer")
++			: localize('dbcodeWrapper.expandDrawer', "Expand drawer");
++		button.hidden = !controlAvailable;
++		button.title = label;
++		button.setAttribute('aria-label', label);
++		button.setAttribute('aria-expanded', String(persistentDrawerOpen));
++		button.classList.toggle('active', persistentDrawerOpen);
++
++		const text = button.querySelector<HTMLElement>('.dbcode-wrapper-button-label');
++		if (text) {
++			text.textContent = label;
++		}
++		const icon = button.querySelector<HTMLElement>('.codicon');
++		icon?.classList.toggle('codicon-chevron-left', persistentDrawerOpen);
++		icon?.classList.toggle('codicon-chevron-right', !persistentDrawerOpen);
 +	}
 +
 +	private handleKeydown(event: KeyboardEvent): void {

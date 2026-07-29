@@ -67,7 +67,7 @@
         "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
         "src/vs/workbench/workbench.common.main.ts"
       ],
-      "sha256": "89e4b8d79f1f4d4a449c477062841335aac7475ba61e9c79a1bc934bc85b899c"
+      "sha256": "eedf8e78923e5c0c3e02c69c39342f7ace9660fab7ac0f30fe05670e09286276"
     },
     {
       "order": 300,
@@ -120,14 +120,14 @@
     "src/vs/workbench/workbench.common.main.ts"
   ],
   "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
-  "expected_maintained_tree_sha256": "9c275c961d74770591e248496ae3d669fed51b6ba578be280b68afab95fbbb6d",
+  "expected_maintained_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f",
   "migration_proof": {
     "baseline": "pinned Code OSS after the pinned VSCodium patch stage and before wrapper Code OSS patches",
     "historical_patch_count": 13,
     "historical_stack_sha256": "5ffa6f010fd3b6973de4acaa2341659765587107bec4075caa20c90777f416b2",
     "historical_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
     "semantic_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
-    "prepared_tree_sha256": "9c275c961d74770591e248496ae3d669fed51b6ba578be280b68afab95fbbb6d",
+    "prepared_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f",
     "equivalent": true
   }
 }

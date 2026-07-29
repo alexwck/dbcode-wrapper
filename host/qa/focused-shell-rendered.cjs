@@ -695,6 +695,7 @@ async function verifyFocusedShell(app, page) {
 		'connections',
 		'connection-tools',
 		'database-explorer',
+		'drawer-toggle',
 		'open-sql',
 		'new-query',
 		'queries',
@@ -771,6 +772,47 @@ async function verifyFocusedShell(app, page) {
 	);
 	record('Database Explorer remains persistent across outside click and Escape');
 
+	await openToolbarMenu(page, 'queries');
+	await page.locator('.context-view:visible .action-label', { hasText: 'History' }).click();
+	await page.waitForFunction(() => {
+		const root = document.querySelector('.monaco-workbench');
+		return root?.dataset.dbcodeWrapperDrawer === 'open'
+			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.history.view';
+	});
+	await clickMainCanvas(page);
+	drawerState = await geometry(page);
+	assert.equal(drawerState.dataset.dbcodeWrapperDrawer, 'open');
+	await page.keyboard.press('Escape');
+	drawerState = await geometry(page);
+	assert.equal(drawerState.dataset.dbcodeWrapperDrawer, 'open');
+	const drawerToggle = page.locator('[data-dbcode-wrapper-action="drawer-toggle"]');
+	assert.equal(await drawerToggle.getAttribute('aria-label'), 'Collapse drawer');
+	assert.equal(await drawerToggle.getAttribute('aria-expanded'), 'true');
+	await drawerToggle.click();
+	await page.waitForFunction(
+		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawer === 'closed'
+	);
+	assert.equal(await drawerToggle.getAttribute('aria-label'), 'Expand drawer');
+	assert.equal(await drawerToggle.getAttribute('aria-expanded'), 'false');
+	await drawerToggle.click();
+	await page.waitForFunction(() => {
+		const root = document.querySelector('.monaco-workbench');
+		return root?.dataset.dbcodeWrapperDrawer === 'open'
+			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.history.view';
+	});
+	await openToolbarMenu(page, 'queries');
+	await page.locator('.context-view:visible .action-label', { hasText: 'Library' }).click();
+	await page.waitForFunction(() => {
+		const root = document.querySelector('.monaco-workbench');
+		return root?.dataset.dbcodeWrapperDrawer === 'open'
+			&& root.dataset.dbcodeWrapperDrawerView === 'dbcode.library.view';
+	});
+	await drawerToggle.click();
+	await page.waitForFunction(
+		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawer === 'closed'
+	);
+	record('History remains persistent, Library replaces it, and the control collapses and expands the drawer');
+
 	await page.locator('[data-dbcode-wrapper-action="release-status"]').click();
 	const releasePicker = page.locator('.quick-input-widget');
 	await releasePicker.waitFor({ state: 'visible', timeout: 15000 });
@@ -788,11 +830,22 @@ async function verifyFocusedShell(app, page) {
 	await page.waitForFunction(
 		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawerView === 'dbcode.account.view'
 	);
+	assert.equal(await drawerToggle.isHidden(), true);
 	await clickMainCanvas(page);
 	await page.waitForFunction(
 		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawer === 'closed'
 	);
-	record('temporary DBCode drawers close on outside click');
+	assert.equal(await drawerToggle.isVisible(), true);
+	assert.equal(await drawerToggle.getAttribute('aria-label'), 'Expand drawer');
+	await page.locator('[data-dbcode-wrapper-action="account"]').click();
+	await page.waitForFunction(
+		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawerView === 'dbcode.account.view'
+	);
+	await page.keyboard.press('Escape');
+	await page.waitForFunction(
+		() => document.querySelector('.monaco-workbench')?.dataset.dbcodeWrapperDrawer === 'closed'
+	);
+	record('Account remains temporary and closes on outside click or Escape');
 }
 
 async function run() {

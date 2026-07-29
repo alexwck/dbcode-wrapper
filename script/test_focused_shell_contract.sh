@@ -171,16 +171,45 @@ for required_transient_surface_contract in \
   }
 done
 
+focused_drawer_persistence_contract="$(
+  sed -n \
+    '/^+	private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {/,/^+	}/p' \
+    "${focused_shell_patch}"
+)"
+for required_persistent_drawer_contract in \
+  'return Boolean(viewId && viewId !== DBCODE_ACCOUNT_VIEW);'; do
+  rg -Fq -- "${required_persistent_drawer_contract}" <<<"${focused_drawer_persistence_contract}" || {
+    echo "The focused shell does not keep every non-Account DBCode drawer persistent: ${required_persistent_drawer_contract}" >&2
+    exit 1
+  }
+done
+
+for required_drawer_toggle_contract in \
+  "createButton('drawer-toggle'" \
+  'private isDbcodeDrawerOpen(): boolean' \
+  'private async togglePersistentDrawer(): Promise<void>' \
+  'lastPersistentDrawerView' \
+  'drawerToggleButton' \
+  '"Collapse drawer"' \
+  '"Expand drawer"' \
+  "codicon-chevron-left" \
+  "codicon-chevron-right"; do
+  rg -Fq -- "${required_drawer_toggle_contract}" "${focused_shell_patch}" || {
+    echo "The focused shell is missing the persistent drawer collapse and expand control: ${required_drawer_toggle_contract}" >&2
+    exit 1
+  }
+done
+
 focused_keydown_contract="$(
   sed -n \
     '/^+	private handleKeydown(event: KeyboardEvent): void {/,/^+	private blockKey(event: KeyboardEvent): void {/p' \
     "${focused_shell_patch}"
 )"
-for required_persistent_explorer_keydown_contract in \
+for required_persistent_drawer_keydown_contract in \
   'const activeDrawerView = this.activeDrawerView();' \
   '!this.isPersistentDrawerView(activeDrawerView)'; do
-  rg -Fq -- "${required_persistent_explorer_keydown_contract}" <<<"${focused_keydown_contract}" || {
-    echo "Escape still closes persistent Database Explorer: ${required_persistent_explorer_keydown_contract}" >&2
+  rg -Fq -- "${required_persistent_drawer_keydown_contract}" <<<"${focused_keydown_contract}" || {
+    echo "Escape still closes a persistent DBCode drawer: ${required_persistent_drawer_keydown_contract}" >&2
     exit 1
   }
 done
@@ -402,7 +431,8 @@ for rendered_contract in \
   'Connections Home' \
   'Connections Home owns the main canvas without opening Terminal' \
   'Database Explorer remains persistent across outside click and Escape' \
-  'temporary DBCode drawers close on outside click' \
+  'History remains persistent, Library replaces it, and the control collapses and expands the drawer' \
+  'Account remains temporary and closes on outside click or Escape' \
   'captureConnectionCatalogueSnapshot' \
   'unchanged DBCode exposes the reviewed New Connection catalogue' \
   'wrapperDatabaseAllowlist: false' \

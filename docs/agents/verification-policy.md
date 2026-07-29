@@ -70,7 +70,7 @@ The materialized source may reuse the launcher checkout's ignored caches and pin
 One rendered smoke should cover the wrapper shell and a small set of useful paths:
 
 - Connections and the unchanged New Connection catalogue;
-- Database Explorer;
+- persistent DBCode drawer collapse and restore, plus temporary Account dismissal;
 - opening a SQL file without executing it;
 - visible Query Builder, notebook, AI, MCP, and DBCode Settings routes without activating them;
 - any route added or changed by the candidate.
