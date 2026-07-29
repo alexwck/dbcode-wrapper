@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Remove stale maintenance and deepen the release workflow](./issues/46-remove-stale-maintenance-and-deepen-release-workflow.md) — delete no-caller maintenance, make retention artifact-based, add the owner-facing release task, and keep maintained guidance forward-facing.
+No implementation issue is open. Create one under `issues/` before changing behaviour.
 
 ## History
 

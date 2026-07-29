@@ -1,6 +1,6 @@
 ---
 title: Focused shell and wrapper extensions
-description: The host UI and small wrapper extensions that present DBCode as a standalone database application.
+description: The small host surface that presents unmodified DBCode as a standalone app.
 type: module
 tags:
   - wiki
@@ -9,44 +9,44 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
 ---
 ## Summary
 
-The focused shell removes general IDE navigation and makes DBCode the product surface. It retains the extension-host APIs DBCode needs and adds only narrow wrapper extensions for profile setup, the Python kernel bridge, and release status.
+The focused shell removes general IDE navigation and makes DBCode the product surface. It keeps the extension-host APIs DBCode needs and adds only small wrapper extensions for profile setup, the Python kernel bridge, and release status.
 
-Query storage is part of the product identity. The shell reads the storage namespace and query folder generated from [Release Specification](release-specification.md). It fails when either value is missing instead of falling back to another hard-coded path.
+DBCode stays unmodified. The wrapper does not recreate its database, notebook, AI, MCP, account, or licence features.
 
 ## Responsibilities
 
-- Present Connections, Database Explorer, SQL files, queries, history, library, scratch files, notebooks, Query Builder, settings, AI, and MCP routes through the focused shell.
-- Keep DBCode-owned editors, grids, context actions, diagrams, exports, and account surfaces available.
-- Keep Database Explorer persistent during editor, canvas, grid, and Escape interactions.
-- Dismiss other temporary DBCode drawers consistently when their owning interaction ends.
-- Open a file-backed scratch query in the Release Specification's query folder without overwriting it.
+- Present Connections, Database Explorer, SQL files, queries, history, library, scratch files, notebooks, Query Builder, settings, AI, and MCP routes.
+- Keep DBCode-owned editors, grids, actions, diagrams, exports, and account surfaces available.
+- Keep Database Explorer stable during editor, canvas, grid, and Escape interactions.
+- Open file-backed scratch queries in the generated query folder without overwriting existing files.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
-- Provide profile safety, kernel permission, and release status without modifying DBCode.
-- Automatically poll official Code OSS, VSCodium, and DBCode records and keep the status icon, review actions, and notifications read-only.
-- Show prompt-prone AI, MCP, notebook, and account routes in smoke checks without activating them.
+- Provide profile safety, kernel permission, and release status around DBCode.
+- Poll official Code OSS, VSCodium, and DBCode metadata automatically while keeping review actions read-only.
+- Show prompt-prone routes in rendered checks without activating them.
 
 ## Public API / entry points
 
-Most shell behaviour comes from the focused Code OSS patch. VSCodium product preparation writes the validated wrapper identity into `product.json`. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately installed upstream extension and owns its commands, views, webviews, editors, AI providers, and MCP tools.
+Most shell behaviour comes from the focused Code OSS patch. VSCodium preparation writes validated wrapper identity into `product.json`. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately acquired upstream extension and owns its commands, views, webviews, editors, providers, and tools.
 
-The approved DBCode `1.36.4` policy keeps capability status separate from evidence depth. Features exercised by the prompt-free gate carry their actual `declared`, `reachable`, or `rendered` evidence. Optional debugger and AI workflows that were not activated are marked limited instead of being treated as failed or falsely tested.
+The current feature policy keeps capability status separate from evidence depth. A feature may be `declared`, `reachable`, `rendered`, or `live`. Optional AI, MCP, debugger, account, and notebook workflows are marked with honest limited evidence when the prompt-free gate does not activate them.
 
 ## Key files
 
-- [`200-final-focused-dbcode-shell.patch`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing, generated query storage, and dismissal behaviour.
-- [`0001-dbcode-wrapper-identity.patch`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/patches/vscodium/0001-dbcode-wrapper-identity.patch) — product identity injection.
-- [`dbcode-wrapper-profile-migration`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration) — setup, import, generated profile identity, runtime installation, and recovery.
-- [`dbcode-wrapper-python-kernel`](https://github.com/alexwck/dbcode-wrapper/tree/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [`dbcode-wrapper-release-status`](https://github.com/alexwck/dbcode-wrapper/tree/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/extensions/dbcode-wrapper-release-status) — automatic official-metadata discovery, read-only review UI, and approved-set status.
-- [`host/dbcode-feature-policy.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/dbcode-feature-policy.json) — DBCode capability and route policy.
+- [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — focused workbench routing, query storage, and dismissal behaviour.
+- [0001-dbcode-wrapper-identity.patch](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/patches/vscodium/0001-dbcode-wrapper-identity.patch) — product identity injection.
+- [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/extensions/dbcode-wrapper-profile-migration) — setup, import, profile identity, runtime installation, and recovery.
+- [dbcode-wrapper-python-kernel](https://github.com/alexwck/dbcode-wrapper/tree/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
+- [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/extensions/dbcode-wrapper-release-status) — official update discovery, read-only review UI, and approved-set status.
+- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/dbcode-feature-policy.json) — capability and route policy.
+- [host/qa/focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/qa/focused-shell-rendered.cjs) — maintained rendered route runner.
 
 ## Dependencies
 
-The shell depends on the pinned Code OSS workbench structure, generated product identity, and DBCode's public contributions. Source contracts protect routing; the single persistent-profile rendered smoke protects real presentation.
+The shell depends on the pinned Code OSS workbench structure, generated product identity, and DBCode's public contributions. Source contracts protect routing; one persistent-profile rendered check protects real presentation.
 
 ## Participates in
 

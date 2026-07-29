@@ -1,6 +1,6 @@
 ---
 title: Review an upstream update
-description: A fast safe path for evaluating DBCode, Code OSS, VSCodium, or notebook changes as one candidate.
+description: A fast path from public update notice to one reviewed release.
 type: guide
 tags:
   - wiki
@@ -9,26 +9,28 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
 ---
 ## Goal
 
-Turn independently published upstream versions into one reviewed wrapper candidate without rebuilding unchanged inputs or making human prompts part of deployment.
+Turn independently published Code OSS, VSCodium, DBCode, or notebook updates into one reviewed wrapper release without rebuilding unchanged inputs or adding human prompts to deployment.
 
-Automatic polling and the status UI remain useful. They report official public information; they do not update pins, approve a candidate, create a tag, publish a release, or install anything.
+Automatic polling and the status UI report official public information. They do not change pins, approve a candidate, create a tag, publish, or install anything.
 
 ## Steps
 
-1. **Review the notice.** Open the official Code OSS, VSCodium, or DBCode release page from the status view.
-2. **Map the changed surface.** For DBCode, compare public contributions, settings, menus, views, editors, tools, connection catalogue, and changed documentation. Keep AI, Copilot, automatic MCP registration, HTTP MCP, and inferred relationships separate.
+1. **Review the notice.** Open the official release page from the status view.
+2. **Map the changed surface.** For DBCode, compare public contributions, settings, menus, views, editors, tools, connection catalogue, and changed documentation. Review AI, Copilot, automatic MCP registration, HTTP MCP, and inferred relationships separately.
 3. **Update canonical records.** Change exact versions, commits, URLs, hashes, signatures, release notes, wrapper version, and only the compatibility policy that changed.
-4. **Run focused source checks.** Validate the release specification and affected wrapper seams.
-5. **Reconcile host patches only when host inputs changed.** Stale applied-tree output fails at compilation, not during unrelated source checks.
-6. **Check the Compiled Host ID.** A DBCode-only or assembly-only change should reuse the verified host.
-7. **Finish release work, then build once.** Preserve the accepted app and rollback material.
-8. **Run static and one-profile rendered checks.** Confirm the full connection catalogue and changed DBCode routes without activating prompts, kernels, models, mutation, or external services.
-9. **Run exact-source final acceptance.**
-10. **Package, approve, and publish.** Use [Host Release](../modules/host-release.md), publish only the DMG and checksum, then verify the public result.
+4. **Run focused source checks.** Validate the Release Specification and affected wrapper seams.
+5. **Reconcile host patches only when host inputs changed.**
+6. **Check the Compiled Host ID.** A DBCode-only or assembly-only update should reuse the verified host.
+7. **Build and sign once.** Keep the accepted app and rollback material.
+8. **Run only required built checks.** Use static smoke and the one generated `qa` profile. Show changed routes without starting databases, kernels, models, mutation, accounts, or external services.
+9. **Inspect the release plan.** Run `./script/release_host.sh plan`.
+10. **Prepare the release.** Run `./script/release_host.sh prepare`. It validates acceptance before tag creation and can reuse exact evidence after full validation.
+11. **Review and commit approval history.** Commit the single `host/approved-release-history.json` change.
+12. **Publish explicitly.** Run `./script/release_host.sh publish --publish` and let it verify the normal public release.
 
 ## Relevant code
 
@@ -36,17 +38,18 @@ Automatic polling and the status UI remain useful. They report official public i
 - [Release Source Snapshot](../modules/release-source-snapshot.md)
 - [Compiled Host Cache](../modules/compiled-host-cache.md)
 - [DBCode capability evidence](../concepts/dbcode-capability-evidence.md)
-- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/release-lock.json)
-- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/host/dbcode-feature-policy.json)
+- [Host Release](../modules/host-release.md)
+- [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/release-lock.json)
+- [host/dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/dbcode-feature-policy.json)
 
 ## Gotchas
 
 - VSCodium packaging and Code OSS runtime labels are related but not interchangeable.
 - An available version is not a tested or approved release.
-- One working AI settings route does not prove every AI workflow.
+- One AI route does not prove every AI workflow.
 - Automatic MCP registration and the HTTP MCP server require separate evidence.
-- Re-signing can cause a new macOS prompt even when code is unchanged.
-- Representative database checks do not prove or limit the complete connection catalogue.
+- Re-signing can cause a new macOS prompt even when source is unchanged.
+- Representative checks do not prove or limit the complete connection catalogue.
 
 ## Related
 

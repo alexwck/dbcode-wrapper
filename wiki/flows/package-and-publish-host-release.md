@@ -1,6 +1,6 @@
 ---
 title: Package and publish a Host Release
-description: How one exact accepted wrapper build becomes a verified normal GitHub release in this repository.
+description: How one exact wrapper build is prepared, recorded, and published.
 type: flow
 tags:
   - wiki
@@ -9,62 +9,65 @@ tags:
   - publication
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
 ---
 ## Summary
 
-This flow packages one exact signed wrapper host, verifies the final DMG independently, records prompt-free approval, and publishes a normal release in the same repository. Only the DMG and checksum become public assets. Installation and profile changes remain separate owner actions.
+This flow prepares one exact signed wrapper host, verifies the final DMG, records approval, and publishes a normal release in this repository. Only the DMG and checksum become public. Installation and profile changes remain separate owner actions.
 
 ## Trigger
 
-Start only after the release-bound source is complete, the app is signed, the one-profile rendered smoke matches it, and prompt-free final acceptance passes.
+Start after the version bump is complete, the app is signed, and the matching one-profile rendered report exists.
 
 ## Sequence diagram
 
 ```mermaid
 sequenceDiagram
-  participant Source
+  participant Owner
+  participant Task as Host Release task
   participant Accept as Final acceptance
-  participant Packager
-  participant Image as Host only DMG
-  participant Verifier
-  participant Approval
+  participant Package as Mounted package
+  participant History as Approved history
   participant GitHub
-  Source->>Accept: Exact snapshot manifest app and rendered report
-  Accept-->>Packager: Matching prompt free report
-  Packager->>Packager: Create validated release context
-  Packager->>Image: Copy exact app and build image
-  Image->>Verifier: Mount read only and validate independently
-  Verifier-->>Approval: Exact package receipt
-  Approval-->>GitHub: Approved tag DMG and checksum
-  GitHub-->>Approval: Public state sizes and digests
+  Owner->>Task: plan
+  Task-->>Owner: Derived tag paths and stages
+  Owner->>Task: prepare
+  Task->>Accept: Run or reuse and fully validate
+  Accept-->>Task: Exact prompt free record
+  Task->>Package: Tag package mount and verify
+  Package-->>Task: Exact approval evidence
+  Task->>History: Write one tracked change
+  Owner->>History: Review and commit
+  Owner->>Task: publish --publish
+  Task->>GitHub: Push tag and publish DMG plus checksum
+  GitHub-->>Task: Public state sizes and digests
 ```
 
 ## Steps
 
-1. Finish the version bump and wrapper changes before running the complete source gate.
-2. Build from a clean immutable commit, reusing the verified [Compiled Host Cache](../modules/compiled-host-cache.md) when compilation inputs did not change.
-3. Run static smoke, the one persistent-profile rendered smoke, and exact-source final acceptance.
-4. Create an annotated tag that matches the wrapper version and manifest source commit.
-5. Run the [Host Release](../modules/host-release.md) packager. It performs one full validation and binds the result to one release context.
-6. Check the staging copy against that context, then create the read-only DMG and five local release files.
-7. Let the independent verifier mount the DMG and rebuild its own context from the mounted app.
-8. Record prompt-free approval for the exact package. Approval does not install the app or write the production profile.
-9. Run publication with the explicit `--publish` flag. The publisher pushes `main` and the annotated tag, uploads only the DMG and checksum, and creates neither a draft nor a prerelease.
-10. Verify the public release state, asset names, server sizes, and downloaded SHA-256 digests.
-11. Treat installation, Gatekeeper, Safe Storage, licence, and account prompts as separate user setup.
+1. Finish the version bump and wrapper changes.
+2. Build and sign once. Reuse the verified [Compiled Host Cache](../modules/compiled-host-cache.md) when compilation inputs did not change.
+3. Run static and one-profile rendered checks required by the release boundary.
+4. Inspect `./script/release_host.sh plan`.
+5. Run `./script/release_host.sh prepare`. Complete acceptance is validated before the tag. The task then packages, mounts, verifies, approves, and records the exact set.
+6. If exact acceptance, assets, or approval already exist, the task validates their full binding before reusing them.
+7. Review and commit the single `host/approved-release-history.json` change.
+8. Run `./script/release_host.sh publish --publish`.
+9. Let the publisher verify a normal non-draft, non-prerelease GitHub release, asset names, sizes, and downloaded digests.
+10. Treat installation, Gatekeeper, Safe Storage, licence, and account prompts as separate user setup.
 
 ## Failure modes
 
-- The source tag, release lock, snapshot, app, manifest, rendered report, or acceptance report identify different sets.
-- The copied app differs from the fully validated release context.
-- The mounted DMG differs from the compatibility record or includes private or proprietary data.
-- Approval changes the installed app or production profile.
-- Publication includes a local compatibility or verification file instead of only the DMG and checksum.
+- Acceptance is missing, incomplete, or belongs to another source, app, or release lock.
+- The tag is lightweight, points to another commit, or is not contained in `main`.
+- Reused assets or approval evidence fail exact digest or identity checks.
+- The tracked approval history was not reviewed and committed before publication.
+- The package contains DBCode, profile data, credentials, or another forbidden private asset.
 - GitHub reports a draft, prerelease, wrong asset, wrong size, or changed digest.
 
 ## Related
 
+- [Host Release](../modules/host-release.md)
 - [Release trust and compatibility](../architecture/release-trust-and-compatibility.md)
 - [Approved Release Set](../modules/approved-release-set.md)
 - [Verification Harness](../modules/verification-harness.md)

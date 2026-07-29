@@ -1,35 +1,35 @@
 ---
-title: Representative acceptance fixtures
-description: Why a small optional set of live workflows can deepen evidence without slowing normal deployment or limiting DBCode.
+title: Prompt-free acceptance boundary
+description: Why deployment checks avoid human prompts and external services.
 type: concept
 tags:
   - wiki
   - concept
   - testing
-  - fixtures
+  - acceptance
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
 ---
 ## Definition
 
-Representative acceptance fixtures are a small set of real workflows for deeper checks when a changed boundary needs them. PostgreSQL covers a network database and can support stored-routine debugger diagnostics. SQLite covers the bundled sample and grid. DuckDB and Parquet cover local data. Python notebooks cover the pinned Jupyter runtime and explicit kernel permission.
+The maintained acceptance boundary checks wrapper-owned source, policy, static host state, and rendered routes without needing a person or an external service halfway through.
 
-They are not the default deployment gate and they are not a list of supported databases.
+PostgreSQL, DuckDB, Parquet, SQLite, and notebooks are representative route and compatibility checks. They are not a connection allowlist, and the default deployment gate does not start their services, ask for credentials, wait for a kernel, or approve a permission prompt.
 
 ## Why it matters
 
-Normal wrapper deployment should not start services, ask for credentials, wait for a kernel, or need a person halfway through. The fast source, static, and one-profile rendered checks protect the wrapper without those dependencies.
+DBCode Wrapper is a thin host. Retesting every database, AI provider, account, kernel, and operating-system prompt would make releases slow while duplicating DBCode's own product testing.
 
-A focused live fixture remains useful for a new or changed high-risk feature. For example, DBCode `1.36.4` declares a stored-routine debugger, so the loopback PostgreSQL fixture can support its separate compatibility proof without making debugger use a release prerequisite.
+A real live workflow may still be useful when investigating a specific changed boundary. That is an explicit product investigation with synthetic data, not a maintained release test and not evidence for unrelated features.
 
-## Where it lives
+## Maintained evidence
 
-- PostgreSQL debugger fixture: [`host/proof/postgres-debugger`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/proof/postgres-debugger)
-- Fixture adapter: [`script/lib/postgres_debugger_fixture.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/lib/postgres_debugger_fixture.sh)
-- Reusable rendered QA: [`host/qa`](https://github.com/alexwck/dbcode-wrapper/tree/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/qa)
-- Connection breadth contract: [`script/test_connection_catalogue_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_connection_catalogue_contract.sh)
-- Notebook contract: [`script/test_python_notebook_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/script/test_python_notebook_contract.sh)
+- Fast source gate: [script/check_development.sh](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/check_development.sh)
+- Rendered route runner: [host/qa/focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/host/qa/focused-shell-rendered.cjs)
+- Connection breadth contract: [script/test_connection_catalogue_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/test_connection_catalogue_contract.sh)
+- Notebook contract: [script/test_python_notebook_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/test_python_notebook_contract.sh)
+- Risk and prompt policy: [docs/agents/verification-policy.md](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/docs/agents/verification-policy.md)
 
 ## Related
 

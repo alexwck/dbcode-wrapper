@@ -1,6 +1,6 @@
 ---
 title: Generated Workspace Retention
-description: The inventory and safety contract for build output, reusable caches, evidence, rollback, and release packages.
+description: The safety contract for ignored build, test, release, and rollback output.
 type: module
 tags:
   - wiki
@@ -9,51 +9,50 @@ tags:
   - safety
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: afc5fe7666bf88007bcf4956f05928e3d93c8e2f
 ---
 ## Summary
 
-Generated Workspace Retention is the ownership and safety boundary for ignored output from builds, tests, rollback, caches, current Host Releases, and retained evidence. It is not a general disk cleaner. Protected and unknown paths are reported without traversal, and cleanup is a dry run unless one exact validated expired path is selected with `--apply`.
+Generated Workspace Retention is the safety boundary for ignored build, test, cache, release, rollback, and evidence output. It is not a general disk cleaner.
 
-The current inventory has no deletion-eligible path. Reusable caches, worktrees, the persistent QA profile, accepted apps, current Host Release assets, retained evidence, and rollback material remain protected.
+Each registered root is classified by its current artifact purpose and explicit expiry. Retention does not depend on an old issue number, a resolved task, or a retired workflow name. Protected and unknown paths are reported without traversing them.
+
+The current inventory has no deletion-eligible path. Reusable caches, worktrees, the persistent QA profile, signed apps, current Host Release assets, evidence, and rollback material remain protected.
 
 ## Responsibilities
 
-- Register rebuildable work, reusable caches, active and retained evidence, rollback evidence, current Host Release assets, expired output, and unknown output.
-- Protect content-addressed Compiled Host entries and their rejected-entry quarantine.
+- Register rebuildable work, reusable caches, active evidence, retained evidence, rollback evidence, release assets, explicitly expired output, and unknown output.
+- Resolve standard paths for build, rendered, acceptance, package, and release-task callers.
 - Normalize relative paths, absolute paths, and paths containing spaces before callers use them.
 - Refuse broad roots, home roots, symbolic links, paths outside the safety root, and unregistered targets.
-- Avoid reading or measuring private profile contents and protected release artifacts.
-- Measure only paths explicitly registered as expired.
-- Require one explicit class or exact path for a cleanup plan; a class cannot be applied.
-- Revalidate one exact expired path immediately before removal and verify that it is gone.
+- Avoid reading or measuring private profiles and protected artifacts.
+- Measure only output explicitly registered as expired.
+- Keep cleanup as a dry run unless one exact validated expired path is supplied with `--apply`.
+- Refuse class-wide apply and revalidate an exact target immediately before removal.
 
 ## Classification and decision flow
 
 ```mermaid
 flowchart LR
-  C[Build or verification caller] --> R[Resolve registered root]
+  C[Caller] --> R[Registered artifact purpose]
   R --> N[Normalized absolute path]
-  N --> W[Caller writes output]
-  I[Inventory] --> P[Class owner reason status]
-  S[Explicit cleanup selection] --> G[Safety checks]
+  I[Inventory] --> P[Class reason owner expiry]
+  S[Exact cleanup selection] --> G[Safety checks]
   G --> D[Dry run plan]
-  D -->|exact path plus apply| V[Repeat validation]
+  D -->|exact path and apply| V[Repeat validation]
   V --> X[Remove one expired target]
-  G -->|protected unknown broad or link| F[Refusal]
-  D -->|class plus apply| F
+  G -->|protected unknown broad or link| F[Refuse]
 ```
 
 ## Public API / entry points
 
-[generated_workspace.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/generated_workspace.sh) provides inventory, dry-run planning, and exact-path apply. [generated_workspace.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/generated_workspace.sh) is the shell adapter. [generated-workspace-retention.js](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/generated-workspace-retention.js) owns the registry and safety decisions.
+[generated_workspace.sh](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/generated_workspace.sh) provides inventory, path resolution, dry-run planning, and exact-path apply. [generated_workspace.cjs](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/generated_workspace.cjs) is the task interface. [generated-workspace-retention.js](https://github.com/alexwck/dbcode-wrapper/blob/afc5fe7666bf88007bcf4956f05928e3d93c8e2f/script/lib/generated-workspace-retention.js) owns the registry and safety decisions.
 
 ## Design decisions
 
-- Retention follows declared ownership, not age or a guessed folder name.
+- Purpose and explicit expiry determine retention.
 - Reusable compiled hosts stay protected because deleting them can turn a quick release into a full build.
-- Current Host Release output has its own protected root.
-- Retained evidence stays protected until its owning workflow records expiry.
+- Current release output and rollback evidence have protected roots.
 - Protected artifacts use an uninspected size status.
 - Cleanup mutation is limited to one exact validated expired path.
 
