@@ -9,7 +9,7 @@ tags:
   - patches
 wiki_profile: public
 wiki_depth: standard
-source_commit: 3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d
+source_commit: d316203cc5eb526d9be007ef702454e2b315ccef
 ---
 ## Summary
 
@@ -30,16 +30,16 @@ Fast source checks validate the maintained patch plan without depending on a sta
 
 ## Public API / entry points
 
-[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/build_host.sh) creates a [Release Source Snapshot](release-source-snapshot.md) and runs assembly inside the materialized source. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/compile_host.sh) gives VSCodium the patch plan and verifier. [verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/verify_prepared_patch_tree.sh) checks the prepared tree before compilation. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/assemble_host.sh) adds release-specific records and signs the final app.
+[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/build_host.sh) creates a [Release Source Snapshot](release-source-snapshot.md) and runs assembly inside the materialized source. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/compile_host.sh) gives VSCodium the patch plan and verifier. [verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/verify_prepared_patch_tree.sh) checks the prepared tree before compilation. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/assemble_host.sh) adds release-specific records and signs the final app.
 
 ## Key files
 
-- [host/patches/patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/patch-plan.json) — ordered patch inventory and expected maintained-tree digest.
-- [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/code-oss) — runtime and focused-shell patches.
-- [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/patches/vscodium) — build-repository patches and the post-preparation verification hook.
-- [script/verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/verify_prepared_patch_tree.sh) — final prepared-tree verifier.
-- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/script/test_patch_plan.sh) — plan and compile-boundary contracts.
-- [host/slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/3da4fcaa63b0a8a87b57ff4750c92b91b0d1d03d/host/slimming-policy.json) — kept and removed host capabilities.
+- [host/patches/patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/host/patches/patch-plan.json) — ordered patch inventory and expected maintained-tree digest.
+- [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/d316203cc5eb526d9be007ef702454e2b315ccef/host/patches/code-oss) — runtime and focused-shell patches.
+- [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/d316203cc5eb526d9be007ef702454e2b315ccef/host/patches/vscodium) — build-repository patches and the post-preparation verification hook.
+- [script/verify_prepared_patch_tree.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/verify_prepared_patch_tree.sh) — final prepared-tree verifier.
+- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/script/test_patch_plan.sh) — plan and compile-boundary contracts.
+- [host/slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/d316203cc5eb526d9be007ef702454e2b315ccef/host/slimming-policy.json) — kept and removed host capabilities.
 
 ## Dependencies
 
