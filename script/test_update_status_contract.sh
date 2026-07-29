@@ -10,9 +10,10 @@ extension_manifest="${extension_root}/package.json"
 extension_runtime="${extension_root}/extension.js"
 status_logic="${extension_root}/release-status.js"
 approved_release_contract="${extension_root}/approved-release-set.js"
-status_patches=(
+status_sources=(
   "${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
 )
 installed_manifest_generator="${REPO_ROOT}/script/generate_installed_release_status.sh"
 approved_history="${REPO_ROOT}/host/approved-release-history.json"
@@ -24,7 +25,7 @@ for required_file in \
   "${status_logic}" \
   "${approved_release_contract}" \
   "${rendered_qa}" \
-  "${status_patches[@]}" \
+  "${status_sources[@]}" \
   "${installed_manifest_generator}"; do
   [[ -f "${required_file}" ]] || {
     echo "Missing focused update-status file: ${required_file}" >&2
@@ -118,7 +119,7 @@ for required_shell_contract in \
   'codeOss?: { installedVersion: string }' \
   'Code OSS {0}, DBCode {1}: current' \
   "createButton('release-status'"; do
-  rg -Fq "${required_shell_contract}" "${status_patches[@]}" || {
+  rg -Fq "${required_shell_contract}" "${status_sources[@]}" || {
     echo "The focused shell is missing update-state contract: ${required_shell_contract}" >&2
     exit 1
   }

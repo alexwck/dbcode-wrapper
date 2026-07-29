@@ -46,13 +46,17 @@ index 2d9ef12..5888c3d 100755
  setpath_json "product" "tunnelApplicationConfig" '{}'
  
  jsonTmp=$( jq -s '.[0] * .[1]' product.json ../product.json )
-@@ -292,4 +329,12 @@ elif [[ "${OS_NAME}" == "windows" ]]; then
+@@ -292,4 +329,16 @@ elif [[ "${OS_NAME}" == "windows" ]]; then
    sed -i 's|Microsoft Corporation|VSCodium|' build/win32/code.iss
  fi
  
 +if [[ "${DBCODE_WRAPPER_OVERLAY}" == "yes" ]]; then
++  : "${DBCODE_WRAPPER_PATCH_TREE_MATERIALIZER:?}"
 +  : "${DBCODE_WRAPPER_PATCH_TREE_VERIFIER:?}"
 +  : "${DBCODE_WRAPPER_PATCH_PLAN_FILE:?}"
++  "${DBCODE_WRAPPER_PATCH_TREE_MATERIALIZER}" \
++    --source-root "${PWD}" \
++    --plan "${DBCODE_WRAPPER_PATCH_PLAN_FILE}"
 +  "${DBCODE_WRAPPER_PATCH_TREE_VERIFIER}" \
 +    --source-root "${PWD}" \
 +    --plan "${DBCODE_WRAPPER_PATCH_PLAN_FILE}"

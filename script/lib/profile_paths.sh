@@ -46,10 +46,6 @@ resolve_isolated_profile_paths() {
   load_profile_layout_record
 }
 
-profile_layout_path() {
-  jq -er --arg name "$1" '.paths[$name]' <<<"${PROFILE_LAYOUT}"
-}
-
 profile_layout_assert_mutable() {
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/profile_layout.cjs" \
     check-record "${PROFILE_LAYOUT}" "$@"

@@ -33,7 +33,7 @@ Use the [latest published Host Release](https://github.com/alexwck/dbcode-wrappe
 
 The app targets Apple silicon. It is self-signed and is not identified or notarized by Apple. Verify the published checksum before opening it. macOS may then require System Settings → Privacy & Security → Open Anyway.
 
-On a fresh Mac, the app offers one focused setup action. It obtains only the pinned DBCode and Python/Jupyter packages, verifies their public records, engine compatibility, sizes, SHA-256 digests, public key, signatures, safe archive entries, and manifests, then installs them outside the app in the current user's private profile.
+On a fresh Mac, the app offers one focused setup action. Profile Setup is registered as soon as the wrapper starts; if the required runtime is not ready, the same action opens Runtime Setup instead of failing. Runtime Setup obtains only the pinned DBCode and Python/Jupyter packages, verifies their public records, engine compatibility, sizes, SHA-256 digests, public key, signatures, safe archive entries, and manifests, then installs them outside the app in the current user's private profile.
 
 ## Updates and compatibility
 
@@ -45,7 +45,7 @@ PostgreSQL, DuckDB, Parquet, SQLite, and Python notebooks are representative opt
 
 ## Repository guide
 
-- `host/` contains the release specification, compatibility policy, wrapper extensions, reviewed patches, and host guide.
+- `host/` contains the Release Specification, compatibility policy, wrapper extensions, first-class focused-shell source, small reviewed upstream patches, and host guide.
 - `script/` contains the prompt-free build, verification, release, rollback, and generated-workspace commands.
 - `docs/` contains maintained architecture, product, security, learning, and agent guidance.
 - `wiki/` contains optional derived learning material.

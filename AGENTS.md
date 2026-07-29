@@ -34,7 +34,7 @@ Before changing behaviour, read:
 - Supported DBCode routes and known compatibility gaps: `host/dbcode-feature-policy.json`.
 - Official feature-family orientation: `docs/product/dbcode-capability-coverage.md`.
 - AI and MCP payload guidance: `docs/security/ai-data-sharing.md`.
-- Package slimming and its rollback: `host/slimming-policy.json`.
+- Active package slimming and rollback: `host/slimming-policy.json`. Dated size and startup measurements live in linked evidence under `docs/architecture/`.
 - Current task state: the open or claimed issue linked from `.scratch/dbcode-wrapper-implementation/map.md`. Resolved issues are dated history.
 - Exact behaviour: current source and tests.
 - Learning material: `docs/` and, after it is generated, `wiki/`. Learning material is derived and never overrides source or tests.
@@ -45,6 +45,7 @@ Before changing behaviour, read:
 
 - Before hiding or removing a DBCode command, view, menu, or context-menu action, check the official DBCode documentation, sanitized contribution evidence already captured by maintained policy or tests, `host/dbcode-feature-policy.json`, and rendered behaviour.
 - Remove only a duplicate or proven-broken wrapper route. Keep at least one working DBCode-owned route to every retained capability.
+- Register every visible wrapper command before startup prerequisites are resolved. If a prerequisite is missing, route the command to the required setup or a safe error; never leave a visible action pointing to an unregistered command.
 - PostgreSQL, DuckDB, Parquet, SQLite, and notebooks are representative acceptance checks, not a connection allowlist. The unchanged DBCode connection catalogue remains authoritative.
 - DBCode owns database, notebook, AI, MCP, account, and licence behaviour. The wrapper pins, verifies, integrates, and exposes those features without recreating or redistributing them.
 - Treat the DBCode documentation as a capability map, not a backlog for reimplementing DBCode inside the wrapper.
@@ -58,6 +59,7 @@ Before changing behaviour, read:
 - Automatic MCP registration and the HTTP MCP server are separate capabilities. Keep HTTP MCP off by default, bound to localhost, and protected by OAuth unless a person deliberately chooses otherwise.
 - A local database connection does not mean AI data remains local. Record what each AI feature sends and which provider receives it.
 - Never use real private data in AI, Copilot, or MCP tests. DML, DDL, data copy, and workspace relationship writes require an explicit user action.
+- Security hardening can be intentionally invisible. Preserve upstream redirect validation, archive extraction checks, and other fail-closed boundaries without adding a wrapper screen merely to make the change visible. Verify the boundary through focused contracts.
 
 ### Redesign work
 
@@ -78,7 +80,7 @@ Before changing behaviour, read:
 - Use `script/release_host.sh` as the normal owner-facing release interface. `prepare` may create the annotated tag only after acceptance passes and leaves one tracked approval-history change to commit. Publication remains the separate explicit `publish --publish` action.
 - Publish a normal GitHub release with only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
 - Never upload DBCode, profiles, compatibility evidence, verification receipts, or other local release evidence. DBCode remains external and each user obtains it from its official source under their own licence.
-- Keep one maintained release path. When a helper has no maintained product, build, release, rollback, user, or documentation caller and survives only through its own test, remove the helper and test together.
+- Keep one maintained release path. Before retaining or removing a helper, search current product, build, release, rollback, test, and documentation callers. When a helper survives only through its own test, remove the helper and that test together.
 - Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing and the complete source gate once from the final exact source.
 
 ### Paths and temporary work
@@ -88,6 +90,8 @@ Before changing behaviour, read:
 - Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary evidence folders in the repository root or user home directory.
 - Use `./script/generated_workspace.sh inventory` and a cleanup plan before changing generated state. Apply cleanup only to one exact validated expired path. Do not replace the retention contract with ad hoc `rm` commands.
 - Classify generated output by its current artifact purpose and explicit expiry. Do not make retention depend on a resolved issue status or emit a retired workflow as current guidance.
+- Every temporary file needs one owning function or script and cleanup on success, failure, interruption, and signal paths. A failing test must not leave a temporary Git index or similar generated file behind.
+- Add a narrow ignore rule only for a proven generated file family, and add or update the public-source contract in the same change. Do not use a broad ignore rule to hide an unclear file.
 - Remove only temporary paths created by the current task. Follow the maintained and generated file rules below for all existing evidence.
 
 ## Public and private data
@@ -98,7 +102,7 @@ Do not use OpenKnowledge sync, share links, or another publishing route to bypas
 
 ## Maintained and generated files
 
-Maintain wrapper sources, policies, tests, wrapper extensions, and patches under `host/` and `script/`. Never hand-edit `dist/`, generated Code OSS/VSCodium checkouts under `.build/`, installed profile content, or rendered test output.
+Maintain wrapper sources, policies, tests, wrapper extensions, and patches under `host/` and `script/`. Focused-shell TypeScript and CSS live as first-class source under `host/code-oss-overlay/`; the Patch Plan materializes them into Code OSS and verifies the prepared tree. Never hand-edit `dist/`, generated Code OSS/VSCodium checkouts under `.build/`, installed profile content, or rendered test output.
 
 Keep current acceptance evidence, approved rollback backups, the current signed app, and reusable caches until the owning workflow explicitly records their expiry. Rebuildable worktrees, smoke output, and screenshots may be removed only after their evidence is no longer needed.
 
@@ -118,12 +122,13 @@ Full builds are expensive. Prefer `build_host.sh`, which reuses an exact Compile
 
 ## Documentation sync
 
-When wrapper behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the current `## Answer` of affected resolved issues. A routine version bump updates only the release specification, changed compatibility policy, public release notes, and required evidence; do not reopen or rewrite resolved issues for unchanged behaviour. Preserve dated issue comments as historical evidence even when they describe an older state.
+When wrapper behaviour changes, update the root README, the relevant maintained guide or policy, the implementation map, and the active issue. Resolve that issue with a final `## Answer`. Do not reopen or rewrite an older resolved issue to describe new behaviour; it remains dated history. A routine version bump updates only the Release Specification, changed compatibility policy, public release notes, and required evidence.
 
 - Keep maintained public documentation forward-facing. Describe the one supported workflow instead of cataloguing removed scripts or retired release paths. Keep historical detail in dated issue comments, the append-only wiki log, and Git history.
 - Use simple plain English in public documentation. Keep `README.md` focused on the product, privacy boundary, update status, current release flow, and the shortest useful commands.
 - Do not hardcode the current wrapper or upstream versions in maintained guidance. Read them from the Release Specification or link to the latest published release. Version-specific compatibility evidence and release notes may name exact versions.
 - Keep operational detail behind the host, command, architecture, and verification guides instead of copying it into the root README.
+- Keep research under `.scratch/` only while a current issue or maintained guide links to it. Once its lasting decision is captured in maintained guidance or a resolved issue, remove the unlinked research and rely on Git history for recovery.
 - A historical or generated visual is not a current source of truth. Remove it when maintained source, tests, or product guidance has moved on.
 
 ## OpenKnowledge

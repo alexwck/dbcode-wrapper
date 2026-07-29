@@ -22,3 +22,4 @@ Issues and specs for this repository live as Markdown files in `.scratch/`.
 - Claim a ticket by changing its status to `claimed` before starting work
 - Resolve a ticket by adding an `## Answer` and changing its status to `resolved`
 - Keep resolved tickets as dated history. Remove them from the map's current-work list instead of repeating their old process as current guidance.
+- Record new behaviour in the active ticket. Do not reopen or rewrite an older resolved ticket to make it read like current guidance.

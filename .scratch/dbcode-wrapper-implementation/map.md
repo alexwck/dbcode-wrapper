@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No implementation issue is currently claimed.
+[Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md) is claimed. It makes visible first-run commands reachable, removes stale maintenance remnants, and deepens active wrapper seams without changing DBCode-owned behaviour.
 
 ## History
 

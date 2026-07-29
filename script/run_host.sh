@@ -5,7 +5,6 @@ umask 077
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/profile_paths.sh"
-source "${REPO_ROOT}/script/lib/profile_guard.sh"
 source "${REPO_ROOT}/script/lib/host_session.sh"
 
 launch_style="monitored"
@@ -159,11 +158,16 @@ else
     tail -n 80 "${host_log}" >&2 || true
     exit 1
   fi
-  record_private_profile_paths \
-    "${host_log}" \
-    "${user_data_root}" \
-    "${shared_data_root}" \
-    "${extensions_root}"
+  [[ -f "${host_log}" && ! -L "${host_log}" ]] || {
+    echo "The private-profile evidence log must be a plain file." >&2
+    exit 1
+  }
+  printf '%s\n' \
+    "DBCode Wrapper user data: ${user_data_root}/User/globalStorage" \
+    "DBCode Wrapper shared data: ${shared_data_root}/sharedStorage" \
+    "DBCode Wrapper extensions: ${extensions_root}" \
+    >> "${host_log}"
+  chmod 600 "${host_log}"
   dbcode_log="$(jq -er '.evidence.dbcode_log' "${session_result_file}")"
   printf '%s\n' "${dbcode_log}" > "${active_dbcode_log_file}"
   chmod "${PROFILE_FILE_MODE}" "${active_dbcode_log_file}"

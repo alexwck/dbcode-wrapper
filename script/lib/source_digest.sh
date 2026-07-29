@@ -15,7 +15,8 @@ shell_patch_digest() {
   digest_source_files \
     host/patches/patch-plan.json \
     host/patches/vscodium \
-    host/patches/code-oss
+    host/patches/code-oss \
+    host/code-oss-overlay
 }
 
 wrapper_source_digest() {
@@ -33,6 +34,7 @@ wrapper_source_digest() {
     script/build_icon.sh \
     script/build_icns.py \
     script/check_vscode_engine.cjs \
+    script/materialize_code_oss_overlay.sh \
     script/verify_openvsx_package.cjs \
     script/verify_openvsx_package.sh \
     script/prepare_source.sh \

@@ -87,8 +87,3 @@ host_session_run() {
   "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/host_session.cjs" \
     run --policy "$1" --output "$2"
 }
-
-host_session_stop() {
-  "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/host_session.cjs" \
-    stop --policy "$1" --session "$2" --output "$3"
-}

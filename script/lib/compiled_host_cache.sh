@@ -91,7 +91,8 @@ compiled_host_patch_digest() {
     "${source_root}" \
     "host/patches/patch-plan.json" \
     "host/patches/vscodium" \
-    "host/patches/code-oss"
+    "host/patches/code-oss" \
+    "host/code-oss-overlay"
 }
 
 compiled_host_implementation_digest() {
@@ -102,6 +103,7 @@ compiled_host_implementation_digest() {
     "script/prepare_source.sh"
     "script/build_icon.sh"
     "script/build_icns.py"
+    "script/materialize_code_oss_overlay.sh"
     "script/lib/artifact_digest.sh"
     "script/lib/compiled_host_cache.sh"
     "script/lib/generated_workspace.sh"

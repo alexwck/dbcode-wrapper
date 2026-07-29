@@ -142,29 +142,7 @@ plutil -convert json -o - "${REPO_ROOT}/host/entitlements/helper.plist" |
 rg -q 'darwinBundleDocumentTypes: product\.darwinBundleDocumentTypes' \
   "${REPO_ROOT}/host/patches/code-oss/100-product-identity-and-macos-packaging.patch"
 
-check_cached_patch_stage() {
-  local cache_repository="${1}"
-  local source_commit="${2}"
-  local stage="${3}"
-  local patch_index stage_patch
-
-  [[ -d "${cache_repository}" ]] || return 0
-  git --git-dir="${cache_repository}" cat-file -e "${source_commit}^{commit}"
-
-  patch_index="$(mktemp "${BUILD_ROOT}/${stage}-patch-index.XXXXXX")"
-  rm -f "${patch_index}"
-  GIT_INDEX_FILE="${patch_index}" \
-    git --git-dir="${cache_repository}" read-tree "${source_commit}"
-  while IFS= read -r stage_patch; do
-    GIT_INDEX_FILE="${patch_index}" \
-      git --git-dir="${cache_repository}" apply --cached --check "${stage_patch}"
-    GIT_INDEX_FILE="${patch_index}" \
-      git --git-dir="${cache_repository}" apply --cached "${stage_patch}"
-  done < <(patch_plan_files "${stage}")
-  rm -f "${patch_index}"
-}
-
-check_cached_patch_stage \
+patch_plan_verify_cached_stage \
   "${BUILD_ROOT}/cache/vscodium.git" \
   "${VSCODIUM_COMMIT}" \
   vscodium

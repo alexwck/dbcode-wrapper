@@ -22,51 +22,10 @@ slimming_patch="${REPO_ROOT}/host/patches/code-oss/300-host-slimming-policy.patc
 }
 
 jq -e '
-  .schema_version == 1 and
-  .baseline.signed_app.installed_kib == 937596 and
-  .baseline.signed_app.indicative_archive_bytes == 264659573 and
-  .baseline.electron_framework.installed_kib == 270980 and
-  .baseline.code_oss_application.installed_kib == 642436 and
-  .baseline.built_in_extensions.actual_extension_count == 93 and
-  .baseline.built_in_extensions.shared_node_modules_present == true and
-  .baseline.built_in_extensions.installed_kib == 167336 and
-  .baseline.source_maps.file_count == 826 and
-  .baseline.source_maps.logical_bytes == 364904314 and
-  .baseline.source_maps.allocated_kib == 358596 and
-  .baseline.external_dbcode.version == "1.36.1" and
-  .baseline.external_dbcode.included_in_app == false and
-  .baseline.external_dbcode.installed_kib == 271444 and
-  .baseline.external_dbcode.logical_bytes == 274298343 and
-  .baseline.external_dbcode.vsix_bytes == 43262773 and
+  .schema_version == 2 and
+  .measurement_evidence == "docs/architecture/host-slimming-measurement-2026-07-21.md" and
   .goals.installed_app_max_kib == 614400 and
   .goals.indicative_archive_max_bytes == 200000000 and
-  .goals.installed_app_max_kib < (.baseline.signed_app.installed_kib * 0.7) and
-  .goals.indicative_archive_max_bytes < (.baseline.signed_app.indicative_archive_bytes * 0.8) and
-  .result.signed_app.installed_kib == 462100 and
-  .result.signed_app.indicative_archive_bytes == 166475377 and
-  .result.signed_app.installed_reduction_kib == 475496 and
-  .result.signed_app.archive_reduction_bytes == 98184196 and
-  .result.electron_framework.installed_kib == 270980 and
-  .result.code_oss_application.installed_kib == 167472 and
-  .result.built_in_extensions == {actual_extension_count: 9, shared_node_modules_present: false, installed_kib: 776} and
-  .result.source_maps == {file_count: 0, logical_bytes: 0, allocated_kib: 0} and
-  .result.external_dbcode == {
-    version: "1.36.2",
-    included_in_app: false,
-    installed_kib: 271532,
-    logical_bytes: 274400008,
-    vsix_bytes: 43297713
-  } and
-  .result.external_runtime == {
-    extension_count: 7,
-    included_in_app: false,
-    installed_kib: 361544,
-    logical_bytes: 359124746,
-    vsix_bytes: 70858742
-  } and
-  .result.external_dbcode.included_in_app == false and
-  .result.startup_smoke.median_wall_time_seconds == 7.18 and
-  .result.startup_smoke.controlled_pre_slim_baseline_available == false and
   .build.ship_source_maps == false and
   .build.built_in_extensions.mode == "allowlist" and
   .build.built_in_extensions.rollback_paths.all_built_ins != null and
@@ -93,9 +52,26 @@ jq -e '
   (([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.removed_groups[].names[]]) | length) == 93 and
   (([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.removed_groups[].names[]]) | unique | length) == 93
 ' "${policy_file}" >/dev/null || {
-  echo "The slimming policy must keep the measured baseline and separate material installed and archive goals." >&2
+  echo "The active slimming policy must keep build choices, size goals, rollback, and a separate evidence link." >&2
   exit 1
 }
+
+measurement_file="${REPO_ROOT}/$(jq -er '.measurement_evidence' "${policy_file}")"
+[[ -f "${measurement_file}" && ! -L "${measurement_file}" ]] || {
+  echo "The dated host-slimming measurement evidence is missing or linked." >&2
+  exit 1
+}
+for required_measurement in \
+  '826 files; 364,904,314 logical bytes; 358,596 allocated KiB' \
+  'projected an installed app of 579,000 KiB' \
+  'Electron Framework, installed | 270,980 KiB' \
+  '274,400,008 logical bytes' \
+  '## Recorded acceptance at the time'; do
+  rg -Fq "${required_measurement}" "${measurement_file}" || {
+    echo "The dated host-slimming evidence is incomplete: ${required_measurement}" >&2
+    exit 1
+  }
+done
 
 [[ -x "${audit_script}" ]] || {
   echo "The reproducible host size audit is missing or not executable." >&2

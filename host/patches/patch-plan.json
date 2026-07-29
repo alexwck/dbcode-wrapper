@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "target": {
     "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
     "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
@@ -17,7 +17,8 @@
       "files": [
         "prepare_vscode.sh"
       ],
-      "sha256": "04f9300e5552c920d94051e5df714a23422eeeea9be3aa1329d20e25f7bc9326"
+      "overlay_files": [],
+      "sha256": "1301dbd6d9f212eb37cdbe4a265ed4352b005f610f2e891da777a81d2b5c5ea6"
     },
     {
       "order": 20,
@@ -31,6 +32,7 @@
       "files": [
         "build.sh"
       ],
+      "overlay_files": [],
       "sha256": "592bcf66251fb13d7c8e434c2dad0331d8ae4450ac78489dafe6e457e8a9166e"
     },
     {
@@ -45,6 +47,7 @@
       "files": [
         "build/lib/electron.ts"
       ],
+      "overlay_files": [],
       "sha256": "6d56fac417364f52b1fe50fc0a59ff2d402cb5d1ba7abf5008eefd9fa3474fcc"
     },
     {
@@ -62,12 +65,22 @@
         "src/vs/base/common/product.ts",
         "src/vs/workbench/browser/layout.ts",
         "src/vs/workbench/browser/parts/titlebar/titlebarPart.ts",
-        "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
-        "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
         "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
         "src/vs/workbench/workbench.common.main.ts"
       ],
-      "sha256": "eedf8e78923e5c0c3e02c69c39342f7ace9660fab7ac0f30fe05670e09286276"
+      "overlay_files": [
+        {
+          "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
+          "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
+          "sha256": "e853fcb33fb47235de902dcc19ca11b4ea5679d22a04f4f1046126ba1cc2a751"
+        },
+        {
+          "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
+          "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
+          "sha256": "3d59b937be783da2275bdd3ad5bcb307e1ab30578d86ea4da83c61b65de65170"
+        }
+      ],
+      "sha256": "5e8d907e3a6e4ad388463912bf6ae2b64193331f66942ea71741be0e1f0c695d"
     },
     {
       "order": 300,
@@ -81,6 +94,7 @@
       "files": [
         "build/gulpfile.vscode.ts"
       ],
+      "overlay_files": [],
       "sha256": "253049d6a9327eb106e725d584afaa6a89634d39e271016f09f6b842889c32ad"
     },
     {
@@ -101,6 +115,7 @@
         "src/vs/workbench/browser/parts/views/treeView.ts",
         "src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts"
       ],
+      "overlay_files": [],
       "sha256": "db28dba5eb732e78bfc16931c317cba0f5b31d628048c7cbee4c82f87295ef96"
     }
   ],

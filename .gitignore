@@ -72,6 +72,7 @@ test-results/
 *.keychain
 *.keychain-db
 *.duckdb
+*.duckdb.gz.base64
 *.parquet
 *.accdb
 *.avro

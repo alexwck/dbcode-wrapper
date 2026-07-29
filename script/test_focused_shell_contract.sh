@@ -6,7 +6,15 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
 focused_shell_patch="${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
 integration_patch="${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
-focused_patches=("${focused_shell_patch}" "${integration_patch}")
+focused_shell_typescript="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
+focused_shell_styles="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css"
+focused_sources=(
+  "${focused_shell_patch}"
+  "${integration_patch}"
+  "${focused_shell_typescript}"
+  "${focused_shell_styles}"
+)
+transport_patches=("${focused_shell_patch}" "${integration_patch}")
 rendered_test="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 profile_settings="${REPO_ROOT}/host/profile/settings.json"
 manifest_generator="${REPO_ROOT}/script/generate_manifest.sh"
@@ -52,9 +60,9 @@ for removed_second_profile_contract in \
   fi
 done
 
-for focused_patch in "${focused_patches[@]}"; do
-  [[ -f "${focused_patch}" ]] || {
-    echo "Missing focused-shell source patch: ${focused_patch}" >&2
+for focused_source_file in "${focused_sources[@]}"; do
+  [[ -f "${focused_source_file}" ]] || {
+    echo "Missing focused-shell source: ${focused_source_file}" >&2
     exit 1
   }
 done
@@ -89,7 +97,7 @@ for required_shell_simplification in \
   "action.id.startsWith('dbcode.')" \
   'editor.action.clipboardCopyAction' \
   'codicon-split-horizontal'; do
-  rg -Fq -- "${required_shell_simplification}" "${focused_patches[@]}" || {
+  rg -Fq -- "${required_shell_simplification}" "${focused_sources[@]}" || {
     echo "The final focused-shell seams are missing contract: ${required_shell_simplification}" >&2
     exit 1
   }
@@ -98,7 +106,7 @@ done
 for required_bottom_result_contract in \
   "private resultLocation: ResultLocation = 'below';" \
   'applyDefaultResultLocation()'; do
-  rg -Fq -- "${required_bottom_result_contract}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_bottom_result_contract}" "${focused_shell_typescript}" || {
     echo "The focused shell does not keep new DBCode results below the query: ${required_bottom_result_contract}" >&2
     exit 1
   }
@@ -109,18 +117,18 @@ for removed_responsive_result_contract in \
   'resultLocationUpdateSequence' \
   'resultLocationUpdate:' \
   'private isNarrow:'; do
-  if rg -Fq -- "${removed_responsive_result_contract}" "${focused_shell_patch}"; then
+  if rg -Fq -- "${removed_responsive_result_contract}" "${focused_shell_typescript}"; then
     echo "The focused shell still carries the removed responsive result-layout process: ${removed_responsive_result_contract}" >&2
     exit 1
   fi
 done
 
-if rg -Fq "nextNarrow ? 'below' : 'beside'" "${focused_shell_patch}"; then
+if rg -Fq "nextNarrow ? 'below' : 'beside'" "${focused_shell_typescript}"; then
   echo "The focused shell still changes DBCode result placement with window width." >&2
   exit 1
 fi
 
-if rg -Fq "joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries')" "${focused_shell_patch}"; then
+if rg -Fq "joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries')" "${focused_shell_typescript}"; then
   echo "The focused shell must not duplicate the Release Specification query storage identity." >&2
   exit 1
 fi
@@ -165,7 +173,7 @@ for required_transient_surface_contract in \
   'closeDbcodeDrawer' \
   '!this.isPersistentDrawerView(activeDrawerView)' \
   'event.composedPath()'; do
-  rg -Fq -- "${required_transient_surface_contract}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_transient_surface_contract}" "${focused_sources[@]}" || {
     echo "The focused shell does not dismiss transient surfaces consistently: ${required_transient_surface_contract}" >&2
     exit 1
   }
@@ -173,8 +181,8 @@ done
 
 focused_drawer_persistence_contract="$(
   sed -n \
-    '/^+	private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {/,/^+	}/p' \
-    "${focused_shell_patch}"
+    '/private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {/,/^	}/p' \
+    "${focused_shell_typescript}"
 )"
 for required_persistent_drawer_contract in \
   'return Boolean(viewId && viewId !== DBCODE_ACCOUNT_VIEW);'; do
@@ -194,7 +202,7 @@ for required_drawer_toggle_contract in \
   '"Expand drawer"' \
   "codicon-chevron-left" \
   "codicon-chevron-right"; do
-  rg -Fq -- "${required_drawer_toggle_contract}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_drawer_toggle_contract}" "${focused_shell_typescript}" || {
     echo "The focused shell is missing the persistent drawer collapse and expand control: ${required_drawer_toggle_contract}" >&2
     exit 1
   }
@@ -202,8 +210,8 @@ done
 
 focused_keydown_contract="$(
   sed -n \
-    '/^+	private handleKeydown(event: KeyboardEvent): void {/,/^+	private blockKey(event: KeyboardEvent): void {/p' \
-    "${focused_shell_patch}"
+    '/private handleKeydown(event: KeyboardEvent): void {/,/private blockKey(event: KeyboardEvent): void {/p' \
+    "${focused_shell_typescript}"
 )"
 for required_persistent_drawer_keydown_contract in \
   'const activeDrawerView = this.activeDrawerView();' \
@@ -218,13 +226,13 @@ for required_quick_input_layer in \
   '--dbcode-wrapper-quick-input-z-index' \
   '.monaco-workbench.dbcode-wrapper-focused .quick-input-widget' \
   'z-index: var(--dbcode-wrapper-quick-input-z-index);'; do
-  rg -Fq -- "${required_quick_input_layer}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_quick_input_layer}" "${focused_shell_styles}" || {
     echo "The focused shell does not keep expanded quick inputs above the database toolbar: ${required_quick_input_layer}" >&2
     exit 1
   }
 done
 
-if rg -Fq "toAction({ id: 'dbcodeWrapper.connectionsHome'" "${focused_shell_patch}"; then
+if rg -Fq "toAction({ id: 'dbcodeWrapper.connectionsHome'" "${focused_shell_typescript}"; then
   echo "The connection-tools menu still duplicates the primary Connections route." >&2
   exit 1
 fi
@@ -234,13 +242,13 @@ for required_ai_configuration_route in \
   '@ext:dbcode.dbcode custom model' \
   'AI: Configure Custom Model…' \
   'AI: Set Custom Model API Key…'; do
-  rg -Fq -- "${required_ai_configuration_route}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_ai_configuration_route}" "${focused_shell_typescript}" || {
     echo "The focused DBCode tools menu does not explain the supported AI-provider setup: ${required_ai_configuration_route}" >&2
     exit 1
   }
 done
 
-if rg -q '^\+.*ConfigurationTarget\.MEMORY' "${focused_shell_patch}"; then
+if rg -q 'ConfigurationTarget\.MEMORY' "${focused_shell_typescript}"; then
   echo "The final shell patch still uses a renderer-only memory setting that DBCode cannot observe." >&2
   exit 1
 fi
@@ -257,7 +265,7 @@ for required_connections_home in \
   'dbcode-wrapper-connections-home-close' \
   'surfaceOpeningCount > 0' \
   'this.connectionsHomeOpen &&'; do
-  rg -Fq -- "${required_connections_home}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_connections_home}" "${focused_shell_typescript}" || {
     echo "The Connections Home patch is missing contract: ${required_connections_home}" >&2
     exit 1
   }
@@ -269,7 +277,7 @@ for required_contextual_surface in \
   'activeTextEditorLanguageId' \
   '.notifications-toasts' \
   '.title-actions .action-item:has(.action-label.codicon-toolbar-more)'; do
-  rg -Fq -- "${required_contextual_surface}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_contextual_surface}" "${focused_sources[@]}" || {
     echo "The contextual-surfaces patch is missing contract: ${required_contextual_surface}" >&2
     exit 1
   }
@@ -315,7 +323,7 @@ for required_contract in \
   'this.viewsService.openViewContainer(DBCODE_ACTIVITY_CONTAINER' \
   'this.viewsService.openViewContainer(DBCODE_PANEL_CONTAINER' \
   'visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER'; do
-  rg -Fq "${required_contract}" "${focused_patches[@]}" || {
+  rg -Fq "${required_contract}" "${focused_sources[@]}" || {
     echo "The focused-shell patch is missing contract: ${required_contract}" >&2
     exit 1
   }
@@ -326,7 +334,7 @@ for required_refinement in \
   'model.setVisible' \
   'model.visibleViewDescriptors' \
   'DBCODE_WRAPPER_TITLEBAR_HEIGHT'; do
-  rg -Fq -- "${required_refinement}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_refinement}" "${focused_sources[@]}" || {
     echo "The Appshot refinement patch is missing contract: ${required_refinement}" >&2
     exit 1
   }
@@ -336,7 +344,7 @@ for required_visibility_fix in \
   "extensionId=dbcode.dbcode" \
   "purpose=webviewView" \
   'clip-path: none !important'; do
-  rg -Fq -- "${required_visibility_fix}" "${focused_shell_patch}" || {
+  rg -Fq -- "${required_visibility_fix}" "${focused_sources[@]}" || {
     echo "The Results visibility patch is missing contract: ${required_visibility_fix}" >&2
     exit 1
   }
@@ -396,25 +404,25 @@ if [[ -f "${focused_css}" ]] && rg -Fq '.dbcode-wrapper-drag-handle' "${focused_
   exit 1
 fi
 
-shortcut_count="$(rg --no-filename -F "accelerator: 'CmdOrCtrl+O'" "${focused_patches[@]}" | rg -c '^\+' || true)"
+shortcut_count="$(rg --no-filename -F "accelerator: 'CmdOrCtrl+O'" "${transport_patches[@]}" | rg -c '^\+' || true)"
 [[ "${shortcut_count}" == "1" ]] || {
   echo "The SQL-file shortcut must have exactly one native menu route." >&2
   exit 1
 }
 
 for invented_state in 'SQL workspace' 'DBCode ready'; do
-  if rg -Fq "${invented_state}" "${focused_patches[@]}"; then
+  if rg -Fq "${invented_state}" "${focused_sources[@]}"; then
     echo "The database context bar must not present invented state: ${invented_state}" >&2
     exit 1
   fi
 done
 
-if rg -Fq "event.metaKey && !event.shiftKey && key === 'o'" "${focused_patches[@]}" || rg -Fq 'KeyCode.KeyO' "${focused_patches[@]}"; then
+if rg -Fq "event.metaKey && !event.shiftKey && key === 'o'" "${focused_sources[@]}" || rg -Fq 'KeyCode.KeyO' "${focused_sources[@]}"; then
   echo "The SQL-file shortcut must use only the native Database menu route, not a second DOM or keybinding handler." >&2
   exit 1
 fi
 
-if rg -Fq 'workbench.action.files.openFile' "${focused_patches[@]}"; then
+if rg -Fq 'workbench.action.files.openFile' "${focused_sources[@]}"; then
   echo "The production Database menu must not expose the generic file opener." >&2
   exit 1
 fi
@@ -484,12 +492,12 @@ for removed_rendered_contract in \
   fi
 done
 
-if rg -Uq '\.part\.panel > \.title \{\n[[:space:]]*display: none' "${focused_patches[@]}"; then
+if rg -Uq '\.part\.panel > \.title \{\n[[:space:]]*display: none' "${focused_shell_styles}"; then
   echo "The focused shell must preserve the Results panel title row for layout." >&2
   exit 1
 fi
 
-if rg -Fq '.part.panel > .content' "${focused_patches[@]}"; then
+if rg -Fq '.part.panel > .content' "${focused_shell_styles}"; then
   echo "The focused shell must not force the Results content into a collapsed panel." >&2
   exit 1
 fi

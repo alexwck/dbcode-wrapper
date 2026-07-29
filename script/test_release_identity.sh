@@ -29,7 +29,7 @@ candidate_lock="${test_root}/candidate.json"
 relabeled_lock="${test_root}/relabeled.json"
 changed_product_lock="${test_root}/changed-product.json"
 slimming_policy="${test_root}/slimming-policy.json"
-changed_result_policy="${test_root}/changed-result-policy.json"
+changed_evidence_policy="${test_root}/changed-evidence-policy.json"
 changed_build_policy="${test_root}/changed-build-policy.json"
 cp "${LOCK_FILE}" "${candidate_lock}"
 jq '.release.compatibility_status = "approved" | .release.validation_issue = "different-label"' \
@@ -37,7 +37,8 @@ jq '.release.compatibility_status = "approved" | .release.validation_issue = "di
 jq '.product.url_scheme = "different-dbcode-wrapper"' \
   "${candidate_lock}" > "${changed_product_lock}"
 cp "${REPO_ROOT}/host/slimming-policy.json" "${slimming_policy}"
-jq '.result.signed_app.installed_kib += 1' "${slimming_policy}" > "${changed_result_policy}"
+jq '.measurement_evidence = "docs/architecture/different-measurement.md"' \
+  "${slimming_policy}" > "${changed_evidence_policy}"
 jq '.build.ship_source_maps = true' "${slimming_policy}" > "${changed_build_policy}"
 
 candidate_id="$(release_source_set_id "${candidate_lock}")"
@@ -52,8 +53,8 @@ changed_product_id="$(release_source_set_id "${changed_product_lock}")"
   echo "Build-affecting product changes must change the canonical source-set identity." >&2
   exit 1
 }
-[[ "$(slimming_build_policy_digest "${slimming_policy}")" == "$(slimming_build_policy_digest "${changed_result_policy}")" ]] || {
-  echo "Measured size results must not change the immutable release-set identity." >&2
+[[ "$(slimming_build_policy_digest "${slimming_policy}")" == "$(slimming_build_policy_digest "${changed_evidence_policy}")" ]] || {
+  echo "Historical measurement evidence must not change the immutable release-set identity." >&2
   exit 1
 }
 [[ "$(slimming_build_policy_digest "${slimming_policy}")" != "$(slimming_build_policy_digest "${changed_build_policy}")" ]] || {

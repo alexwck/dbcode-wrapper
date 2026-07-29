@@ -6,9 +6,11 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
 policy_file="${REPO_ROOT}/host/dbcode-feature-policy.json"
 approved_history_file="${REPO_ROOT}/host/approved-release-history.json"
-focused_feature_patches=(
+focused_feature_sources=(
   "${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css"
 )
 catalogue_contract_module="${REPO_ROOT}/host/qa/connection-catalogue-contract.cjs"
 rendered_test="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
@@ -288,14 +290,14 @@ for required_catalogue_contract in \
   }
 done
 
-if rg -Fq -- 'dbcode.connections.add' "${focused_feature_patches[@]}" "${REPO_ROOT}/host/extensions"; then
+if rg -Fq -- 'dbcode.connections.add' "${focused_feature_sources[@]}" "${REPO_ROOT}/host/extensions"; then
   echo "The wrapper must not intercept DBCode's owned New Connection command or pass it a database allowlist." >&2
   exit 1
 fi
 
-for focused_feature_patch in "${focused_feature_patches[@]}"; do
-  [[ -f "${focused_feature_patch}" ]] || {
-    echo "Missing the focused feature source patch: ${focused_feature_patch}" >&2
+for focused_feature_source in "${focused_feature_sources[@]}"; do
+  [[ -f "${focused_feature_source}" ]] || {
+    echo "Missing the focused feature source: ${focused_feature_source}" >&2
     exit 1
   }
 done
@@ -321,8 +323,8 @@ for required_route in \
   'settings-toc-wrapper' \
   'split-view-view:has(.settings-tree-container)' \
   'product.dbcodeWrapperFocusedShell'; do
-  rg -Fq -- "${required_route}" "${focused_feature_patches[@]}" || {
-    echo "The semantic focused-shell patches are missing route contract: ${required_route}" >&2
+  rg -Fq -- "${required_route}" "${focused_feature_sources[@]}" || {
+    echo "The focused-shell sources are missing route contract: ${required_route}" >&2
     exit 1
   }
 done
@@ -335,13 +337,13 @@ for removed_duplicate_or_broken_route in \
   'dbcode.mcp.stop' \
   'dbcode.mcp.oauth.revokeTokens' \
   'dbcode.scratchFiles.openFolder'; do
-  if rg -Fq -- "${removed_duplicate_or_broken_route}" "${focused_feature_patches[@]}"; then
+  if rg -Fq -- "${removed_duplicate_or_broken_route}" "${focused_feature_sources[@]}"; then
     echo "The focused shell still exposes a broken or duplicate advanced route: ${removed_duplicate_or_broken_route}" >&2
     exit 1
   fi
 done
 
-if rg -Fq 'workbench.action.files.openFile' "${focused_feature_patches[@]}"; then
+if rg -Fq 'workbench.action.files.openFile' "${focused_feature_sources[@]}"; then
   echo "The data-file route must not expose the generic file opener." >&2
   exit 1
 fi

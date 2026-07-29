@@ -23,6 +23,7 @@ The fast source gate should stay comfortably below one minute on the normal deve
 - Shell runners use the pinned Node runtime instead of whichever `node` happens to be on `PATH`.
 - Move a test and remove its old runner in the same change.
 - Test public script interfaces when path handling or command behaviour is the contract.
+- A visible wrapper command needs a focused source test proving it is registered before startup state is known and routes missing prerequisites safely.
 - Keep fixtures local, deterministic, small, and free of private data.
 - Do not add a full rendered test for behaviour already proved by a source contract unless rendering is the risk.
 - Run gate-composition, public-push, host-package, publishing, or deep rollback tests only when a change owns that workflow.
@@ -82,5 +83,6 @@ This proves the wrapper still exposes DBCode. It does not claim live database, k
 - Put timeouts around GUI startup, shutdown, and external processes.
 - Terminate only the isolated process created by the current test.
 - Keep the original error when cleanup also has a problem.
+- Give every temporary file one owner and test cleanup on failure as well as success.
 - Record sanitized pass or fail evidence in the owning issue.
 - Do not turn a normal macOS or DBCode prompt into a test step.

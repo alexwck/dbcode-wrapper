@@ -7,7 +7,10 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 kernel_bridge_dir="${REPO_ROOT}/host/extensions/dbcode-wrapper-python-kernel"
 kernel_bridge_manifest="${kernel_bridge_dir}/package.json"
 kernel_bridge_runtime="${kernel_bridge_dir}/extension.js"
-focused_shell_patch="${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
+focused_shell_sources=(
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
+  "${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css"
+)
 
 jq -e '
   .required == true
@@ -61,11 +64,11 @@ rg -Fq 'copy_first_party_extensions' "${REPO_ROOT}/script/assemble_host.sh" || {
   echo "The production build must bundle the reviewed first-party kernel bridge before signing." >&2
   exit 1
 }
-rg -Fq 'Start Python Kernel…' "${focused_shell_patch}" || {
+rg -Fq 'Start Python Kernel…' "${focused_shell_sources[@]}" || {
   echo "DBCode Tools must provide the focused Python-kernel setup route." >&2
   exit 1
 }
-rg -Fq "dbcode-wrapper-python-kernel.ipynb" "${focused_shell_patch}" || {
+rg -Fq "dbcode-wrapper-python-kernel.ipynb" "${focused_shell_sources[@]}" || {
   echo "The private bootstrap notebook must stay out of the visible DBCode tab strip." >&2
   exit 1
 }

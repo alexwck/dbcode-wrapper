@@ -71,6 +71,7 @@ for ignored_pattern in \
   '*.pfx' \
   '*.key' \
   '*.duckdb' \
+  '*.duckdb.gz.base64' \
   '*.parquet' \
   '*.accdb' \
   '*.avro' \
@@ -88,7 +89,7 @@ done
 
 tracked_forbidden="$({
   git -C "${repo_root}" ls-files
-} | rg -i '^(dist|\.build|output)/|^host/dbcode-public-contributions-[^/]+\.json$|\.(dmg|sha256|db|db3|sqlite|sqlite3|vsix|p12|pfx|key|duckdb|parquet|accdb|avro|csv|ddb|ipynb|mdb|sigzip|xlsx)$' |
+} | rg -i '^(dist|\.build|output)/|^host/dbcode-public-contributions-[^/]+\.json$|\.duckdb\.gz\.base64$|\.(dmg|sha256|db|db3|sqlite|sqlite3|vsix|p12|pfx|key|duckdb|parquet|accdb|avro|csv|ddb|ipynb|mdb|sigzip|xlsx)$' |
   while IFS= read -r tracked_path; do
     [[ -e "${repo_root}/${tracked_path}" ]] && printf '%s\n' "${tracked_path}"
   done || true)"

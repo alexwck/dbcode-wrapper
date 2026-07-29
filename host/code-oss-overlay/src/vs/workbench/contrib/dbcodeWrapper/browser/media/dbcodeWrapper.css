@@ -1,0 +1,502 @@
+.monaco-workbench.dbcode-wrapper-focused {
+	--dbcode-wrapper-accent: #7655ff;
+	--dbcode-wrapper-accent-hover: #866aff;
+	--dbcode-wrapper-toolbar-border: color-mix(in srgb, var(--vscode-titleBar-activeForeground) 16%, transparent);
+	--dbcode-wrapper-quick-input-z-index: 2700;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.activitybar,
+.monaco-workbench.dbcode-wrapper-focused .part.auxiliarybar,
+.monaco-workbench.dbcode-wrapper-focused .part.statusbar,
+.monaco-workbench.dbcode-wrapper-focused .part.banner {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .quick-input-widget {
+	z-index: var(--dbcode-wrapper-quick-input-z-index);
+}
+
+.dbcode-wrapper-webview-dismiss-layer {
+	position: fixed;
+	z-index: 2550;
+	background: transparent;
+	cursor: default;
+	-webkit-app-region: no-drag;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center {
+	flex: 1 1 auto;
+	width: auto;
+	max-width: none;
+	min-width: 0;
+	margin: 0 8px 0 76px;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center > .window-title,
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar .center-adjacent-toolbar-container,
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar .action-toolbar-container,
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar .menubar {
+	display: none !important;
+}
+
+.dbcode-wrapper-toolbar {
+	position: relative;
+	z-index: 2600;
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	height: 100%;
+	align-items: center;
+	gap: 7px;
+	color: var(--vscode-titleBar-activeForeground);
+	-webkit-app-region: no-drag;
+}
+
+.dbcode-wrapper-brand,
+.dbcode-wrapper-toolbar-group {
+	display: inline-flex;
+	min-width: 0;
+	align-items: center;
+}
+
+.dbcode-wrapper-brand {
+	flex: 0 0 auto;
+	gap: 6px;
+	padding-right: 2px;
+	font-size: 12px;
+}
+
+.dbcode-wrapper-brand .codicon {
+	color: var(--dbcode-wrapper-accent-hover);
+}
+
+.dbcode-wrapper-toolbar-group {
+	gap: 3px;
+}
+
+.dbcode-wrapper-toolbar-group.database-actions {
+	flex: 1 1 auto;
+	overflow: hidden;
+}
+
+.dbcode-wrapper-toolbar-divider {
+	width: 1px;
+	height: 18px;
+	background: var(--dbcode-wrapper-toolbar-border);
+}
+
+.dbcode-wrapper-toolbar-button {
+	display: inline-flex;
+	height: 24px;
+	min-width: 26px;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	padding: 0 6px;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	color: inherit;
+	background: transparent;
+	font: inherit;
+	cursor: default;
+}
+
+.dbcode-wrapper-toolbar-button:hover,
+.dbcode-wrapper-toolbar-button:focus-visible,
+.dbcode-wrapper-toolbar-button.active,
+.dbcode-wrapper-toolbar-button[aria-pressed='true'] {
+	border-color: var(--dbcode-wrapper-toolbar-border);
+	background: color-mix(in srgb, var(--vscode-titleBar-activeForeground) 10%, transparent);
+}
+
+.dbcode-wrapper-toolbar-button:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: 1px;
+}
+
+.dbcode-wrapper-toolbar-button:disabled {
+	opacity: 0.38;
+}
+
+.dbcode-wrapper-button-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.panel > .title {
+	position: relative;
+	min-height: 30px;
+	visibility: visible !important;
+	pointer-events: auto;
+	user-select: none;
+}
+
+.monaco-workbench.dbcode-wrapper-focused[data-dbcode-wrapper-connections-home='open'] .part.panel > .title > :not(.dbcode-wrapper-connections-home-title):not(.dbcode-wrapper-connections-home-close) {
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
+.dbcode-wrapper-connections-home-title {
+	position: absolute;
+	inset: 0 auto 0 12px;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	visibility: visible;
+	color: var(--vscode-panelTitle-activeForeground);
+	font-size: 11px;
+	font-weight: 600;
+	pointer-events: none;
+}
+
+.dbcode-wrapper-connections-home-title .codicon {
+	color: var(--dbcode-wrapper-muted, var(--vscode-panelTitle-inactiveForeground));
+	font-size: 13px;
+}
+
+.dbcode-wrapper-connections-home-close {
+	position: absolute;
+	top: 3px;
+	right: 7px;
+	z-index: 2;
+	display: inline-flex;
+	width: 24px;
+	height: 24px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	visibility: visible !important;
+	color: var(--dbcode-wrapper-muted, var(--vscode-panelTitle-inactiveForeground));
+	background: transparent;
+	pointer-events: auto !important;
+}
+
+.dbcode-wrapper-connections-home-close:hover,
+.dbcode-wrapper-connections-home-close:focus-visible {
+	border-color: var(--dbcode-wrapper-border-strong, var(--vscode-focusBorder));
+	color: var(--dbcode-wrapper-text, var(--vscode-panelTitle-activeForeground));
+	background: var(--dbcode-wrapper-hover, transparent);
+}
+
+.dbcode-wrapper-connections-home-close:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: 1px;
+}
+
+.dbcode-wrapper-toolbar-button[hidden] {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .composite-bar-container,
+.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .global-actions-left {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title .title-actions .action-item:has(.action-label.codicon-toolbar-more) {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.sidebar > .title {
+	border-bottom: 1px solid var(--vscode-sideBar-border, transparent);
+}
+
+@media (max-width: 1100px) {
+	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center {
+		margin-left: 72px;
+		margin-right: 2px;
+	}
+
+	.dbcode-wrapper-brand strong,
+	.dbcode-wrapper-toolbar-button .dbcode-wrapper-button-label {
+		display: none;
+	}
+
+	.dbcode-wrapper-toolbar,
+	.dbcode-wrapper-toolbar-group {
+		gap: 2px;
+	}
+}
+
+@media (max-width: 760px) {
+	.dbcode-wrapper-brand,
+	.dbcode-wrapper-toolbar-divider {
+		display: none;
+	}
+}
+
+/* The redesign uses a quiet macOS title row above a database context bar. */
+.monaco-workbench.dbcode-wrapper-focused {
+	--dbcode-wrapper-shell: #18191e;
+	--dbcode-wrapper-raised: #1e2026;
+	--dbcode-wrapper-hover: #272932;
+	--dbcode-wrapper-border: #30323a;
+	--dbcode-wrapper-border-strong: #424550;
+	--dbcode-wrapper-text: #e7e8ed;
+	--dbcode-wrapper-muted: #9da1ad;
+	--dbcode-wrapper-success: #57c28a;
+	background: #111216;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar {
+	box-shadow: none;
+	background: #202126;
+	border-bottom: 1px solid var(--dbcode-wrapper-border-strong);
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container {
+	position: relative;
+	align-items: flex-start;
+	background: #202126;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-left,
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-right {
+	position: relative;
+	z-index: 2;
+	height: 30px;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center,
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container.has-center > .titlebar-center {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: auto;
+	max-width: none;
+	height: 100%;
+	margin: 0;
+	pointer-events: none;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center > .window-title {
+	position: absolute;
+	top: 0;
+	left: 78px;
+	right: 78px;
+	display: flex !important;
+	height: 30px;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	color: #cfd1d8;
+	font-size: 12px;
+	font-weight: 600;
+	pointer-events: none;
+}
+
+.dbcode-wrapper-toolbar.dbcode-wrapper-database-contextbar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	width: auto;
+	height: 52px;
+	padding: 0 10px;
+	gap: 8px;
+	color: var(--dbcode-wrapper-text);
+	background: #1c1d22;
+	border-top: 1px solid var(--dbcode-wrapper-border);
+	pointer-events: auto;
+}
+
+.dbcode-wrapper-toolbar-group.database-actions {
+	flex: 1 1 auto;
+	gap: 4px;
+}
+
+.dbcode-wrapper-toolbar-divider {
+	height: 25px;
+	background: var(--dbcode-wrapper-border);
+}
+
+.dbcode-wrapper-toolbar-button {
+	height: 30px;
+	min-width: 30px;
+	padding: 0 8px;
+	gap: 7px;
+	border-radius: 3px;
+	color: var(--dbcode-wrapper-muted);
+	cursor: pointer;
+}
+
+.dbcode-wrapper-toolbar-button:hover,
+.dbcode-wrapper-toolbar-button:focus-visible,
+.dbcode-wrapper-toolbar-button.active,
+.dbcode-wrapper-toolbar-button[aria-pressed='true'] {
+	border-color: var(--dbcode-wrapper-border-strong);
+	color: var(--dbcode-wrapper-text);
+	background: var(--dbcode-wrapper-hover);
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='connections'] {
+	border-color: var(--dbcode-wrapper-border-strong);
+	color: var(--dbcode-wrapper-text);
+	background: var(--dbcode-wrapper-raised);
+	font-weight: 600;
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='connection-tools'] {
+	min-width: 22px;
+	margin-left: -4px;
+	padding: 0 3px;
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query'] {
+	border-color: var(--dbcode-wrapper-accent);
+	color: #fff;
+	background: var(--dbcode-wrapper-accent);
+	font-weight: 600;
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query']:hover,
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='new-query']:focus-visible {
+	border-color: var(--dbcode-wrapper-accent-hover);
+	background: var(--dbcode-wrapper-accent-hover);
+}
+
+.dbcode-wrapper-extension-state {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--dbcode-wrapper-success);
+	font-size: 11px;
+}
+
+.dbcode-wrapper-extension-state .codicon {
+	font-size: 8px;
+}
+
+.dbcode-wrapper-extension-state.starting {
+	color: var(--dbcode-wrapper-muted);
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-action='release-status'] {
+	flex: 0 0 auto;
+	min-width: 26px;
+	padding: 0 5px;
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='update-available'] {
+	color: var(--dbcode-wrapper-accent-hover);
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='ready'] {
+	color: var(--dbcode-wrapper-success);
+}
+
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='offline'],
+.dbcode-wrapper-toolbar-button[data-dbcode-wrapper-release-status='invalid'] {
+	color: var(--dbcode-wrapper-muted);
+}
+
+.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts {
+	right: 8px;
+	bottom: 8px;
+}
+
+.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast-container > .notification-toast {
+	margin: 6px;
+	overflow: hidden;
+	border: 1px solid var(--dbcode-wrapper-border-strong);
+	border-radius: 6px;
+	background: var(--dbcode-wrapper-raised);
+	box-shadow: 0 14px 34px rgb(0 0 0 / 42%);
+}
+
+.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notifications-list-container,
+.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast .monaco-scrollable-element,
+.monaco-workbench.dbcode-wrapper-focused > .notifications-toasts .notification-toast .monaco-list-row {
+	border-radius: 5px;
+	background: var(--dbcode-wrapper-raised);
+}
+
+.monaco-workbench.dbcode-wrapper-focused .breadcrumbs-control {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title {
+	background: #1d1e23;
+	border-bottom: 1px solid var(--dbcode-wrapper-border);
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container.dbcode-wrapper-sql-editor-group > .title .editor-actions,
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-toolbar-more),
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-split-horizontal),
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content .editor-group-container > .title .editor-actions .action-item:has(.action-label.codicon-split-vertical) {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.editor > .content {
+	background: #14151a;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.sidebar {
+	background: var(--dbcode-wrapper-shell);
+	border-right: 1px solid var(--dbcode-wrapper-border-strong);
+}
+
+.monaco-workbench.dbcode-wrapper-focused .part.panel {
+	border-color: var(--dbcode-wrapper-border-strong);
+	background: #14151a;
+}
+
+/* Lock the only settings route to its DBCode filter and remove generic settings navigation. */
+.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-header {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .split-view-view:has(.settings-toc-wrapper) {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .split-view-view:has(.settings-tree-container) {
+	left: 0 !important;
+	width: 100% !important;
+	transform: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .settings-editor > .settings-body .settings-tree-container {
+	width: 100% !important;
+}
+
+/* The Jupyter notebook is kernel infrastructure for DBCode, not a second notebook product. */
+.monaco-workbench.dbcode-wrapper-focused .tab[aria-label*='dbcode-wrapper-python-kernel.ipynb'],
+.monaco-workbench.dbcode-wrapper-focused .tab:has(.label-name[title*='dbcode-wrapper-python-kernel.ipynb']) {
+	display: none !important;
+}
+
+.monaco-workbench.dbcode-wrapper-focused .editor-instance:has(.notebook-editor[data-uri*='dbcode-wrapper-python-kernel.ipynb']) {
+	visibility: hidden !important;
+}
+
+/* Keep unchanged DBCode webviews visible if Code OSS creates a zero-sized clipping layer. */
+.monaco-workbench.dbcode-wrapper-focused > div:has(> div > iframe.webview[src*='extensionId=dbcode.dbcode'][src*='purpose=webviewView']) {
+	inset: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	clip-path: none !important;
+}
+
+@media (max-width: 1100px) {
+	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container > .titlebar-center,
+	.monaco-workbench.dbcode-wrapper-focused .part.titlebar > .titlebar-container.has-center > .titlebar-center {
+		margin: 0;
+	}
+
+	.dbcode-wrapper-extension-state {
+		display: none;
+	}
+}
+
+@media (max-width: 760px) {
+	.dbcode-wrapper-toolbar.dbcode-wrapper-database-contextbar {
+		padding: 0 6px;
+		gap: 3px;
+	}
+}

@@ -31,6 +31,12 @@ Custom-provider API keys use VS Code SecretStorage and the operating-system Keyc
 
 Official references: [AI privacy and security](https://dbcode.io/docs/ai/privacy-and-security), [Query Builder AI](https://dbcode.io/docs/ai/query-builder-ai), [Grid AI](https://dbcode.io/docs/ai/ai-assist), [custom providers](https://dbcode.io/docs/ai/custom-provider), [Copilot tools](https://dbcode.io/docs/ai/copilot-tools), [MCP](https://dbcode.io/docs/ai/mcp), [inline completion](https://dbcode.io/docs/query/inline-completion), [execution plans](https://dbcode.io/docs/query/execution-plans), [Explore](https://dbcode.io/docs/data/explore), and [relationships](https://dbcode.io/docs/data/relationships).
 
+## Security changes without a screen
+
+Some security fixes should not add visible UI. OAuth redirect validation rejects an unregistered callback before a token can be sent. Driver and package extraction checks reject unsafe archive paths before files can escape their intended directory. These are fail-closed boundaries, not user workflows.
+
+The wrapper keeps those DBCode and package-verification checks unchanged. Focused tests should prove the safe state transition and rejection path. Do not add a wrapper dialog or status badge only to make an invisible security boundary appear as a feature.
+
 ## MCP defaults
 
 Keep DBCode's HTTP MCP server off by default.

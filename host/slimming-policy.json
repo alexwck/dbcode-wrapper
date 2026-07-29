@@ -1,94 +1,9 @@
 {
-  "schema_version": 1,
-  "measured_at": "2026-07-21",
-  "measurement_host": "Apple silicon macOS development host",
-  "baseline": {
-    "signed_app": {
-      "installed_kib": 937596,
-      "indicative_archive_bytes": 264659573
-    },
-    "electron_framework": {
-      "installed_kib": 270980
-    },
-    "code_oss_application": {
-      "installed_kib": 642436
-    },
-    "built_in_extensions": {
-      "actual_extension_count": 93,
-      "shared_node_modules_present": true,
-      "installed_kib": 167336
-    },
-    "source_maps": {
-      "file_count": 826,
-      "logical_bytes": 364904314,
-      "allocated_kib": 358596
-    },
-    "external_dbcode": {
-      "version": "1.36.1",
-      "included_in_app": false,
-      "installed_kib": 271444,
-      "logical_bytes": 274298343,
-      "vsix_bytes": 43262773
-    }
-  },
-  "source_map_free_projection": {
-    "installed_app_kib": 579000,
-    "indicative_archive_bytes": 196286440
-  },
+  "schema_version": 2,
+  "measurement_evidence": "docs/architecture/host-slimming-measurement-2026-07-21.md",
   "goals": {
     "installed_app_max_kib": 614400,
     "indicative_archive_max_bytes": 200000000
-  },
-  "result": {
-    "signed_app": {
-      "installed_kib": 462100,
-      "indicative_archive_bytes": 166475377,
-      "installed_reduction_kib": 475496,
-      "installed_reduction_percent": 50.71,
-      "archive_reduction_bytes": 98184196,
-      "archive_reduction_percent": 37.1
-    },
-    "electron_framework": {
-      "installed_kib": 270980
-    },
-    "code_oss_application": {
-      "installed_kib": 167472
-    },
-    "built_in_extensions": {
-      "actual_extension_count": 9,
-      "shared_node_modules_present": false,
-      "installed_kib": 776
-    },
-    "source_maps": {
-      "file_count": 0,
-      "logical_bytes": 0,
-      "allocated_kib": 0
-    },
-    "external_dbcode": {
-      "version": "1.36.2",
-      "included_in_app": false,
-      "installed_kib": 271532,
-      "logical_bytes": 274400008,
-      "vsix_bytes": 43297713
-    },
-    "external_runtime": {
-      "extension_count": 7,
-      "included_in_app": false,
-      "installed_kib": 361544,
-      "logical_bytes": 359124746,
-      "vsix_bytes": 70858742
-    },
-    "startup_smoke": {
-      "wall_time_seconds": [
-        7.18,
-        7.32,
-        6.98
-      ],
-      "median_wall_time_seconds": 7.18,
-      "includes_static_signature_and_manifest_checks": true,
-      "controlled_pre_slim_baseline_available": false,
-      "conclusion": "All three isolated launches reached a stable renderer. No controlled pre-slim timing was captured, so this ticket makes no startup speed-up claim."
-    }
   },
   "build": {
     "ship_source_maps": false,
@@ -271,12 +186,5 @@
         "all_built_ins": "Set build.built_in_extensions.mode to all and rebuild. This restores the upstream built-in payload without changing DBCode, its profile, licence, saved connections, or secrets."
       }
     }
-  },
-  "notes": [
-    "Installed size uses du -sk and is separate from compressed archive size.",
-    "The indicative archive uses COPYFILE_DISABLE=1 tar -czf and is not a release ZIP or DMG.",
-    "There are 93 real built-in extensions plus one shared extensions/node_modules directory; the earlier directory count of 94 included that shared dependency directory.",
-    "The external DBCode extension remains outside the app and is never slimmed by this policy.",
-    "The final signed app passed static, rendered, real-Keychain, PostgreSQL, DuckDB, Parquet, SQL-file, result-layout, quit, and relaunch checks."
-  ]
+  }
 }
