@@ -36,11 +36,11 @@
     "electron_version": "42.2.0"
   },
   "release": {
-    "wrapper_version": "0.1.5",
+    "wrapper_version": "0.1.6",
     "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.6",
     "compatibility_status": "candidate",
     "profile_schema_version": 1,
-    "validation_issue": "49-publish-latest-external-release-set"
+    "validation_issue": "52-publish-wrapper-maintenance-release"
   },
   "distribution": {
     "channel": "github-published-release",

@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently open or claimed.
+[Issue 52](issues/52-publish-wrapper-maintenance-release.md) is claimed. It publishes the completed wrapper maintenance work as `v0.1.6` without changing the external VSCodium, Code OSS, or DBCode pins.
 
 ## History
 
