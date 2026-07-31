@@ -30,4 +30,4 @@
 
 ## Answer
 
-Published [DBCode Wrapper v0.1.4](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.4) as the normal public Host Release in the same repository. It keeps DBCode `1.36.4`, Code OSS `1.126.0`, VSCodium `1.126.04524`, and profile schema 1 unchanged. The release contains only the independently verified Apple-silicon DMG and its checksum.
+DBCode Wrapper `v0.1.4` was published as a normal public Host Release with DBCode `1.36.4`, Code OSS `1.126.0`, VSCodium `1.126.04524`, and profile schema 1. Its GitHub release record and tag were later retired during the public-version reset, while the accepted commit and protected local DMG, checksum, and evidence remain available. The current public channel is the replacement [`v0.1.0`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.0).

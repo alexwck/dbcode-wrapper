@@ -27,6 +27,6 @@
 
 ## Answer
 
-The original authenticated `v0.1.2` transfer is now superseded by a [public historical release](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.2). The public release contains only the verified DMG and checksum. The compatibility manifest, install and rollback notes, and independent verification receipt remain protected local evidence because they describe the former private-transfer channel. DBCode, profiles, licences, credentials, databases, Keychain material, and signing secrets are not included.
+The original authenticated `v0.1.2` transfer was briefly superseded by a public historical release. That GitHub release record and tag were later retired during the public-version reset. The exact DMG, checksum, compatibility manifest, install and rollback notes, and independent verification receipt remain protected local evidence. DBCode, profiles, licences, credentials, databases, Keychain material, and signing secrets were not included.
 
-The public download is byte-for-byte identical to the accepted local DMG and checksum. Publishing changed only GitHub release visibility and remote asset selection; no application or profile was installed or changed. `v0.1.6` remains the repository's latest release.
+The former public download was byte-for-byte identical to the accepted local DMG and checksum. Publishing and later retirement changed only GitHub release state; no application or profile was installed or changed. The current public channel is the replacement [`v0.1.0`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.0).

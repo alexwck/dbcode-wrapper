@@ -27,4 +27,4 @@
 
 ## Answer
 
-DBCode Wrapper `v0.1.6` is published as the normal latest release in the same GitHub repository. The release contains only the verified host DMG and its checksum. VSCodium remains `1.126.04524`, compatible Code OSS remains `1.126.0`, and unchanged DBCode remains `1.36.6`.
+DBCode Wrapper `v0.1.6` was published as a normal release with only the verified host DMG and checksum. Its GitHub release record and tag were later retired during the public-version reset, while the accepted commit and protected local evidence remain available. The current and only public release is the replacement [`v0.1.0`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.0), with VSCodium `1.126.04524`, compatible Code OSS `1.126.0`, and unchanged DBCode `1.36.6`.

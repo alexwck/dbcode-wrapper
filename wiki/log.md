@@ -191,3 +191,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 5f77cbe (was 34275d9)
 - Coverage: always-reachable first-run commands; shared webview safety; first-class focused-shell TypeScript and CSS; materialize-then-verify Patch Plan; active slimming policy separated from complete dated evidence; success-and-failure temporary cleanup; relative, absolute, and spaced path contracts; invisible fail-closed security boundaries
 - Pages: [Overview](./OVERVIEW.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [Verification Harness](./modules/verification-harness.md), [First run, activation, and query](./flows/first-run-activate-and-query.md), and [AI and MCP data boundaries](./concepts/ai-and-mcp-data-boundaries.md)
+
+## 2026-08-01: refresh
+
+- Profile: public/standard
+- source_commit: 8b6a9c8 (was 5f77cbe)
+- Coverage: restarted public version line; one normal `v0.1.0` release from current source; retained Git history and protected local release evidence; unchanged fast owner-facing release path
+- Pages: [Overview](./OVERVIEW.md)

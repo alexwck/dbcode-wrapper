@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
+source_commit: 8b6a9c89b054fb27d9f9a82d7eb0c8a617f5e052
 tags:
   - wiki
   - overview
@@ -18,7 +18,7 @@ DBCode side drawers stay open while the user works elsewhere. Account remains te
 
 Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
 
-This wiki is a learning map, not a second source of truth. It is anchored to source commit [`5f77cbe`](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27). Check current source and tests when details disagree.
+This wiki is a learning map, not a second source of truth. It is anchored to source commit [`8b6a9c8`](https://github.com/alexwck/dbcode-wrapper/tree/8b6a9c89b054fb27d9f9a82d7eb0c8a617f5e052). Check current source and tests when details disagree.
 
 Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases/latest) for the current published Host Release. Releases are normal published releases in this repository. Public assets contain only the verified wrapper-host DMG and checksum; DBCode is not included.
 

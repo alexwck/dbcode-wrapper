@@ -32,7 +32,7 @@
 
 ## Answer
 
-Published DBCode Wrapper `v0.1.5` with VSCodium `1.126.04524`, compatible Code OSS `1.126.0`, and DBCode `1.36.6`.
+DBCode Wrapper `v0.1.5` was published with VSCodium `1.126.04524`, compatible Code OSS `1.126.0`, and DBCode `1.36.6`. Its GitHub release record and tag were later retired during the public-version reset, while the accepted commit and protected local evidence remain available. The replacement [`v0.1.0`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.0) uses the same external versions.
 
 Code OSS `1.130.0` remains visible through automatic update polling, but it is not in this release because current VSCodium preparation and all four wrapper patch seams fail against it. Using it now would turn the wrapper into a broad VSCodium fork.
 

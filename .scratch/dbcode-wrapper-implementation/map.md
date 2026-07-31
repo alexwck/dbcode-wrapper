@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-[Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md) is claimed. It replaces the existing public version line with one new `v0.1.0` release from the current source while preserving Git history, retained local evidence, and the pinned external release set.
+No issue is currently claimed. The normal public channel contains one `v0.1.0` release built from the current maintained source.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 52](issues/52-publish-wrapper-maintenance-release.md), [Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md), and [Issue 50](issues/50-keep-dbcode-drawers-persistent-and-collapsible.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), [Issue 52](issues/52-publish-wrapper-maintenance-release.md), and [Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 

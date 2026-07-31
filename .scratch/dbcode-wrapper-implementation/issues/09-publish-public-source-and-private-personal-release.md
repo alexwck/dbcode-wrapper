@@ -32,7 +32,7 @@
 
 The owner superseded the private-transfer channel on 29 July 2026. The public source repository now uses normal published host-only releases. A public release contains only the wrapper DMG and checksum; DBCode remains unchanged and external, and each user obtains it from the official source under their own valid licence.
 
-The owner later approved [`v0.1.2`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.2) for public historical access without rewriting its immutable tag or private-transfer evidence. Its public release contains only the verified DMG and checksum; the three private-transfer metadata assets remain protected local evidence. [`v0.1.3`](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.3) remains the first host produced through the normal public-release path, and `v0.1.6` remains the latest release.
+On 1 August 2026, the owner retired the former `v0.1.0` through `v0.1.6` release records and tags after verifying every remote asset against its protected local copy. The public channel now contains one [DBCode Wrapper v0.1.0](https://github.com/alexwck/dbcode-wrapper/releases/tag/v0.1.0) release built from the current maintained source. Git commit history and protected local evidence for the retired releases remain available.
 
 The public host is self-signed and not notarized. Release notes must tell users to verify the checksum and may direct them to macOS Privacy & Security > Open Anyway. No automated test waits for that prompt, a licence, a database, a kernel, a model, or another person.
 
