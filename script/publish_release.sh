@@ -253,7 +253,9 @@ code_oss_version="$(jq -er '.runtime.code_oss_version' "${release_lock}")"
 dbcode_version="$(jq -er '.extension.dbcode.version' "${release_lock}")"
 minimum_macos="$(jq -er '.release.minimum_macos // "12.0"' "${compatibility_file}")"
 cat > "${notes_file}" <<EOF
-DBCode Wrapper ${source_tag} is an unofficial macOS host for the unchanged DBCode extension.
+DBCode Wrapper ${source_tag} is an unofficial macOS app that runs the official, unchanged DBCode extension as a focused database application.
+
+The wrapper provides its own app identity, private profile, simplified interface, update status, and verified macOS packaging. DBCode still owns database, notebook, AI, MCP, account, and licence features.
 
 DBCode is not included. You need your own valid DBCode licence. First run obtains the pinned DBCode ${dbcode_version} package from its official Open VSX distribution.
 

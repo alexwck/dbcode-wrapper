@@ -46,6 +46,8 @@ rg -Fq '.isDraft == false' "${publisher}"
 rg -Fq 'approved_release_history_validate' "${publisher}"
 rg -Fq 'push --atomic' "${publisher}"
 rg -Fq '.source.release_lock_sha256 == $release_lock_sha256' "${publisher}"
+rg -Fq 'focused database application' "${publisher}"
+rg -Fq 'private profile, simplified interface, update status, and verified macOS packaging' "${publisher}"
 if rg -Fq -- '--draft' "${publisher}"; then
   echo "The normal release publisher must not create a draft." >&2
   exit 1
