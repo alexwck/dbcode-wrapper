@@ -41,6 +41,14 @@ done
 [[ -n "${rendered_report}" ]] || usage
 [[ -n "${output_file}" ]] || usage
 
+source "${script_root}/lib/host_config.sh"
+source "${script_root}/lib/dist_checkpoint.sh"
+
+dist_checkpoint_acquire "fast-release-verification"
+trap 'dist_checkpoint_exit "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
 absolute_from_caller() {
   case "$1" in
     /*) printf '%s\n' "$1" ;;
@@ -71,9 +79,13 @@ if [[ "${DBCODE_WRAPPER_RELEASE_VERIFIER_MATERIALIZED:-no}" != "yes" ]]; then
   verifier_source_record="${verifier_source_temp}/snapshot.json"
   materialized_verifier_source="${verifier_source_temp}/source"
   cleanup_verifier_source() {
+    local exit_status=$?
     rm -rf "${verifier_source_temp}"
+    dist_checkpoint_exit "${exit_status}"
   }
-  trap cleanup_verifier_source EXIT INT TERM
+  trap cleanup_verifier_source EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
 
   jq -S '.source.snapshot' "${manifest}" > "${verifier_source_record}"
   materialized_verifier_source="$(
@@ -95,7 +107,6 @@ if [[ "${DBCODE_WRAPPER_RELEASE_VERIFIER_MATERIALIZED:-no}" != "yes" ]]; then
   exit $?
 fi
 
-source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/generated_workspace.sh"
 source "${script_root}/lib/release_source_snapshot.sh"
@@ -232,9 +243,13 @@ gate_temp="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-fast-release-gates.XXXXXX")"
 development_log="${gate_temp}/development.log"
 smoke_log="${gate_temp}/smoke.log"
 cleanup_gate_temp() {
+  local exit_status=$?
   rm -rf "${gate_temp}"
+  dist_checkpoint_exit "${exit_status}"
 }
-trap cleanup_gate_temp EXIT INT TERM
+trap cleanup_gate_temp EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 echo "Running development contracts from the exact release source..."
 if ! "${script_root}/check_development.sh" >"${development_log}" 2>&1; then

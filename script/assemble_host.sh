@@ -12,6 +12,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/compiled_host_cache.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/release_source_snapshot.sh"
+source "${REPO_ROOT}/script/lib/dist_checkpoint.sh"
 
 release_source_record="${DBCODE_WRAPPER_RELEASE_SOURCE_RECORD:-}"
 [[ -f "${release_source_record}" && ! -L "${release_source_record}" ]] || {
@@ -20,6 +21,7 @@ release_source_record="${DBCODE_WRAPPER_RELEASE_SOURCE_RECORD:-}"
 }
 release_source_snapshot_verify_record "${REPO_ROOT}" "${release_source_record}"
 release_source_revision="$(jq -er '.repository_revision' "${release_source_record}")"
+dist_checkpoint_require_lease
 
 require_command ditto
 require_command jq
@@ -66,15 +68,30 @@ compiled_host_entry="$(
 )"
 compiled_host_receipt="${compiled_host_entry}/receipt.json"
 
-mkdir -p "${DIST_ROOT}"
-rm -rf "${APP_BUNDLE}"
-ditto "${compiled_host_app}" "${APP_BUNDLE}"
+cleanup_assembly_stage() {
+  local exit_status=$?
+  trap - EXIT INT TERM
+  if ! dist_checkpoint_recover_promotion; then
+    [[ "${exit_status}" -ne 0 ]] || exit_status=1
+  fi
+  exit "${exit_status}"
+}
+trap cleanup_assembly_stage EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+dist_checkpoint_create_stage
+assembly_dist="${DIST_CHECKPOINT_STAGE}"
+assembly_app="${assembly_dist}/${APP_NAME}.app"
+assembly_manifest="${assembly_dist}/build-manifest.json"
+
+ditto "${compiled_host_app}" "${assembly_app}"
 
 copy_first_party_extensions() {
   local extension_name extension_source source_path destination_path
   while IFS=$'\t' read -r extension_name extension_source; do
     source_path="${REPO_ROOT}/${extension_source}"
-    destination_path="${APP_BUNDLE}/Contents/Resources/app/extensions/${extension_name}"
+    destination_path="${assembly_app}/Contents/Resources/app/extensions/${extension_name}"
     [[ -f "${source_path}/package.json" ]] || {
       echo "Missing reviewed first-party extension: ${source_path}" >&2
       exit 1
@@ -93,13 +110,13 @@ copy_first_party_extensions() {
 
 copy_first_party_extensions
 
-runtime_setup_extension="${APP_BUNDLE}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
+runtime_setup_extension="${assembly_app}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
 "${REPO_ROOT}/script/generate_profile_identity.sh" \
   "${runtime_setup_extension}/profile-identity.json"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" \
   "${runtime_setup_extension}/runtime-extension-set.json"
 
-release_status_extension="${APP_BUNDLE}/Contents/Resources/app/extensions/dbcode-wrapper-release-status"
+release_status_extension="${assembly_app}/Contents/Resources/app/extensions/dbcode-wrapper-release-status"
 "${REPO_ROOT}/script/generate_installed_release_status.sh" \
   "${release_status_extension}/installed-release-set.json"
 cp \
@@ -107,11 +124,22 @@ cp \
   "${release_status_extension}/approved-release-sets.json"
 
 release_source_snapshot_verify_record "${REPO_ROOT}" "${release_source_record}"
-"${REPO_ROOT}/script/sign_host.sh" "${APP_BUNDLE}"
+"${REPO_ROOT}/script/sign_host.sh" "${assembly_app}"
 DBCODE_WRAPPER_RELEASE_SOURCE_RECORD="${release_source_record}" \
 DBCODE_WRAPPER_COMPILED_HOST_RECEIPT="${compiled_host_receipt}" \
 DBCODE_WRAPPER_COMPILED_HOST_CACHE_STATUS="${compiled_host_cache_status}" \
-  "${REPO_ROOT}/script/generate_manifest.sh" "${APP_BUNDLE}" "${BUILD_MANIFEST}"
+  "${REPO_ROOT}/script/generate_manifest.sh" "${assembly_app}" "${assembly_manifest}"
+
+[[ -d "${assembly_app}" && ! -L "${assembly_app}" ]] || {
+  echo "The staged Host application is incomplete or unsafe: ${assembly_app}" >&2
+  exit 1
+}
+[[ -f "${assembly_manifest}" && ! -L "${assembly_manifest}" ]] || {
+  echo "The staged build manifest is incomplete or unsafe: ${assembly_manifest}" >&2
+  exit 1
+}
+
+dist_checkpoint_promote_stage "${assembly_dist}"
 
 echo "Built application: ${APP_BUNDLE}"
 echo "Compiled-host cache: ${compiled_host_cache_status} (${compiled_host_input_id})"

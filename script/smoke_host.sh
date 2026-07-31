@@ -10,6 +10,12 @@ source "${REPO_ROOT}/script/lib/source_digest.sh"
 source "${REPO_ROOT}/script/lib/release_identity.sh"
 source "${REPO_ROOT}/script/lib/local_signing_identity.sh"
 source "${REPO_ROOT}/script/lib/release_source_snapshot.sh"
+source "${REPO_ROOT}/script/lib/dist_checkpoint.sh"
+
+dist_checkpoint_acquire "static-smoke"
+trap 'dist_checkpoint_exit "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 usage() {
   echo "Usage: ./script/smoke_host.sh [--app APP --manifest FILE]" >&2

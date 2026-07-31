@@ -12,10 +12,11 @@ Usage:
   ./script/release_host.sh prepare
   ./script/release_host.sh publish --publish
 
-The prepare action runs prompt-free acceptance, creates or verifies the annotated
-source tag, packages and independently verifies the host, and records approval.
-It leaves one approval-history change to commit. Publication remains a separate
-explicit action.
+The prepare action checks signing readiness, builds or reuses one complete Host
+checkpoint, runs static and one-profile rendered smoke, performs final prompt-free
+acceptance, creates or verifies the annotated source tag, packages and independently
+verifies the host, and records approval. It leaves one approval-history change to
+commit. Publication remains a separate explicit action.
 EOF
   exit 2
 }
@@ -41,6 +42,7 @@ esac
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/generated_workspace.sh"
 source "${script_root}/lib/approved_release_set.sh"
+source "${script_root}/lib/dist_checkpoint.sh"
 
 release_tag="v${WRAPPER_VERSION}"
 rendered_output_root="$(generated_workspace_path "rendered-screenshots")"
@@ -53,6 +55,15 @@ assets_dir="${assets_root}/${release_tag}"
 approval_dir="${acceptance_root}/fast-release/${release_tag}-approval"
 approved_history="${REPO_ROOT}/host/approved-release-history.json"
 approved_history_candidate="${approval_dir}/approved-release-sets.json"
+
+release_prepare_checkpoint() {
+  local exit_status=$?
+  trap - EXIT INT TERM
+  if ! dist_checkpoint_release; then
+    [[ "${exit_status}" -ne 0 ]] || exit_status=1
+  fi
+  exit "${exit_status}"
+}
 
 write_plan() {
   jq -n \
@@ -82,7 +93,11 @@ write_plan() {
           approved_history_candidate: $approved_history_candidate,
           approved_history: $approved_history
         },
-        stages: ["accept", "tag", "package", "approve", "record", "publish"],
+        stages: ["preflight", "build", "static", "render", "accept", "tag", "package", "approve", "record", "publish"],
+        signing_preflight_prompt_free: true,
+        build_owned_by_prepare: true,
+        rendered_smoke_owned_by_prepare: true,
+        dist_checkpoint_serialized: true,
         tag_created_after_acceptance: true,
         approval_history_commit_required: true,
         exact_evidence_resume_supported: true,
@@ -97,6 +112,76 @@ assert_plain_file() {
   local label="$2"
   [[ -f "${file}" && ! -L "${file}" ]] || {
     echo "${label} is missing or unsafe: ${file}" >&2
+    exit 1
+  }
+}
+
+assert_plain_directory() {
+  local directory="$1"
+  local label="$2"
+  [[ -d "${directory}" && ! -L "${directory}" ]] || {
+    echo "${label} is missing or unsafe: ${directory}" >&2
+    exit 1
+  }
+}
+
+run_signing_preflight() {
+  "${script_root}/setup_local_signing_identity.sh" --status
+}
+
+build_matches_current_source() {
+  local current_revision
+  [[ -d "${APP_BUNDLE}" && ! -L "${APP_BUNDLE}" ]] || return 1
+  [[ -f "${BUILD_MANIFEST}" && ! -L "${BUILD_MANIFEST}" ]] || return 1
+  current_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+  jq -e \
+    --arg current_revision "${current_revision}" \
+    '.source.snapshot.repository_revision == $current_revision' \
+    "${BUILD_MANIFEST}" >/dev/null 2>&1
+}
+
+ensure_build() {
+  if build_matches_current_source; then
+    run_signing_preflight
+    echo "Reusing the exact signed Host checkpoint: ${APP_BUNDLE}"
+  else
+    "${script_root}/build_host.sh"
+  fi
+  assert_plain_directory "${APP_BUNDLE}" "The signed Host application"
+  assert_plain_file "${BUILD_MANIFEST}" "The build manifest"
+  build_matches_current_source || {
+    echo "The signed Host checkpoint does not describe the current source commit." >&2
+    exit 1
+  }
+}
+
+run_static_smoke() {
+  "${script_root}/smoke_host.sh"
+}
+
+rendered_report_matches_build() {
+  local release_set_id
+  [[ -f "${rendered_report}" && ! -L "${rendered_report}" ]] || return 1
+  release_set_id="$(jq -er '.release.release_set_id' "${BUILD_MANIFEST}")" || return 1
+  jq -e \
+    --arg release_set_id "${release_set_id}" '
+      .status == "passed"
+      and .mode == "smoke"
+      and .releaseSetId == $release_set_id
+      and .profile.name == "qa"
+      and .profile.persistent == true
+      and .errors == []
+    ' "${rendered_report}" >/dev/null 2>&1
+}
+
+ensure_rendered_smoke() {
+  if rendered_report_matches_build; then
+    echo "Reusing exact one-profile rendered evidence: ${rendered_report}"
+  else
+    "${script_root}/test_focused_shell_rendered.sh"
+  fi
+  rendered_report_matches_build || {
+    echo "The one-profile rendered report does not match the signed Host checkpoint." >&2
     exit 1
   }
 }
@@ -197,6 +282,72 @@ one_release_asset() {
   printf '%s\n' "${matches[0]}"
 }
 
+validate_release_assets() {
+  local dmg_file checksum_file compatibility_file notes_file verification_file
+  local entry entry_count dmg_sha256 dmg_size_bytes notes_sha256 expected_checksum
+
+  [[ -d "${assets_dir}" && ! -L "${assets_dir}" ]] || {
+    echo "The Host Release asset directory is missing or unsafe: ${assets_dir}" >&2
+    exit 1
+  }
+  entry_count="$(
+    find "${assets_dir}" -mindepth 1 -maxdepth 1 -print |
+      wc -l |
+      tr -d '[:space:]'
+  )"
+  [[ "${entry_count}" == "5" ]] || {
+    echo "The Host Release asset directory must contain exactly five files." >&2
+    exit 1
+  }
+  while IFS= read -r -d '' entry; do
+    [[ -f "${entry}" && ! -L "${entry}" ]] || {
+      echo "The Host Release asset is missing or unsafe: ${entry}" >&2
+      exit 1
+    }
+  done < <(find "${assets_dir}" -mindepth 1 -maxdepth 1 -print0)
+
+  dmg_file="$(one_release_asset '*.dmg' 'host DMG')"
+  checksum_file="$(one_release_asset '*.dmg.sha256' 'host DMG checksum')"
+  compatibility_file="$(one_release_asset '*-compatibility.json' 'compatibility manifest')"
+  notes_file="$(one_release_asset '*-install-and-rollback.txt' 'install and rollback notes')"
+  verification_file="$(one_release_asset '*-verification.json' 'verification receipt')"
+
+  jq -e . "${verification_file}" >/dev/null || {
+    echo "The Host Release verification receipt is not valid JSON." >&2
+    exit 1
+  }
+  dmg_sha256="$(shasum -a 256 "${dmg_file}" | awk '{print $1}')"
+  dmg_size_bytes="$(stat -f '%z' "${dmg_file}")"
+  notes_sha256="$(shasum -a 256 "${notes_file}" | awk '{print $1}')"
+  jq -e \
+    --arg dmg_name "$(basename "${dmg_file}")" \
+    --arg dmg_sha256 "${dmg_sha256}" \
+    --argjson dmg_size_bytes "${dmg_size_bytes}" \
+    --arg checksum_name "$(basename "${checksum_file}")" \
+    --arg compatibility_name "$(basename "${compatibility_file}")" \
+    --arg notes_name "$(basename "${notes_file}")" \
+    --arg notes_sha256 "${notes_sha256}" \
+    --arg verification_name "$(basename "${verification_file}")" '
+      .schema_version == 1
+      and .disk_image.filename == $dmg_name
+      and .disk_image.sha256 == $dmg_sha256
+      and .disk_image.size_bytes == $dmg_size_bytes
+      and .disk_image.install_guide_sha256 == $notes_sha256
+      and .assets.checksum == $checksum_name
+      and .assets.compatibility == $compatibility_name
+      and .assets.install_and_rollback == $notes_name
+      and .assets.verification == $verification_name
+    ' "${compatibility_file}" >/dev/null || {
+    echo "The Host Release assets do not match their compatibility manifest." >&2
+    exit 1
+  }
+  expected_checksum="${dmg_sha256}  $(basename "${dmg_file}")"
+  [[ "$(<"${checksum_file}")" == "${expected_checksum}" ]] || {
+    echo "The Host Release checksum does not cover the exact disk image." >&2
+    exit 1
+  }
+}
+
 run_approval() {
   local release_set_id dmg_file compatibility_file verification_file
   release_set_id="$(jq -er '.release.release_set_id' "${BUILD_MANIFEST}")"
@@ -221,6 +372,7 @@ run_approval() {
 assert_approved() {
   local attestation="${approval_dir}/approval-attestation.json"
   local approved_record="${approval_dir}/approved-release-set.json"
+  local compatibility_file verification_file
   assert_plain_file "${attestation}" "The Host Release approval attestation"
   assert_plain_file "${approved_record}" "The approved release record"
   assert_plain_file "${approved_history_candidate}" "The generated Approved Release Set history"
@@ -231,6 +383,18 @@ assert_approved() {
     "${approved_record}" \
     "${approved_history_candidate}" \
     "${release_tag}"
+
+  compatibility_file="$(one_release_asset '*-compatibility.json' 'compatibility manifest')"
+  verification_file="$(one_release_asset '*-verification.json' 'verification receipt')"
+  jq -e \
+    --arg compatibility_sha256 "$(shasum -a 256 "${compatibility_file}" | awk '{print $1}')" \
+    --arg verification_sha256 "$(shasum -a 256 "${verification_file}" | awk '{print $1}')" '
+      .compatibility_manifest_sha256 == $compatibility_sha256
+      and .verification_sha256 == $verification_sha256
+    ' "${attestation}" >/dev/null || {
+    echo "The approval does not bind the current Host Release assets." >&2
+    exit 1
+  }
 }
 
 record_approved_history() {
@@ -254,6 +418,13 @@ case "${action}" in
     write_plan
     ;;
   prepare)
+    dist_checkpoint_acquire "host-release-prepare"
+    trap release_prepare_checkpoint EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    ensure_build
+    run_static_smoke
+    ensure_rendered_smoke
     if [[ -e "${acceptance_file}" || -L "${acceptance_file}" ]]; then
       assert_plain_file "${acceptance_file}" "The reusable prompt-free acceptance report"
       echo "Reusing exact prompt-free acceptance evidence: ${acceptance_file}"
@@ -271,6 +442,7 @@ case "${action}" in
     else
       run_package
     fi
+    validate_release_assets
     if [[ -e "${approval_dir}" || -L "${approval_dir}" ]]; then
       [[ -d "${approval_dir}" && ! -L "${approval_dir}" ]] || {
         echo "The reusable Host Release approval directory is missing or unsafe: ${approval_dir}" >&2

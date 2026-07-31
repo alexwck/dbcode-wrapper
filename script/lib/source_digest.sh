@@ -46,6 +46,7 @@ wrapper_source_digest() {
     script/generate_runtime_setup_manifest.sh \
     script/lib/artifact_digest.sh \
     script/lib/compiled_host_cache.sh \
+    script/lib/dist_checkpoint.sh \
     script/lib/generated_workspace.sh \
     script/lib/host_config.sh \
     script/lib/local_signing_identity.sh \

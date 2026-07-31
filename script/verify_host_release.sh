@@ -9,6 +9,12 @@ source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/generated_workspace.sh"
+source "${script_root}/lib/dist_checkpoint.sh"
+
+dist_checkpoint_acquire "host-release-verification"
+trap 'dist_checkpoint_exit "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 dmg_file=""
 checksum_file=""
@@ -159,16 +165,23 @@ attach_plist="${mount_root}/attach.plist"
 mounted_device=""
 mounted_path=""
 cleanup_mount() {
+  local exit_status=$?
   if [[ -n "${mounted_device}" ]]; then
     hdiutil detach "${mounted_device}" -quiet >/dev/null 2>&1 || \
       hdiutil detach "${mounted_device}" -force -quiet >/dev/null 2>&1 || true
   fi
   case "${mount_root}" in
     "${TMPDIR:-/private/tmp}"/dbcode-host-release-mount.*) rm -rf "${mount_root}" ;;
-    *) echo "Refusing to remove unexpected host-release mount root: ${mount_root}" >&2 ;;
+    *)
+      echo "Refusing to remove unexpected host-release mount root: ${mount_root}" >&2
+      [[ "${exit_status}" -ne 0 ]] || exit_status=1
+      ;;
   esac
+  dist_checkpoint_exit "${exit_status}"
 }
-trap cleanup_mount EXIT INT TERM
+trap cleanup_mount EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 hdiutil attach \
   -readonly \

@@ -168,6 +168,20 @@ test('inventory explains known, protected, private, expired, and unknown roots w
   assert.equal(buildWork.classification, 'rebuildable-work');
   assert.equal(buildWork.deletion_allowed, false);
 
+  const buildCoordination = result.entries.find(
+    entry => entry.id === 'build-coordination'
+  );
+  assert.equal(buildCoordination.path, join(repoRoot, '.build/locks'));
+  assert.equal(buildCoordination.classification, 'rebuildable-work');
+  assert.equal(buildCoordination.owner, 'host-build');
+  assert.equal(buildCoordination.deletion_allowed, false);
+
+  const assemblyWork = result.entries.find(entry => entry.id === 'assembly-work');
+  assert.equal(assemblyWork.path, join(repoRoot, '.build/assembly'));
+  assert.equal(assemblyWork.classification, 'rebuildable-work');
+  assert.equal(assemblyWork.owner, 'host-build');
+  assert.equal(assemblyWork.deletion_allowed, false);
+
   const privateProfile = result.entries.find(entry => entry.id === 'current-profile-state');
   assert.equal(privateProfile.classification, 'active-evidence');
   assert.equal(privateProfile.deletion_allowed, false);

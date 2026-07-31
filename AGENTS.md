@@ -73,21 +73,27 @@ Before changing behaviour, read:
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
 - Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
 - Reuse the exact Compiled Host when its content-addressed inputs match. A DBCode-only bump must not recompile unchanged Code OSS.
+- `release_host.sh prepare` owns the normal signing-status check, build or exact reuse, static smoke, one-profile rendered smoke, final acceptance, tag, package, independent verification, and approval. Do not turn those stages back into a manual release checklist.
+- A standalone `build_host.sh` run must also check the existing signing identity without prompting and fail before assembly when it is not usable. Any setup or trust change remains an explicit human gate.
+- Treat `dist/` as one exact build checkpoint. Build, smoke, rendered QA, acceptance, packaging, and independent verification must hold or inherit its kernel-backed lease for their full lifetime. Stage a complete signed app and manifest, then replace the old checkpoint as one promotion.
+- Checkpoint acquisition and promotion must be recoverable. The operating system releases the lease only after the last process with the inherited descriptor exits. A fixed candidate and previous checkpoint let the next owner restore or retain the last complete checkpoint after interruption; do not add PID-based stale-lock recovery.
 - Automated tests must never wait for Keychain, Kernel, Gatekeeper, Safe Storage, sign-in, licence, OAuth, or another person-controlled prompt. Do not approve or bypass those prompts automatically.
 - Use one persistent generated `qa` profile for rendered checks. It is separate from the user's Standalone DBCode Profile and is the only automated GUI profile.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - Package and approve only when the annotated tag, release lock, build manifest, signed app, final acceptance report, and independent mounted verification identify the same release set.
-- Use `script/release_host.sh` as the normal owner-facing release interface. `prepare` may create the annotated tag only after acceptance passes and leaves one tracked approval-history change to commit. Publication remains the separate explicit `publish --publish` action.
+- Resume only after revalidating the current package files and their approval digests. An existing directory is not evidence that packaging or approval completed.
+- Use `script/release_host.sh` as the normal owner-facing release interface. `prepare` may create the annotated tag only after acceptance passes and leaves one tracked approval-history change to commit. Use lower-level build and verification commands only for development or diagnosis. Publication remains the separate explicit `publish --publish` action.
 - Publish a normal GitHub release with only the host DMG and checksum, then verify the public state, publication timestamp, exact server sizes, and SHA-256 digests.
 - Never upload DBCode, profiles, compatibility evidence, verification receipts, or other local release evidence. DBCode remains external and each user obtains it from its official source under their own licence.
 - Keep one maintained release path. Before retaining or removing a helper, search current product, build, release, rollback, test, and documentation callers. When a helper survives only through its own test, remove the helper and that test together.
-- Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing and the complete source gate once from the final exact source.
+- Keep routine version bumps short: do not create a new issue, refresh the wiki, or rewrite architecture documents unless wrapper behaviour, compatibility, or the release channel changes. Run focused checks while editing; `release_host.sh prepare` owns the one complete gate from the final exact source.
 
 ### Paths and temporary work
 
 - Scripts that accept paths must support documented relative paths, absolute paths, and spaces in filenames. Cover those forms with focused automated tests that exercise the script's public interface.
 - When a path contract returns a normalized absolute output path, the caller must use that returned value. Do not validate a relative path against the repository and then use the original value against the process working directory.
 - Keep generated checkouts, the generated QA profile, screenshots, and temporary evidence under `.build/` or a validated temporary directory. Do not leave temporary evidence folders in the repository root or user home directory.
+- A fixture stub must derive its fixture root from its own script path, not from the caller's working directory. Assert that root before a stub writes an ignored build or release path.
 - Use `./script/generated_workspace.sh inventory` and a cleanup plan before changing generated state. Apply cleanup only to one exact validated expired path. Do not replace the retention contract with ad hoc `rm` commands.
 - Classify generated output by its current artifact purpose and explicit expiry. Do not make retention depend on a resolved issue status or emit a retired workflow as current guidance.
 - Every temporary file needs one owning function or script and cleanup on success, failure, interruption, and signal paths. A failing test must not leave a temporary Git index or similar generated file behind.

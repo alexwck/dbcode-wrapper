@@ -90,7 +90,9 @@ The owner-facing task derives the release tag and standard paths from the Releas
 ./script/release_host.sh publish --publish
 ```
 
-`prepare` runs final prompt-free acceptance, creates or verifies the annotated source tag, packages and independently verifies the host-only DMG, and records approval. If a run is interrupted, it reuses complete exact evidence instead of repeating that work. It leaves one reviewable change in `host/approved-release-history.json`; commit that file before publication. The separate `publish --publish` action pushes `main` and the tag, creates a normal GitHub release with only the DMG and checksum, then verifies the public state, sizes, and digests.
+`prepare` is the normal deployment task. It checks signing readiness without prompting, builds or reuses the exact Host, runs static smoke and one rendered smoke with the persistent generated `qa` profile, performs final prompt-free acceptance, creates or verifies the annotated source tag, packages and independently verifies the host-only DMG, and records approval. It holds one operating-system checkpoint lease throughout, and every child keeps that lease while it reads `dist/`. Another build or verifier therefore cannot read or replace the checkpoint halfway through the release. If a run is interrupted, the next task restores a complete checkpoint and reuses only complete evidence for the same release set.
+
+After `prepare`, review and commit its one change to `host/approved-release-history.json`. The separate `publish --publish` action pushes `main` and the tag, creates a normal GitHub release with only the DMG and checksum, then verifies the public state, sizes, and digests. Use the lower-level build and test commands only for development or diagnosis; they are not extra release steps.
 
 The detailed build and diagnostic commands remain in [the host guide](host/README.md) and [the command guide](script/README.md).
 

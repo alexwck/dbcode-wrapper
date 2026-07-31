@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed. The normal public channel contains one `v0.1.0` release built from the current maintained source.
+[Issue 54](issues/54-make-release-preparation-one-serialized-task.md) is claimed. It makes release preparation one serialized prompt-free task while keeping publication explicit. The normal public channel contains one `v0.1.0` release built from the current maintained source.
 
 ## History
 

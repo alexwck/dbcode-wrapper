@@ -44,8 +44,8 @@ The maintained architecture concentrates cross-cutting rules behind eleven seams
 7. **Host Session** owns one application lifecycle: process start, renderer readiness, DBCode readiness, logs, timeout, and complete quit.
 8. **Patch Plan** applies the maintained Code OSS and VSCodium changes by semantic seam. Small diffs against existing upstream files remain patches. Wrapper-owned focused-shell TypeScript and CSS live under `host/code-oss-overlay/` as normal source files. VSCodium applies official and wrapper patches, materializes those source files, and then verifies the approved prepared-tree digest before Code OSS compilation starts.
 9. **Focused Runtime Setup** derives one public package-and-key record from the Release Specification. Its Open VSX Package Verifier owns registry identity, engine compatibility, sizes, digests, key binding, Ed25519 signatures, archive safety, signature manifests, and VSIX identity. Finder setup and scripted preparation keep separate download and private-cache adapters, but neither owns another copy of those rules. On a fresh Finder launch the setup downloads only the exact DBCode and Python/Jupyter set, installs verified packages outside the app with extension-pack dependencies disabled, and reloads only after the managed inventory matches.
-10. **Host Release** binds one annotated source tag, approved release lock, signed host manifest, prompt-free automated acceptance report, and host-only DMG. `script/release_host.sh` is the owner-facing task: `plan` shows the derived paths, `prepare` runs acceptance before tagging and packaging and leaves one approval-history file to commit, and `publish --publish` is the separate explicit publication step. Lower-level adapters keep their focused validation and recovery roles. Final acceptance re-enters the manifest's materialized source and reruns the fast source and static-smoke gates instead of trusting detached logs. The packager performs one full validation and creates a digest-bound release context for metadata. Its staging copy may reuse that context only while the app digest, signature, identity, architecture, and notices still match. The independent verifier does not trust that shortcut: it mounts the DMG and creates its own fully validated context. Both paths share one compatibility-record constructor, while the install-guide renderer remains separate user-facing policy. A separate approval command consumes the final package evidence without launching, installing, or touching the production profile. The publisher uploads only the DMG and checksum as a normal GitHub release, then verifies public state, sizes, and digests. Read-only compatibility adapters support retained rollback records without defining another release path.
-11. **Generated Workspace Retention** registers build, smoke, rendered, retained evidence, rollback, cache, acceptance, current Host Release, expired, and unknown roots in one inspectable policy. Each root is classified by its current artifact purpose and explicit expiry, not by an old issue or workflow name. The module measures only deliberately expired output, reports protected and unregistered output without traversing it, and keeps cleanup as a dry run by default. An explicit apply can remove one exact validated expired path without a prompt; it cannot apply a class.
+10. **Host Release** binds one annotated source tag, approved release lock, signed host manifest, prompt-free automated acceptance report, and host-only DMG. `script/release_host.sh` is the owner-facing task: `plan` shows the derived paths, `prepare` holds one kernel-backed checkpoint lease while it checks signing, builds or reuses the exact Host, runs static and one-profile rendered smoke, performs final acceptance, tags, packages, independently verifies, and approves, and `publish --publish` is the separate explicit publication step. Build and verification children inherit the lease, so it remains held until the last user exits. Assembly writes a complete signed app and manifest to a fixed candidate under `.build/assembly` before replacing `dist/`; a fixed previous path lets the next owner recover an interrupted promotion. Standalone readers hold the same lease for their full lifetime. Final acceptance re-enters the manifest's materialized source and reruns the fast source and static-smoke gates instead of trusting detached logs. A resumed task revalidates all five package files and the approval's compatibility and verification digests instead of trusting directory presence. The packager performs one full validation and creates a digest-bound release context for metadata. Its staging copy may reuse that context only while the app digest, signature, identity, architecture, and notices still match. The independent verifier does not trust that shortcut: it mounts the DMG and creates its own fully validated context. Both paths share one compatibility-record constructor, while the install-guide renderer remains separate user-facing policy. A separate approval command consumes the final package evidence without launching, installing, or touching the production profile. The publisher uploads only the DMG and checksum as a normal GitHub release, then verifies public state, sizes, and digests. Read-only compatibility adapters support retained rollback records without defining another release path.
+11. **Generated Workspace Retention** registers build coordination, staged assembly, source work, smoke, rendered, retained evidence, rollback, cache, acceptance, current Host Release, expired, and unknown roots in one inspectable policy. Each root is classified by its current artifact purpose and explicit expiry, not by an old issue or workflow name. The module measures only deliberately expired output, reports protected and unregistered output without traversing it, and keeps cleanup as a dry run by default. An explicit apply can remove one exact validated expired path without a prompt; it cannot apply a class.
 
 Tests cross the same interfaces as production callers. Compatibility adapters keep established command-line workflows stable while implementation details move behind the seams.
 
@@ -69,18 +69,24 @@ The wrapper passes no arguments into that DBCode-owned entry point and does not 
 clean immutable release-source commit
         │
         ▼
+release_host.sh prepare acquires one dist checkpoint lease
+        │
+        ├─ prompt-free signing-status check
+        │
+        ▼
 materialized temporary checkout
         │
         ▼
 release specification → Compiled Host input ID
         │
-        ├─ cache hit ───────────────────────┐
-        └─ cache miss → prepare → compile ──┤
-                                           ▼
-                     assemble wrapper records and extensions
-                                           │
-                                           ▼
-                                     sign → manifest
+        ├─ cache hit → reuse exact Compiled Host
+        └─ cache miss → prepare and compile Code OSS
+        │
+        ▼
+assemble wrapper records and extensions in a private stage
+        │
+        ▼
+sign → manifest → promote complete app + manifest to dist/
         │
         ▼
 candidate Approved Release Set

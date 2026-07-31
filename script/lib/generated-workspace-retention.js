@@ -152,6 +152,24 @@ function createRetentionContract({
     ),
     managedRoot(
       checkedRepoRoot,
+      'build-coordination',
+      '.build/locks',
+      'rebuildable-work',
+      'host-build',
+      'Short-lived build and release leases prevent concurrent commands from reading or replacing an incomplete Host checkpoint.',
+      false
+    ),
+    managedRoot(
+      checkedRepoRoot,
+      'assembly-work',
+      '.build/assembly',
+      'rebuildable-work',
+      'host-build',
+      'Staged Host checkpoints remain build-owned until one complete checkpoint replaces dist.',
+      false
+    ),
+    managedRoot(
+      checkedRepoRoot,
       'generated-source',
       '.build/generated',
       'rebuildable-work',

@@ -48,19 +48,20 @@ DBCode is unchanged upstream software. A version bump should verify the wrapper 
 3. Update the candidate Release Specification and only the compatibility policy that changed.
 4. Reuse verified source, package, and Compiled Host caches by digest.
 5. Run focused source checks for changed wrapper seams.
-6. Finish all release-bound changes, then run the complete source gate once from the final exact source.
-7. Build and sign once, then run the one persistent-profile rendered smoke.
-8. Confirm added or changed DBCode routes remain visible. Render a deeper surface only when doing so is prompt-free.
-9. Keep model calls, real credentials, mutation, human prompts, and external-service checks outside deployment.
-10. Run `./script/release_host.sh prepare` to accept, tag, package, independently verify, and approve the exact release set.
-11. Review and commit its one change to `host/approved-release-history.json`.
-12. Run `./script/release_host.sh publish --publish` as a separate explicit action, then verify the public release and its two assets.
+6. Confirm added or changed DBCode routes remain visible. Add a deeper check only when it is prompt-free and the changed surface needs it.
+7. Keep model calls, real credentials, mutation, human prompts, and external-service checks outside deployment.
+8. Finish and commit the exact release source.
+9. Run `./script/release_host.sh prepare`. It owns the prompt-free signing check, build or exact reuse, static smoke, one persistent-profile rendered smoke, final acceptance, tag, package, independent verification, and approval.
+10. Review and commit its one change to `host/approved-release-history.json`.
+11. Run `./script/release_host.sh publish --publish` as a separate explicit action, then verify the public release and its two assets.
 
 Do not run a live model merely because an AI route exists. Do not test every supported database. Do not rebuild an unchanged host for every source assertion. Do not create a new issue or refresh the wiki for a routine version bump unless wrapper behaviour, compatibility, or the release channel changes.
 
+Do not add a standalone complete source gate, build, static smoke, or rendered smoke before `prepare` unless you are developing or investigating a failure. `prepare` owns those stages and reuses a complete exact Host or rendered report when it already matches. Final acceptance still reruns the source gate and static smoke from the manifest's materialized source so release evidence cannot rely on detached earlier logs.
+
 The prompt-free final acceptance command is the only maintained release acceptance path. Retained evidence and rollback records remain protected, but they do not define another test or release workflow.
 
-`build_host.sh` requires one clean immutable release commit and materializes it before reading build inputs. It reuses the Compiled Host when its exact compilation input ID and mode-sensitive app digest match, then performs the smaller extension, release-record, signing, and manifest assembly. A cache hit uses the compiler environment stored in the receipt and skips compiler-only preflights. A documentation, test, historical-adapter, or DBCode-only change still receives a new auditable source snapshot and final manifest, but it does not recompile Code OSS unless a real compilation input changed.
+`build_host.sh` requires one clean immutable release commit and materializes it before reading build inputs. It checks the existing signing identity without prompting, then reuses the Compiled Host when its exact compilation input ID and mode-sensitive app digest match. The smaller assembly writes the complete signed app and manifest to one fixed private candidate and promotes them together, so a failed candidate leaves the last complete `dist/` checkpoint unchanged. The operating system holds the lease until the last inherited process exits. Fixed candidate and previous paths let the next owner recover an interrupted promotion without PID files or stale-lock guessing. A cache hit uses the compiler environment stored in the receipt and skips compiler-only preflights. A documentation, test, historical-adapter, or DBCode-only change still receives a new auditable source snapshot and final manifest, but it does not recompile Code OSS unless a real compilation input changed.
 
 Final acceptance does not accept saved development or static-smoke success logs. It materializes the source snapshot in the signed manifest, reruns the fast development contracts there, and reruns static smoke against the exact signed app. The rendered report is reusable only when its exact release-set ID matches.
 
@@ -81,6 +82,8 @@ This proves the wrapper still exposes DBCode. It does not claim live database, k
 ## Failure handling
 
 - Put timeouts around GUI startup, shutdown, and external processes.
+- Keep `dist/` behind the maintained checkpoint lease. A reader must fail when another command owns it, and only a complete staged app and manifest may replace the last checkpoint.
+- On resume, revalidate the exact DMG, checksum, compatibility record, notes, verification receipt, and approval digests. A directory's presence is not completion evidence.
 - Terminate only the isolated process created by the current test.
 - Keep the original error when cleanup also has a problem.
 - Give every temporary file one owner and test cleanup on failure as well as success.

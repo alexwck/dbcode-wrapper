@@ -23,6 +23,12 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/artifact_digest.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 source "${REPO_ROOT}/script/lib/profile_paths.sh"
+source "${REPO_ROOT}/script/lib/dist_checkpoint.sh"
+
+dist_checkpoint_acquire "rendered-smoke"
+trap 'dist_checkpoint_exit "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 qa_script="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 [[ -x "${NODE_BIN_DIR}/node" ]] || {

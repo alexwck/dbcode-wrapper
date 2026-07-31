@@ -9,6 +9,12 @@ source "${script_root}/lib/artifact_digest.sh"
 source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/host_release_guide.sh"
 source "${script_root}/lib/generated_workspace.sh"
+source "${script_root}/lib/dist_checkpoint.sh"
+
+dist_checkpoint_acquire "host-release-package"
+trap 'dist_checkpoint_exit "$?"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 app_path=""
 manifest_file=""
@@ -128,7 +134,16 @@ cleanup_temporary_root() {
   esac
   temporary_root=""
 }
-trap cleanup_temporary_root EXIT INT TERM
+cleanup_host_package() {
+  local exit_status=$?
+  if ! cleanup_temporary_root; then
+    [[ "${exit_status}" -ne 0 ]] || exit_status=1
+  fi
+  dist_checkpoint_exit "${exit_status}"
+}
+trap cleanup_host_package EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 release_tree="${temporary_root}/volume"
 mkdir -p "${release_tree}"
@@ -214,7 +229,6 @@ for output_name in \
   chmod 600 "${output_dir}/${output_name}"
 done
 cleanup_temporary_root
-trap - EXIT INT TERM
 
 expected_output_entries="$(
   printf '%s\n' \

@@ -4,18 +4,20 @@ This directory is the small maintained overlay used to build the standalone macO
 
 ## Build
 
-Commit the complete release input so the working tree is clean. On the approved Apple-silicon Mac, run:
+For a standalone development or diagnostic build, commit the complete input so the working tree is clean, then run:
 
 ```sh
 ./script/build_host.sh
 ```
 
-That command records the checked-out Git commit as the immutable Release Source Snapshot, copies that commit to a temporary clean checkout, and reads all build and assembly inputs there. It then calculates a Compiled Host input ID from the exact Code OSS, VSCodium, toolchain, first-class Code OSS overlay, small upstream patches, product, icon, and active slimming inputs. It keeps Git's executable-file distinction but ignores local read and write permission differences.
+That command first checks the existing signing identity without changing Keychain trust or asking for input. If signing is not ready, it stops before assembly. It then records the checked-out Git commit as the immutable Release Source Snapshot, copies that commit to a temporary clean checkout, and reads all build and assembly inputs there. It calculates a Compiled Host input ID from the exact Code OSS, VSCodium, toolchain, first-class Code OSS overlay, small upstream patches, product, icon, and active slimming inputs. It keeps Git's executable-file distinction but ignores local read and write permission differences.
 
 On a cache miss, it checks the compiler toolchain, prepares the pinned upstream sources, and compiles `darwin-arm64`. On a cache hit, including a DBCode-only version bump, it reuses the verified unchanged host without rerunning compiler-only preflights. It then adds the current wrapper extensions and release records, signs nested code from the inside out with the current user's persistent private signing identity, and writes:
 
 - `dist/DBCode Wrapper.app`
 - `dist/build-manifest.json`
+
+The build owns one kernel-backed `dist/` checkpoint lease. Child processes inherit the open lease, so it remains held until the last build or verification process exits, even if its parent stops abruptly. Assembly creates and validates the signed app and manifest at one fixed candidate path under `.build/assembly`, then promotes both together. The fixed previous path lets the next owner restore or retain the last complete checkpoint after interruption. Static smoke, rendered QA, acceptance, independent verification, and packaging hold the same lease for their full lifetime.
 
 Changed cached bytes, links, or executable modes fail validation. A normal damaged directory is retained under the ignored cache for investigation and rebuilt. The cache receipt keeps the environment that performed the compilation, so the final manifest does not mislabel the later assembly machine as the compiler. The manifest records schema 6, the source snapshot, Compiled Host input ID, cache result, and signed app digest.
 
@@ -49,11 +51,11 @@ Every new build is labelled `candidate`. Its source-set ID covers the Release Sp
 
 The build disables VSCodium's independent updater. A small status icon beside `DBCode active`, plus `DBCode tools` → `Check for Updates…`, reads three public records: Microsoft's official stable Code OSS GitHub release, the official stable VSCodium GitHub release, and DBCode's verified stable Open VSX record. Automatic checks reuse complete three-feed metadata for one day; the explicit menu action checks again immediately. An older two-feed cache is discarded and refreshed. Neither route sends profile, path, licence, database, connection, or credential data. The review view lists the Code OSS runtime, VSCodium packaging, and DBCode separately with installed and available versions, publication dates, and honest readiness states. Selecting a row opens the exact Microsoft or VSCodium GitHub tag, or the exact version page in DBCode's official changelog. Open VSX remains the verified source for DBCode's version and publication date. This automatic polling and status UI are intentional. They only report public information; the repository owner starts any version bump and release.
 
-A candidate can enter approved history only when its exact release set has a prompt-free acceptance report bound to the source tag, release lock, build manifest, app digest, signature, extension inventory, development checks, static smoke, one-profile rendered smoke, host-only package, and independent mounted verification. Version strings alone are never enough. `script/release_host.sh prepare` derives the standard paths, runs acceptance before creating or verifying the tag, then packages, approves, and leaves one exact change in `host/approved-release-history.json`. Commit that file before running the separate `script/release_host.sh publish --publish` action. The lower-level adapters remain available for focused diagnosis. The app reads the approved history bundled with its build plus an optional private-profile record. Update discovery can read that state but cannot approve or install a release.
+A candidate can enter approved history only when its exact release set has a prompt-free acceptance report bound to the source tag, release lock, build manifest, app digest, signature, extension inventory, development checks, static smoke, one-profile rendered smoke, host-only package, and independent mounted verification. Version strings alone are never enough. `script/release_host.sh prepare` derives the standard paths and owns the signing check, build or reuse, smoke, acceptance, tag, package, verification, approval, and one exact change in `host/approved-release-history.json`. Commit that file before running the separate `script/release_host.sh publish --publish` action. The lower-level adapters remain available for focused diagnosis. The app reads the approved history bundled with its build plus an optional private-profile record. Update discovery can read that state but cannot approve or install a release.
 
 Review, Remind Later, and Skip This Version affect only local notice state. Manual review does not also raise the automatic prompt, and every completed check refreshes the status icon even when it started from the native macOS menu. Discovery never downloads, installs, quits, restarts, or relaunches the app. The previous known-good package remains available for rollback.
 
-During a build, VSCodium requires the Code OSS checkout to be named `vscode` inside its generated work directory. That generated path is an upstream build contract, not a second product or permanent project folder. It lives under ignored `.build/` data and can be deleted at any time; the next full build recreates it.
+During a build, VSCodium requires the Code OSS checkout to be named `vscode` inside its generated work directory. That generated path is an upstream build contract, not a second product or permanent project folder. It lives under ignored `.build/` data and stays retained until its owning workflow explicitly expires it.
 
 The build follows VSCodium's official macOS flow: [VSCodium build documentation](https://github.com/VSCodium/vscodium/blob/master/docs/howto-build.md) and [stable macOS workflow](https://github.com/VSCodium/vscodium/blob/master/.github/workflows/stable-macos.yml).
 
@@ -67,7 +69,7 @@ To run the last signed build immediately, use:
 ./script/run_host.sh
 ```
 
-This command does not build VSCodium or Code OSS. It is the right loop for Appshot review and other feedback against the current signed checkpoint. Source-overlay changes are intentionally batched and become visible only after the next `./script/build_host.sh` checkpoint. A full build remains required before calling a changed host release verified.
+This command does not build VSCodium or Code OSS. It is the right loop for visual review and other feedback against the current signed checkpoint. Source-overlay changes are intentionally batched and become visible only after the next `./script/build_host.sh` checkpoint. A full build remains required before calling a changed host release verified.
 
 Run the fast source contracts after each development change:
 
@@ -117,7 +119,7 @@ During an update review, the narrower command below runs only the exact-version 
 ./script/test_focused_shell_rendered.sh --connection-catalogue-only
 ```
 
-The normal automated gate ends with `verify_fast_release.sh`, which re-enters the manifest's exact source and reruns the source and static-smoke gates before using the matching one-profile rendered report. Packaging, independent mounted verification, and prompt-free approval then bind the accepted output without requiring licence, Keychain, database, debugger, or persistence observations. Installation is a separate user-controlled transition.
+Inside `release_host.sh prepare`, final acceptance uses `verify_fast_release.sh` to re-enter the manifest's exact source, rerun the source and static-smoke gates, and bind the matching one-profile rendered report. Packaging, independent mounted verification, and prompt-free approval then bind the accepted output without requiring licence, Keychain, database, debugger, or persistence observations. Installation is a separate user-controlled transition.
 
 The public Host Release uses a persistent current-user self-signed identity. Strict signature checks prove artifact integrity, but the identity has no Apple Team ID and is not trusted by Gatekeeper. Automated tests never authorize it against the real Keychain. Users must verify the published checksum and macOS may require **Open Anyway**; normal use may also ask for Safe Storage approval. These prompts are setup choices, not deployment tests. The project does not use paid Developer ID signing or Apple notarization and must not claim those protections.
 
