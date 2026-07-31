@@ -6,15 +6,15 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 - [x] Confirm the source tree is clean, identify the six commits since `v0.1.5`, and derive `v0.1.6`.
 - [x] Bump the wrapper version and validation issue without changing the external release set.
 - [x] Run the prompt-free development and exact-source release gates.
 - [x] Create annotated tag `v0.1.6` only after exact-source acceptance passes.
 - [x] Package, mount, and independently verify the host-only DMG; record and commit approval without changing the production profile.
-- [ ] Push `main` and `v0.1.6`, create a normal non-draft, non-prerelease GitHub release, and upload only the DMG and checksum.
-- [ ] Verify the public release, asset sizes and downloaded digests, remote refs, latest-release pointer, and final clean Git state.
+- [x] Push `main` and `v0.1.6`, create a normal non-draft, non-prerelease GitHub release, and upload only the DMG and checksum.
+- [x] Verify the public release, asset sizes and downloaded digests, remote refs, latest-release pointer, and final clean Git state.
 
 ## Comments
 
@@ -23,7 +23,8 @@
 - 2026-07-30: The Release Specification derives `v0.1.6`, and the only release-lock changes are the wrapper version and validation issue. The complete prompt-free development source gate passed without rebuilding or launching the app; one sandbox-only Host Session fixture was skipped while the maintained gate completed successfully.
 - 2026-07-30: The exact-source cold build compiled the first-class focused-shell source with zero errors, produced Compiled Host `compiled-host-fae0ea118970df9358f7fa2aee1cc73663563f356d6268a18a50e538d40ce9cb`, and passed static signed-host smoke plus all 14 rendered checks in the persistent QA profile.
 - 2026-07-30: Prompt-free acceptance passed for source commit `dc5b6aabb705e9b7239e2444be66f8568439424d`, then the release task created annotated tag `v0.1.6`. The independently mounted host-only DMG is 187,903,737 bytes with SHA-256 `c5c88d1d26720174558a594a22bb38a073f96a80994d884d608e63da6e713996`; its embedded app digest is `87515a8e5fbafc31f86f938ba4c157fd689004ebc95cae2c8eef8e888f122134`. Approval history records the exact release set without changing the installed app or production profile.
+- 2026-08-01: GitHub authentication was renewed, then the explicit publication action passed public-push readiness and atomically pushed `main` plus annotated tag `v0.1.6`. The normal public release is neither a draft nor a prerelease and is the repository's latest release. It contains exactly the DMG and checksum. GitHub reports the accepted sizes and digests, and a fresh public download passed the published checksum with DMG SHA-256 `c5c88d1d26720174558a594a22bb38a073f96a80994d884d608e63da6e713996`. Remote `main` identifies approval commit `538cb31e38065cbcbff608e8781f58eee216be9e`; the tag peels to accepted source `dc5b6aabb705e9b7239e2444be66f8568439424d`.
 
 ## Answer
 
-In progress.
+DBCode Wrapper `v0.1.6` is published as the normal latest release in the same GitHub repository. The release contains only the verified host DMG and its checksum. VSCodium remains `1.126.04524`, compatible Code OSS remains `1.126.0`, and unchanged DBCode remains `1.36.6`.
