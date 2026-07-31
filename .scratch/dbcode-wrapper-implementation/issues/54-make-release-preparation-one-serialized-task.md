@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 - [x] Add public-interface contracts for complete prepare ordering, exact evidence reuse, and lock refusal.
 - [x] Make standalone builds fail signing readiness before assembly.
@@ -25,3 +25,17 @@
 - 2026-08-01: Generated-workspace inventory found no new ignore gap. `.build/`, `dist/`, `output/`, application packages, profiles, databases, and signing outputs were already covered. The existing 64-byte expired generated path was not created by this task and was left untouched.
 - 2026-08-01: Focused build, release, retention, public-source, and Host Release contracts passed. The complete prompt-free development gate passed in about 28 seconds with one existing sandbox-only process-table fixture skipped. No app build, GUI launch, production profile, Keychain approval, database, model, or other human gate was used.
 - 2026-08-01: Two independent recursive reviews found and drove fixes for package-resume validation, point-in-time reader checks, interrupted promotion, partial lock metadata, live child ownership, stage cleanup, conditional shell error handling, and fixture process cleanup. Both final recursive reviews reported no remaining actionable findings.
+- 2026-08-01: The public/standard codebase wiki was refreshed at implementation commit `2191402`. OpenKnowledge reported zero dead links, zero lint errors, and zero lint warnings across 32 wiki documents. `ok preview`, the current source-only host contract, and exact-ref public-push readiness contracts passed.
+
+## Answer
+
+Release preparation is now one short owner workflow:
+
+1. Commit the exact release source.
+2. Run `./script/release_host.sh prepare`.
+3. Review and commit its one `host/approved-release-history.json` change.
+4. Run `./script/release_host.sh publish --publish`.
+
+`prepare` owns signing readiness, exact build or reuse, static smoke, one persistent-profile rendered smoke, final acceptance, tag, package, independent verification, and approval. It keeps `dist/` stable for the whole task and restores a complete checkpoint after interruption. A resumed task revalidates every package file and approval digest before reuse.
+
+No new `.gitignore` entry was needed, no existing generated output was deleted, and publication remains a separate explicit action.

@@ -198,3 +198,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 8b6a9c8 (was 5f77cbe)
 - Coverage: restarted public version line; one normal `v0.1.0` release from current source; retained Git history and protected local release evidence; unchanged fast owner-facing release path
 - Pages: [Overview](./OVERVIEW.md)
+
+## 2026-08-01: refresh
+
+- Profile: public/standard
+- source_commit: 2191402 (was 8b6a9c8)
+- Coverage: one serialized prompt-free release preparation task; signing readiness before assembly; full-lifetime kernel checkpoint lease; recoverable staged app and manifest promotion; exact package and approval resume; one persistent `qa` profile; separate explicit publication; build-coordination and assembly retention roots
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Host Release](./modules/host-release.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Generated Workspace Retention](./modules/generated-workspace-retention.md), [Verification Harness](./modules/verification-harness.md), [Build sign and launch](./flows/build-sign-and-launch.md), and [Package and publish a Host Release](./flows/package-and-publish-host-release.md)

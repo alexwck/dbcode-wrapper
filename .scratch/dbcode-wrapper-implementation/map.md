@@ -10,7 +10,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 - The exact wrapper and upstream versions live only in `host/release-lock.json` and generated release evidence.
 - Automatic Code OSS, VSCodium, and DBCode polling remains read-only. It reports updates but cannot change a pin, create a tag, approve or install a candidate, publish a release, or change a profile.
 - Routine deployment uses the fast source gate, an exact Compiled Host cache, static smoke, and one persistent generated `qa` profile.
-- `script/release_host.sh` derives the normal release tag and paths. Acceptance and tagging happen before packaging and approval; publication remains a separate explicit action.
+- `script/release_host.sh prepare` owns signing readiness, exact build or reuse, static smoke, one persistent-profile rendered smoke, final acceptance, tagging, packaging, independent verification, and approval. Publication remains a separate explicit action.
 - Generated output is classified by artifact purpose and explicit expiry. Historical output stays protected without making its retired process current again.
 - The Public Source Repository never includes DBCode, private profiles, credentials, databases, signing secrets, built apps, raw real-profile evidence, or local release receipts.
 
@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-[Issue 54](issues/54-make-release-preparation-one-serialized-task.md) is claimed. It makes release preparation one serialized prompt-free task while keeping publication explicit. The normal public channel contains one `v0.1.0` release built from the current maintained source.
+No issue is currently claimed. The normal public channel contains one `v0.1.0` release built from the current maintained source.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), [Issue 52](issues/52-publish-wrapper-maintenance-release.md), and [Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), [Issue 52](issues/52-publish-wrapper-maintenance-release.md), and [Issue 51](issues/51-deepen-first-run-and-forward-maintenance.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 

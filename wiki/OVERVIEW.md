@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 8b6a9c89b054fb27d9f9a82d7eb0c8a617f5e052
+source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
 tags:
   - wiki
   - overview
@@ -18,13 +18,13 @@ DBCode side drawers stay open while the user works elsewhere. Account remains te
 
 Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
 
-This wiki is a learning map, not a second source of truth. It is anchored to source commit [`8b6a9c8`](https://github.com/alexwck/dbcode-wrapper/tree/8b6a9c89b054fb27d9f9a82d7eb0c8a617f5e052). Check current source and tests when details disagree.
+This wiki is a learning map, not a second source of truth. It is anchored to source commit [`2191402`](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809). Check current source and tests when details disagree.
 
 Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases/latest) for the current published Host Release. Releases are normal published releases in this repository. Public assets contain only the verified wrapper-host DMG and checksum; DBCode is not included.
 
 Automatic read-only polling keeps Code OSS, VSCodium, and DBCode update status visible. It never changes a pin, installs software, approves a candidate, creates a tag, or publishes a release. The repository owner starts those actions after reviewing an update.
 
-The maintained release path has one owner-facing command. `plan` shows the derived tag and paths, `prepare` runs or reuses exact prompt-free evidence and records one approval-history change, and `publish --publish` performs the explicit public release after that history change is committed.
+The maintained release path has one owner-facing command. `plan` shows the derived tag and paths. `prepare` holds one checkpoint lease while it checks signing, builds or reuses the exact host, runs static and one-profile rendered checks, accepts, tags, packages, independently verifies, approves, and records one history change. `publish --publish` performs the explicit public release after that change is committed.
 
 Normal development uses the fast prompt-free source gate. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
 
@@ -40,12 +40,11 @@ Generated cleanup follows artifact purpose and explicit expiry. It is a dry run 
 ```mermaid
 flowchart LR
   U[Official upstream updates] --> S[Read only status]
-  S --> O[Owner starts version bump]
-  O --> B[Build and prompt free checks]
-  B --> P[Prepare Host Release]
+  S --> O[Owner commits version bump]
+  O --> P[Prepare owns build and checks]
+  P --> Q[One generated QA profile]
   P --> H[Commit approved history]
-  H --> R[Publish normal release]
-  B --> Q[One generated QA profile]
+  H --> R[Explicit normal release]
   R --> K[Protected rollback set]
 ```
 
