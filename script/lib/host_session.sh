@@ -79,8 +79,6 @@ host_session_write_policy() {
       }
     ' > "${output_file}"
   chmod 600 "${output_file}"
-  "${NODE_BIN_DIR}/node" "${REPO_ROOT}/script/host_session.cjs" \
-    validate-policy --policy "${output_file}" >/dev/null
 }
 
 host_session_run() {

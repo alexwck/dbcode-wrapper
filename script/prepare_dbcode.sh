@@ -61,7 +61,7 @@ for required_command in chmod cmp curl find grep jq mv shasum sort; do
 done
 
 resolve_profile_paths "${profile_name}" || {
-  echo "DBCode can only be prepared in the default or isolated QA profile." >&2
+  echo "DBCode can only be prepared in the default or generated QA profile." >&2
   exit 2
 }
 profile_root="${PROFILE_STATE_ROOT}"

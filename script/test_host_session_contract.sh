@@ -47,6 +47,19 @@ rg -Fq 'Foreground debugging deliberately' "${REPO_ROOT}/script/run_host.sh" || 
   exit 1
 }
 
+if rg -Fq 'validate-policy' "${host_session_cli}" "${host_session_shell}"; then
+  echo "Host Session still exposes the redundant validate-policy command." >&2
+  exit 1
+fi
+if rg -Fq "command === 'stop'" "${host_session_cli}"; then
+  echo "Host Session still exposes the unused stop command adapter." >&2
+  exit 1
+fi
+rg -Fq './script/host_session.cjs run --policy FILE --output FILE' "${host_session_cli}" || {
+  echo "Host Session must expose one run command." >&2
+  exit 1
+}
+
 "${NODE_BIN_DIR}/node" --check "${host_session_module}"
 "${NODE_BIN_DIR}/node" --check "${host_session_cli}"
 "${NODE_BIN_DIR}/node" --test "${REPO_ROOT}/script/test_host_session.mjs"

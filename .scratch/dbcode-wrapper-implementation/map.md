@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed. The normal public channel contains one `v0.1.0` release built from the current maintained source.
+[Issue 55](issues/55-remove-shallow-maintenance-interfaces.md) is claimed to remove four shallow maintenance interfaces without changing DBCode-owned behaviour or the prompt-free release path. The normal public channel contains one `v0.1.0` release built from the current maintained source.
 
 ## History
 

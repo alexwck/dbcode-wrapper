@@ -87,17 +87,10 @@ resolve_profile_paths qa
   exit 1
 }
 
-isolated_state_root="${BUILD_ROOT}/profile-layout-test/session-one"
-isolated_extensions_root="${BUILD_ROOT}/profile-layout-test/verified-extensions"
-resolve_isolated_profile_paths "${isolated_state_root}" "${isolated_extensions_root}"
-[[ "${PROFILE_STATE_ROOT}" == "${isolated_state_root}" ]] || {
-  echo "The isolated profile state root changed while loading its layout." >&2
+if declare -F resolve_isolated_profile_paths >/dev/null; then
+  echo "The removed generic isolated profile adapter is still available." >&2
   exit 1
-}
-[[ "${PROFILE_EXTENSIONS_ROOT}" == "${isolated_extensions_root}" ]] || {
-  echo "The isolated profile did not preserve its separately verified extension root." >&2
-  exit 1
-}
+fi
 
 if resolve_profile_paths diagnostic 2>/dev/null; then
   echo "The removed full-workbench diagnostic profile is still accepted." >&2

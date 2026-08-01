@@ -53,7 +53,10 @@ BUILD_MANIFEST="${smoke_manifest}"
 
 info_plist="${APP_BUNDLE}/Contents/Info.plist"
 product_json="${APP_BUNDLE}/Contents/Resources/app/product.json"
-if [[ ! -f "${info_plist}" || ! -f "${product_json}" || ! -f "${BUILD_MANIFEST}" ]]; then
+slimming_policy="${REPO_ROOT}/host/slimming-policy.json"
+built_in_extensions_root="${APP_BUNDLE}/Contents/Resources/app/extensions"
+if [[ ! -f "${info_plist}" || ! -f "${product_json}" || ! -f "${BUILD_MANIFEST}" || \
+  ! -f "${slimming_policy}" || ! -d "${built_in_extensions_root}" ]]; then
   echo "Static host inputs are incomplete: app=${APP_BUNDLE}, manifest=${BUILD_MANIFEST}" >&2
   exit 1
 fi
@@ -74,6 +77,58 @@ app_executable="${APP_BUNDLE}/Contents/MacOS/${bundle_executable}"
 [[ "$(jq -er '.dbcodeWrapperFocusedShellNarrowBreakpoint' "${product_json}")" == "${FOCUSED_SHELL_NARROW_BREAKPOINT}" ]] || { echo "Unexpected focused-shell narrow breakpoint." >&2; exit 1; }
 [[ "$(jq -er '.dbcodeWrapperStorageNamespace' "${product_json}")" == "${STORAGE_NAMESPACE}" ]] || { echo "Unexpected focused-shell storage namespace." >&2; exit 1; }
 [[ "$(jq -er '.dbcodeWrapperQueryFolderName' "${product_json}")" == "${QUERY_FOLDER_NAME}" ]] || { echo "Unexpected focused-shell query folder." >&2; exit 1; }
+
+installed_app_kib="$(du -sk "${APP_BUNDLE}" | awk '{print $1}')"
+installed_app_max_kib="$(jq -er '.goals.installed_app_max_kib' "${slimming_policy}")"
+[[ "${installed_app_kib}" -le "${installed_app_max_kib}" ]] || {
+  echo "The packaged app is larger than the reviewed installed-size limit: ${installed_app_kib} KiB." >&2
+  exit 1
+}
+
+source_map_count="$(find "${APP_BUNDLE}" -type f -name '*.map' -print | wc -l | tr -d ' ')"
+[[ "${source_map_count}" -eq 0 ]] || {
+  echo "The packaged app contains ${source_map_count} source-map files." >&2
+  exit 1
+}
+
+expected_built_in_inventory="$(
+  jq -r \
+    '([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.first_party[].name]) | sort[]' \
+    "${slimming_policy}"
+)"
+actual_built_in_inventory="$(
+  find "${built_in_extensions_root}" -mindepth 1 -maxdepth 1 -print |
+    sed 's#.*/##' |
+    LC_ALL=C sort
+)"
+[[ "${actual_built_in_inventory}" == "${expected_built_in_inventory}" ]] || {
+  echo "The packaged built-in extension inventory does not match the reviewed allowlist." >&2
+  echo "Expected:" >&2
+  printf '%s\n' "${expected_built_in_inventory}" >&2
+  echo "Actual:" >&2
+  printf '%s\n' "${actual_built_in_inventory}" >&2
+  exit 1
+}
+
+embedded_dbcode_count=0
+while IFS= read -r extension_name; do
+  extension_manifest="${built_in_extensions_root}/${extension_name}/package.json"
+  [[ -f "${extension_manifest}" && ! -L "${extension_manifest}" ]] || {
+    echo "The packaged built-in extension is missing a plain manifest: ${extension_name}" >&2
+    exit 1
+  }
+  if jq -e '.publisher == "dbcode" and .name == "dbcode"' "${extension_manifest}" >/dev/null 2>&1; then
+    embedded_dbcode_count=$((embedded_dbcode_count + 1))
+  fi
+done <<<"${actual_built_in_inventory}"
+[[ "${embedded_dbcode_count}" -eq 0 ]] || {
+  echo "DBCode must remain external to the packaged app." >&2
+  exit 1
+}
+jq -e '.builtInExtensions | length == 0' "${product_json}" >/dev/null || {
+  echo "The packaged product must not advertise removed marketplace built-ins." >&2
+  exit 1
+}
 
 architecture_list="$(lipo -archs "${app_executable}")"
 [[ " ${architecture_list} " == *" ${TARGET_ARCH} "* ]] || { echo "The app is not ${TARGET_ARCH}: ${architecture_list}" >&2; exit 1; }
@@ -184,12 +239,14 @@ runtime_setup_logic="${runtime_setup_root}/runtimeSetup.js"
 runtime_setup_verifier="${runtime_setup_root}/openVsxPackageVerifier.js"
 profile_identity="${runtime_setup_root}/profile-identity.json"
 profile_layout_logic="${runtime_setup_root}/profile-layout.js"
+managed_profile_settings="${runtime_setup_root}/managed-settings.json"
 runtime_setup_zip_library="${APP_BUNDLE}/Contents/Resources/app/node_modules/yauzl/package.json"
 runtime_setup_semver_library="${APP_BUNDLE}/Contents/Resources/app/node_modules/semver/package.json"
 [[ -f "${runtime_setup_manifest}" && ! -L "${runtime_setup_manifest}" && \
   -f "${runtime_setup_logic}" && -f "${runtime_setup_verifier}" && \
   -f "${profile_identity}" && ! -L "${profile_identity}" && \
-  -f "${profile_layout_logic}" && -f "${runtime_setup_zip_library}" && \
+  -f "${profile_layout_logic}" && -f "${managed_profile_settings}" && \
+  ! -L "${managed_profile_settings}" && -f "${runtime_setup_zip_library}" && \
   ! -L "${runtime_setup_zip_library}" && -f "${runtime_setup_semver_library}" && \
   ! -L "${runtime_setup_semver_library}" ]] || {
   echo "The focused first-run runtime setup is missing from the signed app." >&2
@@ -240,6 +297,11 @@ cmp -s "${runtime_setup_manifest}" "${expected_runtime_setup_manifest}" || {
 cmp -s "${profile_identity}" "${expected_profile_identity}" || {
   rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"
   echo "The packaged profile identity does not match the exact Release Specification." >&2
+  exit 1
+}
+cmp -s "${managed_profile_settings}" "${REPO_ROOT}/host/profile/settings.json" || {
+  rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"
+  echo "The packaged managed settings do not match the canonical profile settings." >&2
   exit 1
 }
 rm -f "${expected_runtime_setup_manifest}" "${expected_profile_identity}"

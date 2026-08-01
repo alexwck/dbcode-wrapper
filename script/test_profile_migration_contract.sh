@@ -26,6 +26,7 @@ profile_identity_generator="${REPO_ROOT}/script/generate_profile_identity.sh"
 host_assembler="${REPO_ROOT}/script/assemble_host.sh"
 host_smoke="${REPO_ROOT}/script/smoke_host.sh"
 managed_settings="${extension_root}/managed-settings.json"
+canonical_settings="${REPO_ROOT}/host/profile/settings.json"
 shell_sources=(
   "${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
   "${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
@@ -53,10 +54,25 @@ for required_file in \
   "${runtime_setup_view}" \
   "${profile_layout_cli}" \
   "${profile_identity_generator}" \
-  "${managed_settings}" \
+  "${canonical_settings}" \
   "${shell_sources[@]}"; do
   [[ -f "${required_file}" ]] || {
     echo "Missing focused profile-migration file: ${required_file}" >&2
+    exit 1
+  }
+done
+
+[[ ! -e "${managed_settings}" ]] || {
+  echo "The profile-migration extension still tracks a duplicate managed settings file." >&2
+  exit 1
+}
+for settings_owner in "${host_assembler}" "${host_smoke}"; do
+  rg -Fq 'host/profile/settings.json' "${settings_owner}" || {
+    echo "Assembly and Static Host Smoke must use the canonical managed settings source." >&2
+    exit 1
+  }
+  rg -Fq 'managed-settings.json' "${settings_owner}" || {
+    echo "Assembly and Static Host Smoke must own the packaged managed settings copy." >&2
     exit 1
   }
 done
@@ -169,7 +185,6 @@ for required_runtime_contract in \
   'recreateStandaloneProfile' \
   'shouldRelaunchApplication(request, processesExited, outcome)' \
   'deriveRecoveryLayout' \
-  'DBCODE_WRAPPER_QA_RECOVERY' \
   'DBCODE_WRAPPER_PROFILE_LAYOUT_JSON' \
   'profileLayout' \
   'crypto.randomUUID()' \
@@ -181,6 +196,11 @@ for required_runtime_contract in \
     exit 1
   }
 done
+
+if rg -Fq 'DBCODE_WRAPPER_QA_RECOVERY' "${recovery_logic}" "${recovery_worker}"; then
+  echo "The removed QA recovery switch is still part of profile recovery." >&2
+  exit 1
+fi
 
 for required_orchestration_contract in \
   'class ProfileSetup' \
@@ -240,11 +260,6 @@ if rg -n '/usr/bin/security|context\.secrets|keytar|find-generic-password|delete
   echo "Profile recovery must not read, write, or delete macOS Keychain records." >&2
   exit 1
 fi
-
-cmp -s "${managed_settings}" "${REPO_ROOT}/host/profile/settings.json" || {
-  echo "Profile recovery must recreate the exact managed Standalone DBCode Profile settings." >&2
-  exit 1
-}
 
 for required_recovery_contract in \
   'PROFILE_BACKUP_ROOT=' \

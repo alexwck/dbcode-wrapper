@@ -111,6 +111,12 @@ copy_first_party_extensions() {
 copy_first_party_extensions
 
 runtime_setup_extension="${assembly_app}/Contents/Resources/app/extensions/dbcode-wrapper-profile-migration"
+canonical_profile_settings="${REPO_ROOT}/host/profile/settings.json"
+[[ -f "${canonical_profile_settings}" && ! -L "${canonical_profile_settings}" ]] || {
+  echo "Canonical managed profile settings are missing or linked: ${canonical_profile_settings}" >&2
+  exit 1
+}
+cp "${canonical_profile_settings}" "${runtime_setup_extension}/managed-settings.json"
 "${REPO_ROOT}/script/generate_profile_identity.sh" \
   "${runtime_setup_extension}/profile-identity.json"
 "${REPO_ROOT}/script/generate_runtime_setup_manifest.sh" \

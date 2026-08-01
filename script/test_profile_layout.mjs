@@ -135,21 +135,17 @@ test('QA layout is complete, private, and isolated inside generated output', () 
   profileLayout.validateProfileLayout(layout, { homeDirectory, buildRoot });
 });
 
-test('isolated layouts keep every path below one generated owner', () => {
+test('generic isolated layouts are not part of the public profile contract', () => {
   const stateRoot = `${buildRoot}/runtime/session-one`;
   const extensionsRoot = `${buildRoot}/runtime/verified-extensions`;
-  const layout = profileLayout.createProfileLayout({
+  assert.throws(() => profileLayout.createProfileLayout({
     profileName: 'isolated',
     homeDirectory,
     buildRoot,
     stateRoot,
     extensionsRoot
-  });
-  assert.deepEqual(cliRecord('isolated', stateRoot, extensionsRoot), layout);
-  assert.equal(layout.owner.root, `${buildRoot}/runtime`);
-  assert.equal(layout.paths.state, stateRoot);
-  assert.equal(layout.paths.extensions, extensionsRoot);
-  assert.equal(layout.paths.backup, `${stateRoot}-backups`);
+  }), /unknown/i);
+  assert.throws(() => cliRecord('isolated', stateRoot, extensionsRoot));
 });
 
 test('layout validation rejects alternate roots, broad paths, and unknown profiles', () => {

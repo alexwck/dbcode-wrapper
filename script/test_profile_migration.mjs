@@ -720,71 +720,17 @@ test('recovery paths are derived from the active Standalone DBCode Profile inste
   }), /does not match the active Standalone DBCode Profile/i);
 });
 
-test('disposable recovery paths stay next to the active QA profile', () => {
-  const profileRoot = '/private/tmp/dbcode-wrapper-qa/profile-one';
-  const profileLayout = createProfileLayout({
-    profileName: 'isolated',
-    homeDirectory: '/Users/alex',
-    buildRoot: '/private/tmp/dbcode-wrapper-qa',
-    stateRoot: profileRoot
-  });
-  assert.deepEqual(deriveRecoveryLayout({
-    userDataRoot: path.join(profileRoot, 'user-data'),
-    homeDirectory: '/Users/alex',
-    appRoot: '/Applications/DBCode Wrapper.app/Contents/Resources/app',
-    environment: {
-      DBCODE_WRAPPER_QA_RECOVERY: '1',
-      DBCODE_WRAPPER_SHARED_DATA_ROOT: path.join(profileRoot, 'shared-data'),
-      DBCODE_WRAPPER_PROFILE_BACKUP_ROOT: `${profileRoot}-backups`,
-      DBCODE_WRAPPER_APP_BUNDLE: '/Applications/DBCode Wrapper.app'
-    }
-  }), {
-    profileLayout,
-    stateRoot: profileRoot,
-    userDataRoot: path.join(profileRoot, 'user-data'),
-    extensionsRoot: path.join(profileRoot, 'extensions'),
-    sharedDataRoot: path.join(profileRoot, 'shared-data'),
-    backupRoot: `${profileRoot}-backups`,
-    cacheRoot: path.join(profileRoot, 'cache'),
-    logsRoot: path.join(profileRoot, 'logs'),
-    appBundle: '/Applications/DBCode Wrapper.app'
-  });
-});
-
-test('disposable recovery preserves the separately verified QA extension set', () => {
-  const profileRoot = '/private/tmp/dbcode-wrapper-qa/focused-shell-persistent';
-  const verifiedExtensionsRoot = '/private/tmp/dbcode-wrapper-qa/profile/extensions';
-  const layout = deriveRecoveryLayout({
-    userDataRoot: path.join(profileRoot, 'user-data'),
-    homeDirectory: '/Users/alex',
-    appRoot: '/Applications/DBCode Wrapper.app/Contents/Resources/app',
-    environment: {
-      DBCODE_WRAPPER_QA_RECOVERY: '1',
-      DBCODE_WRAPPER_EXTENSIONS_ROOT: verifiedExtensionsRoot,
-      DBCODE_WRAPPER_SHARED_DATA_ROOT: path.join(profileRoot, 'shared-data'),
-      DBCODE_WRAPPER_PROFILE_BACKUP_ROOT: `${profileRoot}-backups`,
-      DBCODE_WRAPPER_APP_BUNDLE: '/Applications/DBCode Wrapper.app'
-    }
-  });
-
-  assert.equal(layout.extensionsRoot, verifiedExtensionsRoot);
-  assert.doesNotThrow(() => requireMatchingRelaunchPath(
-    ['--extensions-dir', verifiedExtensionsRoot],
-    '--extensions-dir',
-    layout.extensionsRoot
-  ));
+test('profile recovery is limited to the current user default profile', () => {
+  const qaUserDataRoot = '/private/tmp/dbcode-wrapper-qa/profile/user-data';
   assert.throws(() => deriveRecoveryLayout({
-    userDataRoot: path.join(profileRoot, 'user-data'),
+    userDataRoot: qaUserDataRoot,
     homeDirectory: '/Users/alex',
     appRoot: '/Applications/DBCode Wrapper.app/Contents/Resources/app',
     environment: {
       DBCODE_WRAPPER_QA_RECOVERY: '1',
-      DBCODE_WRAPPER_EXTENSIONS_ROOT: path.join(profileRoot, 'user-data'),
-      DBCODE_WRAPPER_SHARED_DATA_ROOT: path.join(profileRoot, 'shared-data'),
-      DBCODE_WRAPPER_PROFILE_BACKUP_ROOT: `${profileRoot}-backups`,
       DBCODE_WRAPPER_APP_BUNDLE: '/Applications/DBCode Wrapper.app'
     }
-  }), /verified extensions must stay outside profile recovery/i);
+  }), /does not match the active Standalone DBCode Profile/i);
 });
 
 test('profile recovery rejects alternate and duplicate profile-path arguments', () => {

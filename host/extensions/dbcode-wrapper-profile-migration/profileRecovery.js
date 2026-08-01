@@ -61,32 +61,11 @@ function deriveRecoveryLayout({ userDataRoot, homeDirectory, appRoot, environmen
     throw new Error('Profile recovery could not identify the DBCode Wrapper application bundle safely.');
   }
 
-  let profileLayout;
-  if (environment.DBCODE_WRAPPER_QA_RECOVERY === '1') {
-    if (path.basename(resolvedUserDataRoot) !== 'user-data') {
-      throw new Error('Disposable profile recovery requires the active QA user-data directory.');
-    }
-    const profileRoot = path.dirname(resolvedUserDataRoot);
-    profileLayout = path.basename(profileRoot) === 'profile' && path.basename(path.dirname(profileRoot)) === 'qa'
-      ? createProfileLayout({
-          profileName: 'qa',
-          homeDirectory: resolvedHomeDirectory,
-          buildRoot: path.dirname(path.dirname(profileRoot))
-        })
-      : createProfileLayout({
-          profileName: 'isolated',
-          homeDirectory: resolvedHomeDirectory,
-          buildRoot: path.dirname(profileRoot),
-          stateRoot: profileRoot,
-          extensionsRoot: environment.DBCODE_WRAPPER_EXTENSIONS_ROOT
-        });
-  } else {
-    profileLayout = createProfileLayout({
-      profileName: 'default',
-      homeDirectory: resolvedHomeDirectory,
-      buildRoot: path.join(resolvedHomeDirectory, '.dbcode-wrapper-build-not-used')
-    });
-  }
+  let profileLayout = createProfileLayout({
+    profileName: 'default',
+    homeDirectory: resolvedHomeDirectory,
+    buildRoot: path.join(resolvedHomeDirectory, '.dbcode-wrapper-build-not-used')
+  });
   profileLayout = parseMatchingLayout(environment.DBCODE_WRAPPER_PROFILE_LAYOUT_JSON, profileLayout);
   const { state, user_data: expectedUserDataRoot, extensions: extensionsRoot, shared_data: sharedDataRoot,
     backup: backupRoot, cache: cacheRoot, logs: logsRoot } = profileLayout.paths;

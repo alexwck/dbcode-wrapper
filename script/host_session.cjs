@@ -6,18 +6,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
   createNodeRuntime,
-  parseSessionResult,
   runHostSession,
   serializeSessionResult,
-  stopHostSession,
   validateSessionPolicy
 } = require('./lib/host-session');
 
 function usage() {
-  console.error(`Usage:
-  ./script/host_session.cjs validate-policy --policy FILE
-  ./script/host_session.cjs run --policy FILE --output FILE
-  ./script/host_session.cjs stop --policy FILE --session FILE --output FILE`);
+  console.error('Usage: ./script/host_session.cjs run --policy FILE --output FILE');
   process.exit(2);
 }
 
@@ -77,17 +72,10 @@ function writeResult(outputPath, result) {
 
 async function main([command, ...args]) {
   const parsed = options(args);
-  if (!parsed.policy) {
+  if (command !== 'run' || !parsed.policy || !parsed.output || Object.keys(parsed).length !== 2) {
     usage();
   }
   const policy = readPolicy(parsed.policy);
-  if (command === 'validate-policy' && Object.keys(parsed).length === 1) {
-    process.stdout.write(`${JSON.stringify(policy)}\n`);
-    return;
-  }
-  if (!parsed.output) {
-    usage();
-  }
   const runtime = createNodeRuntime();
   const stopOnSignal = signal => {
     runtime.emergencyStopAll();
@@ -95,20 +83,12 @@ async function main([command, ...args]) {
   };
   process.once('SIGINT', stopOnSignal);
   process.once('SIGTERM', stopOnSignal);
-  let result;
-  if (command === 'run' && Object.keys(parsed).length === 2) {
-    result = await runHostSession(policy, runtime, {
-      onReady(readyResult) {
-        writeResult(parsed.output, readyResult);
-        console.error(`Host Session ${readyResult.session_id} is ready.`);
-      }
-    });
-  } else if (command === 'stop' && parsed.session && Object.keys(parsed).length === 3) {
-    const session = parseSessionResult(readPlainFile(parsed.session, 'Host Session result'));
-    result = await stopHostSession(session, policy, runtime);
-  } else {
-    usage();
-  }
+  const result = await runHostSession(policy, runtime, {
+    onReady(readyResult) {
+      writeResult(parsed.output, readyResult);
+      console.error(`Host Session ${readyResult.session_id} is ready.`);
+    }
+  });
   process.removeListener('SIGINT', stopOnSignal);
   process.removeListener('SIGTERM', stopOnSignal);
   writeResult(parsed.output, result);

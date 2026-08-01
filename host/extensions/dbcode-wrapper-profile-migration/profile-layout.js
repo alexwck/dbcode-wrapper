@@ -134,7 +134,7 @@ function queryPath(userData, product) {
   );
 }
 
-function profilePaths(identity, profileName, ownerRoot, isolatedStateRoot, isolatedExtensionsRoot) {
+function profilePaths(identity, profileName, ownerRoot) {
   const product = identity.product;
   if (profileName === 'default') {
     const userData = path.join(
@@ -167,29 +167,6 @@ function profilePaths(identity, profileName, ownerRoot, isolatedStateRoot, isola
       queries: queryPath(userData, product)
     };
   }
-  if (profileName === 'isolated') {
-    const state = checkedRoot(isolatedStateRoot, 'The isolated profile state root');
-    if (!contains(ownerRoot, state) || state === ownerRoot) {
-      fail('The isolated profile state root must stay below its owner root.');
-    }
-    const extensions = isolatedExtensionsRoot === undefined
-      ? path.join(state, product.extensions_folder_name)
-      : checkedRoot(isolatedExtensionsRoot, 'The isolated profile extension root');
-    if (!contains(ownerRoot, extensions)) {
-      fail('The isolated profile extension root must stay below its owner root.');
-    }
-    const userData = path.join(state, 'user-data');
-    return {
-      state,
-      user_data: userData,
-      extensions,
-      shared_data: path.join(state, 'shared-data'),
-      backup: `${state}-backups`,
-      cache: path.join(state, 'cache'),
-      logs: path.join(state, 'logs'),
-      queries: queryPath(userData, product)
-    };
-  }
   fail(`Unknown Standalone DBCode Profile: ${profileName}`);
 }
 
@@ -197,9 +174,7 @@ function createProfileLayout({
   identity = loadProfileIdentity(),
   profileName,
   homeDirectory,
-  buildRoot,
-  stateRoot,
-  extensionsRoot
+  buildRoot
 }) {
   const approvedIdentity = validateProfileIdentity(identity);
   let owner;
@@ -207,9 +182,6 @@ function createProfileLayout({
     owner = { kind: 'current-user-home', root: checkedRoot(homeDirectory, 'The current user home directory') };
   } else if (profileName === 'qa') {
     owner = { kind: 'generated-build-root', root: checkedRoot(buildRoot, 'The generated build root') };
-  } else if (profileName === 'isolated') {
-    const isolatedStateRoot = checkedRoot(stateRoot, 'The isolated profile state root');
-    owner = { kind: 'isolated-generated-root', root: path.dirname(isolatedStateRoot) };
   } else {
     fail(`Unknown Standalone DBCode Profile: ${profileName}`);
   }
@@ -221,7 +193,7 @@ function createProfileLayout({
     owner,
     permissions: { directory_mode: '0700', file_mode: '0600' },
     uses_natural_paths: profileName === 'default',
-    paths: profilePaths(approvedIdentity, profileName, owner.root, stateRoot, extensionsRoot)
+    paths: profilePaths(approvedIdentity, profileName, owner.root)
   };
   validateProfileLayout(layout, { identity: approvedIdentity, homeDirectory, buildRoot });
   return layout;
@@ -237,17 +209,12 @@ function validateProfileLayout(
   const approvedIdentity = validateProfileIdentity(identity);
   let expectedRoot;
   let ownerKind;
-  let isolatedStateRoot;
   if (layout.profile_name === 'default') {
     expectedRoot = checkedRoot(homeDirectory ?? layout.owner?.root, 'The current user home directory');
     ownerKind = 'current-user-home';
   } else if (layout.profile_name === 'qa') {
     expectedRoot = checkedRoot(buildRoot ?? layout.owner?.root, 'The generated build root');
     ownerKind = 'generated-build-root';
-  } else if (layout.profile_name === 'isolated') {
-    expectedRoot = checkedRoot(layout.owner?.root, 'The isolated profile owner root');
-    isolatedStateRoot = checkedRoot(layout.paths?.state, 'The isolated profile state root');
-    ownerKind = 'isolated-generated-root';
   } else {
     fail(`Unknown Standalone DBCode Profile: ${layout.profile_name}`);
   }
@@ -262,13 +229,7 @@ function validateProfileLayout(
     },
     permissions: { directory_mode: '0700', file_mode: '0600' },
     uses_natural_paths: layout.profile_name === 'default',
-    paths: profilePaths(
-      approvedIdentity,
-      layout.profile_name,
-      expectedRoot,
-      isolatedStateRoot,
-      layout.profile_name === 'isolated' ? layout.paths?.extensions : undefined
-    )
+    paths: profilePaths(approvedIdentity, layout.profile_name, expectedRoot)
   };
   if (!isDeepStrictEqual(layout, expected)) {
     fail('Standalone DBCode Profile layout does not match the approved layout.');

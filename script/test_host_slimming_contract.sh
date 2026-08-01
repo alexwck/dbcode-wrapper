@@ -4,11 +4,8 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
-check_built_artifact="yes"
-if [[ $# -eq 1 && "${1}" == "--source-only" ]]; then
-  check_built_artifact="no"
-elif [[ $# -ne 0 ]]; then
-  echo "Usage: ./script/test_host_slimming_contract.sh [--source-only]" >&2
+if [[ $# -ne 0 ]]; then
+  echo "Usage: ./script/test_host_slimming_contract.sh" >&2
   exit 2
 fi
 
@@ -24,8 +21,7 @@ slimming_patch="${REPO_ROOT}/host/patches/code-oss/300-host-slimming-policy.patc
 jq -e '
   .schema_version == 2 and
   .measurement_evidence == "docs/architecture/host-slimming-measurement-2026-07-21.md" and
-  .goals.installed_app_max_kib == 614400 and
-  .goals.indicative_archive_max_bytes == 200000000 and
+  .goals == {installed_app_max_kib: 614400} and
   .build.ship_source_maps == false and
   .build.built_in_extensions.mode == "allowlist" and
   .build.built_in_extensions.rollback_paths.all_built_ins != null and
@@ -73,20 +69,22 @@ for required_measurement in \
   }
 done
 
-[[ -x "${audit_script}" ]] || {
-  echo "The reproducible host size audit is missing or not executable." >&2
+[[ ! -e "${audit_script}" ]] || {
+  echo "The retired host-size audit still exists outside Static Host Smoke." >&2
   exit 1
 }
-bash -n "${audit_script}"
 
-rg -Fq -- '--runtime-extensions' "${audit_script}" || {
-  echo "The size audit must measure the complete external runtime set separately from the app bundle." >&2
-  exit 1
-}
-rg -Fq 'external_runtime:' "${audit_script}" || {
-  echo "The size audit must report the complete external runtime set." >&2
-  exit 1
-}
+for static_host_check in \
+  'installed_app_kib=' \
+  'source_map_count=' \
+  'expected_built_in_inventory=' \
+  'actual_built_in_inventory=' \
+  'embedded_dbcode_count='; do
+  rg -Fq "${static_host_check}" "${REPO_ROOT}/script/smoke_host.sh" || {
+    echo "Static Host Smoke is missing the packaged host check: ${static_host_check}" >&2
+    exit 1
+  }
+done
 
 rg -Fq 'export DBCODE_WRAPPER_STRIP_SOURCE_MAPS="yes"' "${REPO_ROOT}/script/compile_host.sh" || {
   echo "Host compilation must request source-map omission explicitly." >&2
@@ -125,32 +123,6 @@ if rg -n '(find .*\.map.*-delete|rm .*\.map)' \
   "${REPO_ROOT}/script/sign_host.sh"; then
   echo "Source maps must be omitted by packaging, not deleted from the built or signed app." >&2
   exit 1
-fi
-
-if [[ "${check_built_artifact}" == "yes" && -d "${APP_BUNDLE}" ]]; then
-  audit_json="$("${audit_script}" --app "${APP_BUNDLE}" --no-archive)"
-  expected_allowlist="$(jq -c '([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.first_party[].name]) | sort' "${policy_file}")"
-  actual_allowlist="$(find "${APP_BUNDLE}/Contents/Resources/app/extensions" -mindepth 2 -maxdepth 2 -name package.json -print | sed 's#/package.json$##; s#.*/extensions/##' | LC_ALL=C sort | jq -R -s -c 'split("\n")[:-1]')"
-  [[ "${actual_allowlist}" == "${expected_allowlist}" ]] || {
-    echo "The built app extension set does not match the reviewed allowlist." >&2
-    echo "Expected: ${expected_allowlist}" >&2
-    echo "Actual:   ${actual_allowlist}" >&2
-    exit 1
-  }
-  jq -e --argjson max_installed_kib "$(jq -er '.goals.installed_app_max_kib' "${policy_file}")" '
-    .source_maps.file_count == 0 and
-    .signed_app.installed_kib <= $max_installed_kib and
-    .built_in_extensions.actual_extension_count == 9 and
-    .built_in_extensions.shared_node_modules_present == false and
-    .external_dbcode.included_in_app == false
-  ' <<<"${audit_json}" >/dev/null || {
-    echo "The built app does not satisfy the installed-size or source-map contract." >&2
-    exit 1
-  }
-  jq -e '.builtInExtensions | length == 0' "${APP_BUNDLE}/Contents/Resources/app/product.json" >/dev/null || {
-    echo "The packaged product must not advertise removed marketplace built-ins." >&2
-    exit 1
-  }
 fi
 
 echo "Host slimming contract checks passed."

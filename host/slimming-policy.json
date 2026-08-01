@@ -2,8 +2,7 @@
   "schema_version": 2,
   "measurement_evidence": "docs/architecture/host-slimming-measurement-2026-07-21.md",
   "goals": {
-    "installed_app_max_kib": 614400,
-    "indicative_archive_max_bytes": 200000000
+    "installed_app_max_kib": 614400
   },
   "build": {
     "ship_source_maps": false,
