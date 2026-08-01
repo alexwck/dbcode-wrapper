@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-[Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md) is claimed to shrink the remaining shallow maintenance interfaces without changing DBCode-owned behaviour, automatic update polling, or the prompt-free release path.
+No issue is currently claimed. The normal path remains a thin unchanged-DBCode wrapper with read-only update polling, fast prompt-free development checks, one persistent generated `qa` profile, and one serialized release preparation task.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), and [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), and [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 

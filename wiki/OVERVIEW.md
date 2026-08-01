@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
+source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
 tags:
   - wiki
   - overview

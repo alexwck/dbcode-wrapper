@@ -219,3 +219,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: b9d8895 (was 3700317)
 - Coverage: faster default source gate; change-owned deep build and release fixtures; one checked Host Configuration extraction; current-only semantic Patch Plan; smaller CommonJS interfaces; consistent private Standalone DBCode Profile language
 - Pages: [Overview](./OVERVIEW.md), [Product and upstream boundaries](./architecture/product-and-upstream-boundaries.md), [Release Specification](./modules/release-specification.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Compiled Host Cache](./modules/compiled-host-cache.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-01: refresh
+
+- Profile: public/standard
+- source_commit: 764d76e (was b9d8895)
+- Coverage: smaller read-only Update Status interface; one purpose-level Host Session launch record; verifier-owned runtime configuration, canonical package selection, installed identity, safe public-key path, and package security; current-interface tests without deleted-name lists; 21.45-second prompt-free development gate
+- Pages: [Overview](./OVERVIEW.md), [Host Session](./modules/host-session.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)

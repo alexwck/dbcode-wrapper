@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
+source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
 ---
 ## Summary
 
@@ -33,6 +33,8 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 
 The Patch Plan materializes the maintained focused-shell TypeScript and CSS into the pinned Code OSS tree. Small patches register that contribution and connect it to existing title bars and workbench startup. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately acquired upstream extension and owns its commands, views, webviews, editors, providers, and tools.
 
+The release-status extension imports three official metadata URLs and one status service. The service owns polling, cache, review decisions, and release-set matching behind a small maintained interface. Internal comparison and normalization helpers stay private.
+
 The feature policy keeps capability status separate from evidence depth. A feature may be `declared`, `reachable`, `rendered`, or `live`. Optional AI, MCP, debugger, account, and notebook workflows keep honest limited evidence when the prompt-free gate does not activate them.
 
 ## Key files
@@ -42,7 +44,7 @@ The feature policy keeps capability status separate from evidence depth. A featu
 - [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — small hooks into existing Code OSS files.
 - [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration) — runtime setup, profile setup, safe import, and recovery.
 - [dbcode-wrapper-python-kernel](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-release-status) — official update discovery and read-only review UI.
+- [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/764d76e94cc08ff43fd82c9b922b6d738a49bee7/host/extensions/dbcode-wrapper-release-status) — official update discovery and read-only review UI.
 - [dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/dbcode-feature-policy.json) — capability and route policy.
 
 ## Dependencies

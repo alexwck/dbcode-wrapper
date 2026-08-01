@@ -9,7 +9,7 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
+source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
 ---
 ## Summary
 
@@ -20,6 +20,7 @@ No maintained deployment test pauses for a person, starts a real database or ker
 ## Responsibilities
 
 - Keep `check_development.sh` below one minute and free of app launches, network calls, questions, and human input.
+- Test current behaviour and maintained interfaces instead of keeping lists of deleted historical names.
 - Give each test module one maintained runner using the pinned Node runtime.
 - Test owner-facing build and release tasks through their public command interfaces when those workflows change.
 - Prove writer-first and reader-first checkpoint refusal.
