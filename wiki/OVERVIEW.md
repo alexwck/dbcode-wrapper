@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
+source_commit: 02a3c237d5e7baf9c741e1a1dcd7828730490032
 tags:
   - wiki
   - overview
@@ -28,7 +28,7 @@ The maintained release path has one owner-facing command. `plan` shows the deriv
 
 Normal development uses the fast prompt-free source gate. Deep build and release fixtures run only when those workflows change. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
 
-Wrapper-owned focused-shell TypeScript and CSS are maintained as normal source. Small patches connect them to pinned Code OSS, then the build materializes and verifies the exact prepared tree before compilation.
+Wrapper-owned focused-shell TypeScript and CSS are maintained as normal source. Small patches connect them to pinned Code OSS, then the build materializes and verifies the exact prepared tree before compilation. The Patch Plan provides the build-relevant Compiled Host input, so changing descriptive wording does not trigger another Code OSS compilation.
 
 Generated cleanup follows artifact purpose and explicit expiry. It is a dry run by default. Only one exact validated expired path can be applied; caches, worktrees, QA evidence, release assets, rollback data, private profiles, unknown paths, and broad roots stay protected.
 

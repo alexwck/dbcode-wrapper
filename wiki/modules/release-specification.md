@@ -8,11 +8,11 @@ tags:
   - release
 wiki_profile: public
 wiki_depth: standard
-source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
+source_commit: 02a3c237d5e7baf9c741e1a1dcd7828730490032
 ---
 ## Summary
 
-Release Specification is the main read boundary around `host/release-lock.json`. It validates the complete lock before returning smaller records for builds, Compiled Host identity, extensions, profiles, release status, approval, packaging, publication, and rollback. Host Configuration validates once and materializes every existing shell value as one complete checked snapshot.
+Release Specification is the main read boundary around `host/release-lock.json`. It validates the complete lock before returning smaller records for builds, Compiled Host identity, extensions, profiles, release status, approval, packaging, publication, and rollback. Host Configuration validates once and materializes one complete checked snapshot. Package details stay inside `RELEASE_EXTENSION_SPEC`; callers read local values from that record instead of receiving package-specific globals.
 
 Current schema 7 keeps the normal GitHub distribution policy and replaces the old responsive result-layout record with one `below` result location. Product and profile identity remain in one validated record.
 
@@ -21,7 +21,8 @@ Released schema-6 locks remain readable only through the historical adapter. The
 ## Responsibilities
 
 - Reject incomplete, malformed, or unsafe current release locks.
-- Return purpose-specific JSON records and materialize Host Configuration in one extraction instead of spreading direct `jq` reads across scripts.
+- Return purpose-specific JSON records and materialize Host Configuration in one extraction instead of spreading direct reads of `host/release-lock.json` across scripts.
+- Keep DBCode, notebook, and runtime-package details inside the extension record.
 - Keep product identity, upstream commits, package digests, profile schema, distribution, toolchain, and release-set identity connected.
 - Compare DBCode package identity separately from the host compilation contract.
 - Expose only real compile-time values to [Compiled Host Cache](compiled-host-cache.md).
@@ -36,8 +37,8 @@ Consumers ask for a named record such as `build`, `compiled-host`, `extensions`,
 ## Key files
 
 - [script/lib/release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/lib/release_specification.sh) — validation, record routing, historical reads, and comparison logic.
-- [script/lib/release_specification_records.jq](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/lib/release_specification_records.jq) — shared current record projections and the complete Host Configuration snapshot.
-- [script/lib/host_config.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/lib/host_config.sh) — atomic checked assignment of the materialized shell values.
+- [script/lib/release_specification_records.jq](https://github.com/alexwck/dbcode-wrapper/blob/02a3c237d5e7baf9c741e1a1dcd7828730490032/script/lib/release_specification_records.jq) — shared current record projections and the complete Host Configuration snapshot.
+- [script/lib/host_config.sh](https://github.com/alexwck/dbcode-wrapper/blob/02a3c237d5e7baf9c741e1a1dcd7828730490032/script/lib/host_config.sh) — atomic checked assignment of the materialized shell values.
 - [host/release-lock.json](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/host/release-lock.json) — canonical release declaration.
 - [script/test_release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_release_specification.sh) — current, distribution, unsafe-input, historical, host-reuse, and single-extraction contracts.
 

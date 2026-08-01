@@ -226,3 +226,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 764d76e (was b9d8895)
 - Coverage: smaller read-only Update Status interface; one purpose-level Host Session launch record; verifier-owned runtime configuration, canonical package selection, installed identity, safe public-key path, and package security; current-interface tests without deleted-name lists; 21.45-second prompt-free development gate
 - Pages: [Overview](./OVERVIEW.md), [Host Session](./modules/host-session.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-02: refresh
+
+- Profile: public/standard
+- source_commit: 02a3c23 (was 764d76e)
+- Coverage: build-relevant Patch Plan projection without wording-only recompilation; package details kept inside the extension purpose record; Profile Recovery tested through its one `run` interface and operating-system adapter; current maintained exports; 20.96-second prompt-free development gate
+- Pages: [Overview](./OVERVIEW.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), and [Release Specification](./modules/release-specification.md)

@@ -9,13 +9,13 @@ tags:
   - setup
 wiki_profile: public
 wiki_depth: standard
-source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
+source_commit: 02a3c237d5e7baf9c741e1a1dcd7828730490032
 ---
 ## Summary
 
 Profile Layout defines where every Standalone DBCode Profile path may live. Release assembly generates one small identity record from [Release Specification](release-specification.md), and shell and bundled JavaScript validate and use that same record. Assembly also materializes the packaged recovery settings from the one canonical `host/profile/settings.json` file; Static Host Smoke verifies the exact copy.
 
-Profile Setup owns the first-use workflow behind one testable interface. A command router registers Runtime Setup and Profile Setup before startup state is known. When the external runtime is missing, Profile Setup opens that prerequisite instead of producing a missing-command error. Both first-run webviews share one fail-closed content-security, nonce, escaping, and action-message policy.
+Profile Setup owns the first-use workflow behind one testable interface. A command router registers Runtime Setup and Profile Setup before startup state is known. When the external runtime is missing, Profile Setup opens that prerequisite instead of producing a missing-command error. Both first-run webviews share one fail-closed content-security, nonce, escaping, and action-message policy. The recovery worker exposes one `run` interface and receives clock, process, filesystem, sleep, and relaunch behaviour through an operating-system adapter.
 
 ## Responsibilities
 
@@ -32,7 +32,7 @@ Profile Setup owns the first-use workflow behind one testable interface. A comma
 
 `loadProfileIdentity`, `validateProfileIdentity`, `createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the identity and path API. `script/profile_layout.cjs` gives shell callers the same implementation and accepts only `default` or `qa`. Recovery is limited to the current-user default profile.
 
-`createFirstRunCommandRouter` owns immediate command registration and prerequisite routing. `ProfileSetup` provides `requiresSetup`, `open`, `dispatch`, and `panelClosed`. Production supplies one host adapter. Fast tests supply in-memory adapters and exercise the same order.
+`createFirstRunCommandRouter` owns immediate command registration and prerequisite routing. `ProfileSetup` provides `requiresSetup`, `open`, `dispatch`, and `panelClosed`. `profileRecoveryWorker.run` owns process waiting, recovery outcomes, and relaunch. Production supplies real host and operating-system adapters. Fast tests use controlled adapters and exercise the same public order.
 
 ## Key files
 
@@ -42,6 +42,7 @@ Profile Setup owns the first-use workflow behind one testable interface. A comma
 - [host/profile/settings.json](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/profile/settings.json) — the one tracked managed-settings source.
 - [profile-layout.js](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — identity loading, path derivation, and validation.
 - [profileSetup.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js) — setup state and action ordering.
+- [profileRecoveryWorker.js](https://github.com/alexwck/dbcode-wrapper/blob/02a3c237d5e7baf9c741e1a1dcd7828730490032/host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js) — the one recovery worker interface and its operating-system adapter.
 - [migration.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/migration.js), [staging.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/staging.js), and [profileRecovery.js](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — reviewed import, temporary storage, and safe state movement.
 
 ## Dependencies
