@@ -12,14 +12,14 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 - `assemble_host.sh` is the internal materialized-source task. It reuses the exact content-addressed Compiled Host when possible, adds wrapper extensions and release records, signs the app, writes the manifest, and promotes the complete staged app and manifest together. Its child process inherits the lease, and fixed candidate and previous paths make interrupted promotion recoverable.
 - `compile_host.sh` is the cache-miss task. It checks the compiler toolchain, prepares pinned upstream source, verifies the final tree after VSCodium applies the official and wrapper patches, then runs the expensive Code OSS build. It writes the compiler-environment record without adding release-specific wrapper extensions or signing the final app. Normally `assemble_host.sh` calls it.
 - `release_source_snapshot.sh` creates or verifies the immutable Git source record used by the manifest and host-package checks.
-- `run_host.sh` launches the last signed host through the normal Standalone DBCode Profile.
+- `run_host.sh` launches the last signed host through the normal Standalone DBCode Profile. It passes launch-specific values as one record; Host Session owns the standard readiness, logging, timeout, and shutdown policy.
 - `smoke_host.sh [--app APP --manifest FILE]` validates the exact signed bundle and matching manifest without launching it or creating another profile. With no arguments it checks the normal `dist/` pair.
 - `test_focused_shell_rendered.sh` runs the unattended focused-shell smoke in one persistent generated QA profile. It verifies retained notebook, Query Builder, and AI routes without activating them, and opens safe wrapper and SQL routes without starting a kernel, executing SQL, calling a model, entering secrets, or accepting terms. Its `--connection-catalogue-only` mode uses the same profile and compares DBCode's rendered New Connection catalogue with the digest-only exact-version snapshot.
 
 ## Extension and capability preparation
 
 - `prepare_dbcode.sh` verifies and prepares the complete external runtime-extension inventory.
-- `verify_openvsx_package.sh` is the thin file-acquisition adapter for one exact Open VSX package. It calls the same deep verifier as Finder first-run setup.
+- `verify_openvsx_package.sh` is the thin file-acquisition adapter for one exact Open VSX package. It calls the same deep verifier as Finder first-run setup. The verifier alone owns package selection, configuration shape, installed identity, and every package security check.
 - `test_dbcode_feature_contract.sh` checks unchanged DBCode contributions, New Connection ownership, and the no-allowlist rule against wrapper navigation policy.
 
 ## Release sets

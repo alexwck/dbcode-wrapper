@@ -2,12 +2,9 @@
 
 const https = require('node:https');
 const {
-  SAFE_ID_PATTERN,
-  SAFE_VERSION_PATTERN,
-  exactKeys,
   requireOfficialUrl,
-  validateOpenVsxPackageRecord,
-  validateOpenVsxPublicKey,
+  validateInstalledOpenVsxExtension,
+  validateOpenVsxRuntimeConfiguration,
   verifyOpenVsxPackage
 } = require('./openVsxPackageVerifier');
 
@@ -15,69 +12,7 @@ function fail(message) {
   throw new Error(message);
 }
 
-function validateRuntimeConfiguration(configuration) {
-  if (!exactKeys(configuration, [
-    'schema_version',
-    'setup',
-    'code_oss_version',
-    'application_name',
-    'packages',
-    'public_keys'
-  ])) {
-    fail('The focused runtime setup configuration has an unexpected shape.');
-  }
-  if (
-    configuration.schema_version !== 1 ||
-    configuration.setup !== 'focused-pinned-official-sources' ||
-    typeof configuration.code_oss_version !== 'string' ||
-    !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(configuration.code_oss_version) ||
-    configuration.application_name !== 'dbcode-wrapper' ||
-    !Array.isArray(configuration.packages) ||
-    configuration.packages.length === 0 ||
-    !Array.isArray(configuration.public_keys) ||
-    configuration.public_keys.length === 0
-  ) {
-    fail('The focused runtime setup configuration is invalid.');
-  }
-
-  const keyIds = new Set();
-  const keyDigests = new Map();
-  for (const key of configuration.public_keys) {
-    try {
-      validateOpenVsxPublicKey(key);
-    } catch {
-      fail('The focused runtime setup contains an invalid Open VSX public key.');
-    }
-    if (keyIds.has(key.id)) {
-      fail('The focused runtime setup contains a duplicate Open VSX public key.');
-    }
-    keyIds.add(key.id);
-    keyDigests.set(key.id, key.sha256);
-  }
-
-  const packageIds = new Set();
-  const usedKeyIds = new Set();
-  for (const packageRecord of configuration.packages) {
-    validateOpenVsxPackageRecord(
-      packageRecord,
-      configuration.code_oss_version,
-      keyDigests
-    );
-    if (packageIds.has(packageRecord.id)) {
-      fail(`The focused runtime setup contains duplicate package ${packageRecord.id}.`);
-    }
-    packageIds.add(packageRecord.id);
-    usedKeyIds.add(packageRecord.public_key_id);
-  }
-
-  if (!packageIds.has('dbcode.dbcode')) {
-    fail('The focused runtime setup does not contain DBCode.');
-  }
-  if (usedKeyIds.size !== keyIds.size) {
-    fail('The focused runtime setup contains an unused Open VSX public key.');
-  }
-  return configuration;
-}
+const validateRuntimeConfiguration = validateOpenVsxRuntimeConfiguration;
 
 function parseJson(buffer, label) {
   try {
@@ -114,10 +49,8 @@ async function verifyPackageAcquisition(
 function installedVersionMap(installedExtensions) {
   const versions = new Map();
   for (const extension of installedExtensions) {
+    validateInstalledOpenVsxExtension(extension);
     if (
-      !extension ||
-      !SAFE_ID_PATTERN.test(extension.id) ||
-      !SAFE_VERSION_PATTERN.test(extension.version) ||
       versions.has(extension.id)
     ) {
       fail('The installed extension inventory is invalid or duplicated.');

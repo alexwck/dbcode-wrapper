@@ -88,16 +88,6 @@ if rg -Fq 'os.homedir()' "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"; then
   exit 1
 fi
 
-[[ ! -e "${REPO_ROOT}/script/build_diagnostic_host.sh" ]] || {
-  echo "The separate full-workbench diagnostic application must not be built." >&2
-  exit 1
-}
-
-[[ ! -e "${REPO_ROOT}/host/profile/diagnostic-settings.json" ]] || {
-  echo "The removed diagnostic application must not retain a managed profile." >&2
-  exit 1
-}
-
 for runtime_file in \
   "${REPO_ROOT}/script/build_host.sh" \
   "${REPO_ROOT}/script/assemble_host.sh" \

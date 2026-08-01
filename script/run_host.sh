@@ -133,25 +133,25 @@ else
         ELECTRON_ENABLE_LOGGING: "1"
       }
     ')"
-  dbcode_required="true"
-  require_dbcode_before_exit="false"
-  dbcode_patterns_json='[{"kind":"literal","value":"DBCode starting..."}]'
-  host_session_write_policy \
-    "${session_policy_file}" \
-    "default-$(date -u +'%Y%m%dT%H%M%SZ')-$$" \
-    "${app_executable}" \
-    "${launch_arguments_json}" \
-    "${launch_environment_json}" \
-    "${host_log}" \
-    "${log_root}" \
-    "${launch_timeout_seconds}" \
-    1000 \
-    1 \
-    "${dbcode_required}" \
-    "${dbcode_patterns_json}" \
-    '[]' \
-    wait-for-exit \
-    "${require_dbcode_before_exit}"
+  launch_record_json="$(jq -cn \
+    --arg session_id "default-$(date -u +'%Y%m%dT%H%M%SZ')-$$" \
+    --arg executable "${app_executable}" \
+    --argjson arguments "${launch_arguments_json}" \
+    --argjson environment "${launch_environment_json}" \
+    --arg host_log "${host_log}" \
+    --arg log_root "${log_root}" \
+    --argjson timeout_seconds "${launch_timeout_seconds}" '
+      {
+        session_id: $session_id,
+        executable: $executable,
+        arguments: $arguments,
+        environment: $environment,
+        host_log: $host_log,
+        log_root: $log_root,
+        timeout_seconds: $timeout_seconds
+      }
+    ')"
+  host_session_write_policy "${session_policy_file}" "${launch_record_json}"
 
   if ! host_session_run "${session_policy_file}" "${session_result_file}"; then
     echo "${APP_NAME} failed its Host Session policy. See ${host_log}" >&2

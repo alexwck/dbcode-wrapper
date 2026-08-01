@@ -119,6 +119,9 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 ## Verification
 
 - Follow `docs/agents/verification-policy.md` when choosing the smallest useful gate.
+- Test current behaviour and maintained interfaces. Do not keep lists of retired file, command, helper, or ticket names merely to prove that history stays deleted. Git and dated resolved issues own that history.
+- Keep stable policy defaults in the module that validates and executes them. Shell callers should pass one purpose-level record instead of copying defaults into positional arguments.
+- Keep package selection, record shape, and security validation in the shared verifier. Acquisition adapters may fetch or cache files, but they must not copy the verifier's field list or trust rules.
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
 - Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
 - Deep build and release task fixtures, gate-composition, public-push, host-package, publishing, and deep rollback tests are change-owned checks, not part of the default development path.

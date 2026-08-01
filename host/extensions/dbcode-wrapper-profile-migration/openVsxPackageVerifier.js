@@ -56,6 +56,50 @@ function packageIdentity(packageRecord) {
   return `${packageRecord?.id ?? 'unknown package'}@${packageRecord?.version ?? 'unknown version'}`;
 }
 
+function selectOpenVsxPackageRecord(packages, packageId) {
+  if (!Array.isArray(packages)) {
+    fail('The Release Specification package set is invalid.');
+  }
+  const matches = packages.filter(packageRecord => packageRecord?.id === packageId);
+  if (matches.length !== 1) {
+    fail(`The Release Specification has no unique package ${packageId}.`);
+  }
+  return Object.fromEntries(
+    REQUIRED_PACKAGE_FIELDS.map(field => [field, matches[0][field]])
+  );
+}
+
+function validateInstalledOpenVsxExtension(extension) {
+  if (
+    !extension ||
+    !SAFE_ID_PATTERN.test(extension.id) ||
+    !SAFE_VERSION_PATTERN.test(extension.version)
+  ) {
+    fail('The installed extension inventory is invalid or duplicated.');
+  }
+  return extension;
+}
+
+function resolveOpenVsxPublicKeyPath(keyRoot, packageRecord) {
+  const identity = packageIdentity(packageRecord);
+  if (
+    typeof keyRoot !== 'string' ||
+    keyRoot.length === 0 ||
+    !SAFE_KEY_ID_PATTERN.test(packageRecord?.public_key_id)
+  ) {
+    fail(`The approved public-key identity is invalid for ${identity}.`);
+  }
+  const resolvedKeyRoot = path.resolve(keyRoot);
+  const pinnedKeyPath = path.join(
+    resolvedKeyRoot,
+    `openvsx-${packageRecord.public_key_id}.pem`
+  );
+  if (path.dirname(pinnedKeyPath) !== resolvedKeyRoot) {
+    fail(`The approved public-key identity is unsafe for ${identity}.`);
+  }
+  return pinnedKeyPath;
+}
+
 function parseJson(buffer, label) {
   try {
     if (!Buffer.isBuffer(buffer)) {
@@ -219,6 +263,70 @@ function validateOpenVsxPackageRecord(
     `${identity} public-key URL`
   );
   return packageRecord;
+}
+
+function validateOpenVsxRuntimeConfiguration(configuration) {
+  if (!exactKeys(configuration, [
+    'schema_version',
+    'setup',
+    'code_oss_version',
+    'application_name',
+    'packages',
+    'public_keys'
+  ])) {
+    fail('The focused runtime setup configuration has an unexpected shape.');
+  }
+  if (
+    configuration.schema_version !== 1 ||
+    configuration.setup !== 'focused-pinned-official-sources' ||
+    typeof configuration.code_oss_version !== 'string' ||
+    !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(configuration.code_oss_version) ||
+    configuration.application_name !== 'dbcode-wrapper' ||
+    !Array.isArray(configuration.packages) ||
+    configuration.packages.length === 0 ||
+    !Array.isArray(configuration.public_keys) ||
+    configuration.public_keys.length === 0
+  ) {
+    fail('The focused runtime setup configuration is invalid.');
+  }
+
+  const keyIds = new Set();
+  const keyDigests = new Map();
+  for (const key of configuration.public_keys) {
+    try {
+      validateOpenVsxPublicKey(key);
+    } catch {
+      fail('The focused runtime setup contains an invalid Open VSX public key.');
+    }
+    if (keyIds.has(key.id)) {
+      fail('The focused runtime setup contains a duplicate Open VSX public key.');
+    }
+    keyIds.add(key.id);
+    keyDigests.set(key.id, key.sha256);
+  }
+
+  const packageIds = new Set();
+  const usedKeyIds = new Set();
+  for (const packageRecord of configuration.packages) {
+    validateOpenVsxPackageRecord(
+      packageRecord,
+      configuration.code_oss_version,
+      keyDigests
+    );
+    if (packageIds.has(packageRecord.id)) {
+      fail(`The focused runtime setup contains duplicate package ${packageRecord.id}.`);
+    }
+    packageIds.add(packageRecord.id);
+    usedKeyIds.add(packageRecord.public_key_id);
+  }
+
+  if (!packageIds.has('dbcode.dbcode')) {
+    fail('The focused runtime setup does not contain DBCode.');
+  }
+  if (usedKeyIds.size !== keyIds.size) {
+    fail('The focused runtime setup contains an unused Open VSX public key.');
+  }
+  return configuration;
 }
 
 function archiveEntryIsSafe(name) {
@@ -522,15 +630,12 @@ async function verifyOpenVsxPackage(
 }
 
 module.exports = {
-  REQUIRED_PACKAGE_FIELDS,
-  SAFE_ID_PATTERN,
-  SAFE_VERSION_PATTERN,
   engineIsCompatible,
-  exactKeys,
   readZipEntries,
   requireOfficialUrl,
-  sha256,
-  validateOpenVsxPackageRecord,
-  validateOpenVsxPublicKey,
+  resolveOpenVsxPublicKeyPath,
+  selectOpenVsxPackageRecord,
+  validateInstalledOpenVsxExtension,
+  validateOpenVsxRuntimeConfiguration,
   verifyOpenVsxPackage
 };

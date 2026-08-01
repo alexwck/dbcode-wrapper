@@ -440,15 +440,11 @@ module.exports = {
   VSCODIUM_METADATA_URL,
   applyDecision,
   candidateKey,
-  compareVersions,
   createReleaseStatusService,
   deriveStatus,
-  findApprovedCandidate,
   normalizeCodeOssRelease,
   normalizeOpenVsxRecord,
-  normalizeState,
   normalizeVscodiumRelease,
   recordPrompt,
-  releaseTuple,
   shouldUseCache
 };

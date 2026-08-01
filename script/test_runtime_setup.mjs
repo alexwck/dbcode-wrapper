@@ -20,7 +20,12 @@ const {
   verifyPackageAcquisition
 } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
 const openVsxPackageVerifier = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
-const { readZipEntries } = openVsxPackageVerifier;
+const {
+  readZipEntries,
+  selectOpenVsxPackageRecord,
+  validateInstalledOpenVsxExtension,
+  validateOpenVsxRuntimeConfiguration
+} = openVsxPackageVerifier;
 const runtimeSetupController = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
 const {
   RuntimeSetupController,
@@ -33,9 +38,16 @@ const {
 } = require('./verify_openvsx_package.cjs');
 
 test('runtime setup keeps implementation helpers private', () => {
-  for (const privateExport of ['DIGEST_PATTERN', 'assertEngineCompatibility']) {
-    assert.equal(openVsxPackageVerifier[privateExport], undefined, privateExport);
-  }
+  assert.deepEqual(Object.keys(openVsxPackageVerifier).sort(), [
+    'engineIsCompatible',
+    'readZipEntries',
+    'requireOfficialUrl',
+    'resolveOpenVsxPublicKeyPath',
+    'selectOpenVsxPackageRecord',
+    'validateInstalledOpenVsxExtension',
+    'validateOpenVsxRuntimeConfiguration',
+    'verifyOpenVsxPackage'
+  ]);
   for (const privateExport of ['pathIsWithin', 'runCli', 'writeVerifiedPackage']) {
     assert.equal(runtimeSetupController[privateExport], undefined, privateExport);
   }
@@ -261,7 +273,7 @@ async function verifyThroughScriptAdapter(state) {
         state.acquisition.publicKey
       ),
       fs.writeFile(
-        path.join(keyRoot, `openvsx-${state.packageRecord.public_key_id}.pem`),
+        path.join(keyRoot, `openvsx-${state.configuration.public_keys[0].id}.pem`),
         state.pinnedPublicKey
       )
     ]);
@@ -303,6 +315,7 @@ function replaceArchiveEntry(entries, name, body) {
 
 test('runtime setup accepts one exact pinned Open VSX package', async () => {
   const { acquisition, configuration, packageRecord, readZipEntries } = fixture();
+  assert.deepEqual(validateOpenVsxRuntimeConfiguration(configuration), configuration);
   assert.deepEqual(validateRuntimeConfiguration(configuration), configuration);
   await assert.doesNotReject(verifyPackageAcquisition(
     packageRecord,
@@ -313,6 +326,32 @@ test('runtime setup accepts one exact pinned Open VSX package', async () => {
       readZipEntries
     }
   ));
+});
+
+test('the shared verifier selects one canonical package record', () => {
+  const { configuration, packageRecord } = fixture();
+  assert.deepEqual(
+    selectOpenVsxPackageRecord(configuration.packages, packageRecord.id),
+    packageRecord
+  );
+  assert.throws(
+    () => selectOpenVsxPackageRecord(
+      [...configuration.packages, packageRecord],
+      packageRecord.id
+    ),
+    /no unique package/i
+  );
+});
+
+test('the shared verifier validates installed Open VSX identities', () => {
+  assert.deepEqual(
+    validateInstalledOpenVsxExtension({ id: 'dbcode.dbcode', version: '1.36.6' }),
+    { id: 'dbcode.dbcode', version: '1.36.6' }
+  );
+  assert.throws(
+    () => validateInstalledOpenVsxExtension({ id: '../dbcode', version: '1.36.6' }),
+    /installed extension inventory/i
+  );
 });
 
 test('runtime setup binds every embedded public key to the package digest', () => {
@@ -448,6 +487,11 @@ test('both Open VSX acquisition adapters reject changed digests, sizes, and keys
       'pinned public-key digest',
       state => { state.packageRecord.public_key_sha256 = '0'.repeat(64); },
       /public key/i
+    ],
+    [
+      'unsafe public-key identity',
+      state => { state.packageRecord.public_key_id = '../fixture-key'; },
+      /public.key|package record/i
     ],
     ['downloaded VSIX bytes', state => { state.acquisition.vsix = Buffer.from('changed'); }, /VSIX SHA-256/i],
     [

@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
+const releaseStatus = require('../host/extensions/dbcode-wrapper-release-status/release-status.js');
 const {
   CACHE_TTL_MS,
   CODE_OSS_METADATA_URL,
@@ -20,13 +21,32 @@ const {
   normalizeVscodiumRelease,
   recordPrompt,
   shouldUseCache
-} = require('../host/extensions/dbcode-wrapper-release-status/release-status.js');
+} = releaseStatus;
 
 const NOW = Date.parse('2026-07-21T00:00:00Z');
 const INSTALLED_HOST = '1.126.04524';
 const INSTALLED_CODE_OSS = '1.126.0';
 const INSTALLED_DBCODE = '1.36.2';
 const SOURCE_ID_SHA = 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
+test('Update Status exposes only its maintained interface', () => {
+  assert.deepEqual(Object.keys(releaseStatus).sort(), [
+    'CACHE_TTL_MS',
+    'CODE_OSS_METADATA_URL',
+    'DBCODE_METADATA_URL',
+    'REMINDER_DELAY_MS',
+    'VSCODIUM_METADATA_URL',
+    'applyDecision',
+    'candidateKey',
+    'createReleaseStatusService',
+    'deriveStatus',
+    'normalizeCodeOssRelease',
+    'normalizeOpenVsxRecord',
+    'normalizeVscodiumRelease',
+    'recordPrompt',
+    'shouldUseCache'
+  ]);
+});
 
 function vscodiumRelease(version = INSTALLED_HOST) {
   return {

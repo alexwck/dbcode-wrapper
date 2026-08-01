@@ -79,40 +79,6 @@ done
   exit 1
 }
 
-for retired_maintenance_path in \
-  script/proof_dbcode.sh \
-  script/verify_same_mac_release.sh \
-  script/test_same_mac_release_contract.sh \
-  script/test_postgres_debugger_fixture_contract.sh \
-  script/lib/postgres_debugger_fixture.sh \
-  script/controlled_upgrade.sh \
-  script/test_controlled_upgrade.sh \
-  script/check_release_combination.sh \
-  script/verify_release_set_static.sh \
-  script/smoke_release_pair.sh \
-  script/check_installed_release_health.sh \
-  script/lib/proof_state.sh \
-  script/test_proof_state.sh \
-  script/verify_installed_extension_payload.sh \
-  script/restore_installed_extension_payload.sh \
-  script/test_installed_extension_payload.sh \
-  script/test_restore_installed_extension_payload.sh \
-  host/qa/ticket-03-rendered.cjs \
-  script/fixtures/test_controlled_upgrade_gate.sh \
-  script/fixtures/test_installed_health_gate.sh \
-  script/fixtures/test_release_runtime_gate.sh \
-  script/fixtures/test_release_static_gate.sh \
-  docs/design; do
-  if [[ -e "${REPO_ROOT}/${retired_maintenance_path}" ]]; then
-    echo "The superseded maintenance path still exists: ${retired_maintenance_path}" >&2
-    exit 1
-  fi
-done
-[[ ! -e "${REPO_ROOT}/host/proof/postgres-debugger" ]] || {
-  echo "The superseded PostgreSQL debugger fixture still exists." >&2
-  exit 1
-}
-
 for profile_aware_script in prepare_dbcode.sh run_host.sh; do
   rg -Fq 'profile_paths.sh' "${REPO_ROOT}/script/${profile_aware_script}" || {
     echo "${profile_aware_script} must share the self-launch profile path contract." >&2
@@ -139,10 +105,6 @@ host_session_contract="${REPO_ROOT}/script/lib/host-session.js"
 }
 rg -Fq 'host_session_' "${REPO_ROOT}/script/run_host.sh" || {
   echo "The normal launch path must use the Host Session contract." >&2
-  exit 1
-}
-rg -Fq 'dbcode_required="true"' "${REPO_ROOT}/script/run_host.sh" || {
-  echo "The interactive development launch must require DBCode readiness." >&2
   exit 1
 }
 rg -Fq 'active-dbcode-log' "${REPO_ROOT}/script/run_host.sh" || {

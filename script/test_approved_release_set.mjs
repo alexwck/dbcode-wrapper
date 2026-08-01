@@ -27,28 +27,17 @@ const releaseLockTemplate = JSON.parse(
   readFileSync(join(scriptRoot, '..', 'host', 'release-lock.json'), 'utf8')
 );
 
-test('retired prepared-release operations stay absent', () => {
-  const cliSource = readFileSync(contractCli, 'utf8');
-  const shellSource = readFileSync(join(scriptRoot, 'lib', 'approved_release_set.sh'), 'utf8');
-
-  for (const retiredCommand of ['validate-set FILE', 'member FILE MEMBER', 'write-approval CANDIDATE']) {
-    assert.equal(cliSource.includes(retiredCommand), false, retiredCommand);
-  }
-  for (const retiredAdapter of [
-    'approved_release_set_validate()',
-    'approved_release_set_member()',
-    'approved_release_set_write_approval()'
-  ]) {
-    assert.equal(shellSource.includes(retiredAdapter), false, retiredAdapter);
-  }
-  for (const retiredExport of [
-    'createApprovedRecord',
-    'resolvePreparedMember',
-    'validatePreparedReleaseSet',
-    'validateRelativeMemberPath'
-  ]) {
-    assert.equal(approvedReleaseSet[retiredExport], undefined, retiredExport);
-  }
+test('Approved Release Set exposes only its maintained interface', () => {
+  assert.deepEqual(Object.keys(approvedReleaseSet).sort(), [
+    'createPromptFreeApprovedRecord',
+    'findApprovedCandidate',
+    'promptFreeVerificationChecks',
+    'readPlainJsonFile',
+    'upsertApprovedHistory',
+    'validateApprovedHistory',
+    'validateApprovedRecord',
+    'validateInstalledReleaseSet'
+  ]);
 });
 
 test('Approved Release Set keeps validation helpers private', () => {

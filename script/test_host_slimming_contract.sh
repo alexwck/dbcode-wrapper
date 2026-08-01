@@ -10,7 +10,6 @@ if [[ $# -ne 0 ]]; then
 fi
 
 policy_file="${REPO_ROOT}/host/slimming-policy.json"
-audit_script="${REPO_ROOT}/script/audit_host_size.sh"
 slimming_patch="${REPO_ROOT}/host/patches/code-oss/300-host-slimming-policy.patch"
 slimming_check_module="${REPO_ROOT}/script/lib/host_slimming.sh"
 
@@ -69,11 +68,6 @@ for required_measurement in \
     exit 1
   }
 done
-
-[[ ! -e "${audit_script}" ]] || {
-  echo "The retired host-size audit still exists outside Static Host Smoke." >&2
-  exit 1
-}
 
 [[ -f "${slimming_check_module}" ]] || {
   echo "Static Host Smoke is missing its packaged-host slimming checks." >&2

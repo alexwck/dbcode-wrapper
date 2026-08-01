@@ -24,11 +24,6 @@ for required_file in "${signing_library}" "${setup_script}"; do
     exit 1
   }
 done
-if [[ -e "${script_root}/verify_local_signing_continuity.sh" ]]; then
-  echo "The release path must not retain the manual signing-continuity recorder." >&2
-  exit 1
-fi
-
 jq -e '
   .product.signing == {
     mode: "local-certificate",

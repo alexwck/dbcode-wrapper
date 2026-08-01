@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed. The normal public channel points to the latest published release, while the Release Specification defines the next exact candidate.
+[Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md) is claimed to shrink the remaining shallow maintenance interfaces without changing DBCode-owned behaviour, automatic update polling, or the prompt-free release path.
 
 ## History
 

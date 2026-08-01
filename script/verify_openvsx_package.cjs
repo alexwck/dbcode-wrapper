@@ -5,7 +5,8 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const {
-  REQUIRED_PACKAGE_FIELDS,
+  resolveOpenVsxPublicKeyPath,
+  selectOpenVsxPackageRecord,
   verifyOpenVsxPackage
 } = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier');
 
@@ -52,16 +53,7 @@ async function verifyPackageRoot(
     readZipEntries
   } = {}
 ) {
-  if (!Array.isArray(packages)) {
-    fail('The Release Specification package set is invalid.');
-  }
-  const matches = packages.filter(packageRecord => packageRecord?.id === packageId);
-  if (matches.length !== 1) {
-    fail(`The Release Specification has no unique package ${packageId}.`);
-  }
-  const packageRecord = Object.fromEntries(
-    REQUIRED_PACKAGE_FIELDS.map(field => [field, matches[0][field]])
-  );
+  const packageRecord = selectOpenVsxPackageRecord(packages, packageId);
   const identity = `${packageRecord.id}@${packageRecord.version}`;
   const resolvedPackageRoot = path.resolve(packageRoot);
   let rootMetadata;
@@ -89,17 +81,7 @@ async function verifyPackageRoot(
     fail(`The Open VSX registry metadata is not valid JSON for ${identity}.`);
   }
 
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]+$/.test(packageRecord.public_key_id)) {
-    fail(`The approved public-key identity is invalid for ${identity}.`);
-  }
-  const resolvedKeyRoot = path.resolve(keyRoot);
-  const pinnedKeyPath = path.join(
-    resolvedKeyRoot,
-    `openvsx-${packageRecord.public_key_id}.pem`
-  );
-  if (path.dirname(pinnedKeyPath) !== resolvedKeyRoot) {
-    fail(`The approved public-key identity is unsafe for ${identity}.`);
-  }
+  const pinnedKeyPath = resolveOpenVsxPublicKeyPath(keyRoot, packageRecord);
   const pinnedPublicKey = await readPlainFile(
     fileSystem,
     pinnedKeyPath,

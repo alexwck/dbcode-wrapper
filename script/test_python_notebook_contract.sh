@@ -21,10 +21,6 @@ jq -e '
   exit 1
 }
 
-if [[ -e "${REPO_ROOT}/script/prepare_python_notebook_qa.sh" ]]; then
-  echo "The prompt-free release path must not maintain a separate QA kernel installer." >&2
-  exit 1
-fi
 jq -e '
   .publisher == "dbcode-wrapper"
   and .name == "python-kernel-bridge"
@@ -81,11 +77,6 @@ for rendered_notebook_contract in \
     exit 1
   }
 done
-
-if rg -Fq 'prepare_python_notebook_qa.sh' "${REPO_ROOT}/script/test_focused_shell_rendered.sh"; then
-  echo "The fast rendered smoke must not prepare or start a Python kernel." >&2
-  exit 1
-fi
 
 for forbidden_interactive_notebook_contract in \
   'runDbcodeKernelCellWithHumanGate' \

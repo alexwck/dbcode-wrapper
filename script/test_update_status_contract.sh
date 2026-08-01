@@ -188,7 +188,7 @@ jq -e \
   and .target == {platform: "darwin", architecture: "arm64"}
   and (has("releaseSetId") | not)
 ' "${installed_identity}" >/dev/null || {
-  echo "The bundled identity must remain a source-bound candidate until ticket 07 approves an exact artifact." >&2
+  echo "The bundled identity must remain source-bound until prompt-free approval binds the exact artifact." >&2
   exit 1
 }
 
