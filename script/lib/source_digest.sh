@@ -49,6 +49,7 @@ wrapper_source_digest() {
     script/lib/dist_checkpoint.sh \
     script/lib/generated_workspace.sh \
     script/lib/host_config.sh \
+    script/lib/host_slimming.sh \
     script/lib/local_signing_identity.sh \
     script/lib/patch_plan.sh \
     script/lib/release_source_snapshot.sh \

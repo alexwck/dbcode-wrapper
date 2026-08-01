@@ -12,6 +12,7 @@ fi
 policy_file="${REPO_ROOT}/host/slimming-policy.json"
 audit_script="${REPO_ROOT}/script/audit_host_size.sh"
 slimming_patch="${REPO_ROOT}/host/patches/code-oss/300-host-slimming-policy.patch"
+slimming_check_module="${REPO_ROOT}/script/lib/host_slimming.sh"
 
 [[ -f "${policy_file}" ]] || {
   echo "Missing host slimming policy: ${policy_file}" >&2
@@ -74,17 +75,16 @@ done
   exit 1
 }
 
-for static_host_check in \
-  'installed_app_kib=' \
-  'source_map_count=' \
-  'expected_built_in_inventory=' \
-  'actual_built_in_inventory=' \
-  'embedded_dbcode_count='; do
-  rg -Fq "${static_host_check}" "${REPO_ROOT}/script/smoke_host.sh" || {
-    echo "Static Host Smoke is missing the packaged host check: ${static_host_check}" >&2
-    exit 1
-  }
-done
+[[ -f "${slimming_check_module}" ]] || {
+  echo "Static Host Smoke is missing its packaged-host slimming checks." >&2
+  exit 1
+}
+source "${slimming_check_module}"
+rg -Fq 'validate_packaged_host_slimming "${APP_BUNDLE}" "${slimming_policy}"' \
+  "${REPO_ROOT}/script/smoke_host.sh" || {
+  echo "Static Host Smoke does not run the packaged-host slimming checks." >&2
+  exit 1
+}
 
 rg -Fq 'export DBCODE_WRAPPER_STRIP_SOURCE_MAPS="yes"' "${REPO_ROOT}/script/compile_host.sh" || {
   echo "Host compilation must request source-map omission explicitly." >&2
@@ -122,6 +122,77 @@ if rg -n '(find .*\.map.*-delete|rm .*\.map)' \
   "${REPO_ROOT}/script/compile_host.sh" \
   "${REPO_ROOT}/script/sign_host.sh"; then
   echo "Source maps must be omitted by packaging, not deleted from the built or signed app." >&2
+  exit 1
+fi
+
+fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-host-slimming.XXXXXX")"
+cleanup_fixture() {
+  rm -rf "${fixture_root}"
+}
+trap cleanup_fixture EXIT INT TERM
+fixture_app="${fixture_root}/Fixture Host.app"
+fixture_extensions="${fixture_app}/Contents/Resources/app/extensions"
+fixture_product="${fixture_app}/Contents/Resources/app/product.json"
+fixture_policy="${fixture_root}/slimming policy.json"
+mkdir -p "${fixture_extensions}"
+cp "${policy_file}" "${fixture_policy}"
+jq -n '{builtInExtensions: []}' > "${fixture_product}"
+while IFS= read -r extension_name; do
+  mkdir -p "${fixture_extensions}/${extension_name}"
+  jq -n --arg name "${extension_name}" \
+    '{name: $name, publisher: "wrapper-fixture"}' > \
+    "${fixture_extensions}/${extension_name}/package.json"
+done < <(
+  jq -r \
+    '([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.first_party[].name]) | sort[]' \
+    "${fixture_policy}"
+)
+
+validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}"
+
+oversize_policy="${fixture_root}/oversize policy.json"
+jq '.goals.installed_app_max_kib = 0' "${fixture_policy}" > "${oversize_policy}"
+if validate_packaged_host_slimming "${fixture_app}" "${oversize_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke accepted an app above its installed-size limit." >&2
+  exit 1
+fi
+
+touch "${fixture_app}/unexpected.map"
+if validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke accepted a packaged source map." >&2
+  exit 1
+fi
+rm "${fixture_app}/unexpected.map"
+
+mkdir -p "${fixture_extensions}/unexpected-extension"
+jq -n '{name: "unexpected-extension", publisher: "wrapper-fixture"}' > \
+  "${fixture_extensions}/unexpected-extension/package.json"
+if validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke accepted an unexpected built-in extension." >&2
+  exit 1
+fi
+rm -rf "${fixture_extensions}/unexpected-extension"
+
+sql_manifest="${fixture_extensions}/sql/package.json"
+cp "${sql_manifest}" "${fixture_root}/sql-package.json"
+jq -n '{name: "dbcode", publisher: "dbcode"}' > "${sql_manifest}"
+if validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke accepted embedded DBCode." >&2
+  exit 1
+fi
+cp "${fixture_root}/sql-package.json" "${sql_manifest}"
+
+printf '{' > "${sql_manifest}"
+if validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke accepted an invalid extension manifest." >&2
+  exit 1
+fi
+cp "${fixture_root}/sql-package.json" "${sql_manifest}"
+
+mv "${fixture_extensions}/sql" "${fixture_root}/outside-sql"
+ln -s "${fixture_root}/outside-sql" "${fixture_extensions}/sql"
+if validate_packaged_host_slimming "${fixture_app}" "${fixture_policy}" >/dev/null 2>&1; then
+  echo "Static Host Smoke followed a linked extension directory." >&2
   exit 1
 fi
 

@@ -7,8 +7,7 @@ const path = require('node:path');
 const {
   createNodeRuntime,
   runHostSession,
-  serializeSessionResult,
-  validateSessionPolicy
+  serializeSessionResult
 } = require('./lib/host-session');
 
 function usage() {
@@ -49,7 +48,7 @@ function readPolicy(filePath) {
     }
     throw error;
   }
-  return validateSessionPolicy(policy);
+  return policy;
 }
 
 function writeResult(outputPath, result) {

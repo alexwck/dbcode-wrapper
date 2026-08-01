@@ -55,6 +55,14 @@ if rg -Fq "command === 'stop'" "${host_session_cli}"; then
   echo "Host Session still exposes the unused stop command adapter." >&2
   exit 1
 fi
+if rg -Fq 'return validateSessionPolicy(policy);' "${host_session_cli}"; then
+  echo "The Host Session adapter still validates a policy before run validates it." >&2
+  exit 1
+fi
+rg -Fq 'return stopValidatedHostSession(result, policy, runtime);' "${host_session_module}" || {
+  echo "Host Session run must reuse its already validated policy during shutdown." >&2
+  exit 1
+}
 rg -Fq './script/host_session.cjs run --policy FILE --output FILE' "${host_session_cli}" || {
   echo "Host Session must expose one run command." >&2
   exit 1

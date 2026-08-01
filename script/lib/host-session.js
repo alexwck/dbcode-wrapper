@@ -263,8 +263,7 @@ async function assertMatchingLiveProcess(result, policy, runtime) {
   return true;
 }
 
-async function stopHostSession(sessionResult, policy, runtime = createNodeRuntime()) {
-  validateSessionPolicy(policy);
+async function stopValidatedHostSession(sessionResult, policy, runtime) {
   const result = parseSessionResult(serializeSessionResult(sessionResult));
   if (result.session_id !== policy.session_id || result.process.executable !== policy.executable) {
     fail('Host Session result does not match the stop policy.');
@@ -314,11 +313,16 @@ async function stopHostSession(sessionResult, policy, runtime = createNodeRuntim
   return setFailure(result, 'quit-timeout', 'The DBCode Wrapper process did not stop after forced cleanup.', runtime);
 }
 
+async function stopHostSession(sessionResult, policy, runtime = createNodeRuntime()) {
+  validateSessionPolicy(policy);
+  return stopValidatedHostSession(sessionResult, policy, runtime);
+}
+
 async function cleanupFailedSession(result, policy, runtime) {
   if (await runtime.isAlive(result.process.app_pid)) {
     const failure = result.failure;
     const endedAt = result.ended_at;
-    const stopped = await stopHostSession(result, policy, runtime);
+    const stopped = await stopValidatedHostSession(result, policy, runtime);
     result.quit = stopped.quit;
     result.failure = failure;
     result.ended_at = endedAt;
@@ -406,7 +410,7 @@ async function runStartedHostSession(policy, runtime, hooks, startedAtMs, child,
     return result;
   }
   if (policy.completion.mode === 'quit-after-ready') {
-    return stopHostSession(result, policy, runtime);
+    return stopValidatedHostSession(result, policy, runtime);
   }
 
   result.process.exit_code = await runtime.waitForExit(child.pid);

@@ -11,6 +11,7 @@ source "${REPO_ROOT}/script/lib/release_identity.sh"
 source "${REPO_ROOT}/script/lib/local_signing_identity.sh"
 source "${REPO_ROOT}/script/lib/release_source_snapshot.sh"
 source "${REPO_ROOT}/script/lib/dist_checkpoint.sh"
+source "${REPO_ROOT}/script/lib/host_slimming.sh"
 
 dist_checkpoint_acquire "static-smoke"
 trap 'dist_checkpoint_exit "$?"' EXIT
@@ -78,57 +79,7 @@ app_executable="${APP_BUNDLE}/Contents/MacOS/${bundle_executable}"
 [[ "$(jq -er '.dbcodeWrapperStorageNamespace' "${product_json}")" == "${STORAGE_NAMESPACE}" ]] || { echo "Unexpected focused-shell storage namespace." >&2; exit 1; }
 [[ "$(jq -er '.dbcodeWrapperQueryFolderName' "${product_json}")" == "${QUERY_FOLDER_NAME}" ]] || { echo "Unexpected focused-shell query folder." >&2; exit 1; }
 
-installed_app_kib="$(du -sk "${APP_BUNDLE}" | awk '{print $1}')"
-installed_app_max_kib="$(jq -er '.goals.installed_app_max_kib' "${slimming_policy}")"
-[[ "${installed_app_kib}" -le "${installed_app_max_kib}" ]] || {
-  echo "The packaged app is larger than the reviewed installed-size limit: ${installed_app_kib} KiB." >&2
-  exit 1
-}
-
-source_map_count="$(find "${APP_BUNDLE}" -type f -name '*.map' -print | wc -l | tr -d ' ')"
-[[ "${source_map_count}" -eq 0 ]] || {
-  echo "The packaged app contains ${source_map_count} source-map files." >&2
-  exit 1
-}
-
-expected_built_in_inventory="$(
-  jq -r \
-    '([.build.built_in_extensions.allowlist[].name] + [.build.built_in_extensions.first_party[].name]) | sort[]' \
-    "${slimming_policy}"
-)"
-actual_built_in_inventory="$(
-  find "${built_in_extensions_root}" -mindepth 1 -maxdepth 1 -print |
-    sed 's#.*/##' |
-    LC_ALL=C sort
-)"
-[[ "${actual_built_in_inventory}" == "${expected_built_in_inventory}" ]] || {
-  echo "The packaged built-in extension inventory does not match the reviewed allowlist." >&2
-  echo "Expected:" >&2
-  printf '%s\n' "${expected_built_in_inventory}" >&2
-  echo "Actual:" >&2
-  printf '%s\n' "${actual_built_in_inventory}" >&2
-  exit 1
-}
-
-embedded_dbcode_count=0
-while IFS= read -r extension_name; do
-  extension_manifest="${built_in_extensions_root}/${extension_name}/package.json"
-  [[ -f "${extension_manifest}" && ! -L "${extension_manifest}" ]] || {
-    echo "The packaged built-in extension is missing a plain manifest: ${extension_name}" >&2
-    exit 1
-  }
-  if jq -e '.publisher == "dbcode" and .name == "dbcode"' "${extension_manifest}" >/dev/null 2>&1; then
-    embedded_dbcode_count=$((embedded_dbcode_count + 1))
-  fi
-done <<<"${actual_built_in_inventory}"
-[[ "${embedded_dbcode_count}" -eq 0 ]] || {
-  echo "DBCode must remain external to the packaged app." >&2
-  exit 1
-}
-jq -e '.builtInExtensions | length == 0' "${product_json}" >/dev/null || {
-  echo "The packaged product must not advertise removed marketplace built-ins." >&2
-  exit 1
-}
+validate_packaged_host_slimming "${APP_BUNDLE}" "${slimming_policy}"
 
 architecture_list="$(lipo -archs "${app_executable}")"
 [[ " ${architecture_list} " == *" ${TARGET_ARCH} "* ]] || { echo "The app is not ${TARGET_ARCH}: ${architecture_list}" >&2; exit 1; }
