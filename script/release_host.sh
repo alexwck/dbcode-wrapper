@@ -45,14 +45,24 @@ source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/dist_checkpoint.sh"
 
 release_tag="v${WRAPPER_VERSION}"
+if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
+  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
+else
+  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+fi
+[[ "${release_source_revision}" =~ ^[0-9a-f]{40}$ ]] || {
+  echo "The release source revision is invalid: ${release_source_revision}" >&2
+  exit 1
+}
+release_evidence_key="${release_tag}-source-${release_source_revision}"
 rendered_output_root="$(generated_workspace_path "rendered-screenshots")"
 acceptance_root="$(generated_workspace_path "acceptance-evidence")"
 assets_root="$(generated_workspace_path "host-release-assets")"
 
 rendered_report="${rendered_output_root}/focused-shell-rendered-report.json"
-acceptance_file="${acceptance_root}/fast-release/${release_tag}/final-acceptance-report.json"
-assets_dir="${assets_root}/${release_tag}"
-approval_dir="${acceptance_root}/fast-release/${release_tag}-approval"
+acceptance_file="${acceptance_root}/fast-release/${release_evidence_key}/final-acceptance-report.json"
+assets_dir="${assets_root}/${release_evidence_key}"
+approval_dir="${acceptance_root}/fast-release/${release_evidence_key}-approval"
 approved_history="${REPO_ROOT}/host/approved-release-history.json"
 approved_history_candidate="${approval_dir}/approved-release-sets.json"
 
@@ -68,6 +78,8 @@ release_prepare_checkpoint() {
 write_plan() {
   jq -n \
     --arg release_tag "${release_tag}" \
+    --arg source_revision "${release_source_revision}" \
+    --arg evidence_key "${release_evidence_key}" \
     --arg source_repository "${REPO_ROOT}" \
     --arg app "${APP_BUNDLE}" \
     --arg manifest "${BUILD_MANIFEST}" \
@@ -81,6 +93,8 @@ write_plan() {
       {
         schema_version: 1,
         release_tag: $release_tag,
+        source_revision: $source_revision,
+        evidence_key: $evidence_key,
         source_repository: $source_repository,
         paths: {
           app: $app,

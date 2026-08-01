@@ -13,6 +13,12 @@ task="${REPO_ROOT}/script/release_host.sh"
 
 plan="$("${task}" plan)"
 release_tag="v${WRAPPER_VERSION}"
+if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
+  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
+else
+  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+fi
+release_evidence_key="${release_tag}-source-${release_source_revision}"
 expected_rendered_report="$(
   generated_workspace_path "rendered-screenshots"
 )/focused-shell-rendered-report.json"
@@ -20,17 +26,21 @@ expected_rendered_report="$(
 jq -e \
   --arg repository "${REPO_ROOT}" \
   --arg release_tag "${release_tag}" \
+  --arg source_revision "${release_source_revision}" \
+  --arg evidence_key "${release_evidence_key}" \
   --arg app "${APP_BUNDLE}" \
   --arg manifest "${BUILD_MANIFEST}" \
   --arg release_lock "${LOCK_FILE}" \
   --arg rendered_report "${expected_rendered_report}" \
-  --arg acceptance "${BUILD_ROOT}/acceptance/fast-release/${release_tag}/final-acceptance-report.json" \
-  --arg assets "${BUILD_ROOT}/host-release/${release_tag}" \
-  --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval" \
-  --arg approved_history_candidate "${BUILD_ROOT}/acceptance/fast-release/${release_tag}-approval/approved-release-sets.json" \
+  --arg acceptance "${BUILD_ROOT}/acceptance/fast-release/${release_evidence_key}/final-acceptance-report.json" \
+  --arg assets "${BUILD_ROOT}/host-release/${release_evidence_key}" \
+  --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_evidence_key}-approval" \
+  --arg approved_history_candidate "${BUILD_ROOT}/acceptance/fast-release/${release_evidence_key}-approval/approved-release-sets.json" \
   --arg history "${REPO_ROOT}/host/approved-release-history.json" '
     .schema_version == 1
     and .release_tag == $release_tag
+    and .source_revision == $source_revision
+    and .evidence_key == $evidence_key
     and .source_repository == $repository
     and .paths == {
       app: $app,
@@ -383,6 +393,11 @@ git -C "${fixture_root}" config user.email "release-task@example.invalid"
 git -C "${fixture_root}" add .
 git -C "${fixture_root}" commit -qm "fixture source"
 fixture_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
+fixture_evidence_key="v9.9.9-source-${fixture_revision}"
+
+legacy_approval_dir="${fixture_root}/.build/acceptance/fast-release/v9.9.9-approval"
+mkdir -p "${legacy_approval_dir}"
+printf 'retained legacy approval\n' > "${legacy_approval_dir}/retained.txt"
 
 export RELEASE_TASK_LOG="${fixture_root}/.build/release-task.log"
 mkdir -p "${fixture_root}/.build"
@@ -401,7 +416,7 @@ fi
   echo "The release task created a tag before full acceptance validation." >&2
   exit 1
 }
-rm -f "${fixture_root}/.build/acceptance/fast-release/v9.9.9/final-acceptance-report.json"
+rm -f "${fixture_root}/.build/acceptance/fast-release/${fixture_evidence_key}/final-acceptance-report.json"
 
 unset MOCK_ACCEPTANCE_STATUS
 : > "${RELEASE_TASK_LOG}"
@@ -411,8 +426,9 @@ unset MOCK_ACCEPTANCE_STATUS
   "preflight,static,accept,validate-acceptance,package,approve,validate-approval,record" ]]
 [[ "$(git -C "${fixture_root}" status --porcelain)" == \
   " M host/approved-release-history.json" ]]
+[[ "$(<"${legacy_approval_dir}/retained.txt")" == "retained legacy approval" ]]
 
-verification_asset="${fixture_root}/.build/host-release/v9.9.9/fixture-verification.json"
+verification_asset="${fixture_root}/.build/host-release/${fixture_evidence_key}/fixture-verification.json"
 rm -f "${verification_asset}"
 : > "${RELEASE_TASK_LOG}"
 if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
