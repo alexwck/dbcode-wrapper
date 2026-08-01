@@ -265,8 +265,5 @@ module.exports = {
   RuntimeSetupController,
   extensionInventory,
   loadRuntimeConfiguration,
-  pathIsWithin,
-  parseCliInventory,
-  runCli,
-  writeVerifiedPackage
+  parseCliInventory
 };

@@ -51,6 +51,17 @@ test('retired prepared-release operations stay absent', () => {
   }
 });
 
+test('Approved Release Set keeps validation helpers private', () => {
+  for (const privateExport of [
+    'GIT_COMMIT_PATTERN',
+    'SHA256_PATTERN',
+    'COMPILED_HOST_INPUT_PATTERN',
+    'hasCanonicalSourceSetId'
+  ]) {
+    assert.equal(approvedReleaseSet[privateExport], undefined, privateExport);
+  }
+});
+
 function promptFreeReleaseSpecification() {
   const releaseLock = structuredClone(releaseLockTemplate);
   releaseLock.release = {

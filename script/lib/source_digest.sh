@@ -54,6 +54,7 @@ wrapper_source_digest() {
     script/lib/patch_plan.sh \
     script/lib/release_source_snapshot.sh \
     script/lib/release_specification.sh \
+    script/lib/release_specification_records.jq \
     script/lib/source_cache.sh \
     script/lib/source_digest.sh \
     script/lib/release_identity.sh

@@ -11,7 +11,8 @@ const require = createRequire(import.meta.url);
 const { advancePreflight, createMigrationPlan, parseInventory } = require('../host/extensions/dbcode-wrapper-profile-migration/migration.js');
 const { createProfileLayout } = require('../host/extensions/dbcode-wrapper-profile-migration/profile-layout.js');
 const { deriveRecoveryLayout, recreateStandaloneProfile, requireMatchingRelaunchPath } = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js');
-const { applicationExecutable, run: runRecoveryWorker, shouldRelaunchApplication, validateWorkerRequest, writeOutcome } = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js');
+const profileRecoveryWorker = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js');
+const { applicationExecutable, run: runRecoveryWorker, shouldRelaunchApplication, validateWorkerRequest, writeOutcome } = profileRecoveryWorker;
 const { ProfileSetup } = require('../host/extensions/dbcode-wrapper-profile-migration/profileSetup.js');
 const {
   START_MIGRATION_COMMAND,
@@ -24,6 +25,10 @@ const {
   escapeHtml,
   renderWebviewDocument
 } = require('../host/extensions/dbcode-wrapper-profile-migration/webviewSafety.js');
+
+test('profile recovery keeps its process wait helper private', () => {
+  assert.equal(profileRecoveryWorker.waitForProcessesToExit, undefined);
+});
 
 test('first-run commands register before an activation phase is selected', async () => {
   const commands = new Map();

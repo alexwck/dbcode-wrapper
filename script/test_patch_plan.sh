@@ -32,7 +32,7 @@ actual_code_oss_order="$(patch_plan_entries code-oss "${plan_file}" | cut -f2)"
 }
 
 jq -e '
-  .schema_version == 2 and
+  .schema_version == 3 and
   [.entries[] | select(.stage == "code-oss") | .id] == [
     "product-identity-and-macos-packaging",
     "final-focused-dbcode-shell",
@@ -40,11 +40,9 @@ jq -e '
     "release-profile-and-dbcode-integrations"
   ] and
   ([.entries[].overlay_files[]] | length == 2) and
-  .migration_proof.historical_tree_sha256 == .migration_proof.semantic_tree_sha256 and
-  .migration_proof.prepared_tree_sha256 == .expected_maintained_tree_sha256 and
-  .migration_proof.equivalent == true
+  (has("migration_proof") | not)
 ' "${plan_file}" >/dev/null || {
-  echo "The semantic migration proof is incomplete." >&2
+  echo "The current semantic patch plan is incomplete or retains migration-only proof." >&2
   exit 1
 }
 

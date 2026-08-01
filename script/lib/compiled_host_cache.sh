@@ -122,18 +122,29 @@ compiled_host_implementation_digest() {
 compiled_host_release_specification_digest() {
   local source_root="$1"
   local release_specification_module="${source_root}/script/lib/release_specification.sh"
+  local records_module="${source_root}/script/lib/release_specification_records.jq"
 
-  [[ -f "${release_specification_module}" && ! -L "${release_specification_module}" ]] || {
+  [[ -f "${release_specification_module}" && ! -L "${release_specification_module}" &&
+    -f "${records_module}" && ! -L "${records_module}" ]] || {
     echo "Compiled-host Release Specification module is missing or symlinked." >&2
     return 1
   }
 
-  bash -c '
-    set -euo pipefail
-    source "$1"
-    declare -f release_specification_validate release_specification_record
-  ' _ "${release_specification_module}" |
-    compiled_host_sha256_text
+  {
+    bash -c '
+      set -euo pipefail
+      source "$1"
+      declare -f \
+        release_specification_validate \
+        release_specification_module_root \
+        release_specification_records_module \
+        release_specification_require_records_module \
+        release_specification_record
+    ' _ "${release_specification_module}"
+    compiled_host_digest_source_files \
+      "${source_root}" \
+      "script/lib/release_specification_records.jq"
+  } | compiled_host_sha256_text
 }
 
 compiled_host_slimming_digest() {

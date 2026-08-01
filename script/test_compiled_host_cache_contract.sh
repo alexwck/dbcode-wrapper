@@ -126,6 +126,16 @@ printf '\nrelease_specification_record() { return 1; }\n' >> \
 }
 cp "${release_specification_backup}" "${fixture_source}/script/lib/release_specification.sh"
 
+release_records_module="${fixture_source}/script/lib/release_specification_records.jq"
+release_records_backup="${test_root}/release-specification-records.jq"
+cp "${release_records_module}" "${release_records_backup}"
+printf '\n# Active record projection fixture.\n' >> "${release_records_module}"
+[[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" != "${baseline_id}" ]] || {
+  echo "An active Release Specification record projection reused the compiled host." >&2
+  exit 1
+}
+cp "${release_records_backup}" "${release_records_module}"
+
 fixture_slimming_policy="${fixture_source}/host/slimming-policy.json"
 fixture_slimming_backup="${test_root}/slimming-policy.json"
 fixture_slimming_temp="${test_root}/slimming-policy.tmp.json"

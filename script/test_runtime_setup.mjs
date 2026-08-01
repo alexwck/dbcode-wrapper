@@ -19,18 +19,27 @@ const {
   validateRuntimeConfiguration,
   verifyPackageAcquisition
 } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
-const {
-  readZipEntries
-} = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
+const openVsxPackageVerifier = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
+const { readZipEntries } = openVsxPackageVerifier;
+const runtimeSetupController = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
 const {
   RuntimeSetupController,
   extensionInventory,
   parseCliInventory
-} = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
+} = runtimeSetupController;
 const { renderRuntimeSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupView.js');
 const {
   verifyPackageRoot
 } = require('./verify_openvsx_package.cjs');
+
+test('runtime setup keeps implementation helpers private', () => {
+  for (const privateExport of ['DIGEST_PATTERN', 'assertEngineCompatibility']) {
+    assert.equal(openVsxPackageVerifier[privateExport], undefined, privateExport);
+  }
+  for (const privateExport of ['pathIsWithin', 'runCli', 'writeVerifiedPackage']) {
+    assert.equal(runtimeSetupController[privateExport], undefined, privateExport);
+  }
+});
 
 function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');

@@ -2,6 +2,25 @@
 
 set -euo pipefail
 
+release_specification_module_root() {
+  cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P
+}
+
+release_specification_records_module() {
+  local module_root
+  module_root="$(release_specification_module_root)"
+  printf '%s/release_specification_records.jq\n' "${module_root}"
+}
+
+release_specification_require_records_module() {
+  local records_module
+  records_module="$(release_specification_records_module)"
+  [[ -f "${records_module}" && ! -L "${records_module}" ]] || {
+    echo "Release Specification record module is missing or symlinked: ${records_module}" >&2
+    return 1
+  }
+}
+
 release_specification_validate() {
   local release_lock="$1"
 
@@ -358,109 +377,36 @@ release_specification_historical_validate() {
 release_specification_record() {
   local purpose="$1"
   local release_lock="$2"
+  local module_root
 
   release_specification_validate "${release_lock}" || return 1
-
   case "${purpose}" in
-    build)
-      jq -S -c '{
-        schema_version: 1,
-        target,
-        upstream,
-        toolchain,
-        runtime,
-        release,
-        distribution,
-        product
-      }' "${release_lock}"
-      ;;
-    compiled-host)
-      jq -S -c '{
-        schema_version: 1,
-        target,
-        upstream: {
-          vscodium: {
-            repository: .upstream.vscodium.repository,
-            tag: .upstream.vscodium.tag,
-            commit: .upstream.vscodium.commit
-          },
-          code_oss: {
-            repository: .upstream.code_oss.repository,
-            tag: .upstream.code_oss.tag,
-            commit: .upstream.code_oss.commit
-          }
-        },
-        toolchain,
-        runtime,
-        product: {
-          app_name: .product.app_name,
-          application_name: .product.application_name,
-          bundle_identifier: .product.bundle_identifier,
-          url_scheme: .product.url_scheme,
-          data_folder_name: .product.data_folder_name,
-          shared_data_folder_name: .product.shared_data_folder_name,
-          storage_namespace: .product.storage_namespace,
-          query_folder_name: .product.query_folder_name,
-          server_application_name: .product.server_application_name,
-          server_data_folder_name: .product.server_data_folder_name,
-          tunnel_application_name: .product.tunnel_application_name,
-          focused_shell: .product.focused_shell,
-          darwin_profile_uuid: .product.darwin_profile_uuid,
-          darwin_profile_payload_uuid: .product.darwin_profile_payload_uuid,
-          document_extensions: .product.document_extensions
-        }
-      }' "${release_lock}"
-      ;;
-    extensions)
-      jq -S -c '{
-        schema_version: 1,
-        host_code_oss_version: .runtime.code_oss_version,
-        dbcode: .extension.dbcode,
-        python_notebooks: .extension.python_notebooks,
-        packages: (
-          [(.extension.dbcode + {role: "database-client"})] +
-          .extension.python_notebooks.packages
-        )
-      }' "${release_lock}"
-      ;;
-    profile)
-      jq -S -c '{
-        schema_version: 1,
-        target,
-        profile_schema_version: .release.profile_schema_version,
-        product
-      }' "${release_lock}"
-      ;;
-    identity)
-      jq -S -c '{
-        schema_version: 1,
-        target,
-        upstream,
-        toolchain,
-        runtime,
-        product,
-        profile_schema_version: .release.profile_schema_version,
-        extension,
-        runtime_extensions: (
-          [(.extension.dbcode + {role: "database-client"})] +
-          .extension.python_notebooks.packages
-          | map({
-              role,
-              id,
-              version,
-              target_platform,
-              vsix_sha256: .sha256,
-              signature_archive_sha256
-            })
-          | sort_by(.id, .version)
-        )
-      }' "${release_lock}"
-      ;;
+    build|compiled-host|extensions|profile|identity) ;;
     *)
       echo "Unknown Release Specification purpose: ${purpose}" >&2
       return 2
       ;;
   esac
+  release_specification_require_records_module || return 1
+  module_root="$(release_specification_module_root)"
+  jq -S -c \
+    -L "${module_root}" \
+    --arg purpose "${purpose}" \
+    'include "release_specification_records"; release_specification_record($purpose)' \
+    "${release_lock}"
+}
+
+release_specification_host_config_pairs() {
+  local release_lock="$1"
+  local module_root
+
+  release_specification_validate "${release_lock}" || return 1
+  release_specification_require_records_module || return 1
+  module_root="$(release_specification_module_root)"
+  jq -j \
+    -L "${module_root}" \
+    'include "release_specification_records"; release_specification_host_config_pairs' \
+    "${release_lock}"
 }
 
 release_specification_historical_record() {

@@ -21,6 +21,11 @@ const {
   createNodeRuntime
 } = hostSession;
 
+test('Host Session keeps parsing and validation helpers private', () => {
+  assert.equal(hostSession.parseProcessTable, undefined);
+  assert.equal(hostSession.validateSessionResult, undefined);
+});
+
 function policy(overrides = {}) {
   const base = {
     schema_version: 1,

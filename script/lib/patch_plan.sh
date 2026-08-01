@@ -182,7 +182,7 @@ patch_plan_validate() {
   jq -e \
     --arg vscodium_commit "${VSCODIUM_COMMIT}" \
     --arg code_oss_commit "${CODE_OSS_COMMIT}" '
-      .schema_version == 2 and
+      .schema_version == 3 and
       .target.vscodium_commit == $vscodium_commit and
       .target.code_oss_commit == $code_oss_commit and
       (.entries | length > 0) and
@@ -217,11 +217,7 @@ patch_plan_validate() {
       ] | sort) == .maintained_code_oss_paths) and
       .maintained_tree_digest_algorithm == "sha256-of-sorted-sha256-space-space-path-records" and
       (.expected_maintained_tree_sha256 | test("^[0-9a-f]{64}$")) and
-      .migration_proof.historical_patch_count == 13 and
-      (.migration_proof.historical_stack_sha256 | test("^[0-9a-f]{64}$")) and
-      .migration_proof.historical_tree_sha256 == .migration_proof.semantic_tree_sha256 and
-      .migration_proof.prepared_tree_sha256 == .expected_maintained_tree_sha256 and
-      .migration_proof.equivalent == true
+      (has("migration_proof") | not)
     ' "${plan_file}" >/dev/null || {
       echo "Invalid maintained patch plan: ${plan_file}" >&2
       return 1

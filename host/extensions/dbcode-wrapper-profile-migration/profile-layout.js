@@ -310,12 +310,10 @@ function parseMatchingLayout(value, expectedLayout) {
 }
 
 module.exports = {
-  PROFILE_IDENTITY_PATH,
   assertSafeMutationPaths,
   contains,
   createProfileLayout,
   loadProfileIdentity,
   parseMatchingLayout,
-  validateProfileIdentity,
   validateProfileLayout
 };

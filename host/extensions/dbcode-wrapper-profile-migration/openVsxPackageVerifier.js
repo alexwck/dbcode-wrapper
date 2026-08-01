@@ -522,11 +522,9 @@ async function verifyOpenVsxPackage(
 }
 
 module.exports = {
-  DIGEST_PATTERN,
   REQUIRED_PACKAGE_FIELDS,
   SAFE_ID_PATTERN,
   SAFE_VERSION_PATTERN,
-  assertEngineCompatibility,
   engineIsCompatible,
   exactKeys,
   readZipEntries,

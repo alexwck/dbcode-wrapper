@@ -112,6 +112,48 @@ cleanup_test_root() {
 }
 trap cleanup_test_root EXIT INT TERM
 
+host_config_bin="${test_root}/bin"
+host_config_trace="${test_root}/host-config-jq.trace"
+real_jq="$(command -v jq)"
+mkdir -p "${host_config_bin}"
+cat > "${host_config_bin}/jq" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf 'jq\n' >> "${DBCODE_HOST_CONFIG_JQ_TRACE:?}"
+exec "${DBCODE_HOST_CONFIG_REAL_JQ:?}" "$@"
+EOF
+chmod +x "${host_config_bin}/jq"
+
+host_config_records="$(
+  DBCODE_HOST_CONFIG_JQ_TRACE="${host_config_trace}" \
+  DBCODE_HOST_CONFIG_REAL_JQ="${real_jq}" \
+  PATH="${host_config_bin}:${PATH}" \
+    bash -c '
+      set -euo pipefail
+      source "$1"
+      printf "%s\n%s\n%s\n" \
+        "${RELEASE_BUILD_SPEC}" \
+        "${RELEASE_EXTENSION_SPEC}" \
+        "${RELEASE_PROFILE_SPEC}"
+    ' _ "${repo_root}/script/lib/host_config.sh"
+)"
+[[ "$(sed -n '1p' <<<"${host_config_records}")" == "${build_record}" ]] || {
+  echo "Host Configuration changed the Release Specification build record." >&2
+  exit 1
+}
+[[ "$(sed -n '2p' <<<"${host_config_records}")" == "${extension_record}" ]] || {
+  echo "Host Configuration changed the Release Specification extension record." >&2
+  exit 1
+}
+[[ "$(sed -n '3p' <<<"${host_config_records}")" == "${profile_record}" ]] || {
+  echo "Host Configuration changed the Release Specification profile record." >&2
+  exit 1
+}
+[[ "$(wc -l < "${host_config_trace}" | tr -d ' ')" == "2" ]] || {
+  echo "Host Configuration must validate once and extract all values once." >&2
+  exit 1
+}
+
 invalid_schema="${test_root}/invalid-schema.json"
 missing_profile_identity="${test_root}/missing-profile-identity.json"
 unsafe_profile_identity="${test_root}/unsafe-profile-identity.json"

@@ -16,68 +16,113 @@ LOCK_FILE="${REPO_ROOT}/host/release-lock.json"
 
 source "${REPO_ROOT}/script/lib/release_specification.sh"
 
-RELEASE_BUILD_SPEC="$(release_specification_record build "${LOCK_FILE}")"
-RELEASE_EXTENSION_SPEC="$(release_specification_record extensions "${LOCK_FILE}")"
-RELEASE_PROFILE_SPEC="$(release_specification_record profile "${LOCK_FILE}")"
+host_config_expected_names=(
+  RELEASE_BUILD_SPEC
+  RELEASE_EXTENSION_SPEC
+  RELEASE_PROFILE_SPEC
+  APP_NAME
+  APPLICATION_NAME
+  BUNDLE_IDENTIFIER
+  URL_SCHEME
+  DATA_FOLDER_NAME
+  USER_DATA_FOLDER_NAME
+  EXTENSIONS_FOLDER_NAME
+  SHARED_DATA_FOLDER_NAME
+  BACKUP_FOLDER_NAME
+  STORAGE_NAMESPACE
+  QUERY_FOLDER_NAME
+  SERVER_APPLICATION_NAME
+  SERVER_DATA_FOLDER_NAME
+  TUNNEL_APPLICATION_NAME
+  SIGNING_MODE
+  SIGNING_IDENTITY_COMMON_NAME
+  SIGNING_SCOPE
+  FOCUSED_SHELL_ENABLED
+  FOCUSED_SHELL_RESULT_LOCATION
+  FOCUSED_SHELL_NARROW_BREAKPOINT
+  DARWIN_PROFILE_UUID
+  DARWIN_PROFILE_PAYLOAD_UUID
+  DOCUMENT_EXTENSIONS
+  PROFILE_SCHEMA_VERSION
+  TARGET_ARCH
+  VSCODIUM_TAG
+  VSCODIUM_COMMIT
+  VSCODIUM_REPOSITORY
+  VSCODIUM_PUBLISHED_AT
+  VSCODIUM_RELEASE_NOTES_URL
+  CODE_OSS_TAG
+  CODE_OSS_COMMIT
+  CODE_OSS_REPOSITORY
+  CODE_OSS_VERSION
+  ELECTRON_VERSION
+  WRAPPER_VERSION
+  RELEASE_SET_BASE_ID
+  RELEASE_COMPATIBILITY_STATUS
+  RELEASE_VALIDATION_ISSUE
+  NODE_VERSION
+  NODE_NPM_VERSION
+  NODE_ARCHIVE_URL
+  NODE_ARCHIVE_SHA256
+  PYTHON_VERSION
+  APPLE_CLANG_VERSION
+  MACOS_SDK_VERSION
+  DBCODE_PACKAGE_SPEC
+  PYTHON_NOTEBOOK_SPEC
+  RUNTIME_EXTENSION_PACKAGES
+  DBCODE_ID
+  DBCODE_VERSION
+  DBCODE_ENGINE
+  DBCODE_SHA256
+  DBCODE_SIGNATURE_ARCHIVE_SHA256
+  DBCODE_PUBLIC_KEY_ID
+  DBCODE_PUBLIC_KEY_SHA256
+  DBCODE_CONTRIBUTIONS_SHA256
+  DBCODE_PACKAGE_SIZE
+)
+host_config_parts=()
+while IFS= read -r -d '' host_config_part; do
+  host_config_parts+=("${host_config_part}")
+done < <(release_specification_host_config_pairs "${LOCK_FILE}")
 
-APP_NAME="$(jq -er '.product.app_name' <<<"${RELEASE_PROFILE_SPEC}")"
-APPLICATION_NAME="$(jq -er '.product.application_name' <<<"${RELEASE_PROFILE_SPEC}")"
-BUNDLE_IDENTIFIER="$(jq -er '.product.bundle_identifier' <<<"${RELEASE_PROFILE_SPEC}")"
-URL_SCHEME="$(jq -er '.product.url_scheme' <<<"${RELEASE_PROFILE_SPEC}")"
-DATA_FOLDER_NAME="$(jq -er '.product.data_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-USER_DATA_FOLDER_NAME="$(jq -er '.product.user_data_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-EXTENSIONS_FOLDER_NAME="$(jq -er '.product.extensions_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-SHARED_DATA_FOLDER_NAME="$(jq -er '.product.shared_data_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-BACKUP_FOLDER_NAME="$(jq -er '.product.backup_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-STORAGE_NAMESPACE="$(jq -er '.product.storage_namespace' <<<"${RELEASE_PROFILE_SPEC}")"
-QUERY_FOLDER_NAME="$(jq -er '.product.query_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-SERVER_APPLICATION_NAME="$(jq -er '.product.server_application_name' <<<"${RELEASE_PROFILE_SPEC}")"
-SERVER_DATA_FOLDER_NAME="$(jq -er '.product.server_data_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
-TUNNEL_APPLICATION_NAME="$(jq -er '.product.tunnel_application_name' <<<"${RELEASE_PROFILE_SPEC}")"
-SIGNING_MODE="$(jq -er '.product.signing.mode' <<<"${RELEASE_PROFILE_SPEC}")"
-SIGNING_IDENTITY_COMMON_NAME="$(jq -er '.product.signing.identity_common_name' <<<"${RELEASE_PROFILE_SPEC}")"
-SIGNING_SCOPE="$(jq -er '.product.signing.scope' <<<"${RELEASE_PROFILE_SPEC}")"
-FOCUSED_SHELL_ENABLED="$(jq -er '.product.focused_shell.enabled' <<<"${RELEASE_PROFILE_SPEC}")"
-FOCUSED_SHELL_RESULT_LOCATION="$(jq -er '.product.focused_shell.result_location' <<<"${RELEASE_PROFILE_SPEC}")"
-FOCUSED_SHELL_NARROW_BREAKPOINT="$(jq -er '.product.focused_shell.narrow_breakpoint' <<<"${RELEASE_PROFILE_SPEC}")"
-DARWIN_PROFILE_UUID="$(jq -er '.product.darwin_profile_uuid' <<<"${RELEASE_PROFILE_SPEC}")"
-DARWIN_PROFILE_PAYLOAD_UUID="$(jq -er '.product.darwin_profile_payload_uuid' <<<"${RELEASE_PROFILE_SPEC}")"
-DOCUMENT_EXTENSIONS="$(jq -c '.product.document_extensions' <<<"${RELEASE_PROFILE_SPEC}")"
-PROFILE_SCHEMA_VERSION="$(jq -er '.profile_schema_version' <<<"${RELEASE_PROFILE_SPEC}")"
-TARGET_ARCH="$(jq -er '.target.architecture' <<<"${RELEASE_BUILD_SPEC}")"
-VSCODIUM_TAG="$(jq -er '.upstream.vscodium.tag' <<<"${RELEASE_BUILD_SPEC}")"
-VSCODIUM_COMMIT="$(jq -er '.upstream.vscodium.commit' <<<"${RELEASE_BUILD_SPEC}")"
-VSCODIUM_REPOSITORY="$(jq -er '.upstream.vscodium.repository' <<<"${RELEASE_BUILD_SPEC}")"
-VSCODIUM_PUBLISHED_AT="$(jq -er '.upstream.vscodium.published_at' <<<"${RELEASE_BUILD_SPEC}")"
-VSCODIUM_RELEASE_NOTES_URL="$(jq -er '.upstream.vscodium.release_notes_url' <<<"${RELEASE_BUILD_SPEC}")"
-CODE_OSS_TAG="$(jq -er '.upstream.code_oss.tag' <<<"${RELEASE_BUILD_SPEC}")"
-CODE_OSS_COMMIT="$(jq -er '.upstream.code_oss.commit' <<<"${RELEASE_BUILD_SPEC}")"
-CODE_OSS_REPOSITORY="$(jq -er '.upstream.code_oss.repository' <<<"${RELEASE_BUILD_SPEC}")"
-CODE_OSS_VERSION="$(jq -er '.runtime.code_oss_version' <<<"${RELEASE_BUILD_SPEC}")"
-ELECTRON_VERSION="$(jq -er '.runtime.electron_version' <<<"${RELEASE_BUILD_SPEC}")"
-WRAPPER_VERSION="$(jq -er '.release.wrapper_version' <<<"${RELEASE_BUILD_SPEC}")"
-RELEASE_SET_BASE_ID="$(jq -er '.release.release_set_base_id' <<<"${RELEASE_BUILD_SPEC}")"
-RELEASE_COMPATIBILITY_STATUS="$(jq -er '.release.compatibility_status' <<<"${RELEASE_BUILD_SPEC}")"
-RELEASE_VALIDATION_ISSUE="$(jq -er '.release.validation_issue' <<<"${RELEASE_BUILD_SPEC}")"
-NODE_VERSION="$(jq -er '.toolchain.node.version' <<<"${RELEASE_BUILD_SPEC}")"
-NODE_NPM_VERSION="$(jq -er '.toolchain.node.npm_version' <<<"${RELEASE_BUILD_SPEC}")"
-NODE_ARCHIVE_URL="$(jq -er '.toolchain.node.archive_url' <<<"${RELEASE_BUILD_SPEC}")"
-NODE_ARCHIVE_SHA256="$(jq -er '.toolchain.node.archive_sha256' <<<"${RELEASE_BUILD_SPEC}")"
-PYTHON_VERSION="$(jq -er '.toolchain.python_version' <<<"${RELEASE_BUILD_SPEC}")"
-APPLE_CLANG_VERSION="$(jq -er '.toolchain.apple_clang_version' <<<"${RELEASE_BUILD_SPEC}")"
-MACOS_SDK_VERSION="$(jq -er '.toolchain.macos_sdk_version' <<<"${RELEASE_BUILD_SPEC}")"
-DBCODE_PACKAGE_SPEC="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
-PYTHON_NOTEBOOK_SPEC="$(jq -c '.python_notebooks' <<<"${RELEASE_EXTENSION_SPEC}")"
-RUNTIME_EXTENSION_PACKAGES="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
-DBCODE_ID="$(jq -er '.id' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_VERSION="$(jq -er '.version' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_ENGINE="$(jq -er '.engine' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_SHA256="$(jq -er '.sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_SIGNATURE_ARCHIVE_SHA256="$(jq -er '.signature_archive_sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_PUBLIC_KEY_ID="$(jq -er '.public_key_id' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_PUBLIC_KEY_SHA256="$(jq -er '.public_key_sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_CONTRIBUTIONS_SHA256="$(jq -er '.jq_sorted_compact_contributes_sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
-DBCODE_PACKAGE_SIZE="$(jq -er '.package_size' <<<"${DBCODE_PACKAGE_SPEC}")"
+host_config_expected_part_count=$((
+  (${#host_config_expected_names[@]} + 1) * 2
+))
+[[ "${#host_config_parts[@]}" -eq "${host_config_expected_part_count}" ]] || {
+  echo "Host Configuration materialization was incomplete." >&2
+  exit 1
+}
+for ((host_config_index = 0;
+  host_config_index < ${#host_config_expected_names[@]};
+  host_config_index += 1)); do
+  host_config_name_index=$((host_config_index * 2))
+  [[ "${host_config_parts[host_config_name_index]}" == "${host_config_expected_names[host_config_index]}" ]] || {
+    echo "Host Configuration returned an unexpected field." >&2
+    exit 1
+  }
+done
+host_config_sentinel_index=$((${#host_config_expected_names[@]} * 2))
+[[ "${host_config_parts[host_config_sentinel_index]}" == "__HOST_CONFIG_COMPLETE__" && \
+  "${host_config_parts[host_config_sentinel_index + 1]}" == "1" ]] || {
+  echo "Host Configuration materialization did not complete." >&2
+  exit 1
+}
+
+for ((host_config_index = 0;
+  host_config_index < ${#host_config_expected_names[@]};
+  host_config_index += 1)); do
+  host_config_value_index=$((host_config_index * 2 + 1))
+  printf -v "${host_config_expected_names[host_config_index]}" \
+    '%s' "${host_config_parts[host_config_value_index]}"
+done
+unset \
+  host_config_expected_names \
+  host_config_parts \
+  host_config_part \
+  host_config_expected_part_count \
+  host_config_index \
+  host_config_name_index \
+  host_config_sentinel_index \
+  host_config_value_index
 
 BUILD_ROOT="${GENERATED_REPO_ROOT}/.build"
 CACHE_ROOT="${BUILD_ROOT}/cache"

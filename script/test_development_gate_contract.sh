@@ -68,8 +68,6 @@ for adapter in \
   test_generated_workspace_contract.sh \
   test_connection_catalogue_contract.sh \
   test_fast_release_acceptance_contract.sh \
-  test_build_host_task.sh \
-  test_release_host_task.sh \
   test_focused_shell_contract.sh; do
   require_line_once \
     "${trace_file}" \
@@ -79,6 +77,8 @@ done
 
 for change_owned_adapter in \
   test_development_gate_contract.sh \
+  test_build_host_task.sh \
+  test_release_host_task.sh \
   test_public_push_readiness.sh \
   test_host_release_contract.sh \
   test_runtime_extensions_verifier.sh \

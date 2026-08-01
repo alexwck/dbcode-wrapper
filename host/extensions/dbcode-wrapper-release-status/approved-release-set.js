@@ -802,12 +802,8 @@ function upsertApprovedHistory(history, record) {
 }
 
 module.exports = {
-  GIT_COMMIT_PATTERN,
-  SHA256_PATTERN,
-  COMPILED_HOST_INPUT_PATTERN,
   createPromptFreeApprovedRecord,
   findApprovedCandidate,
-  hasCanonicalSourceSetId,
   promptFreeVerificationChecks,
   readPlainJsonFile,
   upsertApprovedHistory,

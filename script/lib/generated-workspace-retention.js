@@ -888,10 +888,8 @@ function assertManagedPath({
 }
 
 module.exports = {
-  CLASSIFICATIONS,
   assertManagedPath,
   contains,
-  createRetentionContract,
   executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,

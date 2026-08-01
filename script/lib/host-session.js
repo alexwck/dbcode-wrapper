@@ -739,11 +739,9 @@ function createNodeRuntime() {
 
 module.exports = {
   createNodeRuntime,
-  parseProcessTable,
   parseSessionResult,
   runHostSession,
   serializeSessionResult,
   stopHostSession,
-  validateSessionPolicy,
-  validateSessionResult
+  validateSessionPolicy
 };

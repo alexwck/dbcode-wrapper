@@ -180,4 +180,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { applicationExecutable, run, shouldRelaunchApplication, validateWorkerRequest, waitForProcessesToExit, writeOutcome };
+module.exports = { applicationExecutable, run, shouldRelaunchApplication, validateWorkerRequest, writeOutcome };

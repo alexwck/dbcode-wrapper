@@ -31,6 +31,11 @@ const {
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const cli = join(scriptRoot, 'generated_workspace.cjs');
 
+test('Generated Workspace Retention keeps policy construction private', () => {
+  assert.equal(retention.CLASSIFICATIONS, undefined);
+  assert.equal(retention.createRetentionContract, undefined);
+});
+
 function makeFixture(t) {
   const fixtureRoot = realpathSync(mkdtempSync(join(tmpdir(), 'dbcode retention contract ')));
   t.after(() => rmSync(fixtureRoot, { recursive: true, force: true }));

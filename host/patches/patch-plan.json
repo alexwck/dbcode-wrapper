@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "target": {
     "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
     "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
@@ -135,14 +135,5 @@
     "src/vs/workbench/workbench.common.main.ts"
   ],
   "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
-  "expected_maintained_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f",
-  "migration_proof": {
-    "baseline": "pinned Code OSS after the pinned VSCodium patch stage and before wrapper Code OSS patches",
-    "historical_patch_count": 13,
-    "historical_stack_sha256": "5ffa6f010fd3b6973de4acaa2341659765587107bec4075caa20c90777f416b2",
-    "historical_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
-    "semantic_tree_sha256": "695610f58337f09b2cd533fd6569a86ec017e810f3b63f3568fd6e2648f948ae",
-    "prepared_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f",
-    "equivalent": true
-  }
+  "expected_maintained_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f"
 }
