@@ -4,7 +4,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 
 ## Development
 
-- `check_development.sh` runs the fast default source contract suite. Gate-composition, public-push, host-package, publishing, and deep rollback tests run only when a change owns those workflows.
+- `check_development.sh` runs the fast default source contract suite. Deep build and release task fixtures, gate-composition, public-push, host-package, publishing, and rollback tests run only when a change owns those workflows.
 - `check_public_push_readiness.sh` checks the exact selected Git history for private material and public-source policy. It streams historical Git objects in batches instead of starting a Git process for each object.
 - `generated_workspace.sh inventory` reports every registered ignored root with its size status, retention class, owner, reason, and current cleanup eligibility. Only deliberately expired output is measured. `cleanup --class CLASS` and `cleanup --path PATH` return a dry-run plan. `cleanup --path PATH --apply` revalidates and removes one exact expired path without a prompt; class-wide apply is refused.
 - `setup_local_signing_identity.sh --status` is the lower-level prompt-free signing diagnostic. Normal build and release tasks call it themselves.

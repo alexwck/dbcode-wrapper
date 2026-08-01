@@ -121,7 +121,7 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 - Follow `docs/agents/verification-policy.md` when choosing the smallest useful gate.
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
 - Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
-- Gate-composition, public-push, host-package, publishing, and deep rollback tests are change-owned checks, not part of the default development path.
+- Deep build and release task fixtures, gate-composition, public-push, host-package, publishing, and deep rollback tests are change-owned checks, not part of the default development path.
 - Built-host changes: run Static Host Smoke and the one-profile rendered focused-shell smoke. Static Host Smoke owns the installed-size limit, zero source maps, the exact built-in inventory, no embedded DBCode, and generated packaged settings. Do not add another audit that scans private runtime folders.
 - Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
 - Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.

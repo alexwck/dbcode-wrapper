@@ -12,15 +12,9 @@
 
 Keep Code OSS as the hidden compatible runtime and VSCodium as its build and packaging layer. Open VSX is only the package registry; it cannot run DBCode by itself.
 
-In design terms, the unchanged DBCode module is an implementation that expects the VS Code Extension API interface. Code OSS supplies the deep host module behind that interface: the Node extension host, editors, views, webviews, commands, custom editors, notebooks, storage, secrets, and workbench coordination. The Open VSX package boundary is a good seam because DBCode and the host can still be versioned and tested separately. Replacing that deep module with a small custom adapter would recreate a large and continually changing part of Code OSS with worse leverage and locality.
+The unchanged DBCode extension expects the VS Code Extension API. Code OSS supplies the extension host, editors, views, webviews, commands, notebooks, storage, secrets, and workbench coordination behind that interface. Replacing it with a small custom adapter would recreate a large and changing platform surface.
 
-The current installed footprint is about 916 MiB for the signed app plus 262 MiB for the expanded external DBCode extension. Inside the app, Electron is about 265 MiB and the Code OSS application is 627 MiB. That Code OSS payload includes 163 MiB across 94 built-in extensions and roughly 350 MiB of source maps across the application. Those are measured opportunities for a controlled slimming prototype, not a safe deletion list. The unchanged DBCode package itself remains outside that work.
-
-Monaco alone cannot run VS Code extensions. A native AppKit or SwiftUI shell would therefore need to recreate the extension host and DBCode's contributed views, custom editor, notebook, renderer, storage, and secret services. Eclipse Theia is the only credible alternative host worth a bounded comparison because it implements the VS Code extension interface, but it still uses Electron for desktop and officially records some API areas as stubbed. Switching now would add another compatibility track without proven size savings.
-
-A truly ground-up DBCode app becomes maintainable only if DBCode supplies a supported standalone engine, SDK, or service API. The public API currently documented by DBCode is an API for other VS Code extensions, not a standalone database engine.
-
-The next dependency order is therefore Appshot redesign refinement, compatible-host slimming, advanced DBCode feature reachability, profile migration and update discovery, controlled promotion and rollback, then the Private Personal Release for the user's own Macs. See [the complete feasibility report](../research/ground-up-desktop-host-feasibility.md).
+Keep size work inside the maintained slimming policy, semantic Patch Plan, and static Host checks. Do not treat old measurements or prototype experiments as a deletion list. A different host becomes worth reconsidering only if DBCode provides a supported standalone engine, SDK, or service API.
 
 ## Comments
 

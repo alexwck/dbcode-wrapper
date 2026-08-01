@@ -9,13 +9,13 @@ tags:
   - cache
 wiki_profile: public
 wiki_depth: standard
-source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
+source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
 ---
 ## Summary
 
 Compiled Host Cache separates expensive Code OSS compilation from smaller release assembly. It gives the exact compilation inputs a content-addressed ID, verifies cached app bytes, file modes, and symbolic links, and records the compiler environment in a receipt.
 
-The key distinguishes profile-only identity from values compiled into the host. User-data, extension, backup-folder, profile-schema, and dated slimming-evidence changes can reuse the host. Query storage invalidates it because the focused shell reads that value from the compiled product record.
+The key distinguishes profile-only identity from values compiled into the host. User-data, extension, backup-folder, profile-schema, and dated slimming-evidence changes can reuse the host. Query storage invalidates it because the focused shell reads that value from the compiled product record. Changes to the active Release Specification projection also invalidate the cache deliberately.
 
 ## Responsibilities
 
@@ -46,10 +46,10 @@ flowchart LR
 
 ## Key files
 
-- [compiled_host_cache.sh](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/script/lib/compiled_host_cache.sh) — input ID, normalized source modes, receipt, integrity, resolution, and publication.
-- [patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/patches/patch-plan.json) — patch and first-class overlay identity.
-- [release_specification.sh](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/script/lib/release_specification.sh) — the compile-time product projection.
-- [test_compiled_host_cache_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/script/test_compiled_host_cache_contract.sh) — reuse, invalidation, permission, tamper, and path checks.
+- [compiled_host_cache.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/lib/compiled_host_cache.sh) — input ID, normalized source modes, active projection digest, receipt, integrity, resolution, and publication.
+- [patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/host/patches/patch-plan.json) — patch and first-class overlay identity.
+- [release_specification_records.jq](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/lib/release_specification_records.jq) — the active compile-time product projection.
+- [test_compiled_host_cache_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_compiled_host_cache_contract.sh) — reuse, invalidation, permission, tamper, and path checks.
 
 ## Dependencies
 

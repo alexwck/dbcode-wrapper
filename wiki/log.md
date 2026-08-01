@@ -212,3 +212,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 3700317 (was 2191402)
 - Coverage: Static Host Smoke owns package size, source maps, exact built-in inventory, embedded-DBCode exclusion, and generated managed settings; Profile Layout keeps only `default` and persistent `qa`; profile recovery is current-user only; Host Session exposes one run command and validates once per public operation
 - Pages: [Overview](./OVERVIEW.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), [Standalone DBCode Profile](./concepts/standalone-dbcode-profile.md), [Host Session](./modules/host-session.md), [Patch Plan and build](./modules/patch-plan-and-build.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-01: refresh
+
+- Profile: public/standard
+- source_commit: b9d8895 (was 3700317)
+- Coverage: faster default source gate; change-owned deep build and release fixtures; one checked Host Configuration extraction; current-only semantic Patch Plan; smaller CommonJS interfaces; consistent private Standalone DBCode Profile language
+- Pages: [Overview](./OVERVIEW.md), [Product and upstream boundaries](./architecture/product-and-upstream-boundaries.md), [Release Specification](./modules/release-specification.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Compiled Host Cache](./modules/compiled-host-cache.md), and [Verification Harness](./modules/verification-harness.md)

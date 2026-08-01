@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
+source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
 tags:
   - wiki
   - overview
@@ -10,7 +10,7 @@ tags:
 ---
 # DBCode Wrapper codebase wiki
 
-DBCode Wrapper is a focused macOS host for the official, unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, isolated profile, build, update status, and release safety. DBCode still owns database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
+DBCode Wrapper is a focused macOS host for the official, unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, private Standalone DBCode Profile, build, update status, and release safety. DBCode still owns database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
 
 DBCode's own query results open below the query at every window width. The wrapper sets that one result-location preference and leaves the result grid, Inspector, copy, and export behavior with DBCode.
 
@@ -18,7 +18,7 @@ DBCode side drawers stay open while the user works elsewhere. Account remains te
 
 Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
 
-This wiki is a learning map, not a second source of truth. It is anchored to source commit [`2191402`](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809). Check current source and tests when details disagree.
+This wiki is a learning map, not a second source of truth. The `source_commit` field records the source revision used for this refresh. Check current source and tests when details disagree.
 
 Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases/latest) for the current published Host Release. Releases are normal published releases in this repository. Public assets contain only the verified wrapper-host DMG and checksum; DBCode is not included.
 
@@ -26,7 +26,7 @@ Automatic read-only polling keeps Code OSS, VSCodium, and DBCode update status v
 
 The maintained release path has one owner-facing command. `plan` shows the derived tag and paths. `prepare` holds one checkpoint lease while it checks signing, builds or reuses the exact host, runs static and one-profile rendered checks, accepts, tags, packages, independently verifies, approves, and records one history change. `publish --publish` performs the explicit public release after that change is committed.
 
-Normal development uses the fast prompt-free source gate. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
+Normal development uses the fast prompt-free source gate. Deep build and release fixtures run only when those workflows change. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
 
 Wrapper-owned focused-shell TypeScript and CSS are maintained as normal source. Small patches connect them to pinned Code OSS, then the build materializes and verifies the exact prepared tree before compilation.
 

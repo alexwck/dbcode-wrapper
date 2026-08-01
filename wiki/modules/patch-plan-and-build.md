@@ -9,7 +9,7 @@ tags:
   - patches
 wiki_profile: public
 wiki_depth: standard
-source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
+source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
 ---
 ## Summary
 
@@ -21,7 +21,7 @@ A standalone build checks the existing signing identity before assembly. It hold
 
 - Check signing readiness without changing trust or asking for input.
 - Materialize one clean [Release Source Snapshot](release-source-snapshot.md).
-- Declare every VSCodium patch, Code OSS patch, and first-class overlay in one ordered plan.
+- Declare every current VSCodium patch, Code OSS patch, and first-class overlay in one ordered plan with the expected prepared-tree digest.
 - Refuse unsafe, linked, missing, changed, or already-present overlay targets.
 - Verify the prepared Code OSS tree before compilation.
 - Reuse only a verified [Compiled Host Cache](compiled-host-cache.md) entry.
@@ -36,7 +36,8 @@ A standalone build checks the existing signing identity before assembly. It hold
 ## Key files
 
 - [script/lib/dist_checkpoint.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/dist_checkpoint.sh) — kernel lease plus fixed candidate and previous checkpoint recovery.
-- [patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/patches/patch-plan.json) — ordered patches, overlay files, and expected maintained-tree digest.
+- [patch-plan.json](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/host/patches/patch-plan.json) — current ordered patches, overlay files, and expected maintained-tree digest.
+- [script/test_patch_plan.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_patch_plan.sh) — current plan, overlay, and prepared-tree contracts.
 - [host/code-oss-overlay](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/code-oss-overlay) — wrapper-owned Code OSS source files.
 - [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/patches/code-oss) — small runtime integration patches.
 - [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/patches/vscodium) — build-repository patches and the materialize-then-verify hook.

@@ -30,7 +30,7 @@ No issue is currently claimed. The normal public channel contains one `v0.1.0` r
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), and [Issue 52](issues/52-publish-wrapper-maintenance-release.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), and [Issue 53](issues/53-restart-public-versioning-at-v0-1-0.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 

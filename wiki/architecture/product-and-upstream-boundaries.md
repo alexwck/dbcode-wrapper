@@ -8,11 +8,11 @@ tags:
   - boundaries
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2008ff48373c1aac378d0d1ec903e96a88ec1e29
+source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
 ---
 ## Summary
 
-DBCode Wrapper is a focused macOS host for the official unmodified DBCode extension. It is not a database engine, a replacement database client, or a general-purpose IDE. The wrapper owns the desktop identity, focused navigation, isolated profile, build and release contracts, and checks around the integration.
+DBCode Wrapper is a focused macOS host for the official unmodified DBCode extension. It is not a database engine, a replacement database client, or a general-purpose IDE. The wrapper owns the desktop identity, focused navigation, private Standalone DBCode Profile, build and release contracts, and checks around the integration.
 
 DBCode owns connections, dialects, object browsing, SQL editing, results, data work, notebooks, AI, MCP, accounts, and licences. Code OSS supplies the extension-host runtime, and VSCodium supplies reproducible macOS build machinery.
 
@@ -23,7 +23,7 @@ flowchart LR
   V[VSCodium build inputs] --> W[Wrapper build and policy]
   C[Code OSS runtime] --> W
   W --> A[DBCode Wrapper app]
-  A --> P[Private standalone profile]
+  A --> P[Private Standalone DBCode Profile]
   D[Official DBCode package] --> P
   N[Pinned notebook packages] --> P
   A --> U[Focused database UI]

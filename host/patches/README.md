@@ -18,6 +18,6 @@ The Code OSS stage has four maintained seams:
 3. host slimming policy;
 4. small release, profile, and DBCode integrations.
 
-The migration proof in the manifest records the 13-patch historical stack and the digest of all 13 maintained source paths. Replaying the four semantic patches produced the same patch-stage digest. The manifest separately records the final prepared-tree digest because VSCodium performs one deterministic copyright substitution after patch application. Source contracts inspect the final tree and semantic outcomes rather than depending on obsolete experiment names.
+The manifest records the final prepared-tree digest because VSCodium performs one deterministic copyright substitution after patch application. Source contracts verify the current entries, patch and overlay digests, complete maintained path set, and final semantic outcomes.
 
 Never edit the generated checkout under `.build/work/` as the source of truth. Make the change in the maintained patch, apply it to a clean pinned checkout, and verify the final tree before updating its expected digest.
