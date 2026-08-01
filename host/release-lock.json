@@ -36,11 +36,11 @@
     "electron_version": "42.2.0"
   },
   "release": {
-    "wrapper_version": "0.1.0",
+    "wrapper_version": "0.1.1",
     "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.6",
     "compatibility_status": "candidate",
     "profile_schema_version": 1,
-    "validation_issue": "53-restart-public-versioning-at-v0-1-0"
+    "validation_issue": "56-deepen-pre-release-maintenance-interfaces"
   },
   "distribution": {
     "channel": "github-published-release",

@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed. The normal public channel contains one `v0.1.0` release built from the current maintained source.
+No issue is currently claimed. The normal public channel points to the latest published release, while the Release Specification defines the next exact candidate.
 
 ## History
 
