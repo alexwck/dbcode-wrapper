@@ -389,6 +389,56 @@
         "production_profile_written": false,
         "installed_app_changed": false
       }
+    },
+    {
+      "schema_version": 2,
+      "id": "code-oss-1.126.0-dbcode-1.36.6-source-6dac390090f6da90075483dbdb13aedb3a84acc6984c500b8127de5013ebaee9-artifact-49f28e8cabbd8583fdcdedfffec224d7e4680d7d02dc34480f97914c471636ef",
+      "source_set_id": "code-oss-1.126.0-dbcode-1.36.6-source-6dac390090f6da90075483dbdb13aedb3a84acc6984c500b8127de5013ebaee9",
+      "compatibility_status": "approved",
+      "source_commit": "850a052ca20be170e219669c5b0476011834f2e2",
+      "target": {
+        "platform": "darwin",
+        "architecture": "arm64"
+      },
+      "profile": {
+        "schema_version": 1
+      },
+      "manifest": {
+        "schema_version": 6,
+        "build_manifest_sha256": "cb0ad2814f65c8cdd7e492f041177e4d3abddb6c586dc175ba9c70f7cec19eb0",
+        "candidate_manifest_sha256": "cb0ad2814f65c8cdd7e492f041177e4d3abddb6c586dc175ba9c70f7cec19eb0",
+        "approval_attestation_sha256": "247a9dbf8603e818f05f1fd2adfb39e867731214909e6fff41245316270cc756",
+        "artifact_sha256": "49f28e8cabbd8583fdcdedfffec224d7e4680d7d02dc34480f97914c471636ef",
+        "shell_patch_revision": "1938fa696f653af37a2c2e828b82be83c2879c611073ea091aa550da08412fe3",
+        "overlay_sha256": "8216eff4357158598613afe3a54e85c9d88ba1fca9cb9906bd9ef5006bd27a94",
+        "source_snapshot_sha256": "ed6d7a623eab43938da7c1f97c2fd788eb1ef16553c969d56d935400384316f3",
+        "compiled_host_input_id": "compiled-host-31aa5ab7dbb6f1f1a719b7e0de342dd5b233cd3fb955c3bcaf57722d82088133",
+        "packaging_status": "built-and-signed"
+      },
+      "host": {
+        "vscodium_tag": "1.126.04524",
+        "vscodium_commit": "4015f2d0191311733aa5dbb2abde8101dce63eef",
+        "code_oss_tag": "1.126.0",
+        "code_oss_commit": "7e7950df89d055b5a378379db9ee14290772148a"
+      },
+      "dbcode": {
+        "id": "dbcode.dbcode",
+        "version": "1.36.6",
+        "vsix_sha256": "ec0923b51ce53bda0c11a2559e2646833eb727f39efd9e61114becf122e3b949",
+        "signature_archive_sha256": "234873cca677864a8e26f15e85b88179ca85b6f8a9bbd54f5aef908d8c6e2fc9"
+      },
+      "approval": {
+        "approved_at": "2026-08-01T14:38:50Z",
+        "validation_issue": "56-deepen-pre-release-maintenance-interfaces",
+        "proof_sha256": "9d3ef853760285872090aa26cefb7d079e2474cbc558441ba12a9df820144fb9",
+        "gate_receipt_sha256": "251a26f1878b31ba7b49c2c0bd74d0dbe32a3203e8c66044f1fa15488c09f6be",
+        "mode": "prompt-free-public-host-release",
+        "source_tag": "v0.1.1",
+        "compatibility_manifest_sha256": "e67556da20c06a32aa0e953d7cbf36e5b3d7db95d9425548c9069f7a3ef03cbc",
+        "release_lock_sha256": "be11aea0feb1d930b0967dc78d335b570494ca23a056f2ceed4fa7eb618289fb",
+        "production_profile_written": false,
+        "installed_app_changed": false
+      }
     }
   ]
 }
