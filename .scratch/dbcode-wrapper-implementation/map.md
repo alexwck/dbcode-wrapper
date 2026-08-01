@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed. The normal path remains a thin unchanged-DBCode wrapper with read-only update polling, fast prompt-free development checks, one persistent generated `qa` profile, and one serialized release preparation task.
+- [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md) is claimed. It keeps routine releases fast by narrowing remaining maintenance interfaces without changing DBCode or adding another release path.
 
 ## History
 

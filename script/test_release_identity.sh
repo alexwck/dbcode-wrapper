@@ -5,6 +5,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/source_digest.sh"
 
+dbcode_version="$(jq -er '.dbcode.version' <<<"${RELEASE_EXTENSION_SPEC}")"
 identity_library="${REPO_ROOT}/script/lib/release_identity.sh"
 source_digest_library="${REPO_ROOT}/script/lib/source_digest.sh"
 [[ -f "${identity_library}" ]] || {
@@ -71,7 +72,7 @@ payload="$(release_source_set_identity_payload "${candidate_lock}")"
 jq -e \
   --arg vscodium_commit "${VSCODIUM_COMMIT}" \
   --arg code_oss_commit "${CODE_OSS_COMMIT}" \
-  --arg dbcode_version "${DBCODE_VERSION}" '
+  --arg dbcode_version "${dbcode_version}" '
   .target == {platform: "darwin", architecture: "arm64"}
   and .profile_schema_version == 1
   and .product.url_scheme == "dbcode-wrapper"

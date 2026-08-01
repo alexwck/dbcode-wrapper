@@ -6,10 +6,11 @@ import { createRequire } from 'node:module';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
+const catalogueContract = require('../host/qa/connection-catalogue-contract.cjs');
 const {
   createConnectionCatalogueSnapshot,
   verifyConnectionCatalogueSnapshot
-} = require('../host/qa/connection-catalogue-contract.cjs');
+} = catalogueContract;
 
 const catalogue = {
   extensionId: 'vendor.database-client',
@@ -19,6 +20,13 @@ const catalogue = {
     { title: 'File formats', declaredCount: 1, labels: ['Example File'] }
   ]
 };
+
+test('Connection Catalogue exposes only its maintained snapshot interface', () => {
+  assert.deepEqual(Object.keys(catalogueContract).sort(), [
+    'createConnectionCatalogueSnapshot',
+    'verifyConnectionCatalogueSnapshot'
+  ]);
+});
 
 test('a rendered catalogue becomes a deterministic digest-only snapshot', () => {
   const snapshot = createConnectionCatalogueSnapshot(catalogue);

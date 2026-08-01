@@ -4,6 +4,12 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
+dbcode_package_spec="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
+dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
+dbcode_sha256="$(jq -er '.sha256' <<<"${dbcode_package_spec}")"
+dbcode_signature_archive_sha256="$(
+  jq -er '.signature_archive_sha256' <<<"${dbcode_package_spec}"
+)"
 expected_extension_ids='[
   "dbcode.dbcode",
   "ms-python.python",
@@ -15,7 +21,7 @@ expected_extension_ids='[
 ]'
 
 jq -e \
-  --arg dbcode_version "${DBCODE_VERSION}" \
+  --arg dbcode_version "${dbcode_version}" \
   --argjson expected_extension_ids "${expected_extension_ids}" '
   .dbcode.version == $dbcode_version and
   .python_notebooks.required == true and
@@ -80,9 +86,9 @@ rg -Fq -- '--allow-candidate' "${runtime_preparer}" || {
 }
 jq -e \
   --slurpfile policy "${feature_policy}" \
-  --arg dbcode_version "${DBCODE_VERSION}" \
-  --arg dbcode_sha256 "${DBCODE_SHA256}" \
-  --arg signature_sha256 "${DBCODE_SIGNATURE_ARCHIVE_SHA256}" \
+  --arg dbcode_version "${dbcode_version}" \
+  --arg dbcode_sha256 "${dbcode_sha256}" \
+  --arg signature_sha256 "${dbcode_signature_archive_sha256}" \
   --arg release_status "${RELEASE_COMPATIBILITY_STATUS}" \
   --arg code_oss_version "${CODE_OSS_VERSION}" \
   --arg code_oss_commit "${CODE_OSS_COMMIT}" \

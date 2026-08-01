@@ -74,6 +74,8 @@ Before changing behaviour, read:
 - Treat update discovery, compatibility testing, approval, installation, and rollback as separate states. Never describe an available or tested version as approved until the complete release-set gate passes.
 - Build an accepted release from a clean immutable source ref. Materialize that commit and read compilation and assembly inputs from the materialized source, not from the launcher checkout after a cleanliness check.
 - Reuse the exact Compiled Host when its content-addressed inputs match. A DBCode-only bump must not recompile unchanged Code OSS.
+- Let the Patch Plan module own the Compiled Host build projection. Keep `purpose` and `touched_areas` as descriptive guidance; do not make wording-only edits invalidate unchanged compiled bytes.
+- Keep DBCode and Python/Jupyter package details inside `RELEASE_EXTENSION_SPEC`. Do not recreate per-package Host Configuration globals when a caller can read the purpose-level record.
 - `release_host.sh prepare` owns the normal signing-status check, build or exact reuse, static smoke, one-profile rendered smoke, final acceptance, tag, package, independent verification, and approval. Do not turn those stages back into a manual release checklist.
 - A standalone `build_host.sh` run must also check the existing signing identity without prompting and fail before assembly when it is not usable. Any setup or trust change remains an explicit human gate.
 - Treat `dist/` as one exact build checkpoint. Build, smoke, rendered QA, acceptance, packaging, and independent verification must hold or inherit its kernel-backed lease for their full lifetime. Stage a complete signed app and manifest, then replace the old checkpoint as one promotion.
@@ -81,6 +83,7 @@ Before changing behaviour, read:
 - Automated tests must never wait for Keychain, Kernel, Gatekeeper, Safe Storage, sign-in, licence, OAuth, or another person-controlled prompt. Do not approve or bypass those prompts automatically.
 - Use one persistent generated `qa` profile for rendered checks. It is separate from the user's Standalone DBCode Profile and is the only automated GUI profile.
 - Keep Profile Layout limited to the current-user `default` profile and the persistent generated `qa` profile. Profile recovery is a current-user action; do not add a test-only profile mode or recovery switch.
+- Test the Profile Recovery Worker through its `run` interface. Keep process waiting, clock, random identity, outcome files, and relaunch behaviour behind its operating-system adapter instead of exporting implementation helpers.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - Package and approve only when the annotated tag, release lock, build manifest, signed app, final acceptance report, and independent mounted verification identify the same release set.
 - Resume only after revalidating the current package files and their approval digests. An existing directory is not evidence that packaging or approval completed.

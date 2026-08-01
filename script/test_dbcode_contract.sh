@@ -4,13 +4,14 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
-jq -e '.id == "dbcode.dbcode"' <<<"${DBCODE_PACKAGE_SPEC}" >/dev/null || {
+dbcode_package_spec="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
+jq -e '.id == "dbcode.dbcode"' <<<"${dbcode_package_spec}" >/dev/null || {
   echo "The Release Specification is missing the locked DBCode package." >&2
   exit 1
 }
 
-dbcode_id="${DBCODE_ID}"
-dbcode_version="${DBCODE_VERSION}"
+dbcode_id="$(jq -er '.id' <<<"${dbcode_package_spec}")"
+dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
 
 [[ "${dbcode_id}" == "dbcode.dbcode" ]] || {
   echo "The release lock must select the official DBCode extension." >&2
@@ -43,15 +44,15 @@ jq -e '
   and (.signature_archive_sha256 | test("^[0-9a-f]{64}$"))
   and (.public_key_sha256 | test("^[0-9a-f]{64}$"))
   and (.package_size > 0)
-' <<<"${DBCODE_PACKAGE_SPEC}" >/dev/null
+' <<<"${dbcode_package_spec}" >/dev/null
 
-public_key_id="${DBCODE_PUBLIC_KEY_ID}"
+public_key_id="$(jq -er '.public_key_id' <<<"${dbcode_package_spec}")"
 public_key="${REPO_ROOT}/host/keys/openvsx-${public_key_id}.pem"
 [[ -f "${public_key}" ]] || {
   echo "Missing pinned Open VSX public key: ${public_key}" >&2
   exit 1
 }
-expected_key_sha="${DBCODE_PUBLIC_KEY_SHA256}"
+expected_key_sha="$(jq -er '.public_key_sha256' <<<"${dbcode_package_spec}")"
 actual_key_sha="$(shasum -a 256 "${public_key}" | awk '{print $1}')"
 [[ "${actual_key_sha}" == "${expected_key_sha}" ]] || {
   echo "The pinned Open VSX public key does not match the release lock." >&2

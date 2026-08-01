@@ -87,7 +87,6 @@ function verifyConnectionCatalogueSnapshot(actual, expected) {
 }
 
 module.exports = {
-  NORMALIZATION,
   createConnectionCatalogueSnapshot,
   verifyConnectionCatalogueSnapshot
 };

@@ -169,19 +169,7 @@ def release_specification_host_config:
       NODE_ARCHIVE_SHA256: $build.toolchain.node.archive_sha256,
       PYTHON_VERSION: $build.toolchain.python_version,
       APPLE_CLANG_VERSION: $build.toolchain.apple_clang_version,
-      MACOS_SDK_VERSION: $build.toolchain.macos_sdk_version,
-      DBCODE_PACKAGE_SPEC: ($extensions.dbcode | release_specification_compact_json),
-      PYTHON_NOTEBOOK_SPEC: ($extensions.python_notebooks | release_specification_compact_json),
-      RUNTIME_EXTENSION_PACKAGES: ($extensions.packages | release_specification_compact_json),
-      DBCODE_ID: $extensions.dbcode.id,
-      DBCODE_VERSION: $extensions.dbcode.version,
-      DBCODE_ENGINE: $extensions.dbcode.engine,
-      DBCODE_SHA256: $extensions.dbcode.sha256,
-      DBCODE_SIGNATURE_ARCHIVE_SHA256: $extensions.dbcode.signature_archive_sha256,
-      DBCODE_PUBLIC_KEY_ID: $extensions.dbcode.public_key_id,
-      DBCODE_PUBLIC_KEY_SHA256: $extensions.dbcode.public_key_sha256,
-      DBCODE_CONTRIBUTIONS_SHA256: $extensions.dbcode.jq_sorted_compact_contributes_sha256,
-      DBCODE_PACKAGE_SIZE: ($extensions.dbcode.package_size | tostring)
+      MACOS_SDK_VERSION: $build.toolchain.macos_sdk_version
     };
 
 def release_specification_host_config_pairs:

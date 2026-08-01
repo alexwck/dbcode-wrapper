@@ -12,7 +12,7 @@ const { advancePreflight, createMigrationPlan, parseInventory } = require('../ho
 const { createProfileLayout } = require('../host/extensions/dbcode-wrapper-profile-migration/profile-layout.js');
 const { deriveRecoveryLayout, recreateStandaloneProfile, requireMatchingRelaunchPath } = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js');
 const profileRecoveryWorker = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js');
-const { applicationExecutable, run: runRecoveryWorker, shouldRelaunchApplication, validateWorkerRequest, writeOutcome } = profileRecoveryWorker;
+const { run: runRecoveryWorker } = profileRecoveryWorker;
 const { ProfileSetup } = require('../host/extensions/dbcode-wrapper-profile-migration/profileSetup.js');
 const {
   START_MIGRATION_COMMAND,
@@ -26,8 +26,8 @@ const {
   renderWebviewDocument
 } = require('../host/extensions/dbcode-wrapper-profile-migration/webviewSafety.js');
 
-test('profile recovery keeps its process wait helper private', () => {
-  assert.equal(profileRecoveryWorker.waitForProcessesToExit, undefined);
+test('Profile Recovery Worker exposes only its maintained run interface', () => {
+  assert.deepEqual(Object.keys(profileRecoveryWorker), ['run']);
 });
 
 test('first-run commands register before an activation phase is selected', async () => {
@@ -660,14 +660,13 @@ test('Profile Setup keeps recovery contextual instead of adding another top-leve
 });
 
 test('the recovery worker refuses an empty app process list', async () => {
-  await assert.rejects(
-    validateWorkerRequest({
-      processPids: [],
-      relaunchArgs: [],
-      relaunchApplication: false
-    }),
-    /invalid process list/i
-  );
+  const outcome = await runRecoveryWorker({
+    processPids: [],
+    relaunchArgs: [],
+    relaunchApplication: false
+  });
+  assert.equal(outcome.status, 'failed');
+  assert.match(outcome.message, /invalid process list/i);
 });
 
 test('an invalid worker request cannot use its unvalidated recovery directory', async () => {
@@ -681,6 +680,75 @@ test('an invalid worker request cannot use its unvalidated recovery directory', 
     });
     assert.equal(outcome.status, 'failed');
     await assert.rejects(fs.stat(path.join(testRoot, 'last-recovery.json')), error => error.code === 'ENOENT');
+  } finally {
+    await fs.rm(testRoot, { recursive: true, force: true });
+  }
+});
+
+test('the recovery worker run seam owns process waiting, outcomes, and relaunch', async () => {
+  const testRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'dbcode-recovery-worker-run-'));
+  const userDataRoot = path.join(testRoot, 'user-data');
+  const sharedDataRoot = path.join(testRoot, 'shared-data');
+  const backupRoot = path.join(testRoot, 'backups');
+  const settingsSource = path.join(testRoot, 'managed-settings.json');
+  const appBundle = path.join(testRoot, 'DBCode Wrapper.app');
+  const appExecutable = path.join(appBundle, 'Contents/MacOS/DBCode Wrapper');
+  const externalState = path.join(testRoot, 'outside.json');
+  const outcomePath = path.join(backupRoot, 'last-recovery.json');
+  const relaunches = [];
+  const processStates = [true, false];
+  const sleepDurations = [];
+  try {
+    await fs.mkdir(userDataRoot, { recursive: true });
+    await fs.mkdir(sharedDataRoot, { recursive: true });
+    await fs.mkdir(backupRoot, { recursive: true });
+    await fs.mkdir(path.dirname(appExecutable), { recursive: true });
+    await fs.writeFile(settingsSource, '{"telemetry.telemetryLevel":"off"}\n');
+    await fs.writeFile(appExecutable, 'fixture executable\n', { mode: 0o600 });
+    await fs.writeFile(externalState, 'outside stays unchanged\n');
+    await fs.symlink(externalState, outcomePath);
+
+    const outcome = await runRecoveryWorker({
+      processPids: [424242],
+      recoveryId: '20260802T000000Z-run',
+      userDataRoot,
+      sharedDataRoot,
+      backupRoot,
+      settingsSource,
+      appBundle,
+      relaunchArgs: ['--new-window'],
+      relaunchApplication: true
+    }, {
+      filesystem: fs,
+      now: () => new Date('2026-08-02T00:00:00.000Z'),
+      randomUUID: () => 'runtime-controlled-id',
+      processExists: () => processStates.shift() ?? false,
+      sleep: async milliseconds => {
+        sleepDurations.push(milliseconds);
+      },
+      relaunchApplication: async (executable, args) => {
+        relaunches.push({ executable, args });
+      }
+    });
+
+    assert.deepEqual(outcome, {
+      schemaVersion: 1,
+      status: 'complete',
+      backupDirectory: path.join(backupRoot, '20260802T000000Z-run'),
+      completedAt: '2026-08-02T00:00:00.000Z'
+    });
+    assert.deepEqual(relaunches, [{
+      executable: appExecutable,
+      args: ['--new-window']
+    }]);
+    assert.deepEqual(sleepDurations, [250]);
+    assert.deepEqual(
+      JSON.parse(await fs.readFile(outcomePath, 'utf8')),
+      outcome
+    );
+    assert.equal(await fs.readFile(externalState, 'utf8'), 'outside stays unchanged\n');
+    assert.equal((await fs.lstat(outcomePath)).isSymbolicLink(), false);
+    assert.equal((await fs.stat(outcomePath)).mode & 0o777, 0o600);
   } finally {
     await fs.rm(testRoot, { recursive: true, force: true });
   }
@@ -755,40 +823,4 @@ test('profile recovery rejects alternate and duplicate profile-path arguments', 
     '--user-data-dir',
     expected
   ), /does not match the active Standalone DBCode Profile/i);
-});
-
-test('the recovery worker reopens only after a complete recovery and a clean app exit', () => {
-  const request = { relaunchApplication: true };
-  assert.equal(shouldRelaunchApplication(request, false, { status: 'complete' }), false);
-  assert.equal(shouldRelaunchApplication(request, true, { status: 'failed' }), false);
-  assert.equal(shouldRelaunchApplication(request, true, { status: 'complete' }), true);
-  assert.equal(shouldRelaunchApplication({ relaunchApplication: false }, true, { status: 'complete' }), false);
-});
-
-test('the recovery worker relaunches the executable inside the validated app bundle', () => {
-  assert.equal(
-    applicationExecutable('/Applications/DBCode Wrapper.app'),
-    '/Applications/DBCode Wrapper.app/Contents/MacOS/DBCode Wrapper'
-  );
-});
-
-test('the recovery outcome atomically replaces a stale link without changing its target', async () => {
-  const testRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'dbcode-profile-outcome-'));
-  const backupRoot = path.join(testRoot, 'backups');
-  const externalState = path.join(testRoot, 'outside.json');
-  const outcomePath = path.join(backupRoot, 'last-recovery.json');
-  try {
-    await fs.mkdir(backupRoot);
-    await fs.writeFile(externalState, 'outside stays unchanged\n');
-    await fs.symlink(externalState, outcomePath);
-
-    await writeOutcome(backupRoot, 'last-recovery.json', { status: 'complete' });
-
-    assert.equal(await fs.readFile(externalState, 'utf8'), 'outside stays unchanged\n');
-    assert.equal((await fs.lstat(outcomePath)).isSymbolicLink(), false);
-    assert.deepEqual(JSON.parse(await fs.readFile(outcomePath, 'utf8')), { status: 'complete' });
-    assert.equal((await fs.stat(outcomePath)).mode & 0o777, 0o600);
-  } finally {
-    await fs.rm(testRoot, { recursive: true, force: true });
-  }
 });

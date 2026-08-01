@@ -8,6 +8,11 @@ source "${REPO_ROOT}/script/lib/profile_paths.sh"
 source "${REPO_ROOT}/script/lib/profile_settings.sh"
 source "${REPO_ROOT}/script/lib/generated_workspace.sh"
 
+runtime_extension_packages="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
+dbcode_package_spec="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
+dbcode_id="$(jq -er '.id' <<<"${dbcode_package_spec}")"
+dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
+
 profile_name="default"
 allow_candidate="no"
 while [[ $# -gt 0 ]]; do
@@ -102,7 +107,7 @@ package_entries() {
     .[] |
     [.id, .id, .version, .registry_api_url, .download_url,
      .signature_url, .sha256_url, .public_key_url] | @tsv
-  ' <<<"${RUNTIME_EXTENSION_PACKAGES}"
+  ' <<<"${runtime_extension_packages}"
 }
 
 download_file() {
@@ -195,10 +200,10 @@ active_extension_manifests() {
 
 expected_extensions="$(jq -r '
   .[] | .id + "@" + .version
-' <<<"${RUNTIME_EXTENSION_PACKAGES}" | LC_ALL=C sort)"
+' <<<"${runtime_extension_packages}" | LC_ALL=C sort)"
 expected_extension_ids="$(jq -r '
   .[].id
-' <<<"${RUNTIME_EXTENSION_PACKAGES}" | LC_ALL=C sort)"
+' <<<"${runtime_extension_packages}" | LC_ALL=C sort)"
 excluded_optional_extension_ids="$(jq -r '.excluded_optional_runtime_members[].id' "${feature_policy_file}" | LC_ALL=C sort)"
 
 installed_extensions="$(list_installed_extensions)"
@@ -251,12 +256,11 @@ installed_manifest_inventory="$({
   exit 1
 }
 
-dbcode_id="${DBCODE_ID}"
 installed_dbcode_manifest=""
 while IFS= read -r installed_manifest; do
   if jq -e \
     --arg extension_id "${dbcode_id}" \
-    --arg extension_version "${DBCODE_VERSION}" \
+    --arg extension_version "${dbcode_version}" \
     '(.publisher + "." + .name) == $extension_id and .version == $extension_version' \
     "${installed_manifest}" >/dev/null; then
     installed_dbcode_manifest="${installed_manifest}"

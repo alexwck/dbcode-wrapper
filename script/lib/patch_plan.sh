@@ -6,6 +6,36 @@ patch_plan_file() {
   printf '%s\n' "${PATCH_PLAN_FILE:-${REPO_ROOT}/host/patches/patch-plan.json}"
 }
 
+patch_plan_compiled_host_projection() {
+  local plan_file="${1:-$(patch_plan_file)}"
+
+  jq -S -c '
+    {
+      schema_version,
+      target,
+      entries: [
+        .entries
+        | sort_by(.order)
+        | .[]
+        | {
+            order,
+            stage,
+            patch,
+            files,
+            overlay_files: [
+              .overlay_files[]
+              | {source, target, sha256}
+            ],
+            sha256
+          }
+      ],
+      maintained_code_oss_paths,
+      maintained_tree_digest_algorithm,
+      expected_maintained_tree_sha256
+    }
+  ' "${plan_file}"
+}
+
 patch_plan_entries() {
   local stage="${1}"
   local plan_file="${2:-$(patch_plan_file)}"

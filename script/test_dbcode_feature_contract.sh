@@ -4,6 +4,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
+dbcode_package_spec="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
 policy_file="${REPO_ROOT}/host/dbcode-feature-policy.json"
 approved_history_file="${REPO_ROOT}/host/approved-release-history.json"
 focused_feature_sources=(
@@ -15,10 +16,12 @@ focused_feature_sources=(
 catalogue_contract_module="${REPO_ROOT}/host/qa/connection-catalogue-contract.cjs"
 rendered_test="${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"
 manifest_file=""
-dbcode_id="${DBCODE_ID}"
-dbcode_version="${DBCODE_VERSION}"
-dbcode_engine="${DBCODE_ENGINE}"
-expected_contributions_sha256="${DBCODE_CONTRIBUTIONS_SHA256}"
+dbcode_id="$(jq -er '.id' <<<"${dbcode_package_spec}")"
+dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
+dbcode_engine="$(jq -er '.engine' <<<"${dbcode_package_spec}")"
+expected_contributions_sha256="$(
+  jq -er '.jq_sorted_compact_contributes_sha256' <<<"${dbcode_package_spec}"
+)"
 code_oss_version="${CODE_OSS_VERSION}"
 code_oss_commit="${CODE_OSS_COMMIT}"
 vscodium_version="${VSCODIUM_TAG}"
@@ -28,8 +31,8 @@ policy_approval_status="$(
     --arg release_status "${RELEASE_COMPATIBILITY_STATUS}" \
     --arg extension_id "${dbcode_id}" \
     --arg extension_version "${dbcode_version}" \
-    --arg dbcode_sha256 "${DBCODE_SHA256}" \
-    --arg signature_sha256 "${DBCODE_SIGNATURE_ARCHIVE_SHA256}" \
+    --arg dbcode_sha256 "$(jq -er '.sha256' <<<"${dbcode_package_spec}")" \
+    --arg signature_sha256 "$(jq -er '.signature_archive_sha256' <<<"${dbcode_package_spec}")" \
     --arg code_oss_version "${code_oss_version}" \
     --arg code_oss_commit "${code_oss_commit}" \
     --arg vscodium_version "${vscodium_version}" \

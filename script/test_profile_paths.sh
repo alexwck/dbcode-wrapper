@@ -87,11 +87,6 @@ resolve_profile_paths qa
   exit 1
 }
 
-if declare -F resolve_isolated_profile_paths >/dev/null; then
-  echo "The removed generic isolated profile adapter is still available." >&2
-  exit 1
-fi
-
 if resolve_profile_paths diagnostic 2>/dev/null; then
   echo "The removed full-workbench diagnostic profile is still accepted." >&2
   exit 1

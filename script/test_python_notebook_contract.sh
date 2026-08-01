@@ -4,6 +4,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
+python_notebook_spec="$(jq -c '.python_notebooks' <<<"${RELEASE_EXTENSION_SPEC}")"
 kernel_bridge_dir="${REPO_ROOT}/host/extensions/dbcode-wrapper-python-kernel"
 kernel_bridge_manifest="${kernel_bridge_dir}/package.json"
 kernel_bridge_runtime="${kernel_bridge_dir}/extension.js"
@@ -16,7 +17,7 @@ jq -e '
   .required == true
   and .user_installation_required == false
   and .kernel_runtime == "user-selected"
-' <<<"${PYTHON_NOTEBOOK_SPEC}" >/dev/null || {
+' <<<"${python_notebook_spec}" >/dev/null || {
   echo "Python notebook support must be a core wrapper feature with a user-selected kernel." >&2
   exit 1
 }

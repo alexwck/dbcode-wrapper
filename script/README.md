@@ -25,7 +25,7 @@ The scripts are adapters around a small set of maintained modules. Prefer the ta
 ## Release sets
 
 - `release_specification.sh` exposes strict build, Compiled Host, extension, profile, and identity records for new candidates, plus an explicit read-only mode for supported manifest-bound rollback records. The adapter does not edit retained records or invent approval.
-- The Compiled Host input ID covers only compilation inputs, including the active Release Specification functions. DBCode package metadata, release-status content, documentation, tests, and historical readers do not force an unchanged Code OSS host to compile again. Cache validation includes executable modes, and a hit uses the stored compiler environment instead of rerunning compiler-only preflights.
+- The Compiled Host input ID covers only compilation inputs, including the active Release Specification functions and the Patch Plan's build-relevant projection. Plain-English Patch Plan descriptions, DBCode package metadata, release-status content, documentation, tests, and historical readers do not force an unchanged Code OSS host to compile again. Cache validation includes executable modes, and a hit uses the stored compiler environment instead of rerunning compiler-only preflights.
 - The Host Release commands below are the only maintained packaging and publication path. Retained evidence remains protected where rollback compatibility requires it.
 - `prepare_release_rollback.sh`, `verify_release_rollback.sh`, and `preview_release_rollback.sh` retain and inspect the known-good rollback set.
 

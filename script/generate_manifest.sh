@@ -15,6 +15,7 @@ require_command jq
 require_command plutil
 require_command shasum
 
+runtime_extension_packages="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
 manifest_app="${1:-${APP_BUNDLE}}"
 manifest_output="${2:-${BUILD_MANIFEST}}"
 info_plist="${manifest_app}/Contents/Info.plist"
@@ -138,7 +139,7 @@ runtime_extensions="$(
         install_location: "external-private-profile",
         required: true
       })
-  ' <<<"${RUNTIME_EXTENSION_PACKAGES}"
+  ' <<<"${runtime_extension_packages}"
 )"
 packaging_status="built-and-signed"
 packaging_installed_kib="$(du -sk "${manifest_app}" | awk '{print $1}')"

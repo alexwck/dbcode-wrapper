@@ -889,7 +889,6 @@ function assertManagedPath({
 
 module.exports = {
   assertManagedPath,
-  contains,
   executeCleanup,
   inventoryGeneratedWorkspace,
   planCleanup,

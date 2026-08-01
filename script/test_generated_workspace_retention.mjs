@@ -31,9 +31,14 @@ const {
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const cli = join(scriptRoot, 'generated_workspace.cjs');
 
-test('Generated Workspace Retention keeps policy construction private', () => {
-  assert.equal(retention.CLASSIFICATIONS, undefined);
-  assert.equal(retention.createRetentionContract, undefined);
+test('Generated Workspace Retention exposes only its maintained interface', () => {
+  assert.deepEqual(Object.keys(retention).sort(), [
+    'assertManagedPath',
+    'executeCleanup',
+    'inventoryGeneratedWorkspace',
+    'planCleanup',
+    'resolveManagedPath'
+  ]);
 });
 
 function makeFixture(t) {

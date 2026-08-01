@@ -9,6 +9,7 @@ if [[ $# -ne 2 ]]; then
   exit 2
 fi
 
+runtime_extension_packages="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
 adapter="${REPO_ROOT}/script/verify_openvsx_package.cjs"
 yauzl_module="${APP_BUNDLE}/Contents/Resources/app/node_modules/yauzl"
 [[ -x "${NODE_BIN_DIR}/node" && -f "${adapter}" && -d "${yauzl_module}" ]] || {
@@ -21,6 +22,6 @@ exec "${NODE_BIN_DIR}/node" \
   "$1" \
   "$2" \
   "${CODE_OSS_VERSION}" \
-  "${RUNTIME_EXTENSION_PACKAGES}" \
+  "${runtime_extension_packages}" \
   "${REPO_ROOT}/host/keys" \
   "${yauzl_module}"

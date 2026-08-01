@@ -6,51 +6,109 @@ const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { recreateStandaloneProfile, validateLayout } = require('./profileRecovery');
 
-function processExists(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return error?.code === 'EPERM';
-  }
+function createNodeRuntime() {
+  return Object.freeze({
+    filesystem: fs,
+    now: () => new Date(),
+    randomUUID: () => crypto.randomUUID(),
+    processExists(pid) {
+      try {
+        process.kill(pid, 0);
+        return true;
+      } catch (error) {
+        return error?.code === 'EPERM';
+      }
+    },
+    sleep: milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)),
+    relaunchApplication(appExecutable, relaunchArgs) {
+      return new Promise((resolve, reject) => {
+        const environment = { ...process.env };
+        delete environment.ELECTRON_RUN_AS_NODE;
+        const child = spawn(appExecutable, relaunchArgs, {
+          detached: true,
+          stdio: 'ignore',
+          env: environment
+        });
+        child.once('error', reject);
+        child.once('spawn', () => {
+          child.unref();
+          resolve();
+        });
+      });
+    }
+  });
 }
 
-async function waitForProcessesToExit(pids, timeoutMs = 10 * 60 * 1000) {
-  const deadline = Date.now() + timeoutMs;
-  while (pids.some(processExists)) {
-    if (Date.now() >= deadline) {
+function validateRuntime(runtime) {
+  if (
+    !runtime ||
+    typeof runtime !== 'object' ||
+    !runtime.filesystem ||
+    typeof runtime.filesystem.lstat !== 'function' ||
+    typeof runtime.filesystem.mkdir !== 'function' ||
+    typeof runtime.filesystem.chmod !== 'function' ||
+    typeof runtime.filesystem.writeFile !== 'function' ||
+    typeof runtime.filesystem.rename !== 'function' ||
+    typeof runtime.filesystem.rm !== 'function' ||
+    typeof runtime.now !== 'function' ||
+    typeof runtime.randomUUID !== 'function' ||
+    typeof runtime.processExists !== 'function' ||
+    typeof runtime.sleep !== 'function' ||
+    typeof runtime.relaunchApplication !== 'function'
+  ) {
+    throw new Error('Profile recovery worker runtime is invalid.');
+  }
+  return runtime;
+}
+
+function runtimeNowIso(runtime) {
+  const now = runtime.now();
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    throw new Error('Profile recovery worker clock is invalid.');
+  }
+  return now.toISOString();
+}
+
+async function waitForProcessesToExit(pids, runtime, timeoutMs = 10 * 60 * 1000) {
+  const deadline = runtime.now().getTime() + timeoutMs;
+  while (pids.some(pid => runtime.processExists(pid))) {
+    if (runtime.now().getTime() >= deadline) {
       throw new Error('DBCode Wrapper did not quit, so profile recreation was cancelled.');
     }
-    await new Promise(resolve => setTimeout(resolve, 250));
+    await runtime.sleep(250);
   }
 }
 
-async function writeOutcome(backupRoot, name, contents) {
+async function writeOutcome(backupRoot, name, contents, runtime) {
+  const runtimeFs = runtime.filesystem;
   if (typeof backupRoot !== 'string' || !path.isAbsolute(backupRoot) || path.resolve(backupRoot) === path.parse(path.resolve(backupRoot)).root) {
     throw new Error('Profile recovery received an invalid outcome directory.');
   }
   if (typeof name !== 'string' || path.basename(name) !== name || name.length === 0) {
     throw new Error('Profile recovery received an invalid outcome filename.');
   }
-  await fs.mkdir(backupRoot, { recursive: true, mode: 0o700 });
-  const backupMetadata = await fs.lstat(backupRoot);
+  await runtimeFs.mkdir(backupRoot, { recursive: true, mode: 0o700 });
+  const backupMetadata = await runtimeFs.lstat(backupRoot);
   if (backupMetadata.isSymbolicLink() || !backupMetadata.isDirectory()) {
     throw new Error('The profile recovery outcome directory must be a real directory.');
   }
-  await fs.chmod(backupRoot, 0o700);
+  await runtimeFs.chmod(backupRoot, 0o700);
   const destination = path.join(backupRoot, name);
-  const temporary = path.join(backupRoot, `.${name}.${process.pid}.${crypto.randomUUID()}.tmp`);
+  const temporary = path.join(
+    backupRoot,
+    `.${name}.${process.pid}.${runtime.randomUUID()}.tmp`
+  );
   try {
-    await fs.writeFile(temporary, `${JSON.stringify(contents, null, 2)}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
-    await fs.chmod(temporary, 0o600);
-    await fs.rename(temporary, destination);
-    await fs.chmod(destination, 0o600);
+    await runtimeFs.writeFile(temporary, `${JSON.stringify(contents, null, 2)}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+    await runtimeFs.chmod(temporary, 0o600);
+    await runtimeFs.rename(temporary, destination);
+    await runtimeFs.chmod(destination, 0o600);
   } finally {
-    await fs.rm(temporary, { force: true }).catch(() => undefined);
+    await runtimeFs.rm(temporary, { force: true }).catch(() => undefined);
   }
 }
 
-async function validateWorkerRequest(request) {
+async function validateWorkerRequest(request, runtime) {
   if (!request || typeof request !== 'object' || Array.isArray(request)) {
     throw new Error('Profile recovery received an invalid request.');
   }
@@ -78,12 +136,12 @@ async function validateWorkerRequest(request) {
       throw new Error('Profile recovery received an invalid application bundle.');
     }
     normalized.appBundle = path.resolve(request.appBundle);
-    const appMetadata = await fs.lstat(normalized.appBundle);
+    const appMetadata = await runtime.filesystem.lstat(normalized.appBundle);
     if (appMetadata.isSymbolicLink() || !appMetadata.isDirectory()) {
       throw new Error('Profile recovery requires the real DBCode Wrapper application bundle.');
     }
     normalized.appExecutable = applicationExecutable(normalized.appBundle);
-    const executableMetadata = await fs.lstat(normalized.appExecutable);
+    const executableMetadata = await runtime.filesystem.lstat(normalized.appExecutable);
     if (executableMetadata.isSymbolicLink() || !executableMetadata.isFile()) {
       throw new Error('Profile recovery requires the real DBCode Wrapper application executable.');
     }
@@ -98,60 +156,52 @@ function applicationExecutable(appBundle) {
   return path.join(resolvedBundle, 'Contents', 'MacOS', path.basename(resolvedBundle, '.app'));
 }
 
-function reopenApplication(appExecutable, relaunchArgs) {
-  return new Promise((resolve, reject) => {
-    const environment = { ...process.env };
-    delete environment.ELECTRON_RUN_AS_NODE;
-    const child = spawn(appExecutable, relaunchArgs, {
-      detached: true,
-      stdio: 'ignore',
-      env: environment
-    });
-    child.once('error', reject);
-    child.once('spawn', () => {
-      child.unref();
-      resolve();
-    });
-  });
-}
-
 function shouldRelaunchApplication(request, processesExited, outcome) {
   return request?.relaunchApplication !== false && processesExited && outcome?.status === 'complete';
 }
 
-async function run(request) {
+async function run(request, runtime = createNodeRuntime()) {
+  const workerRuntime = validateRuntime(runtime);
   let validatedRequest;
   let outcome;
   let processesExited = false;
   try {
-    validatedRequest = await validateWorkerRequest(request);
-    await waitForProcessesToExit(validatedRequest.processPids);
+    validatedRequest = await validateWorkerRequest(request, workerRuntime);
+    await waitForProcessesToExit(validatedRequest.processPids, workerRuntime);
     processesExited = true;
     const recovery = await recreateStandaloneProfile(validatedRequest);
     outcome = {
       schemaVersion: 1,
       status: 'complete',
       backupDirectory: recovery.backupDirectory,
-      completedAt: new Date().toISOString()
+      completedAt: runtimeNowIso(workerRuntime)
     };
-    await writeOutcome(validatedRequest.backupRoot, 'last-recovery.json', outcome);
+    await writeOutcome(validatedRequest.backupRoot, 'last-recovery.json', outcome, workerRuntime);
   } catch (error) {
     outcome = {
       schemaVersion: 1,
       status: 'failed',
       message: error instanceof Error ? error.message : 'Profile recreation failed.',
-      failedAt: new Date().toISOString()
+      failedAt: runtimeNowIso(workerRuntime)
     };
     if (validatedRequest) {
-      await writeOutcome(validatedRequest.backupRoot, 'last-recovery.json', outcome).catch(() => undefined);
+      await writeOutcome(
+        validatedRequest.backupRoot,
+        'last-recovery.json',
+        outcome,
+        workerRuntime
+      ).catch(() => undefined);
     }
   } finally {
     if (shouldRelaunchApplication(validatedRequest, processesExited, outcome)) {
-      await reopenApplication(validatedRequest.appExecutable, validatedRequest.relaunchArgs).catch(async error => {
+      await workerRuntime.relaunchApplication(
+        validatedRequest.appExecutable,
+        validatedRequest.relaunchArgs
+      ).catch(async error => {
         await writeOutcome(validatedRequest.backupRoot, 'last-recovery.json', {
           ...outcome,
           relaunchWarning: error.message
-        }).catch(() => undefined);
+        }, workerRuntime).catch(() => undefined);
       });
     }
   }
@@ -180,4 +230,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { applicationExecutable, run, shouldRelaunchApplication, validateWorkerRequest, writeOutcome };
+module.exports = { run };

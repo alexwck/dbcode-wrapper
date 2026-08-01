@@ -86,6 +86,27 @@ query_storage_id="$(compiled_host_input_id "${query_storage_lock}" "${fixture_so
   exit 1
 }
 
+fixture_patch_plan="${fixture_source}/host/patches/patch-plan.json"
+fixture_patch_plan_backup="${test_root}/patch-plan.json"
+fixture_patch_plan_temp="${test_root}/patch-plan.tmp.json"
+cp "${fixture_patch_plan}" "${fixture_patch_plan_backup}"
+jq '
+  .entries[0].purpose += " Plain-English clarification."
+  | .entries[0].touched_areas[0] += " wording"
+' "${fixture_patch_plan}" > "${fixture_patch_plan_temp}"
+mv "${fixture_patch_plan_temp}" "${fixture_patch_plan}"
+[[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" == "${baseline_id}" ]] || {
+  echo "Descriptive Patch Plan wording invalidated the compiled host." >&2
+  exit 1
+}
+jq '.entries[0].order += 1' "${fixture_patch_plan_backup}" > "${fixture_patch_plan_temp}"
+mv "${fixture_patch_plan_temp}" "${fixture_patch_plan}"
+[[ "$(compiled_host_input_id "${baseline_lock}" "${fixture_source}")" != "${baseline_id}" ]] || {
+  echo "A build-relevant Patch Plan change reused the compiled host." >&2
+  exit 1
+}
+cp "${fixture_patch_plan_backup}" "${fixture_patch_plan}"
+
 fixture_icon="${fixture_source}/host/icon/dbcode-wrapper.svg"
 fixture_build_script="${fixture_source}/script/bootstrap_toolchain.sh"
 chmod 600 "${fixture_icon}"

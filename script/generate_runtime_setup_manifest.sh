@@ -5,6 +5,7 @@ umask 077
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 
+runtime_extension_packages="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
 if [[ $# -ne 1 ]]; then
   echo "Usage: ./script/generate_runtime_setup_manifest.sh <output-json>" >&2
   exit 2
@@ -48,7 +49,7 @@ packages="$(
       public_key_sha256,
       package_size
     })
-  ' <<<"${RUNTIME_EXTENSION_PACKAGES}"
+  ' <<<"${runtime_extension_packages}"
 )"
 
 public_keys='[]'
@@ -74,7 +75,7 @@ while IFS=$'\t' read -r public_key_id public_key_sha256; do
 done < <(
   jq -r \
     'map([.public_key_id, .public_key_sha256] | @tsv) | unique | sort | .[]' \
-    <<<"${RUNTIME_EXTENSION_PACKAGES}"
+    <<<"${runtime_extension_packages}"
 )
 
 temporary_file="$(mktemp "${output_parent}/.runtime-extension-set.XXXXXX")"

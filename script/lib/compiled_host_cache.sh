@@ -10,6 +10,7 @@ DBCODE_WRAPPER_COMPILED_HOST_CACHE_LOADED=1
 compiled_host_cache_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 source "${compiled_host_cache_script_root}/lib/artifact_digest.sh"
+source "${compiled_host_cache_script_root}/lib/patch_plan.sh"
 source "${compiled_host_cache_script_root}/lib/release_specification.sh"
 
 compiled_host_sha256_text() {
@@ -87,12 +88,15 @@ compiled_host_digest_source_files() {
 compiled_host_patch_digest() {
   local source_root="$1"
 
-  compiled_host_digest_source_files \
-    "${source_root}" \
-    "host/patches/patch-plan.json" \
-    "host/patches/vscodium" \
-    "host/patches/code-oss" \
-    "host/code-oss-overlay"
+  {
+    patch_plan_compiled_host_projection \
+      "${source_root}/host/patches/patch-plan.json"
+    compiled_host_digest_source_files \
+      "${source_root}" \
+      "host/patches/vscodium" \
+      "host/patches/code-oss" \
+      "host/code-oss-overlay"
+  } | compiled_host_sha256_text
 }
 
 compiled_host_implementation_digest() {

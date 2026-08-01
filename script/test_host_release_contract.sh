@@ -6,6 +6,8 @@ script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_root}/lib/host_config.sh"
 source "${script_root}/lib/host_release.sh"
 source "${script_root}/lib/artifact_digest.sh"
+runtime_extension_packages="$(jq -c '.packages' <<<"${RELEASE_EXTENSION_SPEC}")"
+dbcode_package_spec="$(jq -c '.dbcode' <<<"${RELEASE_EXTENSION_SPEC}")"
 inspector="${script_root}/inspect_host_release_tree.sh"
 packager="${script_root}/package_host_release.sh"
 verifier="${script_root}/verify_host_release.sh"
@@ -308,13 +310,13 @@ fixture_runtime_extensions="$(
         required: true
       }
     ]
-  ' <<<"${RUNTIME_EXTENSION_PACKAGES}"
+  ' <<<"${runtime_extension_packages}"
 )"
 fixture_installed_extensions="$(
-  jq -c '[.[] | "\(.id)@\(.version)"] | sort' <<<"${RUNTIME_EXTENSION_PACKAGES}"
+  jq -c '[.[] | "\(.id)@\(.version)"] | sort' <<<"${runtime_extension_packages}"
 )"
-fixture_dbcode_version="$(jq -er '.version' <<<"${DBCODE_PACKAGE_SPEC}")"
-fixture_dbcode_sha256="$(jq -er '.sha256' <<<"${DBCODE_PACKAGE_SPEC}")"
+fixture_dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
+fixture_dbcode_sha256="$(jq -er '.sha256' <<<"${dbcode_package_spec}")"
 fixture_source_set_id="code-oss-${CODE_OSS_VERSION}-dbcode-${fixture_dbcode_version}-source-${source_snapshot_sha256}"
 
 manifest_file="${test_root}/build-manifest.json"
