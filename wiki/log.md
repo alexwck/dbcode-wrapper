@@ -205,3 +205,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 2191402 (was 8b6a9c8)
 - Coverage: one serialized prompt-free release preparation task; signing readiness before assembly; full-lifetime kernel checkpoint lease; recoverable staged app and manifest promotion; exact package and approval resume; one persistent `qa` profile; separate explicit publication; build-coordination and assembly retention roots
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Host Release](./modules/host-release.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Generated Workspace Retention](./modules/generated-workspace-retention.md), [Verification Harness](./modules/verification-harness.md), [Build sign and launch](./flows/build-sign-and-launch.md), and [Package and publish a Host Release](./flows/package-and-publish-host-release.md)
+
+## 2026-08-01: refresh
+
+- Profile: public/standard
+- source_commit: 3700317 (was 2191402)
+- Coverage: Static Host Smoke owns package size, source maps, exact built-in inventory, embedded-DBCode exclusion, and generated managed settings; Profile Layout keeps only `default` and persistent `qa`; profile recovery is current-user only; Host Session exposes one run command and validates once per public operation
+- Pages: [Overview](./OVERVIEW.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), [Standalone DBCode Profile](./concepts/standalone-dbcode-profile.md), [Host Session](./modules/host-session.md), [Patch Plan and build](./modules/patch-plan-and-build.md), and [Verification Harness](./modules/verification-harness.md)

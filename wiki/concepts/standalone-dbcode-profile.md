@@ -9,13 +9,13 @@ tags:
   - isolation
 wiki_profile: public
 wiki_depth: standard
-source_commit: ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1
+source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
 ---
 ## Definition
 
 A Standalone DBCode Profile is the complete external state used by DBCode Wrapper. It includes user data, external extensions, shared and secure-storage data, query storage, cache, logs, backups, and recovery records under a validated owner root.
 
-Its application, bundle, folder, query-storage, and schema identity comes from one generated [Release Specification](../modules/release-specification.md) record. The default personal profile, persistent generated `qa` profile, and explicit isolated profiles use the same logical identity with different owned roots.
+Its application, bundle, folder, query-storage, and schema identity comes from one generated [Release Specification](../modules/release-specification.md) record. The current-user `default` profile and the persistent generated `qa` profile use the same logical identity with different owned roots. Profile recovery applies only to the current-user profile.
 
 ## Why it matters
 
@@ -28,10 +28,10 @@ Keeping the profile in the release-set model also makes upgrade and rollback hon
 ## Where it lives
 
 - Generated identity: [`profile-identity.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profile-identity.json)
-- Layout creation and validation: [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js)
+- Layout creation and validation: [`profile-layout.js`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js)
 - Setup and recovery: [`profileSetup.js`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js)
-- Shell path adapter: [`script/lib/profile_paths.sh`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/script/lib/profile_paths.sh)
-- Profile settings: [`host/profile/settings.json`](https://github.com/alexwck/dbcode-wrapper/blob/ddaa6a0b7b906af9994221e98ca8f0a0ef3c93b1/host/profile/settings.json)
+- Shell path adapter: [`script/lib/profile_paths.sh`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/lib/profile_paths.sh)
+- Profile settings: [`host/profile/settings.json`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/profile/settings.json) — the one tracked source; assembly creates the packaged recovery copy.
 
 ## Related
 

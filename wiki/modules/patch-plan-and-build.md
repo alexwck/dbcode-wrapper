@@ -9,7 +9,7 @@ tags:
   - patches
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
+source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
 ---
 ## Summary
 
@@ -25,13 +25,13 @@ A standalone build checks the existing signing identity before assembly. It hold
 - Refuse unsafe, linked, missing, changed, or already-present overlay targets.
 - Verify the prepared Code OSS tree before compilation.
 - Reuse only a verified [Compiled Host Cache](compiled-host-cache.md) entry.
-- Generate wrapper extensions, profile identity, runtime records, and release status after compilation.
+- Generate wrapper extensions, profile identity, runtime records, release status, and the packaged managed-settings copy from `host/profile/settings.json` after compilation.
 - Sign the staged app and write its exact manifest before changing `dist/`.
 - Keep the previous complete checkpoint recoverable across failure, signal, or abrupt parent exit.
 
 ## Public API / entry points
 
-[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/build_host.sh) owns standalone build preparation and immutable-source materialization. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/assemble_host.sh) reuses or creates the compiled host and promotes one complete checkpoint. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/compile_host.sh) gives VSCodium the Patch Plan, overlay materializer, and prepared-tree verifier.
+[build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/build_host.sh) owns standalone build preparation and immutable-source materialization. [assemble_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/assemble_host.sh) reuses or creates the compiled host and promotes one complete checkpoint. [compile_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/compile_host.sh) gives VSCodium the Patch Plan, overlay materializer, and prepared-tree verifier.
 
 ## Key files
 
@@ -41,7 +41,7 @@ A standalone build checks the existing signing identity before assembly. It hold
 - [host/patches/code-oss](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/patches/code-oss) — small runtime integration patches.
 - [host/patches/vscodium](https://github.com/alexwck/dbcode-wrapper/tree/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/patches/vscodium) — build-repository patches and the materialize-then-verify hook.
 - [script/test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_build_host_task.sh) — owner-task failure, concurrency, and recovery coverage.
-- [slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/slimming-policy.json) — active size goals, build choices, and rollback.
+- [slimming-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/slimming-policy.json) — active size goals, build choices, and rollback.
 
 ## Dependencies
 

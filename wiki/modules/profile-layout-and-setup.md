@@ -9,18 +9,18 @@ tags:
   - setup
 wiki_profile: public
 wiki_depth: standard
-source_commit: 5f77cbeeb00b79432ca86b95b0d392d68f0d1d27
+source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
 ---
 ## Summary
 
-Profile Layout defines where every Standalone DBCode Profile path may live. Release assembly generates one small identity record from [Release Specification](release-specification.md), and shell and bundled JavaScript validate and use that same record.
+Profile Layout defines where every Standalone DBCode Profile path may live. Release assembly generates one small identity record from [Release Specification](release-specification.md), and shell and bundled JavaScript validate and use that same record. Assembly also materializes the packaged recovery settings from the one canonical `host/profile/settings.json` file; Static Host Smoke verifies the exact copy.
 
 Profile Setup owns the first-use workflow behind one testable interface. A command router registers Runtime Setup and Profile Setup before startup state is known. When the external runtime is missing, Profile Setup opens that prerequisite instead of producing a missing-command error. Both first-run webviews share one fail-closed content-security, nonce, escaping, and action-message policy.
 
 ## Responsibilities
 
 - Load and validate the generated application, bundle, folder, query-storage, and profile-schema identity.
-- Derive `default`, persistent `qa`, and explicit `isolated` layouts from owned roots.
+- Derive only the current-user `default` layout and the persistent generated `qa` layout from owned roots.
 - Register every visible first-run command before configuration or phase selection.
 - Route an unmet runtime prerequisite to Runtime Setup and keep configuration failures sanitized.
 - Reject missing, linked, malformed, oversized, unsafe, stale, or mismatched identity and layout data.
@@ -30,7 +30,7 @@ Profile Setup owns the first-use workflow behind one testable interface. A comma
 
 ## Public API / entry points
 
-`loadProfileIdentity`, `validateProfileIdentity`, `createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the identity and path API. `script/profile_layout.cjs` gives shell callers the same implementation.
+`loadProfileIdentity`, `validateProfileIdentity`, `createProfileLayout`, `validateProfileLayout`, `assertSafeMutationPaths`, and `parseMatchingLayout` form the identity and path API. `script/profile_layout.cjs` gives shell callers the same implementation and accepts only `default` or `qa`. Recovery is limited to the current-user default profile.
 
 `createFirstRunCommandRouter` owns immediate command registration and prerequisite routing. `ProfileSetup` provides `requiresSetup`, `open`, `dispatch`, and `panelClosed`. Production supplies one host adapter. Fast tests supply in-memory adapters and exercise the same order.
 
@@ -39,9 +39,10 @@ Profile Setup owns the first-use workflow behind one testable interface. A comma
 - [firstRunCommandRouter.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/firstRunCommandRouter.js) — always-registered first-run command routing.
 - [webviewSafety.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/webviewSafety.js) — shared trusted HTML/CSS rendering boundary, nonce, CSP, and action messages.
 - [profile-identity.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/profile-identity.json) — generated profile identity.
-- [profile-layout.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — identity loading, path derivation, and validation.
+- [host/profile/settings.json](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/profile/settings.json) — the one tracked managed-settings source.
+- [profile-layout.js](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/extensions/dbcode-wrapper-profile-migration/profile-layout.js) — identity loading, path derivation, and validation.
 - [profileSetup.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/profileSetup.js) — setup state and action ordering.
-- [migration.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/migration.js), [staging.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/staging.js), and [profileRecovery.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — reviewed import, temporary storage, and safe state movement.
+- [migration.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/migration.js), [staging.js](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration/staging.js), and [profileRecovery.js](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/host/extensions/dbcode-wrapper-profile-migration/profileRecovery.js) — reviewed import, temporary storage, and safe state movement.
 
 ## Dependencies
 

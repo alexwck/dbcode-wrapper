@@ -9,7 +9,7 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
+source_commit: 37003175d654b33c7ad97222bdb49ee614665f53
 ---
 ## Summary
 
@@ -26,16 +26,17 @@ No maintained deployment test pauses for a person, starts a real database or ker
 - Prove failed signing, staging, promotion, cleanup, interruption, and live inherited borrowers fail closed.
 - Verify release ordering and reject missing or changed resumed assets.
 - Exercise public path interfaces with relative, absolute, and space-containing paths.
-- Inspect a signed app without launching it when the built-host boundary changes.
+- Inspect a signed app without launching it when the built-host boundary changes. Static Host Smoke checks the installed-size limit, zero source maps, the exact built-in inventory, no embedded DBCode, and the generated managed-settings copy without reading the private external runtime.
 - Keep live product investigations outside the deployment gate.
 
 ## Public API / entry points
 
-[check_development.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/check_development.sh) runs the fast source gate. [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/smoke_host.sh) validates a signed app without launching it. [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_focused_shell_rendered.sh) owns the one-profile rendered launch. [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_fast_release.sh) reruns final source and static evidence from the manifest source.
+[check_development.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/check_development.sh) runs the fast source gate. [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/smoke_host.sh) validates a signed app without launching it. [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_focused_shell_rendered.sh) owns the one-profile rendered launch. [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_fast_release.sh) reruns final source and static evidence from the manifest source.
 
 ## Key files
 
 - [verification-policy.md](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/docs/agents/verification-policy.md) — risk, speed, prompt, and release-task policy.
+- [host_slimming.sh](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/lib/host_slimming.sh) — fixture-tested package size and inventory checks used by Static Host Smoke.
 - [test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_build_host_task.sh) — signing, lease lifetime, interruption, and promotion coverage.
 - [test_release_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_release_host_task.sh) — complete preparation order, exact resume, and explicit publication coverage.
 - [test_development_gate_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_development_gate_contract.sh) — default gate composition.

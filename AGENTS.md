@@ -35,6 +35,7 @@ Before changing behaviour, read:
 - Official feature-family orientation: `docs/product/dbcode-capability-coverage.md`.
 - AI and MCP payload guidance: `docs/security/ai-data-sharing.md`.
 - Active package slimming and rollback: `host/slimming-policy.json`. Dated size and startup measurements live in linked evidence under `docs/architecture/`.
+- Managed profile settings: `host/profile/settings.json`. Assembly materializes the packaged extension copy, and Static Host Smoke verifies that it is exact.
 - Current task state: the open or claimed issue linked from `.scratch/dbcode-wrapper-implementation/map.md`. Resolved issues are dated history.
 - Exact behaviour: current source and tests.
 - Learning material: `docs/` and, after it is generated, `wiki/`. Learning material is derived and never overrides source or tests.
@@ -79,6 +80,7 @@ Before changing behaviour, read:
 - Checkpoint acquisition and promotion must be recoverable. The operating system releases the lease only after the last process with the inherited descriptor exits. A fixed candidate and previous checkpoint let the next owner restore or retain the last complete checkpoint after interruption; do not add PID-based stale-lock recovery.
 - Automated tests must never wait for Keychain, Kernel, Gatekeeper, Safe Storage, sign-in, licence, OAuth, or another person-controlled prompt. Do not approve or bypass those prompts automatically.
 - Use one persistent generated `qa` profile for rendered checks. It is separate from the user's Standalone DBCode Profile and is the only automated GUI profile.
+- Keep Profile Layout limited to the current-user `default` profile and the persistent generated `qa` profile. Profile recovery is a current-user action; do not add a test-only profile mode or recovery switch.
 - Final acceptance must rerun the fast source and static-smoke gates from the manifest's materialized source. Never accept detached success logs from an earlier source or app.
 - Package and approve only when the annotated tag, release lock, build manifest, signed app, final acceptance report, and independent mounted verification identify the same release set.
 - Resume only after revalidating the current package files and their approval digests. An existing directory is not evidence that packaging or approval completed.
@@ -120,7 +122,7 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 - Documentation-only changes: run `git diff --check` and the relevant public-source contract.
 - Source, policy, or patch changes: run the owning focused tests while working and `./script/check_development.sh` once before resolving the ticket.
 - Gate-composition, public-push, host-package, publishing, and deep rollback tests are change-owned checks, not part of the default development path.
-- Built-host changes: run the static host smoke and the one-profile rendered focused-shell smoke.
+- Built-host changes: run Static Host Smoke and the one-profile rendered focused-shell smoke. Static Host Smoke owns the installed-size limit, zero source maps, the exact built-in inventory, no embedded DBCode, and generated packaged settings. Do not add another audit that scans private runtime folders.
 - Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
 - Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.
 
