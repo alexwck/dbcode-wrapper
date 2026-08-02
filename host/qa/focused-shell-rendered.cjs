@@ -124,10 +124,8 @@ const advancedToolLabels = [
 	'AI: Configure Custom Model…',
 	'AI: Set Custom Model API Key…'
 ];
-const unavailableToolLabels = [
+const policyExcludedToolLabels = [
 	'Open Data File…',
-	'Open Scratch Files Folder',
-	'AI: Change Model',
 	'MCP: Start HTTP Server',
 	'MCP: Stop HTTP Server',
 	'MCP: Revoke OAuth Tokens'
@@ -734,7 +732,7 @@ async function verifyFocusedShell(app, page) {
 	for (const label of advancedToolLabels) {
 		assert.ok(toolsText.includes(label), `DBCode tools is missing ${label}.`);
 	}
-	for (const label of unavailableToolLabels) {
+	for (const label of policyExcludedToolLabels) {
 		assert.ok(!toolsText.includes(label), `DBCode tools unexpectedly exposes ${label}.`);
 	}
 	await page.keyboard.press('Escape');

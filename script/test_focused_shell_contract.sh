@@ -360,7 +360,7 @@ for rendered_contract in \
   'wrapperDatabaseAllowlist: false' \
   'rawLabelsStored: false' \
   'advancedToolLabels' \
-  'unavailableToolLabels' \
+  'policyExcludedToolLabels' \
   'DBCode AI provider, custom-model, and API-key routes remain reachable without sending data' \
   'modelCallMade: false' \
   'secretEntered: false' \

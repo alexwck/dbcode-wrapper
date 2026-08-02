@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs/promises';
@@ -9,8 +10,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
+const SCRIPT_ROOT = path.dirname(fileURLToPath(import.meta.url));
 const runtimeSetup = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
 const {
   acquireAndVerifyPackage,
@@ -21,7 +24,6 @@ const {
 const openVsxPackageVerifier = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
 const {
   createOpenVsxRuntimeConfiguration,
-  readZipEntries,
   selectOpenVsxPackageRecord,
   validateInstalledOpenVsxExtension,
   validateOpenVsxRuntimeConfiguration,
@@ -36,7 +38,6 @@ const { renderRuntimeSetupHtml } = require('../host/extensions/dbcode-wrapper-pr
 test('runtime setup exposes only its maintained verifier interface', () => {
   assert.deepEqual(Object.keys(openVsxPackageVerifier).sort(), [
     'createOpenVsxRuntimeConfiguration',
-    'readZipEntries',
     'requireOfficialUrl',
     'resolveOpenVsxPublicKeyPath',
     'selectOpenVsxPackageRecord',
@@ -237,6 +238,138 @@ function fakeZip(entries) {
   };
 }
 
+function runPackageFileAdapter(args, cwd) {
+  return new Promise(resolve => {
+    execFile(
+      process.execPath,
+      [path.join(SCRIPT_ROOT, 'verify_openvsx_package.cjs'), ...args],
+      {
+        cwd,
+        killSignal: 'SIGKILL',
+        maxBuffer: 1024 * 1024,
+        timeout: 5_000
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          code: error?.code ?? 0,
+          stderr,
+          stdout
+        });
+      }
+    );
+  });
+}
+
+function packageFileAdapterZipStub(state) {
+  const archives = Object.fromEntries([
+    [state.acquisition.signatureArchive, state.signatureEntries],
+    [state.acquisition.vsix, state.vsixEntries]
+  ].map(([archive, entries]) => [
+    archive.toString('base64'),
+    entries.map(entry => ({
+      body: entry.body.toString('base64'),
+      name: entry.name
+    }))
+  ]));
+  return `'use strict';
+const { EventEmitter } = require('node:events');
+const { Readable } = require('node:stream');
+const archives = ${JSON.stringify(archives)};
+exports.fromBuffer = (archive, options, callback) => {
+  const encodedEntries = archives[archive.toString('base64')];
+  if (!encodedEntries || options?.lazyEntries !== true) {
+    callback(new Error('Unexpected synthetic archive.'));
+    return;
+  }
+  const entries = encodedEntries.map(entry => ({
+    body: Buffer.from(entry.body, 'base64'),
+    fileName: entry.name
+  }));
+  const zipFile = new EventEmitter();
+  let index = 0;
+  zipFile.close = () => undefined;
+  zipFile.readEntry = () => queueMicrotask(() => {
+    if (index >= entries.length) {
+      zipFile.emit('end');
+      return;
+    }
+    const entry = entries[index++];
+    zipFile.emit('entry', {
+      fileName: entry.fileName,
+      uncompressedSize: entry.body.length,
+      fixtureBody: entry.body
+    });
+  });
+  zipFile.openReadStream = (entry, streamCallback) => {
+    streamCallback(null, Readable.from([entry.fixtureBody]));
+  };
+  callback(null, zipFile);
+};
+`;
+}
+
+async function populatePackageFileAdapterFixture(testRoot, state) {
+  const packageRoot = path.join(testRoot, 'package with spaces');
+  const keyRoot = path.join(testRoot, 'approved keys');
+  const zipModule = path.join(testRoot, 'synthetic-yauzl.cjs');
+  await Promise.all([
+    fs.mkdir(packageRoot, { recursive: true }),
+    fs.mkdir(keyRoot, { recursive: true })
+  ]);
+  await Promise.all([
+    fs.writeFile(
+      path.join(packageRoot, 'registry.json'),
+      JSON.stringify(state.acquisition.registryRecord)
+    ),
+    fs.writeFile(path.join(packageRoot, 'package.vsix'), state.acquisition.vsix),
+    fs.writeFile(
+      path.join(packageRoot, 'signature.sigzip'),
+      state.acquisition.signatureArchive
+    ),
+    fs.writeFile(path.join(packageRoot, 'package.sha256'), state.acquisition.sha256Record),
+    fs.writeFile(path.join(packageRoot, 'openvsx-public-key.pem'), state.acquisition.publicKey),
+    fs.writeFile(
+      path.join(keyRoot, `openvsx-${state.packageRecord.public_key_id}.pem`),
+      state.pinnedPublicKey
+    ),
+    fs.writeFile(zipModule, packageFileAdapterZipStub(state))
+  ]);
+  return {
+    args: [
+      state.packageRecord.id,
+      packageRoot,
+      state.codeOssVersion,
+      JSON.stringify([state.packageRecord]),
+      keyRoot,
+      zipModule
+    ],
+    packageRoot,
+    relativeArgs: [
+      state.packageRecord.id,
+      path.basename(packageRoot),
+      state.codeOssVersion,
+      JSON.stringify([state.packageRecord]),
+      path.basename(keyRoot),
+      path.basename(zipModule)
+    ],
+    testRoot
+  };
+}
+
+async function createPackageFileAdapterFixture(state) {
+  const testRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'dbcode Open VSX adapter '));
+  try {
+    return await populatePackageFileAdapterFixture(testRoot, state);
+  } catch (error) {
+    try {
+      await fs.rm(testRoot, { recursive: true, force: true });
+    } catch {
+      // The fixture-creation error is the useful failure to report.
+    }
+    throw error;
+  }
+}
+
 function acquisitionRoutes(state, overrides = new Map()) {
   const routes = new Map([
     [state.packageRecord.registry_api_url, {
@@ -266,7 +399,7 @@ function acquisitionRoutes(state, overrides = new Map()) {
   return routes;
 }
 
-async function verifyThroughMaintainedInterface(state) {
+async function verifyThroughMaintainedInterface(state, verifierOptions) {
   return verifyOpenVsxPackage(
     {
       codeOssVersion: state.codeOssVersion,
@@ -274,7 +407,7 @@ async function verifyThroughMaintainedInterface(state) {
       acquisition: state.acquisition,
       publicKeys: state.configuration.public_keys
     },
-    { fromBuffer: state.fromBuffer }
+    verifierOptions ?? { fromBuffer: state.fromBuffer }
   );
 }
 
@@ -302,6 +435,41 @@ test('runtime setup accepts one exact pinned Open VSX package', async () => {
   );
   assert.deepEqual(validateRuntimeConfiguration(state.configuration), state.configuration);
   await assert.doesNotReject(verifyThroughMaintainedInterface(state));
+});
+
+test('the package-file adapter accepts plain files and rejects linked inputs', async () => {
+  const adapterFixture = await createPackageFileAdapterFixture(fixture());
+  try {
+    const accepted = await runPackageFileAdapter(adapterFixture.args);
+    assert.equal(accepted.code, 0, accepted.stderr);
+    assert.match(accepted.stdout, /Verified dbcode\.dbcode@1\.36\.2/);
+
+    const acceptedRelative = await runPackageFileAdapter(
+      adapterFixture.relativeArgs,
+      adapterFixture.testRoot
+    );
+    assert.equal(acceptedRelative.code, 0, acceptedRelative.stderr);
+
+    const linkedRoot = path.join(adapterFixture.testRoot, 'linked package root');
+    await fs.symlink(adapterFixture.packageRoot, linkedRoot, 'dir');
+    const linkedRootResult = await runPackageFileAdapter([
+      ...adapterFixture.args.slice(0, 1),
+      linkedRoot,
+      ...adapterFixture.args.slice(2)
+    ]);
+    assert.equal(linkedRootResult.code, 1);
+    assert.match(linkedRootResult.stderr, /acquisition root is unsafe/i);
+
+    const vsixPath = path.join(adapterFixture.packageRoot, 'package.vsix');
+    const plainVsixPath = path.join(adapterFixture.testRoot, 'plain-package.vsix');
+    await fs.rename(vsixPath, plainVsixPath);
+    await fs.symlink(plainVsixPath, vsixPath);
+    const linkedArtifactResult = await runPackageFileAdapter(adapterFixture.args);
+    assert.equal(linkedArtifactResult.code, 1);
+    assert.match(linkedArtifactResult.stderr, /unsafe VSIX/i);
+  } finally {
+    await fs.rm(adapterFixture.testRoot, { recursive: true, force: true });
+  }
 });
 
 test('the shared verifier selects one canonical package record', () => {
@@ -611,11 +779,37 @@ test('the maintained Open VSX verifier rejects unsafe or incomplete archives', a
         );
         manifest.size = (4 * 1024 * 1024) + 1;
       }
+    ],
+    [
+      'oversized streamed entry',
+      state => {
+        const manifest = state.signatureEntries.find(
+          entry => entry.name === '.signature.manifest'
+        );
+        manifest.body = Buffer.alloc((4 * 1024 * 1024) + 1);
+        manifest.size = 2;
+      }
     ]
   ];
   for (const [label, mutate] of mutations) {
     await assertMaintainedVerifierRejects(mutate, /archive|entry|required/i, label);
   }
+});
+
+test('the maintained verifier sanitizes archive-reader failures', async () => {
+  const privatePath = '/private/example/package.sigzip';
+  await assert.rejects(
+    verifyThroughMaintainedInterface(fixture(), {
+      fromBuffer: () => {
+        throw new Error(privatePath);
+      }
+    }),
+    error => {
+      assert.match(error.message, /archive could not be opened/i);
+      assert.doesNotMatch(error.message, new RegExp(privatePath));
+      return true;
+    }
+  );
 });
 
 test('the maintained Open VSX verifier rejects every changed VSIX identity field', async () => {
@@ -712,108 +906,6 @@ test('runtime downloads follow bounded HTTPS redirects and reject oversized resp
   await assert.rejects(
     acquire(fakeHttps(redirectRoutes)),
     /too many redirects/i
-  );
-});
-
-test('runtime ZIP reading enforces the requested entry set and size limit', async () => {
-  const archive = Buffer.from('synthetic archive');
-  const entries = await readZipEntries(
-    archive,
-    ['one.json', 'two.sig'],
-    {
-      fromBuffer: fakeZip([
-        { name: 'ignored.txt', body: Buffer.from('ignored') },
-        { name: 'one.json', body: Buffer.from('{}') },
-        { name: 'two.sig', body: Buffer.alloc(64) }
-      ])
-    }
-  );
-  assert.equal(entries.get('one.json').toString('utf8'), '{}');
-  assert.equal(entries.get('two.sig').length, 64);
-
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['large.json'],
-      {
-        fromBuffer: fakeZip([{
-          name: 'large.json',
-          body: Buffer.from('{}'),
-          size: (4 * 1024 * 1024) + 1
-        }])
-      }
-    ),
-    /unsafe required entry/i
-  );
-
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['large.json'],
-      {
-        fromBuffer: fakeZip([{
-          name: 'large.json',
-          body: Buffer.alloc((4 * 1024 * 1024) + 1),
-          size: 2
-        }])
-      }
-    ),
-    /could not be read|too large/i
-  );
-
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['duplicate.json'],
-      {
-        fromBuffer: fakeZip([
-          { name: 'duplicate.json', body: Buffer.from('{}') },
-          { name: 'duplicate.json', body: Buffer.from('{}') }
-        ])
-      }
-    ),
-    /unsafe required entry/i
-  );
-
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['missing.json'],
-      { fromBuffer: fakeZip([]) }
-    ),
-    /missing a required entry/i
-  );
-
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['required.json'],
-      {
-        fromBuffer: fakeZip([
-          { name: '../outside.txt', body: Buffer.from('unsafe') },
-          { name: 'required.json', body: Buffer.from('{}') }
-        ])
-      }
-    ),
-    /unsafe archive entry/i
-  );
-
-  const privatePath = '/private/example/package.sigzip';
-  await assert.rejects(
-    readZipEntries(
-      archive,
-      ['required.json'],
-      {
-        fromBuffer: () => {
-          throw new Error(privatePath);
-        }
-      }
-    ),
-    error => {
-      assert.match(error.message, /archive could not be opened/i);
-      assert.doesNotMatch(error.message, new RegExp(privatePath));
-      return true;
-    }
   );
 });
 
