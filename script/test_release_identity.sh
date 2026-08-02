@@ -49,6 +49,7 @@ jq '.build.ship_source_maps = true' "${slimming_policy}" > "${changed_build_poli
 candidate_id="$(release_source_set_id "${candidate_lock}")"
 relabeled_id="$(release_source_set_id "${relabeled_lock}")"
 changed_product_id="$(release_source_set_id "${changed_product_lock}")"
+release_set_base_id="$(jq -er '.release.release_set_base_id' <<<"${RELEASE_BUILD_SPEC}")"
 
 [[ "${candidate_id}" == "${relabeled_id}" ]] || {
   echo "Approval labels must not change the immutable release-set identity." >&2
@@ -66,8 +67,8 @@ changed_product_id="$(release_source_set_id "${changed_product_lock}")"
   echo "Build-affecting slimming changes must change the immutable release-set identity." >&2
   exit 1
 }
-candidate_source_sha="${candidate_id#"${RELEASE_SET_BASE_ID}-source-"}"
-[[ "${candidate_id}" == "${RELEASE_SET_BASE_ID}-source-${candidate_source_sha}" && "${candidate_source_sha}" =~ ^[0-9a-f]{64}$ ]] || {
+candidate_source_sha="${candidate_id#"${release_set_base_id}-source-"}"
+[[ "${candidate_id}" == "${release_set_base_id}-source-${candidate_source_sha}" && "${candidate_source_sha}" =~ ^[0-9a-f]{64}$ ]] || {
   echo "Unexpected canonical release-set identity: ${candidate_id}" >&2
   exit 1
 }

@@ -6,6 +6,8 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 source "${REPO_ROOT}/script/lib/profile_paths.sh"
 
 user_home_dir="$(current_user_home)"
+extensions_folder_name="$(jq -er '.product.extensions_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
+backup_folder_name="$(jq -er '.product.backup_folder_name' <<<"${RELEASE_PROFILE_SPEC}")"
 
 resolve_profile_paths default
 jq -e \
@@ -14,9 +16,9 @@ jq -e \
   --arg bundle_identifier "${BUNDLE_IDENTIFIER}" \
   --arg data_folder_name "${DATA_FOLDER_NAME}" \
   --arg user_data_folder_name "${USER_DATA_FOLDER_NAME}" \
-  --arg extensions_folder_name "${EXTENSIONS_FOLDER_NAME}" \
+  --arg extensions_folder_name "${extensions_folder_name}" \
   --arg shared_data_folder_name "${SHARED_DATA_FOLDER_NAME}" \
-  --arg backup_folder_name "${BACKUP_FOLDER_NAME}" \
+  --arg backup_folder_name "${backup_folder_name}" \
   --arg storage_namespace "${STORAGE_NAMESPACE}" \
   --arg query_folder_name "${QUERY_FOLDER_NAME}" \
   --argjson profile_schema_version "${PROFILE_SCHEMA_VERSION}" '
@@ -44,7 +46,7 @@ jq -e \
   echo "The default user-data path does not match a normal self-launch." >&2
   exit 1
 }
-[[ "${PROFILE_EXTENSIONS_ROOT}" == "${user_home_dir}/${DATA_FOLDER_NAME}/${EXTENSIONS_FOLDER_NAME}" ]] || {
+[[ "${PROFILE_EXTENSIONS_ROOT}" == "${user_home_dir}/${DATA_FOLDER_NAME}/${extensions_folder_name}" ]] || {
   echo "The default extension path does not match a normal self-launch." >&2
   exit 1
 }
@@ -52,7 +54,7 @@ jq -e \
   echo "The default shared-data path does not match a normal self-launch." >&2
   exit 1
 }
-[[ "${PROFILE_BACKUP_ROOT}" == "${user_home_dir}/Library/Application Support/${BACKUP_FOLDER_NAME}" ]] || {
+[[ "${PROFILE_BACKUP_ROOT}" == "${user_home_dir}/Library/Application Support/${backup_folder_name}" ]] || {
   echo "The default profile-backup path does not match a normal self-launch." >&2
   exit 1
 }
@@ -74,7 +76,7 @@ resolve_profile_paths qa
   echo "The QA profile must stay inside generated build output." >&2
   exit 1
 }
-[[ "${PROFILE_EXTENSIONS_ROOT}" == "${BUILD_ROOT}/qa/profile/${EXTENSIONS_FOLDER_NAME}" ]] || {
+[[ "${PROFILE_EXTENSIONS_ROOT}" == "${BUILD_ROOT}/qa/profile/${extensions_folder_name}" ]] || {
   echo "The QA extension path is not isolated." >&2
   exit 1
 }

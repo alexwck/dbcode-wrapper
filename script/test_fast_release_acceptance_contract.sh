@@ -43,24 +43,6 @@ for required_contract in \
   }
 done
 
-for forbidden_contract in \
-  '--development-log' \
-  '--smoke-log' \
-  '--proof' \
-  '--continuity' \
-  '--matrix' \
-  '--health' \
-  '--rollback' \
-  '.runtime.vscodium_version' \
-  'manual_checks' \
-  'manual_evidence' \
-  'Independent launch passed'; do
-  if rg -Fq -- "${forbidden_contract}" "${fast_acceptance}"; then
-    echo "The prompt-free acceptance command still requires legacy evidence: ${forbidden_contract}" >&2
-    exit 1
-  fi
-done
-
 stale_development_log="$(mktemp "${TMPDIR:-/tmp}/dbcode-stale-development.XXXXXX")"
 stale_smoke_log="$(mktemp "${TMPDIR:-/tmp}/dbcode-stale-smoke.XXXXXX")"
 trap 'rm -f "${stale_development_log}" "${stale_smoke_log}"' EXIT
@@ -91,10 +73,4 @@ rg -Fq 'host_release_validate_prompt_free_acceptance \' "${host_release_module}"
   echo "Host packaging must validate the prompt-free acceptance record." >&2
   exit 1
 }
-if rg -Fq 'acceptance_schema=' "${host_release_module}" || \
-  rg -Fq '.schema_version == 1 or .schema_version == 2' "${host_release_module}"; then
-  echo "Host packaging must not accept retired human-evidence schemas." >&2
-  exit 1
-fi
-
 echo "Prompt-free release acceptance contracts passed."

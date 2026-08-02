@@ -136,14 +136,6 @@ rg -Fq 'cryptographic_update_identity_stable="null"' "${REPO_ROOT}/script/genera
   echo "A certificate-signed build must not claim signing continuity without comparing releases." >&2
   exit 1
 }
-if rg -Fq 'DBCODE_WRAPPER_SIGNING_CONTINUITY_EVIDENCE' "${REPO_ROOT}/script/generate_manifest.sh"; then
-  echo "Manifest generation must not accept a retired manual signing receipt." >&2
-  exit 1
-fi
-if rg -Fq 'verified-distinct-rebuilt-artifacts' "${REPO_ROOT}/script/generate_manifest.sh"; then
-  echo "Manifest generation must not retain the retired manual signing branch." >&2
-  exit 1
-fi
 fi
 
 echo "Single-app identity and Keychain-isolated test contracts passed."

@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 62](issues/62-shrink-residual-interface-and-forward-tests.md) — claimed. Remove three test-only Host Configuration values and residual retired-name source scans while preserving current release behaviour checks.
 
 ## History
 
