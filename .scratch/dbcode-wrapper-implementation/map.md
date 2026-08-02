@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+[Issue 61](issues/61-fail-fast-release-source-and-narrow-host-guide.md) is claimed. It moves Host Release source readiness ahead of expensive work and narrows the host guide to its maintained operating contract.
 
 ## History
 

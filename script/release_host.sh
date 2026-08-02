@@ -12,11 +12,12 @@ Usage:
   ./script/release_host.sh prepare
   ./script/release_host.sh publish --publish
 
-The prepare action checks signing readiness, builds or reuses one complete Host
-checkpoint, runs static and one-profile rendered smoke, performs final prompt-free
-acceptance, creates or verifies the annotated source tag, packages and independently
-verifies the host, and records approval. It leaves one approval-history change to
-commit. Publication remains a separate explicit action.
+The prepare action validates release-source readiness before it checks signing,
+builds or reuses one complete Host checkpoint, runs static and one-profile rendered
+smoke, performs final prompt-free acceptance, creates or verifies the annotated
+source tag, packages and independently verifies the host, and records approval. It
+leaves one approval-history change to commit. Publication remains a separate
+explicit action.
 EOF
   exit 2
 }
@@ -44,11 +45,61 @@ source "${script_root}/lib/generated_workspace.sh"
 source "${script_root}/lib/approved_release_set.sh"
 source "${script_root}/lib/dist_checkpoint.sh"
 
+release_resume_status_allowed() {
+  case "$1" in
+    ""|\
+    " M host/approved-release-history.json"|\
+    "M  host/approved-release-history.json"|\
+    "MM host/approved-release-history.json") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 release_tag="v${WRAPPER_VERSION}"
-if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
-  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
-else
-  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+current_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+current_branch="$(git -C "${REPO_ROOT}" branch --show-current)"
+working_tree_status="$(git -C "${REPO_ROOT}" status --porcelain)"
+working_tree_clean="true"
+[[ -z "${working_tree_status}" ]] || working_tree_clean="false"
+resume_working_tree_allowed="false"
+release_resume_status_allowed "${working_tree_status}" && \
+  resume_working_tree_allowed="true"
+
+existing_tag_object=""
+existing_tag_revision=""
+existing_tag_kind=""
+if existing_tag_object="$(
+  git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_tag}" 2>/dev/null
+)"; then
+  existing_tag_kind="$(git -C "${REPO_ROOT}" cat-file -t "${existing_tag_object}")"
+  existing_tag_revision="$(
+    git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}" 2>/dev/null || true
+  )"
+fi
+
+preparation_ready="true"
+preparation_blocker=""
+if [[ "${current_branch}" != "main" ]]; then
+  preparation_ready="false"
+  preparation_blocker="release-source-not-on-main"
+elif [[ -n "${existing_tag_object}" && "${existing_tag_kind}" != "tag" ]]; then
+  preparation_ready="false"
+  preparation_blocker="release-tag-not-annotated"
+elif [[ -n "${existing_tag_object}" && \
+  "${existing_tag_revision}" != "${current_source_revision}" ]]; then
+  preparation_ready="false"
+  preparation_blocker="release-tag-identifies-another-commit"
+elif [[ "${working_tree_clean}" != "true" ]]; then
+  if [[ -z "${existing_tag_object}" || \
+    "${resume_working_tree_allowed}" != "true" ]]; then
+    preparation_ready="false"
+    preparation_blocker="release-source-not-clean"
+  fi
+fi
+
+release_source_revision="${current_source_revision}"
+if [[ "${action}" == "publish" && -n "${existing_tag_revision}" ]]; then
+  release_source_revision="${existing_tag_revision}"
 fi
 [[ "${release_source_revision}" =~ ^[0-9a-f]{40}$ ]] || {
   echo "The release source revision is invalid: ${release_source_revision}" >&2
@@ -89,13 +140,27 @@ write_plan() {
     --arg assets "${assets_dir}" \
     --arg approval "${approval_dir}" \
     --arg approved_history_candidate "${approved_history_candidate}" \
-    --arg approved_history "${approved_history}" '
+    --arg approved_history "${approved_history}" \
+    --argjson preparation_ready "${preparation_ready}" \
+    --arg preparation_blocker "${preparation_blocker}" \
+    --arg current_branch "${current_branch}" \
+    --argjson working_tree_clean "${working_tree_clean}" \
+    --arg existing_tag_revision "${existing_tag_revision}" '
       {
-        schema_version: 1,
+        schema_version: 2,
         release_tag: $release_tag,
         source_revision: $source_revision,
         evidence_key: $evidence_key,
         source_repository: $source_repository,
+        preparation: {
+          ready: $preparation_ready,
+          blocker: (if $preparation_blocker == "" then null else $preparation_blocker end),
+          current_branch: $current_branch,
+          working_tree_clean: $working_tree_clean,
+          existing_tag_revision: (
+            if $existing_tag_revision == "" then null else $existing_tag_revision end
+          )
+        },
         paths: {
           app: $app,
           manifest: $manifest,
@@ -119,6 +184,29 @@ write_plan() {
         automatic_publish: false
       }
     '
+}
+
+assert_release_preparation_ready() {
+  [[ "${preparation_ready}" == "true" ]] && return
+
+  case "${preparation_blocker}" in
+    release-source-not-on-main)
+      echo "Host Release preparation must run from main." >&2
+      ;;
+    release-tag-not-annotated)
+      echo "The existing source tag is not annotated: ${release_tag}" >&2
+      ;;
+    release-tag-identifies-another-commit)
+      echo "The immutable source tag identifies another commit: ${release_tag}" >&2
+      ;;
+    release-source-not-clean)
+      echo "The release source must be clean before preparation starts." >&2
+      ;;
+    *)
+      echo "Host Release preparation is blocked for an unknown reason." >&2
+      ;;
+  esac
+  exit 1
 }
 
 assert_plain_file() {
@@ -221,7 +309,7 @@ create_or_verify_tag() {
   assert_plain_file "${BUILD_MANIFEST}" "The build manifest"
   assert_plain_file "${acceptance_file}" "The prompt-free acceptance report"
 
-  local source_revision tag_object tag_commit
+  local current_revision current_status source_revision tag_object tag_commit
   source_revision="$(jq -er '.source.snapshot.repository_revision' "${BUILD_MANIFEST}")"
 
   [[ "$(git -C "${REPO_ROOT}" branch --show-current)" == "main" ]] || {
@@ -237,6 +325,16 @@ create_or_verify_tag() {
     tag_commit="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
     [[ "${tag_commit}" == "${source_revision}" ]] || {
       echo "The immutable source tag identifies another commit: ${release_tag}" >&2
+      exit 1
+    }
+    current_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+    [[ "${current_revision}" == "${source_revision}" ]] || {
+      echo "The release checkout advanced after preparation started." >&2
+      exit 1
+    }
+    current_status="$(git -C "${REPO_ROOT}" status --porcelain)"
+    release_resume_status_allowed "${current_status}" || {
+      echo "Same-tag preparation permits only the expected approval-history edit." >&2
       exit 1
     }
     git -C "${REPO_ROOT}" merge-base --is-ancestor "${source_revision}" main || {
@@ -432,6 +530,7 @@ case "${action}" in
     write_plan
     ;;
   prepare)
+    assert_release_preparation_ready
     dist_checkpoint_acquire "host-release-prepare"
     trap release_prepare_checkpoint EXIT
     trap 'exit 130' INT

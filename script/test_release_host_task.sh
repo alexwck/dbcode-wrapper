@@ -13,10 +13,13 @@ task="${REPO_ROOT}/script/release_host.sh"
 
 plan="$("${task}" plan)"
 release_tag="v${WRAPPER_VERSION}"
+release_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+current_branch="$(git -C "${REPO_ROOT}" branch --show-current)"
+working_tree_clean="true"
+[[ -z "$(git -C "${REPO_ROOT}" status --porcelain)" ]] || working_tree_clean="false"
+existing_tag_revision=""
 if git -C "${REPO_ROOT}" rev-parse --verify "refs/tags/${release_tag}" >/dev/null 2>&1; then
-  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
-else
-  release_source_revision="$(git -C "${REPO_ROOT}" rev-parse 'HEAD^{commit}')"
+  existing_tag_revision="$(git -C "${REPO_ROOT}" rev-parse "${release_tag}^{commit}")"
 fi
 release_evidence_key="${release_tag}-source-${release_source_revision}"
 expected_rendered_report="$(
@@ -36,12 +39,22 @@ jq -e \
   --arg assets "${BUILD_ROOT}/host-release/${release_evidence_key}" \
   --arg approval "${BUILD_ROOT}/acceptance/fast-release/${release_evidence_key}-approval" \
   --arg approved_history_candidate "${BUILD_ROOT}/acceptance/fast-release/${release_evidence_key}-approval/approved-release-sets.json" \
-  --arg history "${REPO_ROOT}/host/approved-release-history.json" '
-    .schema_version == 1
+  --arg history "${REPO_ROOT}/host/approved-release-history.json" \
+  --arg current_branch "${current_branch}" \
+  --argjson working_tree_clean "${working_tree_clean}" \
+  --arg existing_tag_revision "${existing_tag_revision}" '
+    .schema_version == 2
     and .release_tag == $release_tag
     and .source_revision == $source_revision
     and .evidence_key == $evidence_key
     and .source_repository == $repository
+    and (.preparation.ready | type) == "boolean"
+    and ((.preparation.blocker == null) or ((.preparation.blocker | type) == "string"))
+    and .preparation.current_branch == $current_branch
+    and .preparation.working_tree_clean == $working_tree_clean
+    and .preparation.existing_tag_revision == (
+      if $existing_tag_revision == "" then null else $existing_tag_revision end
+    )
     and .paths == {
       app: $app,
       manifest: $manifest,
@@ -271,8 +284,22 @@ EOF
 cat > "${fixture_root}/script/host_release_contract.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+fixture_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 [[ "$1" == "prompt-free-acceptance-record" && $# -eq 4 ]]
 printf 'validate-acceptance\n' >> "${RELEASE_TASK_LOG}"
+if [[ "${MOCK_ADVANCE_SOURCE_DURING_VALIDATION:-no}" == "yes" ]]; then
+  current_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
+  advanced_revision="$(
+    printf 'advance source during acceptance\n' |
+      git -C "${fixture_root}" commit-tree \
+        "${current_revision}^{tree}" \
+        -p "${current_revision}"
+  )"
+  git -C "${fixture_root}" update-ref \
+    refs/heads/main \
+    "${advanced_revision}" \
+    "${current_revision}"
+fi
 jq -e '
   .schema_version == 3
   and .status == "passed"
@@ -392,15 +419,44 @@ git -C "${fixture_root}" config user.name "Release Task Test"
 git -C "${fixture_root}" config user.email "release-task@example.invalid"
 git -C "${fixture_root}" add .
 git -C "${fixture_root}" commit -qm "fixture source"
+tagged_fixture_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
+git -C "${fixture_root}" tag -a v9.9.9 -m "fixture old release"
+printf 'new release source\n' > "${fixture_root}/current-source.txt"
+git -C "${fixture_root}" add current-source.txt
+git -C "${fixture_root}" commit -qm "advance fixture source"
 fixture_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
 fixture_evidence_key="v9.9.9-source-${fixture_revision}"
+
+export RELEASE_TASK_LOG="${fixture_root}/.build/release-task.log"
+mkdir -p "${fixture_root}/.build"
+: > "${RELEASE_TASK_LOG}"
+
+blocked_plan="$("${fixture_root}/script/release_host.sh" plan)"
+jq -e \
+  --arg source_revision "${fixture_revision}" \
+  --arg tag_revision "${tagged_fixture_revision}" '
+    .schema_version == 2
+    and .source_revision == $source_revision
+    and .preparation == {
+      ready: false,
+      blocker: "release-tag-identifies-another-commit",
+      current_branch: "main",
+      working_tree_clean: true,
+      existing_tag_revision: $tag_revision
+    }
+  ' <<<"${blocked_plan}" >/dev/null
+if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
+  echo "The release task prepared a source whose version tag identifies another commit." >&2
+  exit 1
+fi
+[[ ! -s "${RELEASE_TASK_LOG}" ]]
+[[ ! -e "${fixture_root}/.build/locks/dist-checkpoint.lock" ]]
+git -C "${fixture_root}" tag -d v9.9.9 >/dev/null
 
 legacy_approval_dir="${fixture_root}/.build/acceptance/fast-release/v9.9.9-approval"
 mkdir -p "${legacy_approval_dir}"
 printf 'retained legacy approval\n' > "${legacy_approval_dir}/retained.txt"
 
-export RELEASE_TASK_LOG="${fixture_root}/.build/release-task.log"
-mkdir -p "${fixture_root}/.build"
 export MOCK_ACCEPTANCE_STATUS="failed"
 if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
   echo "The release task accepted an incomplete report." >&2
@@ -427,6 +483,40 @@ unset MOCK_ACCEPTANCE_STATUS
 [[ "$(git -C "${fixture_root}" status --porcelain)" == \
   " M host/approved-release-history.json" ]]
 [[ "$(<"${legacy_approval_dir}/retained.txt")" == "retained legacy approval" ]]
+
+cp "${fixture_root}/current-source.txt" \
+  "${fixture_root}/.build/current-source.clean"
+printf 'uncommitted release source\n' >> "${fixture_root}/current-source.txt"
+: > "${RELEASE_TASK_LOG}"
+dirty_resume_plan="$("${fixture_root}/script/release_host.sh" plan)"
+jq -e '
+  .preparation.ready == false
+  and .preparation.blocker == "release-source-not-clean"
+  and .preparation.working_tree_clean == false
+' <<<"${dirty_resume_plan}" >/dev/null
+if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
+  echo "The release task resumed from an unrelated dirty source." >&2
+  exit 1
+fi
+[[ ! -s "${RELEASE_TASK_LOG}" ]]
+cp "${fixture_root}/.build/current-source.clean" \
+  "${fixture_root}/current-source.txt"
+
+export MOCK_ADVANCE_SOURCE_DURING_VALIDATION="yes"
+: > "${RELEASE_TASK_LOG}"
+if "${fixture_root}/script/release_host.sh" prepare >/dev/null 2>&1; then
+  echo "The release task accepted a checkout that advanced after preflight." >&2
+  exit 1
+fi
+unset MOCK_ADVANCE_SOURCE_DURING_VALIDATION
+[[ "$(paste -sd, "${RELEASE_TASK_LOG}")" == \
+  "preflight,static,validate-acceptance" ]]
+advanced_fixture_revision="$(git -C "${fixture_root}" rev-parse HEAD)"
+[[ "${advanced_fixture_revision}" != "${fixture_revision}" ]]
+git -C "${fixture_root}" update-ref \
+  refs/heads/main \
+  "${fixture_revision}" \
+  "${advanced_fixture_revision}"
 
 verification_asset="${fixture_root}/.build/host-release/${fixture_evidence_key}/fixture-verification.json"
 rm -f "${verification_asset}"
