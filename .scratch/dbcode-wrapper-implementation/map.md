@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Issue 60](issues/60-tighten-release-identity-and-forward-tests.md) is claimed: correct release identity, remove safe test-only and historical-name leftovers, and retain the Python Kernel Bridge because the pinned DBCode workflow still needs an already running Jupyter kernel.
+No issue is open or claimed.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 59](issues/59-deepen-remaining-wrapper-seams.md), [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), and [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 60](issues/60-tighten-release-identity-and-forward-tests.md), [Issue 59](issues/59-deepen-remaining-wrapper-seams.md), [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), and [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 
