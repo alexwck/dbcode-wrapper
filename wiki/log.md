@@ -247,3 +247,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: f1cc5e1 (was b3773b5)
 - Coverage: production Runtime Extension Set included in wrapper source identity; test-only engine checker removed; smaller maintained Runtime Setup and package-file interfaces; current-behaviour tests without retired workflow-name scans; Python Kernel Bridge retained for DBCode's running-kernel workflow; complete prompt-free development gate passed
 - Pages: [Overview](./OVERVIEW.md), [Release Source Snapshot](./modules/release-source-snapshot.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-02: refresh
+
+- Profile: public/standard
+- source_commit: d01539e (was f1cc5e1)
+- Coverage: read-only release preparation readiness; source validation before checkpoint acquisition; exact approval-history-only same-tag resume; final HEAD revalidation; one owner-facing preparation gate; shorter host operations guide
+- Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Host Release](./modules/host-release.md), [Package and publish a Host Release](./flows/package-and-publish-host-release.md), and [Review an upstream update](./guides/review-an-upstream-update.md)

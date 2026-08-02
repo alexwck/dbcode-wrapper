@@ -9,7 +9,7 @@ tags:
   - packaging
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
+source_commit: d01539e88c39b72712395899fd206eee40509ab3
 ---
 ## Summary
 
@@ -27,13 +27,14 @@ git commit -m "chore(release): record approved host release"
 ./script/release_host.sh publish --publish
 ```
 
-`plan` is read-only. `prepare` holds one `dist/` lease while it checks signing readiness, builds or reuses the exact host, runs static smoke and one persistent-profile rendered smoke, performs final acceptance, creates or verifies the annotated tag, packages, independently verifies, approves, and writes one tracked history change. `publish --publish` is deliberately separate.
+`plan` is read-only. It reports the current source, exact paths, and a structured preparation state. `prepare` rejects an off-`main` source, an unrelated working-tree change, a lightweight tag, or a version tag at another commit before it takes the `dist/` lease. It then checks signing readiness, builds or reuses the exact host, runs static smoke and one persistent-profile rendered smoke, performs final acceptance, creates or verifies the annotated tag, packages, independently verifies, approves, and writes one tracked history change. `publish --publish` is deliberately separate.
 
-A resumed preparation does not trust directory presence. It validates the exact DMG, checksum, compatibility record, install notes, verification receipt, and approval digests before reuse.
+A resumed preparation does not trust directory presence. An annotated tag must still identify the current commit, and only the expected approval-history edit may remain dirty. The final tag step rechecks `HEAD` before packaging. Reuse also validates the exact DMG, checksum, compatibility record, install notes, verification receipt, and approval digests.
 
 ## Responsibilities
 
-- Derive the standard tag and generated evidence paths.
+- Derive the standard tag, current source, preparation state, and generated evidence paths.
+- Reject unsafe branch, working-tree, or tag state before checkpoint acquisition.
 - Hold or pass one kernel-backed checkpoint lease across every build and reader.
 - Stop before assembly when the existing signing identity is not ready.
 - Reuse only a complete host and rendered report for the exact release set.
@@ -46,14 +47,14 @@ A resumed preparation does not trust directory presence. It validates the exact 
 
 ## Public API / entry points
 
-[release_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/release_host.sh) is the owner-facing interface. It coordinates [build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/build_host.sh), [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/smoke_host.sh), [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_focused_shell_rendered.sh), [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_fast_release.sh), [package_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/package_host_release.sh), [verify_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_host_release.sh), [approve_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/approve_host_release.sh), and [publish_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/publish_release.sh).
+[release_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/d01539e88c39b72712395899fd206eee40509ab3/script/release_host.sh) is the owner-facing interface. It coordinates [build_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/build_host.sh), [smoke_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/smoke_host.sh), [test_focused_shell_rendered.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_focused_shell_rendered.sh), [verify_fast_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_fast_release.sh), [package_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/package_host_release.sh), [verify_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/verify_host_release.sh), [approve_host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/approve_host_release.sh), and [publish_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/publish_release.sh).
 
 ## Key files
 
 - [script/lib/dist_checkpoint.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/dist_checkpoint.sh) — full-lifetime kernel lease and recoverable staged promotion.
 - [script/lib/host_release.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/host_release.sh) — release contexts, copy checks, compatibility records, and metadata safety.
 - [script/lib/approved_release_set.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/approved_release_set.sh) — exact approval validation and safe history recording.
-- [script/test_release_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_release_host_task.sh) — preparation order, exact resume, and explicit publication contracts.
+- [script/test_release_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/d01539e88c39b72712395899fd206eee40509ab3/script/test_release_host_task.sh) — preparation order, exact resume, and explicit publication contracts.
 - [script/test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/test_build_host_task.sh) — signing, lease, concurrency, interruption, and promotion contracts.
 - [host/approved-release-history.json](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/approved-release-history.json) — tracked approved history bundled with the wrapper.
 

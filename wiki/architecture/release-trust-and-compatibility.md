@@ -9,19 +9,20 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
+source_commit: d01539e88c39b72712395899fd206eee40509ab3
 ---
 ## Summary
 
 A version number is not enough to approve a release. DBCode Wrapper treats the immutable wrapper source, pinned upstream inputs, compiled host, signed app, profile identity, acceptance evidence, mounted DMG, approval record, and public digests as one compatibility unit.
 
-The release path stays short. One owner-facing `prepare` task checks signing readiness, builds or reuses the exact host, runs static and one-profile rendered checks, performs final acceptance, tags, packages, verifies, and records approval. Publication remains a separate explicit action.
+The release path stays short. Read-only `plan` reports source readiness. The owner-facing `prepare` task rejects a blocked branch, unrelated working-tree change, or unsafe tag before it takes the checkpoint lease. It then checks signing readiness, builds or reuses the exact host, runs static and one-profile rendered checks, performs final acceptance, tags, packages, verifies, and records approval. Publication remains a separate explicit action.
 
 ## Diagram
 
 ```mermaid
 flowchart LR
-  O[Owner commits exact source] --> P[Prepare owns one checkpoint lease]
+  O[Owner commits exact source] --> N[Plan reports source readiness]
+  N --> P[Prepare validates source then owns one checkpoint lease]
   P --> B[Build or reuse exact host]
   B --> Q[Static and one QA profile]
   Q --> A[Prompt free acceptance]
@@ -42,12 +43,14 @@ flowchart LR
 - [Host Release](../modules/host-release.md) owns preparation, exact resume, approval recording, and explicit publication.
 - [Approved Release Set](../modules/approved-release-set.md) validates the exact approval and tracked history.
 
-Core checks live in [release_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/release_host.sh), [dist_checkpoint.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/dist_checkpoint.sh), [release_source_snapshot.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/release_source_snapshot.sh), [compiled_host_cache.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/compiled_host_cache.sh), and [approved_release_set.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/approved_release_set.sh).
+Core checks live in [release_host.sh](https://github.com/alexwck/dbcode-wrapper/blob/d01539e88c39b72712395899fd206eee40509ab3/script/release_host.sh), [dist_checkpoint.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/dist_checkpoint.sh), [release_source_snapshot.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/release_source_snapshot.sh), [compiled_host_cache.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/compiled_host_cache.sh), and [approved_release_set.sh](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/script/lib/approved_release_set.sh).
 
 ## Design decisions
 
 - Automatic polling is advisory. It cannot change pins, approve, tag, publish, or install.
-- `prepare` is the only normal preparation checklist; lower-level commands are diagnostics.
+- `plan` is read-only and reports why the current source is or is not ready.
+- `prepare` validates source state before checkpoint acquisition; lower-level commands remain diagnostics.
+- Exact same-tag resume permits only the expected approval-history edit, and the final tag step rechecks `HEAD` before packaging.
 - A kernel-backed lease covers `dist/` for the full lifetime of build and verification children.
 - Assembly promotes one complete staged app and manifest. Fixed candidate and previous paths make interruption recoverable.
 - Complete acceptance passes before a new annotated tag is created.

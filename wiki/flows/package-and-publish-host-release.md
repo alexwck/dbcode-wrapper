@@ -9,7 +9,7 @@ tags:
   - publication
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2191402c377a4caa9c941af83c6cbcf6c0d41809
+source_commit: d01539e88c39b72712395899fd206eee40509ab3
 ---
 ## Summary
 
@@ -33,8 +33,9 @@ sequenceDiagram
   participant History as Approved history
   participant GitHub
   Owner->>Task: plan
-  Task-->>Owner: Derived tag paths and stages
+  Task-->>Owner: Current source paths and readiness
   Owner->>Task: prepare
+  Task->>Task: Validate branch tree and tag
   Task->>Build: Sign build or reuse static and render
   Build-->>Task: Exact stable release set
   Task->>Accept: Rerun exact source and static gates
@@ -50,9 +51,9 @@ sequenceDiagram
 ## Steps
 
 1. Finish and commit the exact release source.
-2. Inspect `./script/release_host.sh plan`.
-3. Run `./script/release_host.sh prepare`.
-4. Let preparation check signing, build or reuse the host, run static and one-profile rendered smoke, perform final acceptance, tag, package, independently verify, approve, and record history.
+2. Inspect `./script/release_host.sh plan`. It reports whether the current source is ready and names any blocker.
+3. Run `./script/release_host.sh prepare` only when the plan is ready.
+4. Let preparation revalidate the branch, working tree, and version tag before it takes the checkpoint lease. It then checks signing, builds or reuses the host, runs static and one-profile rendered smoke, performs final acceptance, tags, packages, independently verifies, approves, and records history.
 5. If evidence already exists, require complete identity, file-set, and digest validation before reuse.
 6. Review and commit the single `host/approved-release-history.json` change.
 7. Run `./script/release_host.sh publish --publish`.
@@ -61,6 +62,9 @@ sequenceDiagram
 
 ## Failure modes
 
+- The source is off `main`, a new release source is dirty, or the version tag is lightweight or identifies another commit.
+- Same-tag resume contains a working-tree change other than the expected approval-history edit.
+- `HEAD` advances after preflight and fails the final tag recheck.
 - Signing readiness fails before assembly.
 - Another command owns the `dist/` lease.
 - Acceptance is missing, incomplete, or belongs to another source, app, or release lock.

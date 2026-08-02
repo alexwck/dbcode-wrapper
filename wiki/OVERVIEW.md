@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
+source_commit: d01539e88c39b72712395899fd206eee40509ab3
 tags:
   - wiki
   - overview
@@ -26,7 +26,7 @@ Use the [latest release page](https://github.com/alexwck/dbcode-wrapper/releases
 
 Automatic read-only polling keeps Code OSS, VSCodium, and DBCode update status visible. It never changes a pin, installs software, approves a candidate, creates a tag, or publishes a release. The repository owner starts those actions after reviewing an update.
 
-The maintained release path has one owner-facing command. `plan` shows the derived tag and paths. `prepare` holds one checkpoint lease while it checks signing, builds or reuses the exact host, runs static and one-profile rendered checks, accepts, tags, packages, independently verifies, approves, and records one history change. `publish --publish` performs the explicit public release after that change is committed.
+The maintained release path has one owner-facing command. `plan` reports the current source, derived paths, and any branch, working-tree, or version-tag blocker. `prepare` rejects a blocked source before it takes the checkpoint lease or starts signing, building, or verification. It then owns the complete prompt-free gate, creates the annotated tag after acceptance, and records one history change. Exact same-tag preparation can resume only with the expected approval-history edit. `publish --publish` performs the explicit public release after that change is committed.
 
 Normal development uses the fast prompt-free source gate. Deep build and release fixtures run only when those workflows change. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
 
@@ -43,7 +43,8 @@ Generated cleanup follows artifact purpose and explicit expiry. It is a dry run 
 flowchart LR
   U[Official upstream updates] --> S[Read only status]
   S --> O[Owner commits version bump]
-  O --> P[Prepare owns build and checks]
+  O --> N[Plan reports source readiness]
+  N --> P[Prepare owns build and checks]
   P --> Q[One generated QA profile]
   P --> H[Commit approved history]
   H --> R[Explicit normal release]

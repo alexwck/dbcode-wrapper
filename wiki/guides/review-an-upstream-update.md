@@ -9,7 +9,7 @@ tags:
   - compatibility
 wiki_profile: public
 wiki_depth: standard
-source_commit: 2dbaee59ad243e222541fbea3b5efcc1873a26df
+source_commit: d01539e88c39b72712395899fd206eee40509ab3
 ---
 ## Goal
 
@@ -25,12 +25,10 @@ Automatic polling and the status UI report official public information. They do 
 4. **Run focused source checks.** Validate the Release Specification and affected wrapper seams.
 5. **Choose the latest compatible host pair.** Reconcile host patches only when host inputs changed. If the newest Code OSS no longer matches the newest VSCodium build machinery, keep the latest pair that passes clean preparation and patch checks. The status UI can still report a newer available version.
 6. **Check the Compiled Host ID.** A DBCode-only or assembly-only update should reuse the verified host.
-7. **Build and sign once.** Keep the accepted app and rollback material.
-8. **Run only required built checks.** Use static smoke and the one generated `qa` profile. Show changed routes without starting databases, kernels, models, mutation, accounts, or external services.
-9. **Inspect the release plan.** Run `./script/release_host.sh plan`.
-10. **Prepare the release.** Run `./script/release_host.sh prepare`. It validates acceptance before tag creation and can reuse exact evidence after full validation.
-11. **Review and commit approval history.** Commit the single `host/approved-release-history.json` change.
-12. **Publish explicitly.** Run `./script/release_host.sh publish --publish` and let it verify the normal public release.
+7. **Inspect the release plan.** Run `./script/release_host.sh plan`. It reports the current source and any branch, working-tree, or tag blocker without changing state.
+8. **Prepare the release once.** Run `./script/release_host.sh prepare`. It fails before checkpoint acquisition when the source is unsafe, then owns signing, build or exact reuse, static smoke, one generated-`qa`-profile rendered smoke, final acceptance, tag creation, packaging, independent verification, approval, and history recording.
+9. **Review and commit approval history.** Commit the single `host/approved-release-history.json` change.
+10. **Publish explicitly.** Run `./script/release_host.sh publish --publish` and let it verify the normal public release.
 
 ## Relevant code
 
@@ -44,6 +42,7 @@ Automatic polling and the status UI report official public information. They do 
 
 ## Gotchas
 
+- A plan blocked by an existing version tag at another commit needs a committed wrapper version bump. Never move or replace the published tag.
 - VSCodium packaging and Code OSS runtime labels are related but not interchangeable.
 - An available version is not a tested or approved release.
 - One AI route does not prove every AI workflow.
