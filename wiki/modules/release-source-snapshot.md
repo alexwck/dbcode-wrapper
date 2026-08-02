@@ -9,7 +9,7 @@ tags:
   - source
 wiki_profile: public
 wiki_depth: standard
-source_commit: e02160a3b5363fc4e91c5282f7818ed908624c6d
+source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
 ---
 ## Summary
 
@@ -17,11 +17,14 @@ Release Source Snapshot makes each build start from one clean immutable Git comm
 
 This prevents an uncommitted file or later working-tree edit from quietly changing the app after review. Materialization returns a normalized physical path, and callers use that path.
 
+The wrapper-source digest includes production assembly adapters that can change signed app bytes, including the Runtime Extension Set. Test-only helpers are outside that identity.
+
 ## Responsibilities
 
 - Resolve a release ref to one Git commit and tree.
 - Refuse dirty source when the selected release commit is the current checkout.
 - Record the release-lock digest and host-and-script input digest.
+- Include every production assembly adapter that can change the signed app, and exclude test-only helpers.
 - Materialize the exact commit in a narrow temporary directory.
 - Recheck the record before and after expensive build stages.
 - Bind the snapshot to the signed manifest, acceptance report, source tag, and Host Release.
@@ -44,7 +47,8 @@ flowchart LR
 
 ## Key files
 
-- [script/lib/release_source_snapshot.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/release_source_snapshot.sh) — record, verification, digest, and materialization logic.
+- [script/lib/release_source_snapshot.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/lib/release_source_snapshot.sh) — record, verification, and materialization logic.
+- [script/lib/source_digest.sh](https://github.com/alexwck/dbcode-wrapper/blob/03c571b8056a0ce65cab3779ae2d231e8820563c/script/lib/source_digest.sh) — exact production wrapper and assembly-adapter input set.
 - [script/test_release_source_snapshot_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/test_release_source_snapshot_contract.sh) — clean-source, path, and tamper checks.
 - [script/generate_manifest.sh](https://github.com/alexwck/dbcode-wrapper/blob/e02160a3b5363fc4e91c5282f7818ed908624c6d/script/generate_manifest.sh) — copies the verified snapshot into the signed build manifest.
 

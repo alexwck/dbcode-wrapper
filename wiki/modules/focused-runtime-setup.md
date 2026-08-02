@@ -9,11 +9,11 @@ tags:
   - open-vsx
 wiki_profile: public
 wiki_depth: standard
-source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
+source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
 ---
 ## Summary
 
-Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages into the external Standalone DBCode Profile. Packages are not opportunistic marketplace installs: every identity, URL, size, digest, signature, and public-key binding comes from the Release Specification. The Runtime Extension Set projects that purpose record once, and every setup and release path checks it through the same verifier.
+Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages into the external Standalone DBCode Profile. Packages are not opportunistic marketplace installs: every identity, URL, size, digest, signature, and public-key binding comes from the Release Specification. The Runtime Extension Set projects that purpose record once. Because it generates settings packaged in the signed app, it is part of wrapper source identity. Every setup and release path checks the result through the same verifier.
 
 ## Responsibilities
 
@@ -28,7 +28,7 @@ Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages
 
 ## Public API / entry points
 
-`openVsxPackageVerifier.js` owns the runtime record projection, configuration shape, canonical package selection, installed identity, safe public-key path resolution, deep package checks, and safe errors. `runtime_extension_set.cjs` writes or checks the exact public record from purpose-level Release Specification input. `runtimeSetup.js` owns Finder first-run acquisition, private caching, and inventory. `runtimeSetupController.js` connects that adapter to Code OSS extension management and the setup view. `verify_openvsx_package.cjs` is the package-file adapter. The shell generator and release checks call these interfaces instead of copying the package field list or a security rule.
+`openVsxPackageVerifier.js` owns the runtime record projection, configuration shape, canonical package selection, installed identity, safe public-key path resolution, deep package checks, and safe errors. `runtime_extension_set.cjs` writes or checks the exact public record from purpose-level Release Specification input. `runtimeSetup.js` exposes setup validation, installed-inventory checks, and one acquire-and-verify operation; download and verification helpers stay private. `runtimeSetupController.js` connects that interface to Code OSS extension management and the setup view. `verify_openvsx_package.cjs` is the package-file command adapter. The shell generator and release checks call these maintained interfaces instead of copying package fields or security rules.
 
 ## Key files
 
@@ -41,7 +41,7 @@ Focused Runtime Setup installs DBCode and the pinned Python and Jupyter packages
 
 ## Dependencies
 
-The module depends on Node crypto and HTTPS, Code OSS extension management, approved Open VSX keys, [Release Specification](release-specification.md), and [Profile Layout and Setup](profile-layout-and-setup.md). The default development gate runs a fast synthetic adversarial matrix through both adapters. The real cached-package gate runs only when verification changes. Rendered deployment checks reuse the generated QA profile; these checks do not request kernel permission or human input.
+The module depends on Node crypto and HTTPS, Code OSS extension management, approved Open VSX keys, [Release Specification](release-specification.md), and [Profile Layout and Setup](profile-layout-and-setup.md). The default development gate runs a fast synthetic adversarial matrix through the maintained verifier and production acquisition interface. The real cached-package command-adapter gate runs only when verification changes. Rendered deployment checks reuse the generated QA profile; these checks do not request kernel permission or human input.
 
 ## Participates in
 

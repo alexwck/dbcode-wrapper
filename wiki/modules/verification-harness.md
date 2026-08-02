@@ -9,7 +9,7 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
+source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
 ---
 ## Summary
 
@@ -21,6 +21,7 @@ No maintained deployment test pauses for a person, starts a real database or ker
 
 - Keep `check_development.sh` below one minute and free of app launches, network calls, questions, and human input.
 - Test current behaviour through the same maintained interfaces production uses.
+- Prefer positive checks for current behaviour over scans for names from retired workflows.
 - Do not export a helper only for a test or keep a test whose only job is naming a private helper.
 - Keep an exact interface test when the small interface is deliberate.
 - Give each test module one maintained runner using the pinned Node runtime.

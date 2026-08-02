@@ -9,13 +9,13 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
+source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
 ---
 ## Summary
 
 The focused shell removes general IDE navigation and makes DBCode the product surface. It keeps the extension-host APIs DBCode needs and adds only small wrapper extensions for profile setup, the Python kernel bridge, and release status.
 
-DBCode stays unmodified. The wrapper does not recreate its database, notebook, AI, MCP, account, or licence features. Wrapper-owned shell TypeScript and CSS now live as normal source files; the patch stack contains only the smaller changes to existing Code OSS files.
+DBCode stays unmodified. The wrapper does not recreate its database, notebook, AI, MCP, account, or licence features. DBCode attaches Python cells to an already running Jupyter kernel, so the wrapper keeps one explicit Start Python Kernel bridge instead of duplicating the notebook. Wrapper-owned shell TypeScript and CSS live as normal source files; the patch stack contains only the smaller changes to existing Code OSS files.
 
 ## Responsibilities
 
@@ -25,7 +25,7 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 - Keep every DBCode-owned side drawer open during editor, canvas, grid, and Escape interactions. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent drawer.
 - Open file-backed scratch queries in the generated query folder without overwriting existing files.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
-- Provide profile safety, kernel permission, and release status around DBCode.
+- Provide profile safety, explicit user-started Python kernel setup, and release status around DBCode.
 - Poll official Code OSS, VSCodium, and DBCode metadata automatically while keeping review actions read-only.
 - Show prompt-prone routes in rendered checks without activating them.
 

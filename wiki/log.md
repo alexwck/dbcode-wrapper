@@ -240,3 +240,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: b3773b5 (was 02a3c23)
 - Coverage: one Runtime Extension Set projection and checker; one purpose-level Host Session run lifecycle; production-interface tests without test-only exports or modes; small Update Status service interface; 21.66-second prompt-free development gate
 - Pages: [Overview](./OVERVIEW.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Host Session](./modules/host-session.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-02: refresh
+
+- Profile: public/standard
+- source_commit: f1cc5e1 (was b3773b5)
+- Coverage: production Runtime Extension Set included in wrapper source identity; test-only engine checker removed; smaller maintained Runtime Setup and package-file interfaces; current-behaviour tests without retired workflow-name scans; Python Kernel Bridge retained for DBCode's running-kernel workflow; complete prompt-free development gate passed
+- Pages: [Overview](./OVERVIEW.md), [Release Source Snapshot](./modules/release-source-snapshot.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)

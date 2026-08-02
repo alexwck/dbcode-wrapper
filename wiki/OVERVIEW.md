@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
+source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
 tags:
   - wiki
   - overview
@@ -17,6 +17,8 @@ DBCode's own query results open below the query at every window width. The wrapp
 DBCode side drawers stay open while the user works elsewhere. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent DBCode drawer used in the app session.
 
 Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
+
+The production Runtime Extension Set adapter is part of release identity because it generates settings packaged in the signed app. Runtime and release tests use maintained interfaces; private helpers and retired workflow names are not test APIs.
 
 This wiki is a learning map, not a second source of truth. The `source_commit` field records the source revision used for this refresh. Check current source and tests when details disagree.
 
