@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Issue 59](issues/59-deepen-remaining-wrapper-seams.md) is claimed to deepen the Runtime Extension Set and Host Session seams, remove test-only leftovers, and narrow Update Status around its maintained service interface.
+No issue is open or claimed.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), and [Issue 54](issues/54-make-release-preparation-one-serialized-task.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 59](issues/59-deepen-remaining-wrapper-seams.md), [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), and [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 
