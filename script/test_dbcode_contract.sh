@@ -95,10 +95,6 @@ rg -Fq -- '--disable-workspace-trust' "${REPO_ROOT}/script/run_host.sh" || {
   echo "The dedicated DBCode host must not leave its only extension disabled in Restricted Mode." >&2
   exit 1
 }
-if rg -Fq -- '--manual-proof' "${REPO_ROOT}/script/run_host.sh"; then
-  echo "The normal host launch still exposes the superseded manual-proof mode." >&2
-  exit 1
-fi
 host_session_contract="${REPO_ROOT}/script/lib/host-session.js"
 [[ -f "${host_session_contract}" ]] || {
   echo "Missing Host Session contract: script/lib/host-session.js" >&2

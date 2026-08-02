@@ -163,10 +163,6 @@ async function main(argv) {
   }
 }
 
-module.exports = {
-  verifyPackageRoot
-};
-
 if (require.main === module) {
   main(process.argv.slice(2)).then(code => {
     process.exitCode = code;

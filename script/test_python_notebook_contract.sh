@@ -79,24 +79,4 @@ for rendered_notebook_contract in \
   }
 done
 
-for forbidden_interactive_notebook_contract in \
-  'runDbcodeKernelCellWithHumanGate' \
-  'focusDbcodeWindowForHumanKernelGate' \
-  'HUMAN ACTION REQUIRED' \
-  'DBCODE_WRAPPER_QA_MANUAL_KERNEL_GATE' \
-  'kernel-permission-preflight' \
-  'verifyNotebookRoute' \
-  '.notebookOverlay.notebook-editor:visible' \
-  'dbcode_wrapper_notebook_proof = 6 * 7' \
-  'DBCODE_NOTEBOOK_PYTHON_OUTPUT_42' \
-  'findNotebookPythonOutput' \
-  'chooseQaPythonKernel'; do
-  if rg -Fq "${forbidden_interactive_notebook_contract}" \
-    "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs" \
-    "${REPO_ROOT}/script/test_focused_shell_rendered.sh"; then
-    echo "The fast rendered smoke still contains an interactive Kernel workflow: ${forbidden_interactive_notebook_contract}" >&2
-    exit 1
-  fi
-done
-
 echo "Core Python-notebook contract checks passed."

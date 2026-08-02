@@ -81,7 +81,7 @@ Coverage: declared and reachable; rendered Explorer navigation; live and destruc
 
 Official features include SQL and Markdown cells, cell-level execution, result tabs, export, per-cell connection locking, and Python. See [notebook basics](https://dbcode.io/docs/notebooks/getting-started) and [Python notebooks](https://dbcode.io/docs/notebooks/python).
 
-The wrapper keeps DBCode's notebook editor, renderer, toolbar, cell menus, export route, and verified Python/Jupyter runtime. The fast smoke verifies that the notebook route remains visible but does not activate it or start a kernel. This avoids DBCode terms and macOS permission prompts during deployment.
+The wrapper keeps DBCode's notebook editor, renderer, toolbar, cell menus, export route, and verified Python/Jupyter runtime. DBCode attaches Python cells to an already running Jupyter kernel, so the focused Start Python Kernel action starts a user-selected kernel first. The fast smoke verifies that the notebook route remains visible but does not start a kernel. This avoids DBCode terms and macOS permission prompts during deployment.
 
 Coverage: declared and reachable, with rendered menu evidence. Python execution is normal user work, not a deployment test.
 
@@ -111,7 +111,7 @@ Current gaps:
 - Query explanations are named by DBCode team policy, but the current official feature pages do not identify a distinct route.
 - Team controls are declared upstream but are not rendered or exercised through a signed-in team account.
 
-See [AI data sharing](../security/ai-data-sharing.md) for payload and privacy details.
+See [AI data sharing](https://github.com/alexwck/dbcode-wrapper/blob/main/docs/security/ai-data-sharing.md) for payload and privacy details.
 
 Coverage: mixed. Provider and API-key routes are reachable from the rendered DBCode Tools menu, but the smoke does not activate them. Automatic MCP registration is supported and reachable. Inline completion, Query Builder AI, Grid AI, Explore AI, plan analysis, HTTP MCP, Copilot tool access, inferred-relationship writes, query explanations, and team controls are limited at their recorded evidence level. Optional deeper checks do not block deployment. Live AI is not a deployment test.
 

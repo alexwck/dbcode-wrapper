@@ -25,13 +25,7 @@ rendered_session_support_test="${REPO_ROOT}/host/qa/rendered-session-support.tes
 jq -e '
   .product.focused_shell.enabled == true and
   .product.focused_shell.result_location == "below" and
-  (.product.focused_shell | has("automatic_result_layout") | not) and
-  (.product.focused_shell | has("default_result_location") | not) and
-  (.product.focused_shell | has("supported_result_locations") | not) and
-  (.product.focused_shell | has("default_results_position") | not) and
-  (.product.focused_shell | has("narrow_results_position") | not) and
-  .product.focused_shell.narrow_breakpoint == 1050 and
-  (.product | has("diagnostic") | not)
+  .product.focused_shell.narrow_breakpoint == 1050
 ' <<<"${RELEASE_PROFILE_SPEC}" >/dev/null
 
 for release_contract in "${manifest_generator}" "${smoke_test}"; do
@@ -39,25 +33,6 @@ for release_contract in "${manifest_generator}" "${smoke_test}"; do
     echo "The release contract does not describe the DBCode result location: ${release_contract}" >&2
     exit 1
   }
-  if rg -Fq 'automatic_result_layout:' "${release_contract}" ||
-    rg -Fq 'focused_shell_automatic_result_layout' "${release_contract}" ||
-    rg -Fq 'default_result_location' "${release_contract}" ||
-    rg -Fq 'supported_result_locations' "${release_contract}"; then
-    echo "The release contract still describes removed responsive or manual result-layout metadata: ${release_contract}" >&2
-    exit 1
-  fi
-done
-
-for removed_second_profile_contract in \
-  'host_session_run' \
-  '--user-data-dir' \
-  '--extensions-dir' \
-  '--shared-data-dir' \
-  '--use-mock-keychain'; do
-  if rg -Fq -- "${removed_second_profile_contract}" "${smoke_test}"; then
-    echo "Static smoke still creates the removed second GUI profile: ${removed_second_profile_contract}" >&2
-    exit 1
-  fi
 done
 
 for focused_source_file in "${focused_sources[@]}"; do
@@ -111,22 +86,6 @@ for required_bottom_result_contract in \
     exit 1
   }
 done
-
-for removed_responsive_result_contract in \
-  'applyAutomaticResultLocation' \
-  'resultLocationUpdateSequence' \
-  'resultLocationUpdate:' \
-  'private isNarrow:'; do
-  if rg -Fq -- "${removed_responsive_result_contract}" "${focused_shell_typescript}"; then
-    echo "The focused shell still carries the removed responsive result-layout process: ${removed_responsive_result_contract}" >&2
-    exit 1
-  fi
-done
-
-if rg -Fq "nextNarrow ? 'below' : 'beside'" "${focused_shell_typescript}"; then
-  echo "The focused shell still changes DBCode result placement with window width." >&2
-  exit 1
-fi
 
 if rg -Fq "joinPath(this.userDataProfileService.currentProfile.globalStorageHome, 'dbcode-wrapper', 'queries')" "${focused_shell_typescript}"; then
   echo "The focused shell must not duplicate the Release Specification query storage identity." >&2
@@ -358,52 +317,7 @@ if [[ -f "${focused_source}" ]] && ! rg -Fq \
   exit 1
 fi
 
-if [[ -f "${focused_source}" ]] && rg -Fq 'const dragHandle =' "${focused_source}"; then
-  echo "The final focused shell still creates the global six-dot Results drag handle." >&2
-  exit 1
-fi
-
-if [[ -f "${focused_source}" ]] && rg -Fq 'dbcode-wrapper-query-context' "${focused_source}"; then
-  echo "The final focused shell still renders the redundant Query and editor-name context." >&2
-  exit 1
-fi
-
-if [[ -f "${focused_source}" ]] && rg -Fq "createButton('maximize-" "${focused_source}"; then
-  echo "The final focused shell still puts both maximize controls in the global toolbar." >&2
-  exit 1
-fi
-
-for removed_result_control in \
-  'resultsBesideButton' \
-  'resultsBelowButton' \
-  "createButton('results-beside'" \
-  "createButton('results-below'" \
-  'Place new results beside query' \
-  'Place new results below query'; do
-  if [[ -f "${focused_source}" ]] && rg -Fq "${removed_result_control}" "${focused_source}"; then
-    echo "The final focused shell still exposes a removed result-position control: ${removed_result_control}" >&2
-    exit 1
-  fi
-done
-
-for removed_results_panel_contract in \
-  'dbcodeWrapperResultsSurface' \
-  'dbcode-wrapper-results-drag-surface' \
-  "createButton('results-surface'" \
-  "createButton('query-surface'" \
-  'private async openResults'; do
-  if [[ -f "${focused_source}" ]] && rg -Fq "${removed_results_panel_contract}" "${focused_source}"; then
-    echo "The final focused shell still owns the removed Results panel contract: ${removed_results_panel_contract}" >&2
-    exit 1
-  fi
-done
-
 focused_css="${WORK_ROOT}/vscode/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css"
-if [[ -f "${focused_css}" ]] && rg -Fq '.dbcode-wrapper-drag-handle' "${focused_css}"; then
-  echo "The final focused shell still contains styling for the removed six-dot Results drag handle." >&2
-  exit 1
-fi
-
 shortcut_count="$(rg --no-filename -F "accelerator: 'CmdOrCtrl+O'" "${transport_patches[@]}" | rg -c '^\+' || true)"
 [[ "${shortcut_count}" == "1" ]] || {
   echo "The SQL-file shortcut must have exactly one native menu route." >&2
@@ -446,13 +360,14 @@ for rendered_contract in \
   'wrapperDatabaseAllowlist: false' \
   'rawLabelsStored: false' \
   'advancedToolLabels' \
-  'removedToolLabels' \
+  'unavailableToolLabels' \
   'DBCode AI provider, custom-model, and API-key routes remain reachable without sending data' \
   'modelCallMade: false' \
   'secretEntered: false' \
   'Query Builder remains reachable from DBCode Tools' \
   'the DBCode notebook route remains reachable without starting a kernel' \
   'kernelStarted: false' \
+  'permissionPromptExpected: false' \
   'DBCode Settings remains reachable from DBCode Tools without activating it' \
   'the release status quick input stays above the toolbar and closes on outside click' \
   'Open SQL File renders the deterministic query without executing it' \
@@ -465,31 +380,6 @@ for rendered_contract in \
     echo "The rendered test is missing coverage: ${rendered_contract}" >&2
     exit 1
   }
-done
-
-for forbidden_rendered_contract in \
-  'mkdtempSync' \
-  'rmSync(profileRoot' \
-  'HUMAN ACTION REQUIRED' \
-  'kernel-permission-preflight' \
-  'acceptDbcodeTermsIfOffered' \
-  'runDbcodeKernelCellWithHumanGate' \
-  'freshDefaultProof' \
-  'profileRecoveryProof'; do
-  if rg -Fq -- "${forbidden_rendered_contract}" "${rendered_test}"; then
-    echo "The single-profile rendered smoke still contains a removed lifecycle or human gate: ${forbidden_rendered_contract}" >&2
-    exit 1
-  fi
-done
-
-for removed_rendered_contract in \
-  'Place new results beside query' \
-  'Place new results below query' \
-  'result location persists while Database Explorer stays hidden across relaunch'; do
-  if rg -Fq -- "${removed_rendered_contract}" "${rendered_test}"; then
-    echo "The rendered acceptance flow still exercises a removed result-position control: ${removed_rendered_contract}" >&2
-    exit 1
-  fi
 done
 
 if rg -Uq '\.part\.panel > \.title \{\n[[:space:]]*display: none' "${focused_shell_styles}"; then

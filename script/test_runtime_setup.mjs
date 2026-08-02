@@ -11,35 +11,31 @@ import { Readable } from 'node:stream';
 import test from 'node:test';
 
 const require = createRequire(import.meta.url);
+const runtimeSetup = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
 const {
   acquireAndVerifyPackage,
   assertManagedRuntimeInstalled,
-  downloadBuffer,
   missingRuntimePackages,
-  validateRuntimeConfiguration,
-  verifyPackageAcquisition
-} = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
+  validateRuntimeConfiguration
+} = runtimeSetup;
 const openVsxPackageVerifier = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
 const {
   createOpenVsxRuntimeConfiguration,
   readZipEntries,
   selectOpenVsxPackageRecord,
   validateInstalledOpenVsxExtension,
-  validateOpenVsxRuntimeConfiguration
+  validateOpenVsxRuntimeConfiguration,
+  verifyOpenVsxPackage
 } = openVsxPackageVerifier;
 const runtimeSetupController = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
 const {
   RuntimeSetupController
 } = runtimeSetupController;
 const { renderRuntimeSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupView.js');
-const {
-  verifyPackageRoot
-} = require('./verify_openvsx_package.cjs');
 
 test('runtime setup exposes only its maintained verifier interface', () => {
   assert.deepEqual(Object.keys(openVsxPackageVerifier).sort(), [
     'createOpenVsxRuntimeConfiguration',
-    'engineIsCompatible',
     'readZipEntries',
     'requireOfficialUrl',
     'resolveOpenVsxPublicKeyPath',
@@ -47,6 +43,15 @@ test('runtime setup exposes only its maintained verifier interface', () => {
     'validateInstalledOpenVsxExtension',
     'validateOpenVsxRuntimeConfiguration',
     'verifyOpenVsxPackage'
+  ]);
+});
+
+test('runtime setup exposes only its maintained setup interface', () => {
+  assert.deepEqual(Object.keys(runtimeSetup).sort(), [
+    'acquireAndVerifyPackage',
+    'assertManagedRuntimeInstalled',
+    'missingRuntimePackages',
+    'validateRuntimeConfiguration'
   ]);
 });
 
@@ -232,76 +237,55 @@ function fakeZip(entries) {
   };
 }
 
-async function verifyThroughRuntimeAdapter(state) {
-  return verifyPackageAcquisition(
-    state.packageRecord,
-    state.acquisition,
-    state.configuration.public_keys,
+function acquisitionRoutes(state, overrides = new Map()) {
+  const routes = new Map([
+    [state.packageRecord.registry_api_url, {
+      statusCode: 200,
+      body: Buffer.from(JSON.stringify(state.acquisition.registryRecord))
+    }],
+    [state.packageRecord.download_url, {
+      statusCode: 200,
+      body: state.acquisition.vsix
+    }],
+    [state.packageRecord.signature_url, {
+      statusCode: 200,
+      body: state.acquisition.signatureArchive
+    }],
+    [state.packageRecord.sha256_url, {
+      statusCode: 200,
+      body: state.acquisition.sha256Record
+    }],
+    [state.packageRecord.public_key_url, {
+      statusCode: 200,
+      body: state.acquisition.publicKey
+    }]
+  ]);
+  for (const [url, route] of overrides) {
+    routes.set(url, route);
+  }
+  return routes;
+}
+
+async function verifyThroughMaintainedInterface(state) {
+  return verifyOpenVsxPackage(
     {
       codeOssVersion: state.codeOssVersion,
-      fromBuffer: state.fromBuffer
-    }
+      packageRecord: state.packageRecord,
+      acquisition: state.acquisition,
+      publicKeys: state.configuration.public_keys
+    },
+    { fromBuffer: state.fromBuffer }
   );
 }
 
-async function verifyThroughScriptAdapter(state) {
-  const testRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'dbcode Open VSX adapter '));
-  const packageRoot = path.join(testRoot, 'package with spaces');
-  const keyRoot = path.join(testRoot, 'approved keys');
-  try {
-    await fs.mkdir(packageRoot, { recursive: true });
-    await fs.mkdir(keyRoot, { recursive: true });
-    await Promise.all([
-      fs.writeFile(
-        path.join(packageRoot, 'registry.json'),
-        JSON.stringify(state.acquisition.registryRecord)
-      ),
-      fs.writeFile(path.join(packageRoot, 'package.vsix'), state.acquisition.vsix),
-      fs.writeFile(
-        path.join(packageRoot, 'signature.sigzip'),
-        state.acquisition.signatureArchive
-      ),
-      fs.writeFile(
-        path.join(packageRoot, 'package.sha256'),
-        state.acquisition.sha256Record
-      ),
-      fs.writeFile(
-        path.join(packageRoot, 'openvsx-public-key.pem'),
-        state.acquisition.publicKey
-      ),
-      fs.writeFile(
-        path.join(keyRoot, `openvsx-${state.configuration.public_keys[0].id}.pem`),
-        state.pinnedPublicKey
-      )
-    ]);
-    return await verifyPackageRoot(
-      {
-        packageId: state.packageRecord.id,
-        packageRoot,
-        codeOssVersion: state.codeOssVersion,
-        packages: [state.packageRecord],
-        keyRoot
-      },
-      { fromBuffer: state.fromBuffer }
-    );
-  } finally {
-    await fs.rm(testRoot, { recursive: true, force: true });
-  }
-}
-
-async function assertBothAdaptersReject(mutate, expected, label) {
-  for (const [adapterName, verify] of [
-    ['in-app adapter', verifyThroughRuntimeAdapter],
-    ['script adapter', verifyThroughScriptAdapter]
-  ]) {
-    const state = fixture();
-    mutate(state);
-    await assert.rejects(
-      verify(state),
-      expected,
-      `${adapterName} accepted ${label}`
-    );
-  }
+async function assertMaintainedVerifierRejects(mutate, expected, label) {
+  const state = fixture();
+  mutate(state);
+  await assert.rejects(
+    verifyThroughMaintainedInterface(state),
+    expected,
+    `The maintained Open VSX verifier accepted ${label}`
+  );
 }
 
 function replaceArchiveEntry(entries, name, body) {
@@ -311,18 +295,13 @@ function replaceArchiveEntry(entries, name, body) {
 }
 
 test('runtime setup accepts one exact pinned Open VSX package', async () => {
-  const { acquisition, configuration, packageRecord, readZipEntries } = fixture();
-  assert.deepEqual(validateOpenVsxRuntimeConfiguration(configuration), configuration);
-  assert.deepEqual(validateRuntimeConfiguration(configuration), configuration);
-  await assert.doesNotReject(verifyPackageAcquisition(
-    packageRecord,
-    acquisition,
-    configuration.public_keys,
-    {
-      codeOssVersion: configuration.code_oss_version,
-      readZipEntries
-    }
-  ));
+  const state = fixture();
+  assert.deepEqual(
+    validateOpenVsxRuntimeConfiguration(state.configuration),
+    state.configuration
+  );
+  assert.deepEqual(validateRuntimeConfiguration(state.configuration), state.configuration);
+  await assert.doesNotReject(verifyThroughMaintainedInterface(state));
 });
 
 test('the shared verifier selects one canonical package record', () => {
@@ -370,32 +349,20 @@ test('runtime setup binds every embedded public key to the package digest', () =
 });
 
 test('runtime setup rejects registry or package bytes that differ from the pinned set', async () => {
-  const { acquisition, configuration, packageRecord, readZipEntries } = fixture();
+  const changedRegistry = fixture();
+  changedRegistry.acquisition.registryRecord = {
+    ...changedRegistry.acquisition.registryRecord,
+    version: '1.36.3'
+  };
   await assert.rejects(
-    verifyPackageAcquisition(
-      packageRecord,
-      {
-        ...acquisition,
-        registryRecord: { ...acquisition.registryRecord, version: '1.36.3' }
-      },
-      configuration.public_keys,
-      {
-        codeOssVersion: configuration.code_oss_version,
-        readZipEntries
-      }
-    ),
+    verifyThroughMaintainedInterface(changedRegistry),
     /registry record/i
   );
+
+  const changedPackage = fixture();
+  changedPackage.acquisition.vsix = Buffer.from('changed package');
   await assert.rejects(
-    verifyPackageAcquisition(
-      packageRecord,
-      { ...acquisition, vsix: Buffer.from('changed package') },
-      configuration.public_keys,
-      {
-        codeOssVersion: configuration.code_oss_version,
-        readZipEntries
-      }
-    ),
+    verifyThroughMaintainedInterface(changedPackage),
     /VSIX.*SHA-256/i
   );
 });
@@ -430,26 +397,24 @@ test('runtime setup rejects a pinned package that needs a newer Code OSS host', 
     ]]);
   };
 
-  await assert.rejects(
-    verifyPackageAcquisition(
-      incompatiblePackage,
-      incompatibleAcquisition,
-      configuration.public_keys,
-      {
-        codeOssVersion: configuration.code_oss_version,
-        readZipEntries: incompatibleZipReader
-      }
-    ),
+  await assert.rejects(verifyOpenVsxPackage(
+    {
+      codeOssVersion: configuration.code_oss_version,
+      packageRecord: incompatiblePackage,
+      acquisition: incompatibleAcquisition,
+      publicKeys: configuration.public_keys
+    },
+    { readZipEntries: incompatibleZipReader }
+  ),
     /not compatible with Code OSS/i
   );
 });
 
-test('both Open VSX acquisition adapters accept the same exact package', async () => {
-  await assert.doesNotReject(verifyThroughRuntimeAdapter(fixture()));
-  await assert.doesNotReject(verifyThroughScriptAdapter(fixture()));
+test('the maintained Open VSX verifier accepts the exact package', async () => {
+  await assert.doesNotReject(verifyThroughMaintainedInterface(fixture()));
 });
 
-test('both Open VSX acquisition adapters reject every changed registry invariant', async () => {
+test('the maintained Open VSX verifier rejects every changed registry invariant', async () => {
   const mutations = [
     ['namespace', state => { state.acquisition.registryRecord.namespace = 'changed'; }],
     ['name', state => { state.acquisition.registryRecord.name = 'changed'; }],
@@ -466,11 +431,11 @@ test('both Open VSX acquisition adapters reject every changed registry invariant
     ['public-key URL', state => { state.acquisition.registryRecord.files.publicKey += '.changed'; }]
   ];
   for (const [label, mutate] of mutations) {
-    await assertBothAdaptersReject(mutate, /registry record/i, label);
+    await assertMaintainedVerifierRejects(mutate, /registry record/i, label);
   }
 });
 
-test('both Open VSX acquisition adapters reject changed digests, sizes, and keys', async () => {
+test('the maintained Open VSX verifier rejects changed digests, sizes, and keys', async () => {
   const replacementKey = () => crypto.generateKeyPairSync('ed25519').publicKey
     .export({ type: 'spki', format: 'pem' });
   const mutations = [
@@ -522,11 +487,11 @@ test('both Open VSX acquisition adapters reject changed digests, sizes, and keys
     ]
   ];
   for (const [label, mutate, expected] of mutations) {
-    await assertBothAdaptersReject(mutate, expected, label);
+    await assertMaintainedVerifierRejects(mutate, expected, label);
   }
 });
 
-test('both Open VSX acquisition adapters reject changed signatures and signature manifests', async () => {
+test('the maintained Open VSX verifier rejects changed signatures and signature manifests', async () => {
   const mutations = [
     [
       'wrong-length Ed25519 signature',
@@ -587,11 +552,11 @@ test('both Open VSX acquisition adapters reject changed signatures and signature
     ]
   ];
   for (const [label, mutate, expected] of mutations) {
-    await assertBothAdaptersReject(mutate, expected, label);
+    await assertMaintainedVerifierRejects(mutate, expected, label);
   }
 });
 
-test('both Open VSX acquisition adapters reject unsafe or incomplete archives', async () => {
+test('the maintained Open VSX verifier rejects unsafe or incomplete archives', async () => {
   const mutations = [
     [
       'parent traversal entry',
@@ -649,11 +614,11 @@ test('both Open VSX acquisition adapters reject unsafe or incomplete archives', 
     ]
   ];
   for (const [label, mutate] of mutations) {
-    await assertBothAdaptersReject(mutate, /archive|entry|required/i, label);
+    await assertMaintainedVerifierRejects(mutate, /archive|entry|required/i, label);
   }
 });
 
-test('both Open VSX acquisition adapters reject every changed VSIX identity field', async () => {
+test('the maintained Open VSX verifier rejects every changed VSIX identity field', async () => {
   const mutations = [
     ['publisher', manifest => { manifest.publisher = 'changed'; }],
     ['name', manifest => { manifest.name = 'changed'; }],
@@ -661,7 +626,7 @@ test('both Open VSX acquisition adapters reject every changed VSIX identity fiel
     ['engine', manifest => { manifest.engines.vscode = '^9.0.0'; }]
   ];
   for (const [label, mutateManifest] of mutations) {
-    await assertBothAdaptersReject(
+    await assertMaintainedVerifierRejects(
       state => {
         const entry = state.vsixEntries.find(
           candidate => candidate.name === 'extension/package.json'
@@ -677,59 +642,63 @@ test('both Open VSX acquisition adapters reject every changed VSIX identity fiel
 });
 
 test('runtime downloads follow bounded HTTPS redirects and reject oversized responses', async () => {
-  const officialUrl = 'https://open-vsx.org/api/fixture/package/1.0.0';
+  const state = fixture();
+  const officialUrl = state.packageRecord.download_url;
   const redirectedUrl = 'https://cdn.example.invalid/fixture';
-  const request = fakeHttps(new Map([
-    [officialUrl, {
-      statusCode: 302,
-      headers: { location: redirectedUrl }
-    }],
+  const acquire = request => acquireAndVerifyPackage(
+    state.packageRecord,
+    state.configuration.public_keys,
+    state.codeOssVersion,
+    { request, verify: async () => undefined }
+  );
+  const redirectedRoutes = acquisitionRoutes(state, new Map([
+    [officialUrl, { statusCode: 302, headers: { location: redirectedUrl } }],
     [redirectedUrl, {
       statusCode: 200,
-      headers: { 'content-length': '7' },
-      body: Buffer.from('fixture')
+      headers: { 'content-length': String(state.acquisition.vsix.length) },
+      body: state.acquisition.vsix
     }]
   ]));
-  assert.equal(
-    (await downloadBuffer(officialUrl, 7, 0, { request })).toString('utf8'),
-    'fixture'
+  assert.deepEqual(
+    await acquire(fakeHttps(redirectedRoutes)),
+    state.acquisition.vsix
   );
 
-  const oversizedRequest = fakeHttps(new Map([
+  const oversizedRoutes = acquisitionRoutes(state, new Map([
     [officialUrl, {
       statusCode: 200,
-      headers: { 'content-length': '8' },
-      body: Buffer.from('oversize')
+      headers: { 'content-length': String(state.packageRecord.package_size + 1) },
+      body: Buffer.alloc(state.packageRecord.package_size + 1)
     }]
   ]));
   await assert.rejects(
-    downloadBuffer(officialUrl, 7, 0, { request: oversizedRequest }),
+    acquire(fakeHttps(oversizedRoutes)),
     /exceeded its pinned size limit/i
   );
 
-  const streamedOversizeRequest = fakeHttps(new Map([
+  const streamedOversizeRoutes = acquisitionRoutes(state, new Map([
     [officialUrl, {
       statusCode: 200,
-      body: Buffer.from('oversize')
+      body: Buffer.alloc(state.packageRecord.package_size + 1)
     }]
   ]));
   await assert.rejects(
-    downloadBuffer(officialUrl, 7, 0, { request: streamedOversizeRequest }),
+    acquire(fakeHttps(streamedOversizeRoutes)),
     /exceeded its pinned size limit/i
   );
 
-  const downgradeRequest = fakeHttps(new Map([
+  const downgradeRoutes = acquisitionRoutes(state, new Map([
     [officialUrl, {
       statusCode: 302,
       headers: { location: 'http://open-vsx.org/insecure' }
     }]
   ]));
   await assert.rejects(
-    downloadBuffer(officialUrl, 7, 0, { request: downgradeRequest }),
+    acquire(fakeHttps(downgradeRoutes)),
     /outside HTTPS/i
   );
 
-  const redirectRoutes = new Map();
+  const redirectRoutes = acquisitionRoutes(state);
   redirectRoutes.set(officialUrl, {
     statusCode: 302,
     headers: { location: 'https://redirect.example.invalid/1' }
@@ -741,7 +710,7 @@ test('runtime downloads follow bounded HTTPS redirects and reject oversized resp
     });
   }
   await assert.rejects(
-    downloadBuffer(officialUrl, 7, 0, { request: fakeHttps(redirectRoutes) }),
+    acquire(fakeHttps(redirectRoutes)),
     /too many redirects/i
   );
 });
@@ -849,42 +818,37 @@ test('runtime ZIP reading enforces the requested entry set and size limit', asyn
 });
 
 test('runtime acquisition composes all five pinned downloads before verification', async () => {
-  const { acquisition, configuration, packageRecord } = fixture();
-  const downloads = new Map([
-    [packageRecord.registry_api_url, Buffer.from(JSON.stringify(acquisition.registryRecord))],
-    [packageRecord.download_url, acquisition.vsix],
-    [packageRecord.signature_url, acquisition.signatureArchive],
-    [packageRecord.sha256_url, acquisition.sha256Record],
-    [packageRecord.public_key_url, acquisition.publicKey]
-  ]);
+  const state = fixture();
   const calls = [];
   let verified = false;
+  const fixtureRequest = fakeHttps(acquisitionRoutes(state));
+  const request = (url, options, callback) => {
+    calls.push(url);
+    return fixtureRequest(url, options, callback);
+  };
   const result = await acquireAndVerifyPackage(
-    packageRecord,
-    configuration.public_keys,
-    configuration.code_oss_version,
+    state.packageRecord,
+    state.configuration.public_keys,
+    state.codeOssVersion,
     {
-      download: async (url, maximumBytes) => {
-        calls.push([url, maximumBytes]);
-        return downloads.get(url);
-      },
-      verify: async (record, downloaded, publicKeys, options) => {
-        assert.equal(record, packageRecord);
-        assert.deepEqual(downloaded, acquisition);
-        assert.equal(publicKeys, configuration.public_keys);
-        assert.equal(options.codeOssVersion, configuration.code_oss_version);
+      request,
+      verify: async input => {
+        assert.equal(input.packageRecord, state.packageRecord);
+        assert.deepEqual(input.acquisition, state.acquisition);
+        assert.equal(input.publicKeys, state.configuration.public_keys);
+        assert.equal(input.codeOssVersion, state.codeOssVersion);
         verified = true;
       }
     }
   );
-  assert.equal(result, acquisition.vsix);
+  assert.deepEqual(result, state.acquisition.vsix);
   assert.equal(verified, true);
   assert.deepEqual(calls, [
-    [packageRecord.registry_api_url, 1024 * 1024],
-    [packageRecord.download_url, packageRecord.package_size],
-    [packageRecord.signature_url, 4 * 1024 * 1024],
-    [packageRecord.sha256_url, 1024],
-    [packageRecord.public_key_url, 64 * 1024]
+    state.packageRecord.registry_api_url,
+    state.packageRecord.download_url,
+    state.packageRecord.signature_url,
+    state.packageRecord.sha256_url,
+    state.packageRecord.public_key_url
   ]);
 });
 

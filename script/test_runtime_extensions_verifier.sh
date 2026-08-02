@@ -11,26 +11,15 @@ dbcode_version="$(jq -er '.version' <<<"${dbcode_package_spec}")"
 verifier="${REPO_ROOT}/script/verify_openvsx_package.sh"
 verifier_adapter="${REPO_ROOT}/script/verify_openvsx_package.cjs"
 verification_module="${REPO_ROOT}/host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js"
-engine_checker="${REPO_ROOT}/script/check_vscode_engine.cjs"
 [[ -x "${verifier}" ]] || {
   echo "The shared Open VSX package verifier is missing." >&2
   exit 1
 }
 
-[[ -f "${engine_checker}" ]] || {
-  echo "The VS Code engine compatibility checker is missing." >&2
-  exit 1
-}
 [[ -f "${verifier_adapter}" && -f "${verification_module}" ]] || {
   echo "The shared Open VSX verification module or script adapter is missing." >&2
   exit 1
 }
-
-"${NODE_BIN_DIR}/node" "${engine_checker}" "${CODE_OSS_VERSION}" '^1.95.0'
-if "${NODE_BIN_DIR}/node" "${engine_checker}" "${CODE_OSS_VERSION}" '^1.127.0'; then
-  echo "The engine checker accepted an extension that needs a newer Code OSS host." >&2
-  exit 1
-fi
 
 rg -Fq 'verify_openvsx_package.cjs' "${verifier}" || {
   echo "The shell verifier must delegate to its Node adapter." >&2
@@ -38,10 +27,6 @@ rg -Fq 'verify_openvsx_package.cjs' "${verifier}" || {
 }
 rg -Fq 'verifyOpenVsxPackage' "${verifier_adapter}" || {
   echo "The script adapter must delegate to the shared Open VSX verifier." >&2
-  exit 1
-}
-rg -Fq 'openVsxPackageVerifier' "${engine_checker}" || {
-  echo "The engine checker must use the shared Open VSX verifier." >&2
   exit 1
 }
 

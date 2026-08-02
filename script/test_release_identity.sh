@@ -22,6 +22,14 @@ rg -Fq 'script/verify_openvsx_package.cjs' "${source_digest_library}" || {
   echo "Open VSX package verification must be part of the immutable wrapper source digest." >&2
   exit 1
 }
+rg -Fq 'script/runtime_extension_set.cjs' "${source_digest_library}" || {
+  echo "The production Runtime Extension Set must be part of the immutable wrapper source digest." >&2
+  exit 1
+}
+if rg -Fq 'script/check_vscode_engine.cjs' "${source_digest_library}"; then
+  echo "A test-only engine checker must not be part of the immutable wrapper source digest." >&2
+  exit 1
+fi
 
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-release-identity.XXXXXX")"
 trap 'rm -rf "${test_root}"' EXIT

@@ -22,30 +22,6 @@ function parseJson(buffer, label) {
   }
 }
 
-async function verifyPackageAcquisition(
-  packageRecord,
-  acquisition,
-  publicKeys,
-  {
-    codeOssVersion,
-    fromBuffer,
-    readZipEntries: zipReader
-  } = {}
-) {
-  return verifyOpenVsxPackage(
-    {
-      codeOssVersion,
-      packageRecord,
-      acquisition,
-      publicKeys
-    },
-    {
-      fromBuffer,
-      readZipEntries: zipReader
-    }
-  );
-}
-
 function installedVersionMap(installedExtensions) {
   const versions = new Map();
   for (const extension of installedExtensions) {
@@ -170,10 +146,16 @@ async function acquireAndVerifyPackage(
   publicKeys,
   codeOssVersion,
   {
-    download = downloadBuffer,
-    verify = verifyPackageAcquisition
+    request = https.get,
+    verify = verifyOpenVsxPackage
   } = {}
 ) {
+  const download = (url, maximumBytes) => downloadBuffer(
+    url,
+    maximumBytes,
+    0,
+    { request }
+  );
   const [registryBytes, vsix, signatureArchive, sha256Record, publicKey] = await Promise.all([
     download(packageRecord.registry_api_url, 1024 * 1024),
     download(packageRecord.download_url, packageRecord.package_size),
@@ -188,15 +170,13 @@ async function acquireAndVerifyPackage(
     sha256Record,
     publicKey
   };
-  await verify(packageRecord, acquisition, publicKeys, { codeOssVersion });
+  await verify({ codeOssVersion, packageRecord, acquisition, publicKeys });
   return acquisition.vsix;
 }
 
 module.exports = {
   acquireAndVerifyPackage,
   assertManagedRuntimeInstalled,
-  downloadBuffer,
   missingRuntimePackages,
-  validateRuntimeConfiguration,
-  verifyPackageAcquisition
+  validateRuntimeConfiguration
 };

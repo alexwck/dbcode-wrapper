@@ -33,7 +33,7 @@ wrapper_source_digest() {
     script/compile_host.sh \
     script/build_icon.sh \
     script/build_icns.py \
-    script/check_vscode_engine.cjs \
+    script/runtime_extension_set.cjs \
     script/materialize_code_oss_overlay.sh \
     script/verify_openvsx_package.cjs \
     script/verify_openvsx_package.sh \

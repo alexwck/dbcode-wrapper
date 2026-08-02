@@ -120,7 +120,7 @@ for required_contract in \
   'runtimeSetup.requiresSetup()' \
   'runtimeSetup.open()' \
   'acquireAndVerifyPackage' \
-  'verifyPackageAcquisition' \
+  'verifyOpenVsxPackage' \
   'crypto.verify(null' \
   'workbench.action.reloadWindow' \
   '--do-not-include-pack-dependencies' \

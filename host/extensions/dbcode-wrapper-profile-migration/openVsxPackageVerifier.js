@@ -662,7 +662,6 @@ async function verifyOpenVsxPackage(
 
 module.exports = {
   createOpenVsxRuntimeConfiguration,
-  engineIsCompatible,
   readZipEntries,
   requireOfficialUrl,
   resolveOpenVsxPublicKeyPath,

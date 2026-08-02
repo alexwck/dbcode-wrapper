@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 60](issues/60-tighten-release-identity-and-forward-tests.md) is claimed: correct release identity, remove safe test-only and historical-name leftovers, and retain the Python Kernel Bridge because the pinned DBCode workflow still needs an already running Jupyter kernel.
 
 ## History
 

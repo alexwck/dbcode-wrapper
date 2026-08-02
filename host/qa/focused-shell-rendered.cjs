@@ -124,7 +124,7 @@ const advancedToolLabels = [
 	'AI: Configure Custom Model…',
 	'AI: Set Custom Model API Key…'
 ];
-const removedToolLabels = [
+const unavailableToolLabels = [
 	'Open Data File…',
 	'Open Scratch Files Folder',
 	'AI: Change Model',
@@ -734,8 +734,8 @@ async function verifyFocusedShell(app, page) {
 	for (const label of advancedToolLabels) {
 		assert.ok(toolsText.includes(label), `DBCode tools is missing ${label}.`);
 	}
-	for (const label of removedToolLabels) {
-		assert.ok(!toolsText.includes(label), `DBCode tools still exposes ${label}.`);
+	for (const label of unavailableToolLabels) {
+		assert.ok(!toolsText.includes(label), `DBCode tools unexpectedly exposes ${label}.`);
 	}
 	await page.keyboard.press('Escape');
 	record('DBCode tools preserves notebook, Query Builder, settings, and AI routes', {

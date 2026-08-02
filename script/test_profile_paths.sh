@@ -87,8 +87,8 @@ resolve_profile_paths qa
   exit 1
 }
 
-if resolve_profile_paths diagnostic 2>/dev/null; then
-  echo "The removed full-workbench diagnostic profile is still accepted." >&2
+if resolve_profile_paths unsupported 2>/dev/null; then
+  echo "Profile Layout accepted an unsupported profile name." >&2
   exit 1
 fi
 

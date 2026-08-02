@@ -800,7 +800,6 @@ test('profile recovery is limited to the current user default profile', () => {
     homeDirectory: '/Users/alex',
     appRoot: '/Applications/DBCode Wrapper.app/Contents/Resources/app',
     environment: {
-      DBCODE_WRAPPER_QA_RECOVERY: '1',
       DBCODE_WRAPPER_APP_BUNDLE: '/Applications/DBCode Wrapper.app'
     }
   }), /does not match the active Standalone DBCode Profile/i);

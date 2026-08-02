@@ -197,11 +197,6 @@ for required_runtime_contract in \
   }
 done
 
-if rg -Fq 'DBCODE_WRAPPER_QA_RECOVERY' "${recovery_logic}" "${recovery_worker}"; then
-  echo "The removed QA recovery switch is still part of profile recovery." >&2
-  exit 1
-fi
-
 for required_orchestration_contract in \
   'class ProfileSetup' \
   'async dispatch(action)' \
