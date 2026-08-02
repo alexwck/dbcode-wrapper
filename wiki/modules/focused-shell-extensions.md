@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
+source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
 ---
 ## Summary
 
@@ -44,7 +44,7 @@ The feature policy keeps capability status separate from evidence depth. A featu
 - [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — small hooks into existing Code OSS files.
 - [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration) — runtime setup, profile setup, safe import, and recovery.
 - [dbcode-wrapper-python-kernel](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
-- [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/764d76e94cc08ff43fd82c9b922b6d738a49bee7/host/extensions/dbcode-wrapper-release-status) — official update discovery and read-only review UI.
+- [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/host/extensions/dbcode-wrapper-release-status) — official update discovery and read-only review UI.
 - [dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/dbcode-feature-policy.json) — capability and route policy.
 
 ## Dependencies

@@ -233,3 +233,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 02a3c23 (was 764d76e)
 - Coverage: build-relevant Patch Plan projection without wording-only recompilation; package details kept inside the extension purpose record; Profile Recovery tested through its one `run` interface and operating-system adapter; current maintained exports; 20.96-second prompt-free development gate
 - Pages: [Overview](./OVERVIEW.md), [Compiled Host Cache](./modules/compiled-host-cache.md), [Patch Plan and build](./modules/patch-plan-and-build.md), [Profile Layout and Setup](./modules/profile-layout-and-setup.md), and [Release Specification](./modules/release-specification.md)
+
+## 2026-08-02: refresh
+
+- Profile: public/standard
+- source_commit: b3773b5 (was 02a3c23)
+- Coverage: one Runtime Extension Set projection and checker; one purpose-level Host Session run lifecycle; production-interface tests without test-only exports or modes; small Update Status service interface; 21.66-second prompt-free development gate
+- Pages: [Overview](./OVERVIEW.md), [Focused Runtime Setup](./modules/focused-runtime-setup.md), [Host Session](./modules/host-session.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)

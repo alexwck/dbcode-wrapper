@@ -1,6 +1,6 @@
 ---
 title: Host Session
-description: The reusable lifecycle module that starts, observes, validates, and stops one DBCode Wrapper process tree.
+description: The lifecycle module that runs, observes, and records one DBCode Wrapper process tree.
 type: module
 tags:
   - wiki
@@ -9,35 +9,35 @@ tags:
   - lifecycle
 wiki_profile: public
 wiki_depth: standard
-source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
+source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
 ---
 ## Summary
 
-Host Session is the policy-driven boundary for one application lifecycle. It starts the app with explicit profile paths, finds the expected process tree, observes renderer and DBCode readiness, rejects fatal logs, records structured evidence, and performs bounded shutdown.
+Host Session is the boundary for one application lifecycle. It accepts only launch-specific values, creates and validates the stable policy, starts the app with explicit profile paths, observes renderer and DBCode readiness, records structured evidence, waits for normal user exit, and performs bounded failure cleanup.
 
 ## Responsibilities
 
-- Build the normal policy from one launch record and keep stable defaults inside the module.
-- Validate policy before process or filesystem work.
+- Build and validate the policy from one purpose-level launch record.
+- Keep renderer, DBCode log, timeout, and failure-cleanup defaults inside the module.
 - Prepare only absolute approved paths without symbolic-link escapes.
 - Start the app and identify its renderer and extension-host processes.
 - Observe stable renderer, DBCode log, and host-log readiness.
 - Reject configured fatal patterns.
-- Stop only the matching process tree and confirm exit within timeouts.
-- Preserve the original failure when cleanup also fails.
+- Wait for normal user exit after readiness.
+- Clean up only the matching process tree after failure and preserve the original failure.
 - Serialize one stable result for shell and rendered-test consumers.
 
 ## Public API / entry points
 
-The JavaScript API includes policy validation, `runHostSession`, `stopHostSession`, result parsing and validation, path preparation, and the Node runtime adapter. The public `run` and `stopHostSession` operations each validate once; an already validated run reuses its internal shutdown path. [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/764d76e94cc08ff43fd82c9b922b6d738a49bee7/script/lib/host_session.sh) accepts one launch record with the executable, arguments, environment, log paths, session ID, and timeout. It owns the normal readiness, fatal-log, completion, and shutdown defaults before it starts the one `run` command. The command adapter does not expose separate validate or stop commands.
+The maintained JavaScript interface is `runHostSession`, `serializeSessionResult`, and the production `createNodeRuntime` adapter. [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/lib/host_session.sh) passes one launch record with the application name, executable, arguments, environment, log paths, session ID, and timeout to the one `run` command. Policy construction, validation, result parsing, path preparation, and failure cleanup stay private. There is no saved-session stop command or test-only completion mode.
 
 ## Key files
 
-- [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/lib/host-session.js) — lifecycle state machine.
-- [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/lib/host_session.sh) — shell policy writer and run adapter.
-- [`host_session.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/host_session.cjs) — the one-command Node adapter.
-- [`host/qa/rendered-session-support.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/2008ff48373c1aac378d0d1ec903e96a88ec1e29/host/qa/rendered-session-support.cjs) — rendered smoke integration.
-- [`script/test_host_session_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/764d76e94cc08ff43fd82c9b922b6d738a49bee7/script/test_host_session_contract.sh) — launch-record, default-policy, public-command, and lifecycle contract.
+- [`host-session.js`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/lib/host-session.js) — policy and lifecycle state machine.
+- [`host_session.sh`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/lib/host_session.sh) — purpose-level shell adapter.
+- [`host_session.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/host_session.cjs) — the one-command Node adapter.
+- [`host/qa/rendered-session-support.cjs`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/host/qa/rendered-session-support.cjs) — rendered smoke integration.
+- [`script/test_host_session_contract.sh`](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/test_host_session_contract.sh) — launch-record, path, command, and lifecycle contract.
 
 ## Dependencies
 

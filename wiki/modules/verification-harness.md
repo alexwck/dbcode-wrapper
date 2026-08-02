@@ -9,7 +9,7 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: 764d76e94cc08ff43fd82c9b922b6d738a49bee7
+source_commit: b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11
 ---
 ## Summary
 
@@ -20,7 +20,9 @@ No maintained deployment test pauses for a person, starts a real database or ker
 ## Responsibilities
 
 - Keep `check_development.sh` below one minute and free of app launches, network calls, questions, and human input.
-- Test current behaviour and maintained interfaces instead of keeping lists of deleted historical names.
+- Test current behaviour through the same maintained interfaces production uses.
+- Do not export a helper only for a test or keep a test whose only job is naming a private helper.
+- Keep an exact interface test when the small interface is deliberate.
 - Give each test module one maintained runner using the pinned Node runtime.
 - Test owner-facing build and release tasks through their public command interfaces when those workflows change.
 - Prove writer-first and reader-first checkpoint refusal.
@@ -38,7 +40,7 @@ No maintained deployment test pauses for a person, starts a real database or ker
 
 - [verification-policy.md](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/docs/agents/verification-policy.md) — risk, speed, prompt, and release-task policy.
 - [host_slimming.sh](https://github.com/alexwck/dbcode-wrapper/blob/37003175d654b33c7ad97222bdb49ee614665f53/script/lib/host_slimming.sh) — fixture-tested package size and inventory checks used by Static Host Smoke.
-- [test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_build_host_task.sh) — change-owned signing, lease lifetime, interruption, and promotion coverage.
+- [test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/test_build_host_task.sh) — change-owned signing, lease lifetime, interruption, and promotion coverage.
 - [test_release_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_release_host_task.sh) — change-owned preparation order, exact resume, and publication coverage.
 - [test_development_gate_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_development_gate_contract.sh) — default and change-owned gate composition.
 - [focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/qa/focused-shell-rendered.cjs) — prompt-free rendered route checks.
