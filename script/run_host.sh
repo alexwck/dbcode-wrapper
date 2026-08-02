@@ -135,6 +135,7 @@ else
     ')"
   launch_record_json="$(jq -cn \
     --arg session_id "default-$(date -u +'%Y%m%dT%H%M%SZ')-$$" \
+    --arg app_name "${APP_NAME}" \
     --arg executable "${app_executable}" \
     --argjson arguments "${launch_arguments_json}" \
     --argjson environment "${launch_environment_json}" \
@@ -143,6 +144,7 @@ else
     --argjson timeout_seconds "${launch_timeout_seconds}" '
       {
         session_id: $session_id,
+        app_name: $app_name,
         executable: $executable,
         arguments: $arguments,
         environment: $environment,
@@ -151,9 +153,7 @@ else
         timeout_seconds: $timeout_seconds
       }
     ')"
-  host_session_write_policy "${session_policy_file}" "${launch_record_json}"
-
-  if ! host_session_run "${session_policy_file}" "${session_result_file}"; then
+  if ! host_session_run "${launch_record_json}" "${session_policy_file}" "${session_result_file}"; then
     echo "${APP_NAME} failed its Host Session policy. See ${host_log}" >&2
     tail -n 80 "${host_log}" >&2 || true
     exit 1

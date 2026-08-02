@@ -28,16 +28,15 @@ for required_file in \
 done
 
 source "${host_session_shell}"
-policy_file="${contract_root}/policy.json"
-host_log="${contract_root}/host.log"
-log_root="${contract_root}/logs"
 launch_record="$(jq -cn \
   --arg session_id "default-test" \
+  --arg app_name "${APP_NAME}" \
   --arg executable "/Applications/DBCode Wrapper.app/Contents/MacOS/Electron" \
-  --arg host_log "${host_log}" \
-  --arg log_root "${log_root}" '
+  --arg host_log "${contract_root}/host.log" \
+  --arg log_root "${contract_root}/logs" '
     {
       session_id: $session_id,
+      app_name: $app_name,
       executable: $executable,
       arguments: ["--user-data-dir", "/tmp/dbcode profile"],
       environment: {ELECTRON_ENABLE_LOGGING: "1"},
@@ -46,67 +45,56 @@ launch_record="$(jq -cn \
       timeout_seconds: 17
     }
   ')"
-host_session_write_policy "${policy_file}" "${launch_record}"
-jq -e \
-  --arg app_name "${APP_NAME}" \
-  --arg host_log "${host_log}" \
-  --arg log_root "${log_root}" '
-    .schema_version == 1
-    and .session_id == "default-test"
-    and .executable == "/Applications/DBCode Wrapper.app/Contents/MacOS/Electron"
-    and .arguments == ["--user-data-dir", "/tmp/dbcode profile"]
-    and .environment == {ELECTRON_ENABLE_LOGGING: "1"}
-    and .host_log == $host_log
-    and .log_root == $log_root
-    and .readiness.timeout_seconds == 17
-    and .readiness.poll_interval_ms == 1000
-    and .readiness.renderer == {
-      command_contains: [($app_name + " Helper (Renderer).app"), "--type=renderer"],
-      stable_observations: 1
-    }
-    and .readiness.dbcode == {
-      required: true,
-      log_suffix: "/dbcode.dbcode/DBCode.log",
-      patterns: [{kind: "literal", value: "DBCode starting..."}]
-    }
-    and .readiness.host_log_patterns == []
-    and .readiness.fatal_host_log_patterns == [{
-      kind: "regex",
-      value: "Library not loaded:|not valid for use in process|renderer process gone|GPU process isn.t usable|FATAL:"
-    }]
-    and .completion == {
-      mode: "wait-for-exit",
-      require_dbcode_before_exit: false,
-      graceful_timeout_seconds: 10,
-      force_timeout_seconds: 5
-    }
-  ' "${policy_file}" >/dev/null
 
-invalid_policy_file="${contract_root}/invalid-policy.json"
-invalid_launch_record="$(jq -c '. + {readiness: {}}' <<<"${launch_record}")"
-if host_session_write_policy "${invalid_policy_file}" "${invalid_launch_record}" 2>/dev/null; then
-  echo "Host Session accepted an unexpected launch-record field." >&2
+stub_node_root="${contract_root}/node bin"
+mkdir -p "${stub_node_root}"
+cat > "${stub_node_root}/node" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" == */script/host_session.cjs ]]
+[[ "$2" == "run" && "$3" == "--launch" && "$5" == "--policy" && "$7" == "--output" ]]
+cat "$4" > "${HOST_SESSION_STUB_LAUNCH_RECORD}"
+printf '%s\n' "$6" "$8" > "${HOST_SESSION_STUB_OUTPUT_PATHS}"
+EOF
+chmod 755 "${stub_node_root}/node"
+original_node_bin_dir="${NODE_BIN_DIR}"
+NODE_BIN_DIR="${stub_node_root}"
+export HOST_SESSION_STUB_LAUNCH_RECORD="${contract_root}/captured-launch.json"
+export HOST_SESSION_STUB_OUTPUT_PATHS="${contract_root}/captured-paths.txt"
+policy_file="${contract_root}/active policy.json"
+output_file="${contract_root}/active result.json"
+host_session_run "${launch_record}" "${policy_file}" "${output_file}"
+NODE_BIN_DIR="${original_node_bin_dir}"
+
+[[ "$(jq -S -c . "${HOST_SESSION_STUB_LAUNCH_RECORD}")" == "$(jq -S -c . <<<"${launch_record}")" ]] || {
+  echo "The Host Session shell adapter changed the purpose-level launch record." >&2
+  exit 1
+}
+captured_policy_path="$(sed -n '1p' "${HOST_SESSION_STUB_OUTPUT_PATHS}")"
+captured_output_path="$(sed -n '2p' "${HOST_SESSION_STUB_OUTPUT_PATHS}")"
+[[ "${captured_policy_path}" == "${policy_file}" && "${captured_output_path}" == "${output_file}" ]] || {
+  echo "The Host Session shell adapter changed a path containing spaces." >&2
+  exit 1
+}
+if find "${contract_root}" -name '.host-session-launch.*' -print -quit | grep -q .; then
+  echo "The Host Session shell adapter left its temporary launch record behind." >&2
   exit 1
 fi
-[[ ! -e "${invalid_policy_file}" ]] || {
-  echo "Host Session wrote a policy for an invalid launch record." >&2
-  exit 1
-}
 
-rg -Fq 'host_session_write_policy' "${REPO_ROOT}/script/run_host.sh" || {
-  echo "The normal launch path does not declare a Host Session policy." >&2
+rg -Fq 'host_session_run "${launch_record_json}" "${session_policy_file}" "${session_result_file}"' \
+  "${REPO_ROOT}/script/run_host.sh" || {
+  echo "The normal launch path does not use the purpose-level Host Session interface." >&2
   exit 1
 }
-rg -Fq 'host_session_run' "${REPO_ROOT}/script/run_host.sh" || {
-  echo "The normal launch path does not use the Host Session lifecycle." >&2
+if rg -Fq 'host_session_write_policy' "${REPO_ROOT}/script/run_host.sh" "${host_session_shell}"; then
+  echo "Host Session policy construction still leaks into the shell adapter." >&2
   exit 1
-}
-
+fi
 rg -Fq 'Foreground debugging deliberately' "${REPO_ROOT}/script/run_host.sh" || {
   echo "Foreground debugging must remain an explicit non-production adapter." >&2
   exit 1
 }
-rg -Fq './script/host_session.cjs run --policy FILE --output FILE' "${host_session_cli}" || {
+rg -Fq './script/host_session.cjs run --launch FILE --policy FILE --output FILE' "${host_session_cli}" || {
   echo "Host Session must expose one run command." >&2
   exit 1
 }

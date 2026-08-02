@@ -12,6 +12,7 @@ package_verifier="${extension_root}/openVsxPackageVerifier.js"
 setup_controller="${extension_root}/runtimeSetupController.js"
 setup_view="${extension_root}/runtimeSetupView.js"
 generator="${REPO_ROOT}/script/generate_runtime_setup_manifest.sh"
+runtime_extension_set_cli="${REPO_ROOT}/script/runtime_extension_set.cjs"
 script_verifier="${REPO_ROOT}/script/verify_openvsx_package.cjs"
 shell_verifier="${REPO_ROOT}/script/verify_openvsx_package.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-runtime-setup-contract.XXXXXX")"
@@ -29,6 +30,7 @@ for required_file in \
   "${setup_controller}" \
   "${setup_view}" \
   "${generator}" \
+  "${runtime_extension_set_cli}" \
   "${script_verifier}" \
   "${shell_verifier}"; do
   [[ -f "${required_file}" ]] || {
@@ -62,40 +64,18 @@ generated_manifest="${test_root}/runtime-extension-set.json"
   const [logic, record] = process.argv.slice(1);
   require(logic).validateRuntimeConfiguration(JSON.parse(fs.readFileSync(record, "utf8")));
 ' "${setup_logic}" "${generated_manifest}"
-
-expected_packages="$(
-  jq -c '
-    .packages
-    | map({
-      role,
-      namespace,
-      name,
-      id,
-      publisher,
-      version,
-      engine,
-      target_platform,
-      published_at,
-      verified_publisher,
-      pre_release,
-      deprecated,
-      registry_api_url,
-      download_url,
-      signature_url,
-      sha256_url,
-      public_key_id,
-      public_key_url,
-      sha256,
-      signature_archive_sha256,
-      public_key_sha256,
-      package_size
-    })
-  ' <<<"${RELEASE_EXTENSION_SPEC}"
-)"
-[[ "$(jq -c '.packages' "${generated_manifest}")" == "${expected_packages}" ]] || {
-  echo "The focused first-run setup does not contain the exact Release Specification package set." >&2
-  exit 1
-}
+"${NODE_BIN_DIR}/node" "${runtime_extension_set_cli}" \
+  check \
+  "${generated_manifest}" \
+  "${APPLICATION_NAME}" \
+  "${RELEASE_EXTENSION_SPEC}" \
+  "${REPO_ROOT}/host/keys"
+relative_manifest="${test_root}/relative output/runtime extension set.json"
+(
+  cd "${test_root}"
+  "${generator}" "relative output/runtime extension set.json" >/dev/null
+)
+cmp "${generated_manifest}" "${relative_manifest}"
 jq -e \
   --arg code_oss_version "${CODE_OSS_VERSION}" \
   --arg application_name "${APPLICATION_NAME}" '

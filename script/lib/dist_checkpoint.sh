@@ -231,17 +231,6 @@ dist_checkpoint_create_stage() {
   dist_checkpoint_validate_candidate "${DIST_CHECKPOINT_STAGE}"
 }
 
-dist_checkpoint_discard_stage() {
-  local candidate="${1:-${DIST_CHECKPOINT_STAGE}}"
-  [[ -n "${candidate}" ]] || return 0
-  dist_checkpoint_validate_candidate "${candidate}" || return 1
-  rm -rf "${candidate}" || {
-    echo "The dist checkpoint candidate could not be discarded." >&2
-    return 1
-  }
-  DIST_CHECKPOINT_STAGE=""
-}
-
 dist_checkpoint_promote_stage() {
   local candidate="${1:-${DIST_CHECKPOINT_STAGE}}"
 

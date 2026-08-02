@@ -270,9 +270,8 @@ host_release_validate_sources() {
   local expected_extensions accepted_extensions architectures
   local runtime_setup_manifest runtime_setup_logic runtime_setup_sha256
   local release_build_spec release_extension_spec release_profile_spec
-  local expected_setup_packages actual_setup_packages
   local expected_manifest_extensions actual_manifest_extensions
-  local node_binary
+  local node_binary runtime_extension_set_cli
 
   [[ -d "${app_path}" && ! -L "${app_path}" ]] || {
     echo "The signed host application is missing or unsafe: ${app_path}" >&2
@@ -361,6 +360,8 @@ host_release_validate_sources() {
     return 1
   }
   node_binary="${NODE_BIN_DIR}/node"
+  runtime_extension_set_cli="${REPO_ROOT}/script/runtime_extension_set.cjs"
+  host_release_assert_file "${runtime_extension_set_cli}" "The Runtime Extension Set adapter" || return 1
   "${node_binary}" -e '
     const fs = require("node:fs");
     const path = require("node:path");
@@ -375,47 +376,12 @@ host_release_validate_sources() {
     echo "The focused first-run runtime setup manifest does not match the accepted app." >&2
     return 1
   }
-  expected_setup_packages="$(
-    jq -S -c '
-      .packages
-      | map({
-          role,
-          namespace,
-          name,
-          id,
-          publisher,
-          version,
-          engine,
-          target_platform,
-          published_at,
-          verified_publisher,
-          pre_release,
-          deprecated,
-          registry_api_url,
-          download_url,
-          signature_url,
-          sha256_url,
-          public_key_id,
-          public_key_url,
-          sha256,
-          signature_archive_sha256,
-          public_key_sha256,
-          package_size
-        })
-      | sort_by(.id)
-    ' <<<"${release_extension_spec}"
-  )"
-  actual_setup_packages="$(jq -S -c '.packages | sort_by(.id)' "${runtime_setup_manifest}")"
-  jq -e \
-    --arg code_oss_version "$(jq -er '.runtime.code_oss_version' <<<"${release_build_spec}")" \
-    --arg application_name "$(jq -er '.product.application_name' <<<"${release_profile_spec}")" '
-      .code_oss_version == $code_oss_version
-      and .application_name == $application_name
-    ' "${runtime_setup_manifest}" >/dev/null || {
-    echo "The focused first-run setup host identity does not match the supplied Release Specification." >&2
-    return 1
-  }
-  [[ "${actual_setup_packages}" == "${expected_setup_packages}" ]] || {
+  "${node_binary}" "${runtime_extension_set_cli}" \
+    check \
+    "${runtime_setup_manifest}" \
+    "$(jq -er '.product.application_name' <<<"${release_profile_spec}")" \
+    "${release_extension_spec}" \
+    "${REPO_ROOT}/host/keys" || {
     echo "The focused first-run setup does not match the supplied Release Specification." >&2
     return 1
   }

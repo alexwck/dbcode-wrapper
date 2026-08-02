@@ -433,18 +433,8 @@ function createReleaseStatusService({
 }
 
 module.exports = {
-  CACHE_TTL_MS,
   CODE_OSS_METADATA_URL,
   DBCODE_METADATA_URL,
-  REMINDER_DELAY_MS,
   VSCODIUM_METADATA_URL,
-  applyDecision,
-  candidateKey,
-  createReleaseStatusService,
-  deriveStatus,
-  normalizeCodeOssRelease,
-  normalizeOpenVsxRecord,
-  normalizeVscodiumRelease,
-  recordPrompt,
-  shouldUseCache
+  createReleaseStatusService
 };

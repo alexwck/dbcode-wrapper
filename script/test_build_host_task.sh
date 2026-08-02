@@ -290,7 +290,6 @@ fi
 dist_checkpoint_create_stage
 printf 'complete\n' > "${DIST_CHECKPOINT_STAGE}/checkpoint.txt"
 if [[ "${MOCK_ASSEMBLY_FAIL_BEFORE_PROMOTION:-no}" == "yes" ]]; then
-  dist_checkpoint_discard_stage
   exit 1
 fi
 dist_checkpoint_promote_stage "${DIST_CHECKPOINT_STAGE}"

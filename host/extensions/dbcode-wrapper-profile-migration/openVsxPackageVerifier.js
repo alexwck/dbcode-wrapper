@@ -69,6 +69,37 @@ function selectOpenVsxPackageRecord(packages, packageId) {
   );
 }
 
+function createOpenVsxRuntimeConfiguration({
+  extensionRecord,
+  applicationName,
+  publicKeys
+}) {
+  if (
+    !exactKeys(extensionRecord, [
+      'schema_version',
+      'host_code_oss_version',
+      'dbcode',
+      'python_notebooks',
+      'packages'
+    ]) ||
+    extensionRecord.schema_version !== 1 ||
+    !Array.isArray(extensionRecord.packages)
+  ) {
+    fail('The Release Specification extension record is invalid.');
+  }
+  const configuration = {
+    schema_version: 1,
+    setup: 'focused-pinned-official-sources',
+    code_oss_version: extensionRecord.host_code_oss_version,
+    application_name: applicationName,
+    packages: extensionRecord.packages.map(packageRecord => Object.fromEntries(
+      REQUIRED_PACKAGE_FIELDS.map(field => [field, packageRecord[field]])
+    )),
+    public_keys: publicKeys
+  };
+  return validateOpenVsxRuntimeConfiguration(configuration);
+}
+
 function validateInstalledOpenVsxExtension(extension) {
   if (
     !extension ||
@@ -630,6 +661,7 @@ async function verifyOpenVsxPackage(
 }
 
 module.exports = {
+  createOpenVsxRuntimeConfiguration,
   engineIsCompatible,
   readZipEntries,
   requireOfficialUrl,

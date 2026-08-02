@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 59](issues/59-deepen-remaining-wrapper-seams.md) is claimed to deepen the Runtime Extension Set and Host Session seams, remove test-only leftovers, and narrow Update Status around its maintained service interface.
 
 ## History
 

@@ -131,6 +131,9 @@ The Generated Workspace Retention module is the source of truth for ignored buil
 - Built-host changes: run Static Host Smoke and the one-profile rendered focused-shell smoke. Static Host Smoke owns the installed-size limit, zero source maps, the exact built-in inventory, no embedded DBCode, and generated packaged settings. Do not add another audit that scans private runtime folders.
 - Release identity, extension inventory, profile, signing, update, or rollback changes: run the relevant automated release-set checks and the prompt-free acceptance command, then record evidence in the issue.
 - Every test module has one maintained runner. Use the pinned Node runtime, and remove an old runner in the same change that moves its test.
+- Test behaviour through the same maintained interface production uses. Do not export an implementation helper only for a test, and do not keep a test whose only job is naming a helper that remains private. Keep an exact interface test when that small interface is deliberate.
+- The Runtime Extension Set seam owns its package projection and security validation. Generation, acquisition, smoke, and release checks pass purpose-level records to it instead of repeating the package field list.
+- Host Session has one `run` interface. It owns policy defaults, validation, lifecycle execution, result records, and failure cleanup; do not add a test-only completion mode or saved-session stop path.
 
 Full builds are expensive. Prefer `build_host.sh`, which reuses an exact Compiled Host and performs only release assembly when the inputs match. App launches can open GUI windows and trigger real macOS Keychain prompts. Do not force a rebuild, launch the production profile, approve Keychain access, or delete retained release evidence unless the current task requires it and the user has agreed to that gate.
 

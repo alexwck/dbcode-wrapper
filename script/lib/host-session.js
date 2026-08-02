@@ -5,7 +5,6 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
-const COMPLETION_MODES = new Set(['leave-running', 'wait-for-exit', 'quit-after-ready']);
 const RESULT_STATUSES = new Set(['ready', 'complete', 'failed']);
 const SIGNALS = Object.freeze({ graceful: 'SIGTERM', force: 'SIGKILL' });
 
@@ -56,6 +55,73 @@ function validatePatterns(patterns, label) {
   patterns.forEach((pattern, index) => validatePattern(pattern, `${label}[${index}]`));
 }
 
+function createSessionPolicy(launchRecord) {
+  requireExactKeys(launchRecord, [
+    'session_id',
+    'app_name',
+    'executable',
+    'arguments',
+    'environment',
+    'host_log',
+    'log_root',
+    'timeout_seconds'
+  ], 'Host Session launch record');
+  if (typeof launchRecord.session_id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{2,100}$/.test(launchRecord.session_id)) {
+    fail('Host Session identifier is invalid.');
+  }
+  if (
+    typeof launchRecord.app_name !== 'string' ||
+    launchRecord.app_name.length === 0 ||
+    /[\r\n/\\]/.test(launchRecord.app_name)
+  ) {
+    fail('Host Session application name is invalid.');
+  }
+  requireAbsolutePath(launchRecord.executable, 'Host Session executable');
+  requireAbsolutePath(launchRecord.host_log, 'Host Session host log');
+  requireAbsolutePath(launchRecord.log_root, 'Host Session log root');
+  if (!Array.isArray(launchRecord.arguments) || launchRecord.arguments.length > 500 || launchRecord.arguments.some(value => typeof value !== 'string')) {
+    fail('Host Session arguments are invalid.');
+  }
+  if (!isRecord(launchRecord.environment) || Object.entries(launchRecord.environment).some(([name, value]) => (
+    !/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) || typeof value !== 'string' || value.length > 64 * 1024
+  ))) {
+    fail('Host Session environment is invalid.');
+  }
+  requireInteger(launchRecord.timeout_seconds, 1, 600, 'Host Session readiness timeout');
+
+  return {
+    schema_version: 2,
+    session_id: launchRecord.session_id,
+    executable: launchRecord.executable,
+    arguments: launchRecord.arguments,
+    environment: launchRecord.environment,
+    host_log: launchRecord.host_log,
+    log_root: launchRecord.log_root,
+    readiness: {
+      timeout_seconds: launchRecord.timeout_seconds,
+      poll_interval_ms: 1000,
+      renderer: {
+        command_contains: [`${launchRecord.app_name} Helper (Renderer).app`, '--type=renderer'],
+        stable_observations: 1
+      },
+      dbcode: {
+        required: true,
+        log_suffix: '/dbcode.dbcode/DBCode.log',
+        patterns: [{ kind: 'literal', value: 'DBCode starting...' }]
+      },
+      host_log_patterns: [],
+      fatal_host_log_patterns: [{
+        kind: 'regex',
+        value: 'Library not loaded:|not valid for use in process|renderer process gone|GPU process isn.t usable|FATAL:'
+      }]
+    },
+    completion: {
+      graceful_timeout_seconds: 10,
+      force_timeout_seconds: 5
+    }
+  };
+}
+
 function validateSessionPolicy(policy) {
   requireExactKeys(policy, [
     'schema_version',
@@ -68,7 +134,7 @@ function validateSessionPolicy(policy) {
     'readiness',
     'completion'
   ], 'Host Session policy');
-  if (policy.schema_version !== 1) {
+  if (policy.schema_version !== 2) {
     fail('Host Session policy uses an unsupported schema version.');
   }
   if (typeof policy.session_id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{2,100}$/.test(policy.session_id)) {
@@ -121,17 +187,9 @@ function validateSessionPolicy(policy) {
   validatePatterns(policy.readiness.fatal_host_log_patterns, 'Host Session fatal host-log patterns');
 
   requireExactKeys(policy.completion, [
-    'mode',
-    'require_dbcode_before_exit',
     'graceful_timeout_seconds',
     'force_timeout_seconds'
   ], 'Host Session completion policy');
-  if (!COMPLETION_MODES.has(policy.completion.mode)) {
-    fail('Host Session completion mode is invalid.');
-  }
-  if (typeof policy.completion.require_dbcode_before_exit !== 'boolean') {
-    fail('Host Session post-exit DBCode requirement must be true or false.');
-  }
   requireInteger(policy.completion.graceful_timeout_seconds, 1, 60, 'Host Session graceful quit timeout');
   requireInteger(policy.completion.force_timeout_seconds, 1, 30, 'Host Session forced quit timeout');
   return policy;
@@ -313,11 +371,6 @@ async function stopValidatedHostSession(sessionResult, policy, runtime) {
   return setFailure(result, 'quit-timeout', 'The DBCode Wrapper process did not stop after forced cleanup.', runtime);
 }
 
-async function stopHostSession(sessionResult, policy, runtime = createNodeRuntime()) {
-  validateSessionPolicy(policy);
-  return stopValidatedHostSession(sessionResult, policy, runtime);
-}
-
 async function cleanupFailedSession(result, policy, runtime) {
   if (await runtime.isAlive(result.process.app_pid)) {
     const failure = result.failure;
@@ -348,13 +401,6 @@ async function readinessObservation(policy, result, runtime, startedAtMs) {
   const hostLogReady = matchesAll(hostText, policy.readiness.host_log_patterns);
   const appProcess = processes.find(processRecord => processRecord.pid === result.process.app_pid);
   return { fatal: false, appProcess, renderer, rendererReady, dbcodeLog, dbcodeReady, hostLogReady };
-}
-
-async function collectPostExitDbcode(policy, result, runtime, startedAtMs) {
-  const dbcodeLog = await findDbcodeLog(policy, runtime, startedAtMs);
-  result.evidence.dbcode_log = dbcodeLog;
-  result.readiness.dbcode_ready = Boolean(dbcodeLog);
-  return Boolean(dbcodeLog);
 }
 
 async function runStartedHostSession(policy, runtime, hooks, startedAtMs, child, result) {
@@ -405,28 +451,16 @@ async function runStartedHostSession(policy, runtime, hooks, startedAtMs, child,
     await hooks.onReady(result);
   }
 
-  if (policy.completion.mode === 'leave-running') {
-    runtime.detach(child.pid);
-    return result;
-  }
-  if (policy.completion.mode === 'quit-after-ready') {
-    return stopValidatedHostSession(result, policy, runtime);
-  }
-
   result.process.exit_code = await runtime.waitForExit(child.pid);
   result.quit.complete = true;
   result.quit.graceful = true;
-  if (policy.completion.require_dbcode_before_exit &&
-      !(await collectPostExitDbcode(policy, result, runtime, startedAtMs))) {
-    return setFailure(result, 'dbcode-not-observed', 'DBCode did not activate before the application closed.', runtime);
-  }
   result.status = 'complete';
   result.failure = null;
   result.ended_at = isoNow(runtime);
   return result;
 }
 
-async function runHostSession(policy, runtime = createNodeRuntime(), hooks = {}) {
+async function runSessionPolicy(policy, runtime, hooks) {
   validateSessionPolicy(policy);
   const startedAtMs = runtime.now().getTime();
   const child = await runtime.spawn(policy);
@@ -455,6 +489,14 @@ async function runHostSession(policy, runtime = createNodeRuntime(), hooks = {})
     }
     return result;
   }
+}
+
+async function runHostSession(launchRecord, runtime = createNodeRuntime(), hooks = {}) {
+  const policy = createSessionPolicy(launchRecord);
+  if (typeof hooks.onPolicy === 'function') {
+    await hooks.onPolicy(policy);
+  }
+  return runSessionPolicy(policy, runtime, hooks);
 }
 
 function validateSessionResult(result) {
@@ -604,7 +646,7 @@ function createNodeRuntime() {
       const hostLogFd = fs.openSync(policy.host_log, 'w', 0o600);
       fs.fchmodSync(hostLogFd, 0o600);
       const child = spawn(policy.executable, policy.arguments, {
-        detached: policy.completion.mode === 'leave-running',
+        detached: false,
         env: { ...process.env, ...policy.environment },
         stdio: ['ignore', hostLogFd, hostLogFd]
       });
@@ -711,9 +753,6 @@ function createNodeRuntime() {
       }
       return null;
     },
-    detach(pid) {
-      children.get(pid)?.child.unref();
-    },
     async emergencyStop(pid) {
       try {
         process.kill(pid, 'SIGTERM');
@@ -739,9 +778,6 @@ function createNodeRuntime() {
 
 module.exports = {
   createNodeRuntime,
-  parseSessionResult,
   runHostSession,
-  serializeSessionResult,
-  stopHostSession,
-  validateSessionPolicy
+  serializeSessionResult
 };

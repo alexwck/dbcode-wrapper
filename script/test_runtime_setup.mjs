@@ -21,6 +21,7 @@ const {
 } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetup.js');
 const openVsxPackageVerifier = require('../host/extensions/dbcode-wrapper-profile-migration/openVsxPackageVerifier.js');
 const {
+  createOpenVsxRuntimeConfiguration,
   readZipEntries,
   selectOpenVsxPackageRecord,
   validateInstalledOpenVsxExtension,
@@ -28,17 +29,16 @@ const {
 } = openVsxPackageVerifier;
 const runtimeSetupController = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupController.js');
 const {
-  RuntimeSetupController,
-  extensionInventory,
-  parseCliInventory
+  RuntimeSetupController
 } = runtimeSetupController;
 const { renderRuntimeSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/runtimeSetupView.js');
 const {
   verifyPackageRoot
 } = require('./verify_openvsx_package.cjs');
 
-test('runtime setup keeps implementation helpers private', () => {
+test('runtime setup exposes only its maintained verifier interface', () => {
   assert.deepEqual(Object.keys(openVsxPackageVerifier).sort(), [
+    'createOpenVsxRuntimeConfiguration',
     'engineIsCompatible',
     'readZipEntries',
     'requireOfficialUrl',
@@ -48,9 +48,6 @@ test('runtime setup keeps implementation helpers private', () => {
     'validateOpenVsxRuntimeConfiguration',
     'verifyOpenVsxPackage'
   ]);
-  for (const privateExport of ['pathIsWithin', 'runCli', 'writeVerifiedPackage']) {
-    assert.equal(runtimeSetupController[privateExport], undefined, privateExport);
-  }
 });
 
 function sha256(value) {
@@ -914,10 +911,13 @@ test('runtime setup derives work only from exact installed versions', () => {
   );
 });
 
-test('startup checks only the exact external profile inventory', () => {
+test('startup checks only the exact external profile inventory through the controller', () => {
+  const { configuration } = fixture();
   const extensionsRoot = '/private/profile/extensions';
-  assert.deepEqual(
-    extensionInventory([
+  const vscode = {
+    env: { appRoot: '/Applications/DBCode Wrapper.app/Contents/Resources/app' },
+    extensions: {
+      all: [
       {
         id: 'DBCode.DBCode',
         extensionPath: `${extensionsRoot}/dbcode.dbcode-1.36.2`,
@@ -928,9 +928,22 @@ test('startup checks only the exact external profile inventory', () => {
         extensionPath: '/Applications/DBCode Wrapper.app/Contents/Resources/app/extensions/sql',
         packageJSON: { version: '1.0.0' }
       }
-    ], extensionsRoot),
-    [{ id: 'dbcode.dbcode', version: '1.36.2' }]
-  );
+      ]
+    }
+  };
+  const controller = new RuntimeSetupController({
+    context: { globalStorageUri: { fsPath: '/private/profile/storage' } },
+    vscode,
+    layout: {
+      userDataRoot: '/private/profile/user-data',
+      extensionsRoot,
+      sharedDataRoot: '/private/profile/shared-data'
+    },
+    configuration
+  });
+  assert.equal(controller.requiresSetup(), false);
+  vscode.extensions.all[0].extensionPath = '/Applications/DBCode Wrapper.app/Contents/Resources/app/extensions/dbcode';
+  assert.equal(controller.requiresSetup(), true);
 });
 
 test('first run presents one focused setup action without a marketplace', () => {
@@ -1021,9 +1034,11 @@ test('the focused controller installs verified files with the exact private prof
       ]
     );
     assert.match(html, /DBCode Wrapper is ready/);
-    assert.deepEqual(parseCliInventory('dbcode.dbcode@1.36.2\n'), [
-      { id: 'dbcode.dbcode', version: '1.36.2' }
-    ]);
+    controller.executeCli = async (_executable, args) => (
+      args.includes('--list-extensions') ? 'not-an-extension-record\n' : ''
+    );
+    await controller.install();
+    assert.match(html, /invalid installed-extension inventory/i);
   } finally {
     await fs.rm(testRoot, { recursive: true, force: true });
   }

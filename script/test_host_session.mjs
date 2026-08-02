@@ -13,67 +13,36 @@ import test from 'node:test';
 import hostSession from './lib/host-session.js';
 
 const {
-  parseSessionResult,
   runHostSession,
   serializeSessionResult,
-  stopHostSession,
-  validateSessionPolicy,
   createNodeRuntime
 } = hostSession;
 
-test('Host Session keeps parsing and validation helpers private', () => {
-  assert.equal(hostSession.parseProcessTable, undefined);
-  assert.equal(hostSession.validateSessionResult, undefined);
+test('Host Session exposes one maintained run interface and its two runtime adapters', () => {
+  assert.deepEqual(Object.keys(hostSession).sort(), [
+    'createNodeRuntime',
+    'runHostSession',
+    'serializeSessionResult'
+  ]);
 });
 
-function policy(overrides = {}) {
-  const base = {
-    schema_version: 1,
+function launchRecord(overrides = {}) {
+  return {
     session_id: 'unit-session',
+    app_name: 'DBCode Wrapper',
     executable: '/private/tmp/DBCode Wrapper.app/Contents/MacOS/DBCode Wrapper',
     arguments: ['--new-window'],
     environment: { DBCODE_WRAPPER_TEST: '1' },
     host_log: '/private/tmp/dbcode-wrapper-session/host.log',
     log_root: '/private/tmp/dbcode-wrapper-session/logs',
-    readiness: {
-      timeout_seconds: 4,
-      poll_interval_ms: 1000,
-      renderer: {
-        command_contains: ['DBCode Wrapper Helper (Renderer).app', '--type=renderer'],
-        stable_observations: 2
-      },
-      dbcode: {
-        required: true,
-        log_suffix: '/dbcode.dbcode/DBCode.log',
-        patterns: [{ kind: 'literal', value: 'DBCode started' }]
-      },
-      host_log_patterns: [],
-      fatal_host_log_patterns: [{ kind: 'regex', value: 'FATAL:|renderer process gone' }]
-    },
-    completion: {
-      mode: 'quit-after-ready',
-      require_dbcode_before_exit: false,
-      graceful_timeout_seconds: 2,
-      force_timeout_seconds: 1
-    }
-  };
-  return {
-    ...base,
-    ...overrides,
-    readiness: {
-      ...base.readiness,
-      ...overrides.readiness,
-      renderer: { ...base.readiness.renderer, ...overrides.readiness?.renderer },
-      dbcode: { ...base.readiness.dbcode, ...overrides.readiness?.dbcode }
-    },
-    completion: { ...base.completion, ...overrides.completion }
+    timeout_seconds: 4,
+    ...overrides
   };
 }
 
 function fakeRuntime(options = {}) {
   let tick = 0;
   let alive = true;
-  let detached = false;
   const signals = [];
   const rendererAt = options.rendererAt ?? 0;
   const dbcodeAt = options.dbcodeAt ?? 0;
@@ -82,7 +51,6 @@ function fakeRuntime(options = {}) {
   return {
     signals,
     get tick() { return tick; },
-    get detached() { return detached; },
     now() {
       return new Date(Date.UTC(2026, 6, 23, 0, 0, tick));
     },
@@ -115,7 +83,7 @@ function fakeRuntime(options = {}) {
     },
     async readText(filePath) {
       if (filePath.endsWith('DBCode.log')) {
-        return tick >= dbcodeAt ? (options.dbcodeText ?? 'DBCode started') : '';
+        return tick >= dbcodeAt ? (options.dbcodeText ?? 'DBCode starting...') : '';
       }
       return hostTextAt(tick);
     },
@@ -144,70 +112,125 @@ function fakeRuntime(options = {}) {
       }
       return options.exitCode ?? 0;
     },
-    detach() {
-      detached = true;
-    },
     async emergencyStop() {
       alive = false;
     }
   };
 }
 
-test('session policies are explicit and reject unsafe or unsupported values', () => {
-  assert.deepEqual(validateSessionPolicy(policy()), policy());
-  assert.throws(
-    () => validateSessionPolicy(policy({ executable: 'DBCode Wrapper' })),
+test('the run interface owns policy defaults and rejects unsafe launch records', async () => {
+  let policy;
+  const result = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ externalExitAt: 2 }),
+    { onPolicy(value) { policy = value; } }
+  );
+  assert.equal(result.status, 'complete');
+  assert.deepEqual(policy, {
+    schema_version: 2,
+    session_id: 'unit-session',
+    executable: launchRecord().executable,
+    arguments: ['--new-window'],
+    environment: { DBCODE_WRAPPER_TEST: '1' },
+    host_log: launchRecord().host_log,
+    log_root: launchRecord().log_root,
+    readiness: {
+      timeout_seconds: 4,
+      poll_interval_ms: 1000,
+      renderer: {
+        command_contains: ['DBCode Wrapper Helper (Renderer).app', '--type=renderer'],
+        stable_observations: 1
+      },
+      dbcode: {
+        required: true,
+        log_suffix: '/dbcode.dbcode/DBCode.log',
+        patterns: [{ kind: 'literal', value: 'DBCode starting...' }]
+      },
+      host_log_patterns: [],
+      fatal_host_log_patterns: [{
+        kind: 'regex',
+        value: 'Library not loaded:|not valid for use in process|renderer process gone|GPU process isn.t usable|FATAL:'
+      }]
+    },
+    completion: {
+      graceful_timeout_seconds: 10,
+      force_timeout_seconds: 5
+    }
+  });
+  await assert.rejects(
+    runHostSession(launchRecord({ executable: 'DBCode Wrapper' }), fakeRuntime()),
     /absolute path/i
   );
-  assert.throws(
-    () => validateSessionPolicy(policy({ completion: { mode: 'background-magic' } })),
-    /completion mode/i
-  );
-  assert.throws(
-    () => validateSessionPolicy(policy({ readiness: { timeout_seconds: 0 } })),
+  await assert.rejects(
+    runHostSession(launchRecord({ timeout_seconds: 0 }), fakeRuntime()),
     /timeout/i
+  );
+  await assert.rejects(
+    runHostSession({ ...launchRecord(), completion: {} }, fakeRuntime()),
+    /launch record/i
   );
 });
 
 test('a process exit before readiness returns a structured failure', async () => {
-  const result = await runHostSession(policy(), fakeRuntime({ rendererAt: 9, dbcodeAt: 9, exitAt: 1 }));
+  const result = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ rendererAt: 9, dbcodeAt: 9, exitAt: 1 })
+  );
   assert.equal(result.status, 'failed');
   assert.equal(result.failure.code, 'process-exited');
   assert.equal(result.process.app_pid, 4100);
   assert.equal(result.readiness.ready, false);
 });
 
-test('renderer and DBCode timeouts are distinguished', async () => {
-  const rendererTimeout = await runHostSession(policy(), fakeRuntime({ rendererAt: 9, dbcodeAt: 9 }));
+test('renderer and DBCode timeouts remain distinct', async () => {
+  const rendererTimeout = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ rendererAt: 9, dbcodeAt: 9 })
+  );
   assert.equal(rendererTimeout.failure.code, 'renderer-timeout');
 
-  const dbcodeTimeout = await runHostSession(policy(), fakeRuntime({ rendererAt: 0, dbcodeAt: 9 }));
+  const dbcodeTimeout = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ rendererAt: 0, dbcodeAt: 9 })
+  );
   assert.equal(dbcodeTimeout.failure.code, 'dbcode-timeout');
   assert.equal(dbcodeTimeout.readiness.renderer_ready, true);
 });
 
-test('stable renderer and DBCode readiness complete with a graceful quit', async () => {
-  const runtime = fakeRuntime({ rendererAt: 1, dbcodeAt: 1 });
-  const result = await runHostSession(policy(), runtime);
+test('stable renderer and DBCode readiness wait for the user to close the app', async () => {
+  const runtime = fakeRuntime({ rendererAt: 1, dbcodeAt: 1, externalExitAt: 3 });
+  const result = await runHostSession(launchRecord(), runtime);
   assert.equal(result.status, 'complete');
   assert.equal(result.readiness.ready, true);
-  assert.equal(result.readiness.stable_observations, 2);
-  assert.equal(result.quit.requested, true);
+  assert.equal(result.readiness.stable_observations, 1);
+  assert.equal(result.quit.requested, false);
   assert.equal(result.quit.graceful, true);
   assert.equal(result.quit.forced, false);
-  assert.deepEqual(runtime.signals, ['SIGTERM']);
+  assert.deepEqual(runtime.signals, []);
 });
 
-test('fatal host output fails immediately and triggers cleanup', async () => {
+test('fatal host output fails immediately and triggers graceful cleanup', async () => {
   const runtime = fakeRuntime({ hostText: 'FATAL: helper crashed' });
-  const result = await runHostSession(policy(), runtime);
+  const result = await runHostSession(launchRecord(), runtime);
   assert.equal(result.status, 'failed');
   assert.equal(result.failure.code, 'fatal-host-log');
   assert.deepEqual(runtime.signals, ['SIGTERM']);
 });
 
+test('failure cleanup uses a forced stop only when graceful cleanup is ignored', async () => {
+  const runtime = fakeRuntime({ hostText: 'FATAL: helper crashed', ignoreTerm: true });
+  const result = await runHostSession(launchRecord(), runtime);
+  assert.equal(result.status, 'failed');
+  assert.equal(result.quit.graceful, false);
+  assert.equal(result.quit.forced, true);
+  assert.deepEqual(runtime.signals, ['SIGTERM', 'SIGKILL']);
+});
+
 test('an unexpected observer error is structured and still cleans up the app', async () => {
-  const result = await runHostSession(policy(), fakeRuntime({ processError: 'process table unavailable' }));
+  const result = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ processError: 'process table unavailable' })
+  );
   assert.equal(result.status, 'failed');
   assert.equal(result.failure.code, 'session-error');
   assert.match(result.failure.message, /process table unavailable/);
@@ -215,67 +238,16 @@ test('an unexpected observer error is structured and still cleans up the app', a
   assert.equal(result.quit.complete, true);
 });
 
-test('a process that ignores graceful quit is forcefully cleaned up', async () => {
-  const runtime = fakeRuntime({ ignoreTerm: true });
-  const result = await runHostSession(policy({
-    readiness: { renderer: { stable_observations: 1 } },
-    completion: { graceful_timeout_seconds: 1, force_timeout_seconds: 1 }
-  }), runtime);
-  assert.equal(result.status, 'complete');
-  assert.equal(result.quit.graceful, false);
-  assert.equal(result.quit.forced, true);
-  assert.deepEqual(runtime.signals, ['SIGTERM', 'SIGKILL']);
-});
-
-test('leave-running detaches only after readiness', async () => {
-  const runtime = fakeRuntime();
-  const result = await runHostSession(policy({
-    readiness: { renderer: { stable_observations: 1 } },
-    completion: { mode: 'leave-running' }
-  }), runtime);
-  assert.equal(result.status, 'ready');
-  assert.equal(runtime.detached, true);
-  assert.equal(result.quit.requested, false);
-});
-
-test('wait-for-exit can require DBCode evidence collected before the user quits', async () => {
-  const runtime = fakeRuntime({ dbcodeAt: 2, externalExitAt: 3 });
-  const result = await runHostSession(policy({
-    readiness: {
-      renderer: { stable_observations: 1 },
-      dbcode: { required: false }
-    },
-    completion: {
-      mode: 'wait-for-exit',
-      require_dbcode_before_exit: true
-    }
-  }), runtime);
-  assert.equal(result.status, 'complete');
-  assert.equal(result.readiness.dbcode_ready, true);
-  assert.equal(result.process.exit_code, 0);
-});
-
-test('a saved ready session can be stopped through the same lifecycle module', async () => {
-  const runtime = fakeRuntime();
-  const ready = await runHostSession(policy({
-    readiness: { renderer: { stable_observations: 1 } },
-    completion: { mode: 'leave-running' }
-  }), runtime);
-  const stopped = await stopHostSession(ready, policy(), runtime);
-  assert.equal(stopped.status, 'complete');
-  assert.equal(stopped.quit.complete, true);
-});
-
 test('session result serialization is canonical and rejects changed records', async () => {
-  const result = await runHostSession(policy({
-    readiness: { renderer: { stable_observations: 1 } },
-    completion: { mode: 'leave-running' }
-  }), fakeRuntime());
+  const result = await runHostSession(
+    launchRecord(),
+    fakeRuntime({ externalExitAt: 2 })
+  );
   const serialized = serializeSessionResult(result);
   assert.equal(serialized.endsWith('\n'), true);
-  assert.deepEqual(parseSessionResult(serialized), result);
+  assert.deepEqual(JSON.parse(serialized), result);
   assert.throws(
-    () => parseSessionResult(JSON.stringify({ ...result, status: 'invented' })),
+    () => serializeSessionResult({ ...result, status: 'invented' }),
     /session result/i
   );
 });
@@ -284,48 +256,33 @@ test('the production runtime controls a disposable fake host without touching th
   const root = mkdtempSync(join(realpathSync(tmpdir()), 'dbcode-host-session-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const executable = join(root, 'fake-host.sh');
-  const rendererScript = join(root, 'fake-renderer.mjs');
+  const rendererScript = join(root, 'DBCode Wrapper Helper (Renderer).app');
   const logRoot = join(root, 'logs');
   const dbcodeLog = join(logRoot, 'run/dbcode.dbcode/DBCode.log');
-  writeFileSync(rendererScript, `process.on('SIGTERM', () => process.exit(0));
-process.on('SIGINT', () => process.exit(0));
-setInterval(() => {}, 1_000);
-`, { mode: 0o600 });
+  writeFileSync(rendererScript, `setInterval(() => {}, 1_000);\n`, { mode: 0o600 });
   writeFileSync(executable, `#!/bin/sh
 set -eu
 fixture_log="$1"
 node_executable="$2"
 renderer_script="$3"
 mkdir -p "$(dirname "$fixture_log")"
-printf '%s\n' 'DBCode started' > "$fixture_log"
+printf '%s\n' 'DBCode starting...' > "$fixture_log"
 printf '%s\n' 'fake host ready'
 "$node_executable" "$renderer_script" --type=renderer &
 renderer_pid=$!
-stop_fixture() {
-  kill -TERM "$renderer_pid" 2>/dev/null || true
-  wait "$renderer_pid" 2>/dev/null || true
-  exit 0
-}
-trap stop_fixture TERM INT
-wait "$renderer_pid"
+sleep 2
+kill -TERM "$renderer_pid" 2>/dev/null || true
+wait "$renderer_pid" 2>/dev/null || true
 `, { mode: 0o700 });
   chmodSync(executable, 0o700);
-  const integrationPolicy = policy({
+  const result = await runHostSession(launchRecord({
     session_id: 'production-runtime-fixture',
     executable,
     arguments: [dbcodeLog, process.execPath, rendererScript],
     host_log: join(root, 'host.log'),
     log_root: logRoot,
-    readiness: {
-      timeout_seconds: 5,
-      poll_interval_ms: 100,
-      renderer: {
-        command_contains: [rendererScript, '--type=renderer'],
-        stable_observations: 1
-      }
-    }
-  });
-  const result = await runHostSession(integrationPolicy, createNodeRuntime());
+    timeout_seconds: 5
+  }), createNodeRuntime());
   if (result.failure?.message.includes('EPERM')) {
     t.skip('The current sandbox does not permit the fixture process-table check.');
     return;

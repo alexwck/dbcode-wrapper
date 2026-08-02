@@ -263,7 +263,5 @@ class RuntimeSetupController {
 
 module.exports = {
   RuntimeSetupController,
-  extensionInventory,
-  loadRuntimeConfiguration,
-  parseCliInventory
+  loadRuntimeConfiguration
 };

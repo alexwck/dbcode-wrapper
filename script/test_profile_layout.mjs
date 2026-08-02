@@ -13,11 +13,6 @@ const cli = join(scriptRoot, 'profile_layout.cjs');
 const homeDirectory = '/Users/alex';
 const buildRoot = '/Users/alex/Documents/Development/dbcode/.build';
 
-test('Profile Layout keeps generated identity validation private', () => {
-  assert.equal('PROFILE_IDENTITY_PATH' in profileLayout, false);
-  assert.equal('validateProfileIdentity' in profileLayout, false);
-});
-
 function cliRecord(profileName, ...profileArgs) {
   return JSON.parse(execFileSync(process.execPath, [
     cli,
