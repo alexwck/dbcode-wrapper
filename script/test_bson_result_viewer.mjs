@@ -317,8 +317,11 @@ test('viewer webview exposes tree, table, raw, search, and parsed-string control
   assert.deepEqual(Object.keys(viewerWebview), ['renderViewerDocument']);
   const page = renderViewerDocument();
   const nonce = page.match(/script-src 'nonce-([^']+)'/)?.[1];
+  const generatedScript = page.match(/<script nonce="[^"]+">([\s\S]*?)<\/script>/)?.[1];
 
   assert.ok(nonce);
+  assert.ok(generatedScript);
+  assert.doesNotThrow(() => new vm.Script(generatedScript, { filename: 'generated-bson-viewer-webview.js' }));
   assert.match(page, /default-src 'none'/);
   assert.ok(page.includes(`<script nonce="${nonce}">`));
   assert.match(page, />Tree</);

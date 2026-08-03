@@ -109,7 +109,7 @@ function renderViewerDocument() {
 
     function matches(node, query) {
       if (!query) return true;
-      const ownText = [node.path, node.key, node.displayValue, node.type].join('\n').toLocaleLowerCase();
+      const ownText = [node.path, node.key, node.displayValue, node.type].join('\\n').toLocaleLowerCase();
       return ownText.includes(query) || visibleChildren(node).some(child => matches(child, query));
     }
 
@@ -187,7 +187,7 @@ function renderViewerDocument() {
       }
       const nodes = [];
       collect(displayDocument.root, nodes);
-      const matchesCount = query ? nodes.filter(node => [node.path, node.key, node.displayValue, node.type].join('\n').toLocaleLowerCase().includes(query)).length : nodes.length;
+      const matchesCount = query ? nodes.filter(node => [node.path, node.key, node.displayValue, node.type].join('\\n').toLocaleLowerCase().includes(query)).length : nodes.length;
       const treeState = { renderedNodes: 0, limitNoticeShown: false };
       content.replaceChildren(treeNode(displayDocument.root, query, 0, treeState));
       summary.textContent = matchesCount > TREE_NODE_LIMIT
@@ -198,7 +198,7 @@ function renderViewerDocument() {
     function renderTable(query) {
       const nodes = [];
       collect(displayDocument.root, nodes);
-      const filtered = nodes.filter(node => !query || [node.path, node.key, node.displayValue, node.type].join('\n').toLocaleLowerCase().includes(query));
+      const filtered = nodes.filter(node => !query || [node.path, node.key, node.displayValue, node.type].join('\\n').toLocaleLowerCase().includes(query));
       if (filtered.length === 0) {
         content.replaceChildren(makeElement('div', 'empty', 'No path, value, or type matches this search.'));
         summary.textContent = '0 matches';
