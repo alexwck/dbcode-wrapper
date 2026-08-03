@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 const require = createRequire(import.meta.url);
 const { createDisplayDocument } = require('../host/extensions/dbcode-wrapper-bson-viewer/ejson-display.js');
@@ -367,6 +370,96 @@ test('clipboard and file commands register synchronously and route only explicit
   await commands.get('dbcodeWrapper.openBsonResultFromClipboard')();
   await commands.get('dbcodeWrapper.openBsonResultFromFile')();
   assert.deepEqual(events, ['clipboard', 'file']);
+});
+
+test('extension installs the webview ready listener before loading its document', async () => {
+  const extensionUrl = new URL('../host/extensions/dbcode-wrapper-bson-viewer/extension.js', import.meta.url);
+  const extensionRequire = createRequire(extensionUrl);
+  const extensionModule = { exports: {} };
+  const extensionSource = readFileSync(extensionUrl, 'utf8');
+  const commands = new Map();
+  const messages = [];
+  const errors = [];
+  const selectedFile = { fsPath: '/private/synthetic/result.ejson' };
+  let readyHandler;
+  let readyDelivered = false;
+  let html = '';
+
+  const webview = {
+    get html() {
+      return html;
+    },
+    set html(value) {
+      html = value;
+      if (readyHandler) {
+        readyDelivered = true;
+        void readyHandler({ type: 'ready' });
+      }
+    },
+    async postMessage(message) {
+      if (readyDelivered) {
+        messages.push(message);
+      }
+      return readyDelivered;
+    },
+    onDidReceiveMessage(handler) {
+      readyHandler = handler;
+      return { dispose() {} };
+    }
+  };
+  const panel = {
+    webview,
+    reveal() {},
+    onDidDispose() {
+      return { dispose() {} };
+    },
+    dispose() {}
+  };
+  const vscode = {
+    ViewColumn: { Active: 1 },
+    commands: {
+      registerCommand(command, handler) {
+        commands.set(command, handler);
+        return { dispose() {} };
+      }
+    },
+    env: {
+      clipboard: {
+        readText: async () => '',
+        writeText: async () => {}
+      }
+    },
+    window: {
+      createWebviewPanel: () => panel,
+      showOpenDialog: async () => [selectedFile],
+      showErrorMessage: async message => errors.push(message)
+    },
+    workspace: {
+      fs: {
+        stat: async () => ({ size: 35 }),
+        readFile: async () => Buffer.from('[{"amount":{"$numberInt":"12"}}]')
+      }
+    }
+  };
+  const load = vm.runInNewContext(
+    `(function (require, module, exports, __dirname, __filename) { ${extensionSource}\n})`,
+    { Buffer, TextDecoder }
+  );
+  load(
+    specifier => specifier === 'vscode' ? vscode : extensionRequire(specifier),
+    extensionModule,
+    extensionModule.exports,
+    fileURLToPath(new URL('.', extensionUrl)),
+    fileURLToPath(extensionUrl)
+  );
+
+  extensionModule.exports.activate({ subscriptions: [] });
+  await commands.get('dbcodeWrapper.openBsonResultFromFile')();
+
+  assert.equal(readyDelivered, true);
+  assert.equal(errors.length, 0);
+  assert.equal(messages.some(message => message.type === 'document'), true);
+  assert.match(html, /BSON Result Viewer/);
 });
 
 test('viewer manifest keeps both commands inside the focused shell and gives clipboard input one shortcut', () => {

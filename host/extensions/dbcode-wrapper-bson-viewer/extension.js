@@ -29,7 +29,7 @@ function createDocumentPresenter(context) {
         localResourceRoots: []
       }
     );
-    createdPanel.webview.html = renderViewerDocument();
+    panel = createdPanel;
     context.subscriptions.push(
       createdPanel,
       createdPanel.onDidDispose(() => {
@@ -67,13 +67,14 @@ function createDocumentPresenter(context) {
         }
       })
     );
+    createdPanel.webview.html = renderViewerDocument();
     return createdPanel;
   }
 
   return async (document, origin) => {
     latestPayload = { type: 'document', document, origin };
     if (!panel) {
-      panel = createPanel();
+      createPanel();
     } else {
       panel.reveal(vscode.ViewColumn.Active, false);
     }

@@ -710,6 +710,7 @@ async function verifySqlRoute(app, page) {
 async function verifyBsonResultViewerRoute(app, page) {
 	let renderError;
 	let viewer;
+	const routeState = {};
 	const calls = await withOpenDialogProbe(
 		app,
 		{ canceled: false, filePaths: [bsonResultFixturePath] },
@@ -717,15 +718,37 @@ async function verifyBsonResultViewerRoute(app, page) {
 			await openToolbarMenu(page, 'tools');
 			const menuItem = page.getByRole('menuitem', { name: 'Open BSON Result File…', exact: true });
 			assert.equal(await menuItem.isVisible(), true, 'DBCode Tools did not expose the BSON result file action.');
-			await menuItem.click();
+			routeState.ariaDisabled = await menuItem.getAttribute('aria-disabled');
+			routeState.element = await menuItem.evaluate(element => ({
+				tagName: element.tagName,
+				className: element.className,
+				role: element.getAttribute('role')
+			}));
+			await page.keyboard.press('Home');
+			for (let index = 0; index < 4; index++) {
+				await page.keyboard.press('ArrowDown');
+			}
+			routeState.focusedLabel = await page.evaluate(() => document.activeElement?.textContent
+				?.replace(/\s+/g, ' ')
+				.trim());
+			assert.equal(routeState.focusedLabel, 'Open BSON Result File…');
+			await page.keyboard.press('Enter');
 			try {
 				viewer = await findDbcodePanelFrame(page, /BSON Result Viewer/i, 15000);
 			} catch (error) {
 				renderError = error;
+				routeState.contextMenuText = await visibleContextMenuText(page);
+				routeState.notifications = (await page.locator('.notifications-toasts').textContent().catch(() => ''))
+					.replace(/\s+/g, ' ')
+					.trim();
 			}
 		}
 	);
-	assert.equal(calls.length, 1, 'Open BSON Result File must open exactly one native JSON picker.');
+	assert.equal(
+		calls.length,
+		1,
+		`Open BSON Result File must open exactly one native JSON picker. Route state: ${JSON.stringify(routeState)}`
+	);
 	assert.deepEqual(calls[0].filters, [{ name: 'JSON results', extensions: ['json', 'ejson'] }]);
 	assert.ok(calls[0].properties.includes('openFile'));
 	assert.ok(!calls[0].properties.includes('openDirectory'));
