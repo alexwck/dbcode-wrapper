@@ -235,6 +235,8 @@ jq -e \
   .public_contribution_contract.mcp_server_definition_providers == ["dbcode"] and
   (.public_contribution_contract.configuration_titles | length) == 11 and
   ([.focused_routes.wrapper_commands[].id] | sort) == [
+    "dbcodeWrapper.openBsonResultFromClipboard",
+    "dbcodeWrapper.openBsonResultFromFile",
     "dbcodeWrapper.openDbcodeAiSettings",
     "dbcodeWrapper.openDbcodeSettings",
     "dbcodeWrapper.revealScratchFiles",

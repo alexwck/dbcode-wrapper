@@ -77,6 +77,7 @@ const workspacePath = path.join(qaRoot, 'workspace');
 const scratchFilesPath = path.join(profileRoot, 'scratch-files');
 const settingsPath = path.join(userDataRoot, 'User/settings.json');
 const projectQueryPath = path.join(repoRoot, 'host/qa/project-query.sql');
+const bsonResultFixturePath = path.join(repoRoot, 'host/qa/bson-result-viewer-sample.ejson');
 const timeout = Number(process.env.DBCODE_WRAPPER_QA_TIMEOUT_MS ?? 60000);
 const reportPath = path.join(
 	outputRoot,
@@ -119,6 +120,8 @@ const advancedToolLabels = [
 	'New DBCode Notebook',
 	'Start Python Kernel…',
 	'Query Builder',
+	'Open Copied BSON Result',
+	'Open BSON Result File…',
 	'DBCode Settings…',
 	'AI: Choose Provider',
 	'AI: Configure Custom Model…',
@@ -704,6 +707,65 @@ async function verifySqlRoute(app, page) {
 	});
 }
 
+async function verifyBsonResultViewerRoute(app, page) {
+	let renderError;
+	let viewer;
+	const calls = await withOpenDialogProbe(
+		app,
+		{ canceled: false, filePaths: [bsonResultFixturePath] },
+		async () => {
+			await openToolbarMenu(page, 'tools');
+			const menuItem = page.getByRole('menuitem', { name: 'Open BSON Result File…', exact: true });
+			assert.equal(await menuItem.isVisible(), true, 'DBCode Tools did not expose the BSON result file action.');
+			await menuItem.click();
+			try {
+				viewer = await findDbcodePanelFrame(page, /BSON Result Viewer/i, 15000);
+			} catch (error) {
+				renderError = error;
+			}
+		}
+	);
+	assert.equal(calls.length, 1, 'Open BSON Result File must open exactly one native JSON picker.');
+	assert.deepEqual(calls[0].filters, [{ name: 'JSON results', extensions: ['json', 'ejson'] }]);
+	assert.ok(calls[0].properties.includes('openFile'));
+	assert.ok(!calls[0].properties.includes('openDirectory'));
+	if (renderError) {
+		throw renderError;
+	}
+	assert.ok(viewer);
+	await viewer.frame.getByRole('tab', { name: 'Tree' }).click();
+	const parseEmbeddedToggle = viewer.frame.getByLabel('Parse JSON strings');
+	await viewer.frame.waitForFunction(() => document.querySelector('#parse-embedded')?.disabled === false);
+	if (await parseEmbeddedToggle.isChecked()) {
+		await parseEmbeddedToggle.uncheck();
+	}
+	await viewer.frame.waitForFunction(() => document.body.textContent?.includes('Int32'));
+	viewer.text = await deepFrameText(viewer.frame);
+	assert.match(viewer.text, /requestedamount.*0.*Int32/i);
+	assert.match(viewer.text, /numericString.*0.*String/i);
+	assert.match(viewer.text, /createdOn.*2000-01-01T00:00:00\.000Z.*Date/i);
+
+	await parseEmbeddedToggle.check();
+	await viewer.frame.getByLabel('Search result').fill('nested');
+	await viewer.frame.waitForFunction(() => document.body.textContent?.includes('{parsed JSON}'));
+	assert.match(await deepFrameText(viewer.frame), /nested.*2.*Int32/i);
+
+	await viewer.frame.getByLabel('Search result').fill('');
+	await viewer.frame.getByRole('tab', { name: 'Table' }).click();
+	assert.match(await deepFrameText(viewer.frame), /Path.*Value.*Type.*\$\[0\]\.requestedamount.*0.*Int32/i);
+	await viewer.frame.getByRole('tab', { name: 'Raw JSON' }).click();
+	assert.match(await deepFrameText(viewer.frame), /"\$numberInt": "0"/);
+
+	record('BSON Result Viewer renders readable values with separate types without a database', {
+		evidence: 'rendered',
+		fixture: path.basename(bsonResultFixturePath),
+		databaseRead: false,
+		databaseWrite: false,
+		networkUsed: false,
+		clipboardRead: false
+	});
+}
+
 async function verifyFocusedShell(app, page) {
 	const initial = await geometry(page);
 	assert.deepEqual(initial.toolbarActions.map(item => item.action), [
@@ -758,6 +820,8 @@ async function verifyFocusedShell(app, page) {
 		evidence: 'reachable',
 		executed: false
 	});
+
+	await verifyBsonResultViewerRoute(app, page);
 
 	await openConnectionsHome(page);
 	const homeState = await geometry(page);

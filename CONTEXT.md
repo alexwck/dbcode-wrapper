@@ -24,6 +24,10 @@ _Avoid_: native rewrite, VS Code-free implementation
 The normal visible application exposes DBCode database functionality only. Any compatible extension host remains internal and does not present a general code workbench, Extensions view, Command Palette, or unrelated coding tools.
 _Avoid_: reduced VS Code IDE, general-purpose IDE, reimplemented DBCode interface
 
+**Local BSON Result Viewer**:
+A wrapper-owned, read-only display adapter for JSON or MongoDB Extended JSON that the user explicitly copies or opens. It shows readable scalar values, separate BSON types, the original raw JSON, and optional structure for JSON stored inside strings. It never executes a query, connects to a database, reads DBCode internals, watches the clipboard, uses the network, sends telemetry, or persists result data.
+_Avoid_: second live results grid, DBCode result replacement, automatic clipboard reader, database client
+
 **Standalone DBCode Profile**:
 The app's private DBCode settings, connection state, and normal license activation. Existing state enters it only through a DBCode-supported migration path; protected credentials are re-entered securely.
 _Avoid_: permanently shared VS Code profile, copied license state, extracted credentials

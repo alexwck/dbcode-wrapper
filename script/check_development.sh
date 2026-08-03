@@ -16,6 +16,7 @@ repo_root="$(cd "${script_root}/.." && pwd)"
 "${script_root}/test_python_notebook_contract.sh"
 "${script_root}/test_connection_catalogue_contract.sh"
 "${script_root}/test_dbcode_feature_contract.sh" --source-only
+"${script_root}/test_bson_result_viewer_contract.sh"
 "${script_root}/test_profile_paths.sh"
 "${script_root}/test_host_session_contract.sh"
 "${script_root}/test_generated_workspace_contract.sh"

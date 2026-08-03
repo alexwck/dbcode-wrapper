@@ -17,17 +17,21 @@ Pinned Code OSS runtime + reviewed wrapper patches
 Unchanged DBCode + required Python/Jupyter extensions
 ```
 
-Code OSS is the extension host and application runtime. VSCodium supplies the reproducible macOS build and packaging flow. Open VSX supplies independently verified extension packages. DBCode supplies the database, notebook, AI, MCP, account, and licence features. The wrapper owns only the application identity, focused shell, private profile, compatibility checks, and host-only packaging.
+Code OSS is the extension host and application runtime. VSCodium supplies the reproducible macOS build and packaging flow. Open VSX supplies independently verified extension packages. DBCode supplies the database, notebook, AI, MCP, account, and licence features. The wrapper owns only the application identity, focused shell, private profile, compatibility checks, the explicit local BSON Result Viewer, and host-only packaging. The viewer is a display adapter, not another database client.
 
 DBCode side drawers stay open while the user works in a query editor, the main canvas, or a result grid. Another DBCode action may replace the current drawer. The shared Collapse drawer control hides it and then becomes Expand drawer so the same view can be restored. Account is the exception: it remains temporary and closes on an outside click or Escape.
 
-New DBCode query results open below the query at every window width. DBCode still owns the result editor, grid, Inspector, copy, and export behavior; the wrapper does not add a second Results panel.
+New DBCode query results open below the query at every window width. DBCode still owns the live result editor, grid, Inspector, copy, and export behavior; the wrapper does not add a second live Results panel.
+
+For MongoDB rows copied or exported as JSON or JSON Pretty, choose **DBCode tools → Open Copied BSON Result** or press `⌘⌥J`. **Open BSON Result File…** handles a saved `.json` or `.ejson` file. The local viewer offers Tree, Table, and Raw JSON modes; search by path, value, or type; optional parsing of JSON stored inside strings; and scalar copy actions. Canonical Extended JSON such as `{"$numberInt":"0"}` appears as value `0` with type `Int32` instead of as a wrapper object.
 
 ## Public source and releases
 
 This repository contains the wrapper source, reviewed patches, policies, tests, documentation, and normal published host-only releases. DBCode is not included. Each user needs a valid DBCode licence and obtains the official unchanged extension from its approved Open VSX source into their private profile.
 
 Published releases contain only the wrapper host. DBCode packages, licences, accounts, credentials, profiles, databases, signing secrets, and raw real-profile evidence stay outside Git and outside release assets. Only sanitized versions, public metadata, cryptographic digests, and pass or fail summaries may appear in project history.
+
+The BSON Result Viewer reads the clipboard or one selected file only after an explicit action. It does not inspect DBCode, connect to a database, monitor the clipboard, use the network, send telemetry, or write result data to disk. Input stays in the active extension host and webview memory and is released when the viewer closes. Only the selected view mode and the **Parse JSON strings** preference may persist; raw input and search text do not. A 10 MiB input limit and bounded display model stop accidental oversized rendering.
 
 Use the [latest published Host Release](https://github.com/alexwck/dbcode-wrapper/releases/latest) for downloads. The exact wrapper, Code OSS, VSCodium, and DBCode versions for a source revision live in [`host/release-lock.json`](host/release-lock.json). Maintained guidance does not duplicate those changing values.
 

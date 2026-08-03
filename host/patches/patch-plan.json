@@ -72,7 +72,7 @@
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
           "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
-          "sha256": "e853fcb33fb47235de902dcc19ca11b4ea5679d22a04f4f1046126ba1cc2a751"
+          "sha256": "5832810126a0b0ef45997b4e932f77d852a445211b121b53cb0b47269a8c7507"
         },
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
@@ -135,5 +135,5 @@
     "src/vs/workbench/workbench.common.main.ts"
   ],
   "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
-  "expected_maintained_tree_sha256": "601ece171404df0fa8fd336a97697cab818d88e6b9473ed3f36abbf0a87eb14f"
+  "expected_maintained_tree_sha256": "ee15705d560b70708f5088911aa9761457e219db045f5eb6fc5ea2d2cabc3b32"
 }

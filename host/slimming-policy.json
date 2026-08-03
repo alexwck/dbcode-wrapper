@@ -42,6 +42,11 @@
       ],
       "first_party": [
         {
+          "name": "dbcode-wrapper-bson-viewer",
+          "source": "host/extensions/dbcode-wrapper-bson-viewer",
+          "reason": "The local viewer presents explicitly opened MongoDB Extended JSON with readable values and separate BSON types without reading DBCode internals or connecting to a database."
+        },
+        {
           "name": "dbcode-wrapper-python-kernel",
           "source": "host/extensions/dbcode-wrapper-python-kernel",
           "reason": "The focused bridge starts a user-selected Jupyter kernel for DBCode Python cells without exposing a general Jupyter workbench."

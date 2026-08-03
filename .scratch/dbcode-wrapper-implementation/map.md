@@ -2,7 +2,7 @@
 
 ## Destination
 
-Maintain a small Apple-silicon host for the official unchanged DBCode extension. The wrapper owns application identity, a focused shell, private profile handling, compatibility checks, prompt-free verification, rollback, and host-only publication. DBCode owns database, notebook, AI, MCP, account, and licence behaviour.
+Maintain a small Apple-silicon host for the official unchanged DBCode extension. The wrapper owns application identity, a focused shell, private profile handling, the explicit local BSON Result Viewer, compatibility checks, prompt-free verification, rollback, and host-only publication. DBCode owns database, query, live-result, notebook, AI, MCP, account, and licence behaviour.
 
 ## Current state
 
@@ -13,6 +13,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 - `script/release_host.sh plan` reports release-source readiness without changing state. `prepare` rejects blocked source state before checkpoint acquisition, then owns signing readiness, exact build or reuse, static smoke, one persistent-profile rendered smoke, final acceptance, tagging, packaging, independent verification, and approval. Publication remains a separate explicit action.
 - Generated output is classified by artifact purpose and explicit expiry. Historical output stays protected without making its retired process current again.
 - The Public Source Repository never includes DBCode, private profiles, credentials, databases, signing secrets, built apps, raw real-profile evidence, or local release receipts.
+- The local BSON Result Viewer reads only an explicitly chosen clipboard value or JSON file, keeps the payload in memory, separates readable values from BSON types, and never connects to a database or reads DBCode internals.
 
 ## Maintained modules
 
@@ -26,7 +27,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 65](issues/65-add-local-bson-result-viewer.md) is claimed: add an explicit local BSON result viewer without reading DBCode internals or connecting to a database.
 
 ## History
 

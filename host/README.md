@@ -55,7 +55,13 @@ Both commands use the current user's Standalone DBCode Profile:
 
 The automated rendered check uses one separate persistent generated `qa` profile under `.build/`. It never uses the production profile.
 
-Profile Setup, Runtime Setup, profile recovery, focused navigation, query results, update reporting, and other user-facing behavior are described in the [root README](https://github.com/alexwck/dbcode-wrapper/blob/main/README.md), [architecture overview](https://github.com/alexwck/dbcode-wrapper/blob/main/docs/architecture/overview.md), and [capability coverage guide](https://github.com/alexwck/dbcode-wrapper/blob/main/docs/product/dbcode-capability-coverage.md). DBCode owns database, notebook, AI, MCP, account, and licence behavior; the wrapper exposes those routes without reimplementing them.
+## View BSON results
+
+DBCode continues to own query execution and its live result grid. When MongoDB output copied as JSON or JSON Pretty contains canonical Extended JSON wrappers, choose **DBCode tools → Open Copied BSON Result** or press `⌘⌥J`. Choose **Open BSON Result File…** for one saved `.json` or `.ejson` file. The wrapper-owned viewer separates readable values from BSON types in Tree and Table modes, keeps the original Raw JSON, searches by path/value/type, and can optionally expand JSON stored inside strings.
+
+Both routes are explicit and local. They do not inspect DBCode, query a database, monitor the clipboard, use the network, send telemetry, or persist result data. The viewer rejects a selected file larger than 10 MiB before reading it and accepts at most 50,000 display values. Tree and Table each materialize at most 5,000 matching values at once, so use search and lazy tree branches to inspect a larger accepted document.
+
+Profile Setup, Runtime Setup, profile recovery, focused navigation, live query results, local BSON display, update reporting, and other user-facing behavior are described in the [root README](https://github.com/alexwck/dbcode-wrapper/blob/main/README.md), [architecture overview](https://github.com/alexwck/dbcode-wrapper/blob/main/docs/architecture/overview.md), and [capability coverage guide](https://github.com/alexwck/dbcode-wrapper/blob/main/docs/product/dbcode-capability-coverage.md). DBCode owns database, notebook, AI, MCP, account, licence, query, and live-result behavior. The wrapper exposes those routes without reimplementing them and keeps its BSON viewer as a separate explicit-input display adapter.
 
 ## Verify
 

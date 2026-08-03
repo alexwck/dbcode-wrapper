@@ -45,6 +45,8 @@ const DBCODE_RESULT_LOCATION_SETTING = 'dbcode.resultLocation';
 const OPEN_SQL_FILE_COMMAND = 'dbcodeWrapper.openSqlFile';
 const OPEN_DBCODE_SETTINGS_COMMAND = 'dbcodeWrapper.openDbcodeSettings';
 const OPEN_DBCODE_AI_SETTINGS_COMMAND = 'dbcodeWrapper.openDbcodeAiSettings';
+const OPEN_BSON_RESULT_FROM_CLIPBOARD_COMMAND = 'dbcodeWrapper.openBsonResultFromClipboard';
+const OPEN_BSON_RESULT_FROM_FILE_COMMAND = 'dbcodeWrapper.openBsonResultFromFile';
 const REVEAL_SCRATCH_FILES_COMMAND = 'dbcodeWrapper.revealScratchFiles';
 const GET_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.getUpdateStatus';
 const REVIEW_UPDATES_COMMAND = 'dbcodeWrapper.reviewUpdates';
@@ -300,6 +302,9 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 				toAction({ id: 'dbcodeWrapper.notebook', label: localize('dbcodeWrapper.notebook', "New DBCode Notebook"), run: () => this.executeDbcodeCommand('dbcode.notebook.new') }),
 				toAction({ id: 'dbcodeWrapper.pythonKernel', label: localize('dbcodeWrapper.pythonKernel', "Start Python Kernel…"), run: () => this.executeDbcodeCommand('dbcodeWrapper.startPythonKernel') }),
 				toAction({ id: 'dbcodeWrapper.queryBuilder', label: localize('dbcodeWrapper.queryBuilder', "Query Builder"), run: () => this.executeDbcodeCommand('dbcode.queryBuilder.open') }),
+				new Separator(),
+				toAction({ id: 'dbcodeWrapper.openBsonResultFromClipboard', label: localize('dbcodeWrapper.openBsonResultFromClipboard', "Open Copied BSON Result"), run: () => this.executeDbcodeCommand(OPEN_BSON_RESULT_FROM_CLIPBOARD_COMMAND) }),
+				toAction({ id: 'dbcodeWrapper.openBsonResultFromFile', label: localize('dbcodeWrapper.openBsonResultFromFile', "Open BSON Result File…"), run: () => this.executeDbcodeCommand(OPEN_BSON_RESULT_FROM_FILE_COMMAND) }),
 				new Separator(),
 				toAction({ id: 'dbcodeWrapper.settings', label: localize('dbcodeWrapper.settings', "DBCode Settings…"), run: () => this.executeDbcodeCommand(OPEN_DBCODE_SETTINGS_COMMAND) }),
 				toAction({ id: 'dbcodeWrapper.checkForUpdates', label: localize('dbcodeWrapper.checkForUpdates', "Check for Updates…"), run: () => this.checkForUpdates() }),

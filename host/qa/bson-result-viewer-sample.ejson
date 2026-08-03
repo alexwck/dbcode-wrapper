@@ -1,0 +1,14 @@
+[
+  {
+    "requestedamount": {
+      "$numberInt": "0"
+    },
+    "numericString": "0",
+    "createdOn": {
+      "$date": {
+        "$numberLong": "946684800000"
+      }
+    },
+    "escapedJson": "{\"nested\":{\"$numberInt\":\"2\"}}"
+  }
+]

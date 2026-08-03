@@ -1,0 +1,56 @@
+{
+  "name": "bson-result-viewer",
+  "displayName": "DBCode Wrapper BSON Result Viewer",
+  "description": "Displays explicitly opened MongoDB Extended JSON as readable values with separate BSON types.",
+  "publisher": "dbcode-wrapper",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.126.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onCommand:dbcodeWrapper.openBsonResultFromClipboard",
+    "onCommand:dbcodeWrapper.openBsonResultFromFile"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dbcodeWrapper.openBsonResultFromClipboard",
+        "title": "Open Copied BSON Result",
+        "category": "DBCode Wrapper"
+      },
+      {
+        "command": "dbcodeWrapper.openBsonResultFromFile",
+        "title": "Open BSON Result File",
+        "category": "DBCode Wrapper"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dbcodeWrapper.openBsonResultFromClipboard",
+        "key": "ctrl+alt+j",
+        "mac": "cmd+alt+j",
+        "when": "!inputFocus"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "dbcodeWrapper.openBsonResultFromClipboard",
+          "when": "false"
+        },
+        {
+          "command": "dbcodeWrapper.openBsonResultFromFile",
+          "when": "false"
+        }
+      ]
+    }
+  }
+}

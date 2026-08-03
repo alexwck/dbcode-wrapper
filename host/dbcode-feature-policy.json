@@ -148,9 +148,11 @@
       "focused_routes": [
         "Automatic DBCode result editor",
         "Database Explorer table actions",
-        "DBCode-owned grid toolbar and context actions"
+        "DBCode-owned grid toolbar and context actions",
+        "DBCode tools > Open Copied BSON Result",
+        "DBCode tools > Open BSON Result File"
       ],
-      "evidence": "The wrapper retains DBCode's result and table-editor contributions, automatic result placement, DBCode-owned grid routes, and the setting for pinning actions from the result grid's + menu. The fast deployment gate does not execute SQL or open live table data."
+      "evidence": "The wrapper retains DBCode's result and table-editor contributions, automatic result placement, DBCode-owned grid routes, and the setting for pinning actions from the result grid's + menu. For explicitly copied or opened MongoDB Extended JSON, the local wrapper viewer presents readable values with separate BSON types without inspecting DBCode or connecting to a database. The fast deployment gate uses only a synthetic local viewer fixture; it does not execute SQL or open live table data."
     },
     {
       "id": "history",
@@ -616,6 +618,16 @@
         "id": "dbcodeWrapper.startProfileMigration",
         "route": "First launch and Connection tools > Profile Setup",
         "target": "reviewed non-secret connection details handed to DBCode's importer"
+      },
+      {
+        "id": "dbcodeWrapper.openBsonResultFromClipboard",
+        "route": "DBCode tools > Open Copied BSON Result",
+        "target": "JSON text explicitly read from the clipboard into the local BSON Result Viewer"
+      },
+      {
+        "id": "dbcodeWrapper.openBsonResultFromFile",
+        "route": "DBCode tools > Open BSON Result File",
+        "target": "one JSON or Extended JSON file explicitly selected by the user"
       }
     ],
     "dbcode_commands": [

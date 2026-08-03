@@ -252,6 +252,8 @@ for required_contract in \
   dbcode-wrapper-focused \
   dbcode-wrapper-database-contextbar \
   dbcodeWrapper.openSqlFile \
+  dbcodeWrapper.openBsonResultFromClipboard \
+  dbcodeWrapper.openBsonResultFromFile \
   dbcode.resultLocation \
   dbcode.connections.view \
   dbcode.tunnels.view \
@@ -369,6 +371,10 @@ for rendered_contract in \
   'kernelStarted: false' \
   'permissionPromptExpected: false' \
   'DBCode Settings remains reachable from DBCode Tools without activating it' \
+  'verifyBsonResultViewerRoute' \
+  'BSON Result Viewer renders readable values with separate types without a database' \
+  'networkUsed: false' \
+  'clipboardRead: false' \
   'the release status quick input stays above the toolbar and closes on outside click' \
   'Open SQL File renders the deterministic query without executing it' \
   'databaseRead: false' \
