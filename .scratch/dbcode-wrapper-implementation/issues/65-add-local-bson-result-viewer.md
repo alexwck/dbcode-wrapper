@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 ## Comments
 
@@ -21,6 +21,9 @@
 - 2026-08-03: Engineering re-review found four remaining Extended JSON edge cases and one missing race test. Validation now follows the documented Decimal128 exponent and precision bounds, rejects normalized invalid calendar dates, accepts one- or two-digit binary subtypes, and requires supported regular-expression options in strict alphabetical order. The file test now also proves that a file growing after the preflight check is rejected before parsing or rendering.
 - 2026-08-03: The focused checks and complete prompt-free development gate passed after the final edge-case fixes. Final independent re-review remains pending before the signed build and rendered app gate.
 - 2026-08-03: Final engineering review requested compatibility with valid ISO date strings containing one or two fractional-second digits. The validator now accepts one-to-three digits while retaining explicit calendar and time-range checks, and the complete prompt-free development gate passes on that final source.
+- 2026-08-04: Final specification and engineering re-reviews found no actionable gaps. The remaining acceptance risk was limited to the signed app's static and rendered behavior.
+- 2026-08-04: The first rendered run exposed two integration defects that source-only checks had not caught: the initial webview payload could race its ready listener, and an embedded `\n` escape became an invalid literal newline in the generated script. The presenter now installs its listener before loading HTML, and the fast suite compiles the generated webview JavaScript before acceptance.
+- 2026-08-04: The final source at `49c7d5b2c97afb27f90126e93f5b5f3657882eba` passed 12 focused viewer tests and the complete prompt-free development gate. The signed build reused the exact Compiled Host, Static Host Smoke passed, and the one-profile rendered gate proved Tree, Table, Raw JSON, BSON type labels, optional embedded JSON, and search against the synthetic fixture without a database read or write, network use, or clipboard read.
 
 ## Work
 
@@ -29,8 +32,8 @@
 - [x] Add a local webview with tree, table, and raw modes; path/value/type search; copy-value actions; and optional expansion of JSON stored inside strings.
 - [x] Package the viewer as a reviewed first-party extension without changing or redistributing DBCode.
 - [x] Update the public product, privacy, architecture, capability, host, and current-work guidance.
-- [ ] Run focused checks, the complete prompt-free development gate, and final specification and engineering reviews.
+- [x] Run focused checks, the complete prompt-free development gate, and final specification and engineering reviews.
 
 ## Answer
 
-Pending implementation and verification.
+Implemented and accepted. DBCode continues to own query execution and its live results. The wrapper now offers an explicit, local-only handoff from copied or selected Extended JSON into a readable Tree, Table, or Raw JSON view. Canonical BSON wrappers show a readable value beside a separate type, ordinary strings stay strings, embedded JSON remains opt-in, and no payload is persisted or read from DBCode internals.
