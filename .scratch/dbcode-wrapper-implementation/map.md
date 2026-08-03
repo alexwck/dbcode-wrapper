@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 64](issues/64-remove-final-shallow-test-seams.md) — remove one unused helper and three shallow test seams without changing product or release behaviour.
 
 ## History
 

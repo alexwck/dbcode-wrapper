@@ -197,20 +197,6 @@ for required_runtime_contract in \
   }
 done
 
-for required_orchestration_contract in \
-  'class ProfileSetup' \
-  'async dispatch(action)' \
-  'async panelClosed()' \
-  'async recreateProfile()' \
-  'requireMatchingRelaunchPath' \
-  'await this.adapter.startRecovery(this.recoveryRequest())' \
-  'await this.adapter.quit()'; do
-  rg -Fq "${required_orchestration_contract}" "${profile_setup}" || {
-    echo "Profile Setup is missing orchestration: ${required_orchestration_contract}" >&2
-    exit 1
-  }
-done
-
 if rg -n 'class ProfileMigrationController|this\.plan|this\.staged|preflightProgress|finishPreflight|recoveryRequest' "${extension_runtime}"; then
   echo "The extension must remain a thin host adapter for Profile Setup." >&2
   exit 1

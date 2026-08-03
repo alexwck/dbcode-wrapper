@@ -85,14 +85,6 @@ function requireSha1(value, label) {
   return requirePattern(value, SHA1_PATTERN, label);
 }
 
-function requireHttpsUrl(value, label) {
-  const text = requireString(value, label);
-  if (!text.startsWith('https://')) {
-    fail(`${label} is invalid.`);
-  }
-  return text;
-}
-
 function requireTarget(target, label = 'Release target') {
   requireObject(target, label);
   if (target.platform !== 'darwin' || target.architecture !== 'arm64') {

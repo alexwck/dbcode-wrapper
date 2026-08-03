@@ -16,10 +16,6 @@ publisher="${script_root}/publish_release.sh"
 test_root="$(mktemp -d "${TMPDIR:-/tmp}/dbcode-host-release-test.XXXXXX")"
 export DBCODE_WRAPPER_TEST_ALLOW_TEMPORARY_OUTPUT="yes"
 
-if rg -Fq 'host_release_validate_sources' "${packager}"; then
-  echo "The packager must use the validated Host Release context instead of repeating its lower-level source validator." >&2
-  exit 1
-fi
 [[ "$(rg -c '^[[:space:]]*host_release_context_record \\' "${packager}")" == "1" ]] || {
   echo "The packager must derive release metadata from exactly one validated Host Release context." >&2
   exit 1
@@ -603,11 +599,13 @@ printf '%s\n' \
 legacy_acceptance_file="${test_root}/historical-final-acceptance.json"
 jq '.schema_version = 2 | .manual_evidence = {status: "passed"}' \
   "${fast_acceptance_file}" > "${legacy_acceptance_file}"
-if PATH="${stub_bin}:${PATH}" host_release_validate_sources \
+if PATH="${stub_bin}:${PATH}" host_release_context_record \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
-  "${legacy_acceptance_file}" >/dev/null 2>&1; then
+  "${legacy_acceptance_file}" \
+  "${fixture_repository}" \
+  "${source_tag}" >/dev/null 2>&1; then
   echo "Host packaging accepted a retired human-evidence report." >&2
   exit 1
 fi
@@ -665,11 +663,13 @@ package_source_arguments=(
 stale_gate_acceptance_file="${test_root}/stale-gate-final-acceptance.json"
 jq '.gate_execution.source_snapshot_sha256 = ("f" * 64)' \
   "${fast_acceptance_file}" > "${stale_gate_acceptance_file}"
-if PATH="${stub_bin}:${PATH}" host_release_validate_sources \
+if PATH="${stub_bin}:${PATH}" host_release_context_record \
   "${fixture_app}" \
   "${manifest_file}" \
   "${release_lock}" \
-  "${stale_gate_acceptance_file}" >/dev/null 2>&1; then
+  "${stale_gate_acceptance_file}" \
+  "${fixture_repository}" \
+  "${source_tag}" >/dev/null 2>&1; then
   echo "Private packaging accepted gate evidence from another source snapshot." >&2
   exit 1
 fi
