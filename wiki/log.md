@@ -254,3 +254,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: d01539e (was f1cc5e1)
 - Coverage: read-only release preparation readiness; source validation before checkpoint acquisition; exact approval-history-only same-tag resume; final HEAD revalidation; one owner-facing preparation gate; shorter host operations guide
 - Pages: [Overview](./OVERVIEW.md), [Release trust and compatibility](./architecture/release-trust-and-compatibility.md), [Host Release](./modules/host-release.md), [Package and publish a Host Release](./flows/package-and-publish-host-release.md), and [Review an upstream update](./guides/review-an-upstream-update.md)
+
+## 2026-08-04: refresh
+
+- Profile: public/standard
+- source_commit: 187fa2b (was d01539e)
+- Coverage: explicit local BSON result handoff from clipboard or file; readable values with separate BSON types; Tree, Table, and Raw JSON views; opt-in embedded JSON parsing; bounded in-memory input and rendering; focused generated-script and ready-message regression checks; signed static and rendered acceptance without database, network, or clipboard access
+- Pages: [Overview](./OVERVIEW.md), [Product and upstream boundaries](./architecture/product-and-upstream-boundaries.md), [Prompt-free acceptance boundary](./concepts/representative-acceptance-fixtures.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)

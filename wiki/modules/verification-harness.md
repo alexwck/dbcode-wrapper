@@ -9,13 +9,13 @@ tags:
   - testing
 wiki_profile: public
 wiki_depth: standard
-source_commit: f1cc5e1bbc50281cd6b86a307054982619ce5f00
+source_commit: 187fa2bf6982b805c49a456a03d6b305a57a56a0
 ---
 ## Summary
 
 Verification protects wrapper-owned seams without retesting DBCode. The normal development gate is fast, local, deterministic, and prompt-free. A normal release does not repeat a separate manual full gate, build, static smoke, and rendered smoke before preparation; `release_host.sh prepare` owns those stages and final acceptance reruns the exact source and static checks.
 
-No maintained deployment test pauses for a person, starts a real database or kernel, calls an AI provider, signs in, or approves a macOS prompt. Deep build and release task fixtures stay maintained but run only when those workflows change. Rendered automation uses one persistent generated `qa` profile.
+No maintained deployment test pauses for a person, starts a real database or kernel, calls an AI provider, signs in, or approves a macOS prompt. Deep build and release task fixtures stay maintained but run only when those workflows change. Rendered automation uses one persistent generated `qa` profile. The BSON viewer route uses a synthetic file and proves readable values and separate types without database, network, or clipboard access.
 
 ## Responsibilities
 
@@ -25,6 +25,7 @@ No maintained deployment test pauses for a person, starts a real database or ker
 - Do not export a helper only for a test or keep a test whose only job is naming a private helper.
 - Keep an exact interface test when the small interface is deliberate.
 - Give each test module one maintained runner using the pinned Node runtime.
+- Compile the generated BSON viewer script and test the ready-message handshake at the extension activation boundary before relying on rendered automation.
 - Test owner-facing build and release tasks through their public command interfaces when those workflows change.
 - Prove writer-first and reader-first checkpoint refusal.
 - Prove failed signing, staging, promotion, cleanup, interruption, and live inherited borrowers fail closed.
@@ -44,11 +45,12 @@ No maintained deployment test pauses for a person, starts a real database or ker
 - [test_build_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/script/test_build_host_task.sh) — change-owned signing, lease lifetime, interruption, and promotion coverage.
 - [test_release_host_task.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_release_host_task.sh) — change-owned preparation order, exact resume, and publication coverage.
 - [test_development_gate_contract.sh](https://github.com/alexwck/dbcode-wrapper/blob/b9d88955e313bff25e2abb14d96fc986e80e7f7a/script/test_development_gate_contract.sh) — default and change-owned gate composition.
-- [focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/2191402c377a4caa9c941af83c6cbcf6c0d41809/host/qa/focused-shell-rendered.cjs) — prompt-free rendered route checks.
+- [focused-shell-rendered.cjs](https://github.com/alexwck/dbcode-wrapper/blob/187fa2bf6982b805c49a456a03d6b305a57a56a0/host/qa/focused-shell-rendered.cjs) — prompt-free rendered route checks, including the synthetic BSON viewer handoff.
+- [test_bson_result_viewer.mjs](https://github.com/alexwck/dbcode-wrapper/blob/187fa2bf6982b805c49a456a03d6b305a57a56a0/script/test_bson_result_viewer.mjs) — parsing limits, BSON display semantics, generated-script syntax, command routing, and ready-message delivery.
 
 ## Dependencies
 
-Source checks need shell, the pinned Node runtime, and local synthetic fixtures. Built checks need the signed app and macOS inspection tools. Rendered checks use ignored profile and evidence roots managed by [Generated Workspace Retention](generated-workspace-retention.md).
+Source checks need shell, the pinned Node runtime, and local synthetic fixtures. Built checks need the signed app and macOS inspection tools. Rendered checks use the maintained synthetic BSON fixture plus ignored profile and evidence roots managed by [Generated Workspace Retention](generated-workspace-retention.md).
 
 ## Participates in
 

@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: d01539e88c39b72712395899fd206eee40509ab3
+source_commit: 187fa2bf6982b805c49a456a03d6b305a57a56a0
 tags:
   - wiki
   - overview
@@ -10,9 +10,11 @@ tags:
 ---
 # DBCode Wrapper codebase wiki
 
-DBCode Wrapper is a focused macOS host for the official, unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, private Standalone DBCode Profile, build, update status, and release safety. DBCode still owns database connections, editors, grids, notebooks, AI, MCP, accounts, and licences.
+DBCode Wrapper is a focused macOS host for the official, unmodified DBCode extension. The wrapper owns the desktop identity, focused shell, private Standalone DBCode Profile, build, update status, release safety, and one narrow local BSON result viewer. DBCode still owns database connections, query execution, editors, live grids, notebooks, AI, MCP, accounts, and licences.
 
 DBCode's own query results open below the query at every window width. The wrapper sets that one result-location preference and leaves the result grid, Inspector, copy, and export behavior with DBCode.
+
+The local BSON viewer is an explicit handoff, not a live result replacement. It opens only JSON or Extended JSON that the user deliberately copies or selects from a file. Tree, Table, and Raw JSON views keep ordinary strings unchanged, display supported BSON wrappers as readable values with separate types, and parse embedded JSON strings only when the user turns that option on. Input stays in memory; the viewer does not connect to a database, inspect DBCode internals, use the network, or persist the payload.
 
 DBCode side drawers stay open while the user works elsewhere. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent DBCode drawer used in the app session.
 
@@ -28,7 +30,7 @@ Automatic read-only polling keeps Code OSS, VSCodium, and DBCode update status v
 
 The maintained release path has one owner-facing command. `plan` reports the current source, derived paths, and any branch, working-tree, or version-tag blocker. `prepare` rejects a blocked source before it takes the checkpoint lease or starts signing, building, or verification. It then owns the complete prompt-free gate, creates the annotated tag after acceptance, and records one history change. Exact same-tag preparation can resume only with the expected approval-history edit. `publish --publish` performs the explicit public release after that change is committed.
 
-Normal development uses the fast prompt-free source gate. Deep build and release fixtures run only when those workflows change. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows.
+Normal development uses the fast prompt-free source gate. Deep build and release fixtures run only when those workflows change. Built-host and rendered checks run only when their boundary changes or a release needs them. Rendered automation reuses one generated `qa` profile and does not start databases, kernels, models, sign-in, licences, or macOS permission flows. BSON viewer acceptance opens a synthetic file and verifies readable values and separate types without a database read or write, network use, or clipboard read.
 
 Wrapper-owned focused-shell TypeScript and CSS are maintained as normal source. Small patches connect them to pinned Code OSS, then the build materializes and verifies the exact prepared tree before compilation. The Patch Plan provides the build-relevant Compiled Host input, so changing descriptive wording does not trigger another Code OSS compilation.
 
@@ -79,7 +81,7 @@ The release unit is an [Approved Release Set](concepts/approved-release-set.md):
 - [Host Session](modules/host-session.md) — policy-driven launch, observation, result, and shutdown.
 - [Patch Plan and build](modules/patch-plan-and-build.md) — ordered upstream patches, compilation, and assembly.
 - [Focused Runtime Setup](modules/focused-runtime-setup.md) — shared package verification with thin acquisition adapters.
-- [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation and narrow integrations.
+- [Focused shell and wrapper extensions](modules/focused-shell-extensions.md) — database-first navigation, the explicit local BSON handoff, and narrow integrations.
 - [Host Release](modules/host-release.md) — the owner-facing prepare and publish task.
 - [Generated Workspace Retention](modules/generated-workspace-retention.md) — protected output ownership and exact-path cleanup.
 - [Verification Harness](modules/verification-harness.md) — fast source checks and risk-based built checks.

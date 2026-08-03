@@ -8,13 +8,15 @@ tags:
   - boundaries
 wiki_profile: public
 wiki_depth: standard
-source_commit: b9d88955e313bff25e2abb14d96fc986e80e7f7a
+source_commit: 187fa2bf6982b805c49a456a03d6b305a57a56a0
 ---
 ## Summary
 
-DBCode Wrapper is a focused macOS host for the official unmodified DBCode extension. It is not a database engine, a replacement database client, or a general-purpose IDE. The wrapper owns the desktop identity, focused navigation, private Standalone DBCode Profile, build and release contracts, and checks around the integration.
+DBCode Wrapper is a focused macOS host for the official unmodified DBCode extension. It is not a database engine, a replacement database client, or a general-purpose IDE. The wrapper owns the desktop identity, focused navigation, private Standalone DBCode Profile, build and release contracts, checks around the integration, and one narrow local viewer for user-supplied JSON and Extended JSON.
 
-DBCode owns connections, dialects, object browsing, SQL editing, results, data work, notebooks, AI, MCP, accounts, and licences. Code OSS supplies the extension-host runtime, and VSCodium supplies reproducible macOS build machinery.
+DBCode owns connections, dialects, object browsing, SQL editing, query execution, live results, data work, notebooks, AI, MCP, accounts, and licences. Code OSS supplies the extension-host runtime, and VSCodium supplies reproducible macOS build machinery.
+
+The BSON result viewer begins only after an explicit clipboard or file handoff. It does not query a database, monitor results, inspect DBCode internals, use the network, or persist the payload.
 
 ## Diagram
 
@@ -44,6 +46,7 @@ The main executable policies are [`host/slimming-policy.json`](https://github.co
 ## Design decisions
 
 - DBCode remains unmodified. The wrapper uses public extension and host behaviour instead of copying proprietary implementation.
+- DBCode owns query execution and its live result grid. The wrapper viewer accepts only user-chosen clipboard or file input and keeps that payload local and in memory.
 - Every retained capability keeps at least one DBCode-owned route. A proven-broken wrapper shortcut may be hidden without hiding the underlying feature.
 - Feature evidence stays honest: `declared`, `reachable`, `rendered`, and `live` mean different things.
 - The complete New Connection catalogue is authoritative. Representative checks are not an allowlist.
