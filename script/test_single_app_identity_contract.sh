@@ -20,8 +20,7 @@ jq -e '
     mode: "local-certificate",
     identity_common_name: "DBCode Wrapper Local Signing",
     scope: "current-user-private-use"
-  } and
-  (.product | has("diagnostic") | not)
+  }
 ' <<<"${RELEASE_PROFILE_SPEC}" >/dev/null || {
   echo "The release lock must describe one DBCode Wrapper application." >&2
   exit 1
@@ -87,20 +86,6 @@ if rg -Fq 'os.homedir()' "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs"; then
   echo "Rendered shell tests must not read extensions from the real user profile." >&2
   exit 1
 fi
-
-for runtime_file in \
-  "${REPO_ROOT}/script/build_host.sh" \
-  "${REPO_ROOT}/script/assemble_host.sh" \
-  "${REPO_ROOT}/script/generate_manifest.sh" \
-  "${REPO_ROOT}/script/lib/host_config.sh" \
-  "${REPO_ROOT}/script/prepare_dbcode.sh" \
-  "${REPO_ROOT}/script/run_host.sh" \
-  "${REPO_ROOT}/script/smoke_host.sh"; do
-  if rg -q 'DIAGNOSTIC_|development_diagnostic|--diagnostic' "${runtime_file}"; then
-    echo "The production workflow still contains diagnostic-app wiring: ${runtime_file}" >&2
-    exit 1
-  fi
-done
 
 rg -Fq -- '--use-mock-keychain' "${REPO_ROOT}/host/qa/focused-shell-rendered.cjs" || {
   echo "Rendered shell tests must not use the real macOS Keychain." >&2

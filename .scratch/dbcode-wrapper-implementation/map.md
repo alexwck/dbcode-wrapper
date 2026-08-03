@@ -26,7 +26,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is open or claimed.
+- [Issue 63](issues/63-remove-residual-test-interfaces.md) — remove residual test interfaces without changing wrapper behaviour (`claimed`).
 
 ## History
 

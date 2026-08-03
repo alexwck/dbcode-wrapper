@@ -14,11 +14,14 @@ const { deriveRecoveryLayout, recreateStandaloneProfile, requireMatchingRelaunch
 const profileRecoveryWorker = require('../host/extensions/dbcode-wrapper-profile-migration/profileRecoveryWorker.js');
 const { run: runRecoveryWorker } = profileRecoveryWorker;
 const { ProfileSetup } = require('../host/extensions/dbcode-wrapper-profile-migration/profileSetup.js');
-const {
-  START_MIGRATION_COMMAND,
-  START_RUNTIME_SETUP_COMMAND,
-  createFirstRunCommandRouter
-} = require('../host/extensions/dbcode-wrapper-profile-migration/firstRunCommandRouter.js');
+const firstRunCommandRouter = require('../host/extensions/dbcode-wrapper-profile-migration/firstRunCommandRouter.js');
+const { createFirstRunCommandRouter } = firstRunCommandRouter;
+const firstRunManifest = require('../host/extensions/dbcode-wrapper-profile-migration/package.json');
+const firstRunCommandsByTitle = new Map(
+  firstRunManifest.contributes.commands.map(command => [command.title, command.command])
+);
+const PROFILE_SETUP_COMMAND = firstRunCommandsByTitle.get('Profile Setup');
+const RUNTIME_SETUP_COMMAND = firstRunCommandsByTitle.get('Set Up Pinned Runtime');
 const { cleanupReviewedInventory, stageReviewedInventory } = require('../host/extensions/dbcode-wrapper-profile-migration/staging.js');
 const { renderProfileSetupHtml } = require('../host/extensions/dbcode-wrapper-profile-migration/view.js');
 const {
@@ -28,6 +31,10 @@ const {
 
 test('Profile Recovery Worker exposes only its maintained run interface', () => {
   assert.deepEqual(Object.keys(profileRecoveryWorker), ['run']);
+});
+
+test('First Run Command Router exposes only its maintained factory interface', () => {
+  assert.deepEqual(Object.keys(firstRunCommandRouter), ['createFirstRunCommandRouter']);
 });
 
 test('first-run commands register before an activation phase is selected', async () => {
@@ -44,13 +51,13 @@ test('first-run commands register before an activation phase is selected', async
   });
 
   assert.deepEqual([...commands.keys()].sort(), [
-    START_MIGRATION_COMMAND,
-    START_RUNTIME_SETUP_COMMAND
+    PROFILE_SETUP_COMMAND,
+    RUNTIME_SETUP_COMMAND
   ].sort());
   assert.equal(subscriptions.length, 2);
 
-  await commands.get(START_MIGRATION_COMMAND)();
-  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+  await commands.get(PROFILE_SETUP_COMMAND)();
+  await commands.get(RUNTIME_SETUP_COMMAND)();
   assert.deepEqual(errors, [
     'DBCode Wrapper first-run setup is still starting.',
     'DBCode Wrapper first-run setup is still starting.'
@@ -77,10 +84,10 @@ test('Profile Setup routes through the required runtime prerequisite', async () 
     open: () => events.push(['profile'])
   });
 
-  await commands.get(START_MIGRATION_COMMAND)();
+  await commands.get(PROFILE_SETUP_COMMAND)();
   runtimeRequired = false;
-  await commands.get(START_MIGRATION_COMMAND)();
-  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+  await commands.get(PROFILE_SETUP_COMMAND)();
+  await commands.get(RUNTIME_SETUP_COMMAND)();
 
   assert.deepEqual(events, [
     ['runtime'],
@@ -102,8 +109,8 @@ test('first-run command failures stay registered and fail with a sanitized messa
   });
   router.setUnavailable('DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.');
 
-  await commands.get(START_MIGRATION_COMMAND)();
-  await commands.get(START_RUNTIME_SETUP_COMMAND)();
+  await commands.get(PROFILE_SETUP_COMMAND)();
+  await commands.get(RUNTIME_SETUP_COMMAND)();
 
   assert.deepEqual(errors, [
     'DBCode Wrapper cannot verify its focused first-run setup configuration. The external runtime was not changed.',

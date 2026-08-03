@@ -64,7 +64,5 @@ function createFirstRunCommandRouter(options) {
 }
 
 module.exports = {
-  START_MIGRATION_COMMAND,
-  START_RUNTIME_SETUP_COMMAND,
   createFirstRunCommandRouter
 };

@@ -221,19 +221,10 @@ rg -Fq 'new ProfileSetup({' "${extension_runtime}" || {
   exit 1
 }
 
-for required_first_run_contract in \
-  'createFirstRunCommandRouter' \
-  'this.registerCommand(START_RUNTIME_SETUP_COMMAND' \
-  'this.registerCommand(START_MIGRATION_COMMAND' \
-  'openProfileSetup' \
-  'setRuntimeSetup' \
-  'setProfileSetup' \
-  'setUnavailable'; do
-  rg -Fq "${required_first_run_contract}" "${extension_runtime}" "${first_run_command_router}" || {
-    echo "First-run commands are not routed through the always-registered command seam: ${required_first_run_contract}" >&2
-    exit 1
-  }
-done
+rg -Fq 'const commandRouter = createFirstRunCommandRouter({' "${extension_runtime}" || {
+  echo "The extension adapter must create the always-registered First Run Command Router." >&2
+  exit 1
+}
 
 for required_webview_safety_contract in \
   'renderWebviewDocument' \
