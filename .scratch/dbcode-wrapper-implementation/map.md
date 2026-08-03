@@ -26,11 +26,11 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-- [Issue 63](issues/63-remove-residual-test-interfaces.md) — remove residual test interfaces without changing wrapper behaviour (`claimed`).
+No issue is open or claimed.
 
 ## History
 
-Resolved issues under `issues/`, including [Issue 62](issues/62-shrink-residual-interface-and-forward-tests.md), [Issue 61](issues/61-fail-fast-release-source-and-narrow-host-guide.md), [Issue 60](issues/60-tighten-release-identity-and-forward-tests.md), [Issue 59](issues/59-deepen-remaining-wrapper-seams.md), [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), and [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
+Resolved issues under `issues/`, including [Issue 63](issues/63-remove-residual-test-interfaces.md), [Issue 62](issues/62-shrink-residual-interface-and-forward-tests.md), [Issue 61](issues/61-fail-fast-release-source-and-narrow-host-guide.md), [Issue 60](issues/60-tighten-release-identity-and-forward-tests.md), [Issue 59](issues/59-deepen-remaining-wrapper-seams.md), [Issue 58](issues/58-finish-fast-release-architecture-cleanup.md), [Issue 57](issues/57-deepen-remaining-maintenance-interfaces.md), [Issue 56](issues/56-deepen-pre-release-maintenance-interfaces.md), and [Issue 55](issues/55-remove-shallow-maintenance-interfaces.md), preserve dated decisions and evidence. They are not part of the normal reading path and do not define another current build, test, release, or rollback workflow. Git history and the append-only wiki log retain earlier process detail.
 
 ## Out of scope
 
