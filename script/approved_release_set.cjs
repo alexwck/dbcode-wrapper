@@ -26,8 +26,25 @@ function usage() {
   process.exit(2);
 }
 
+function readPlainJsonFile(filePath, label) {
+  let fileInfo;
+  try {
+    fileInfo = fs.lstatSync(filePath);
+  } catch {
+    throw new Error(`${label} is missing.`);
+  }
+  if (!fileInfo.isFile() || fileInfo.isSymbolicLink()) {
+    throw new Error(`${label} is missing or symlinked.`);
+  }
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    throw new Error(`${label} is not valid JSON.`);
+  }
+}
+
 function fileSha256(filePath, label) {
-  const value = contract.readPlainJsonFile(filePath, label);
+  const value = readPlainJsonFile(filePath, label);
   const digest = crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
   return { value, digest };
 }
@@ -111,11 +128,11 @@ function validateRecordedApproval({
     attestationPath,
     'Prompt-free approval attestation'
   );
-  const record = contract.readPlainJsonFile(
+  const record = readPlainJsonFile(
     recordPath,
     'Approved Release Set record'
   );
-  const history = contract.readPlainJsonFile(
+  const history = readPlainJsonFile(
     historyPath,
     'Candidate Approved Release Set history'
   );
@@ -171,13 +188,13 @@ function main(argv) {
   switch (command) {
     case 'validate-approved': {
       if (args.length !== 1) usage();
-      const record = contract.readPlainJsonFile(args[0], 'Approved Release Set record');
+      const record = readPlainJsonFile(args[0], 'Approved Release Set record');
       contract.validateApprovedRecord(record, { allowLegacy: false });
       break;
     }
     case 'validate-history': {
       if (args.length !== 1) usage();
-      const history = contract.readPlainJsonFile(args[0], 'Approved Release Set history');
+      const history = readPlainJsonFile(args[0], 'Approved Release Set history');
       contract.validateApprovedHistory(history);
       break;
     }
@@ -195,7 +212,7 @@ function main(argv) {
     }
     case 'history-record': {
       if (args.length !== 2) usage();
-      const history = contract.readPlainJsonFile(args[0], 'Approved Release Set history');
+      const history = readPlainJsonFile(args[0], 'Approved Release Set history');
       contract.validateApprovedHistory(history);
       const record = history.approved_release_sets.find(entry => entry.id === args[1]);
       if (!record) process.exit(3);
@@ -205,15 +222,15 @@ function main(argv) {
     case 'record-approved-history': {
       if (args.length !== 4) usage();
       const [currentPath, recordPath, candidatePath, outputPath] = args;
-      const current = contract.readPlainJsonFile(
+      const current = readPlainJsonFile(
         currentPath,
         'Current Approved Release Set history'
       );
-      const record = contract.readPlainJsonFile(
+      const record = readPlainJsonFile(
         recordPath,
         'New Approved Release Set record'
       );
-      const candidate = contract.readPlainJsonFile(
+      const candidate = readPlainJsonFile(
         candidatePath,
         'Candidate Approved Release Set history'
       );
@@ -278,7 +295,7 @@ function main(argv) {
         verificationPath,
         'Host-release verification receipt'
       );
-      const baseHistory = contract.readPlainJsonFile(
+      const baseHistory = readPlainJsonFile(
         baseHistoryPath,
         'Base Approved Release Set history'
       );

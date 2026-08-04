@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -32,7 +33,6 @@ test('Approved Release Set exposes only its maintained interface', () => {
     'createPromptFreeApprovedRecord',
     'findApprovedCandidate',
     'promptFreeVerificationChecks',
-    'readPlainJsonFile',
     'upsertApprovedHistory',
     'validateApprovedHistory',
     'validateApprovedRecord',
@@ -513,6 +513,14 @@ function cliAccepts(command, path) {
   }
 }
 
+function cliFailure(command, path) {
+  const result = spawnSync(process.execPath, [contractCli, command, path], {
+    encoding: 'utf8'
+  });
+  assert.notEqual(result.status, 0, `${command} unexpectedly accepted ${path}`);
+  return result.stderr.trim();
+}
+
 test('shell and JavaScript adapters accept and reject the same records', t => {
   const root = mkdtempSync(join(tmpdir(), 'dbcode-approved-release-set-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -537,6 +545,30 @@ test('shell and JavaScript adapters accept and reject the same records', t => {
     assert.equal(jsAccepted, expected, `${name} JavaScript decision`);
     assert.equal(cliAccepts('validate-approved', fixture), expected, `${name} shell decision`);
   }
+});
+
+test('command adapter rejects missing, symlinked, and malformed JSON before release validation', t => {
+  const root = mkdtempSync(join(tmpdir(), 'dbcode-approved-release-files-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const target = join(root, 'target.json');
+  const linked = join(root, 'linked.json');
+  const malformed = join(root, 'malformed.json');
+  writeJson(target, completeApproval());
+  symlinkSync(target, linked);
+  writeFileSync(malformed, '{not-json}\n');
+
+  assert.equal(
+    cliFailure('validate-approved', join(root, 'missing.json')),
+    'Approved Release Set record is missing.'
+  );
+  assert.equal(
+    cliFailure('validate-approved', linked),
+    'Approved Release Set record is missing or symlinked.'
+  );
+  assert.equal(
+    cliFailure('validate-approved', malformed),
+    'Approved Release Set record is not valid JSON.'
+  );
 });
 
 test('legacy history remains readable but never becomes update-ready', () => {

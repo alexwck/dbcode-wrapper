@@ -27,7 +27,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed.
+- [Issue 67 — Localize Approved Release Set file reading](issues/67-localize-approved-release-file-reading.md) is claimed.
 
 ## History
 

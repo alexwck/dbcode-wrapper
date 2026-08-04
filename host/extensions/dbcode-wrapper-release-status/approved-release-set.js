@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('node:fs');
 const { isDeepStrictEqual } = require('node:util');
 
 const GIT_COMMIT_PATTERN = /^[0-9a-f]{40}$/;
@@ -312,23 +311,6 @@ function findApprovedCandidate(approvedReleaseSets, installed, candidate) {
       return false;
     }
   });
-}
-
-function readPlainJsonFile(filePath, label) {
-  let fileInfo;
-  try {
-    fileInfo = fs.lstatSync(filePath);
-  } catch {
-    fail(`${label} is missing.`);
-  }
-  if (!fileInfo.isFile() || fileInfo.isSymbolicLink()) {
-    fail(`${label} is missing or symlinked.`);
-  }
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    fail(`${label} is not valid JSON.`);
-  }
 }
 
 function validateReleaseSpecificationRecords(input) {
@@ -797,7 +779,6 @@ module.exports = {
   createPromptFreeApprovedRecord,
   findApprovedCandidate,
   promptFreeVerificationChecks,
-  readPlainJsonFile,
   upsertApprovedHistory,
   validateApprovedHistory,
   validateApprovedRecord,
