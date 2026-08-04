@@ -19,6 +19,7 @@ import approvedReleaseSet from '../host/extensions/dbcode-wrapper-release-status
 const scriptRoot = dirname(fileURLToPath(import.meta.url));
 const contractCli = join(scriptRoot, 'approved_release_set.cjs');
 const hostReleaseContract = join(scriptRoot, 'host_release_contract.sh');
+const CONTRACT_CLI_TIMEOUT_MS = 30_000;
 const sha = character => character.repeat(64);
 const commit = character => character.repeat(40);
 const sourceSetId = `code-oss-1.127.0-dbcode-1.37.0-source-${sha('a')}`;
@@ -504,19 +505,35 @@ function fileSha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
-function cliAccepts(command, path) {
-  try {
-    execFileSync(process.execPath, [contractCli, command, path], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
+function runContractCli(command, path) {
+  const result = spawnSync(process.execPath, [contractCli, command, path], {
+    encoding: 'utf8',
+    timeout: CONTRACT_CLI_TIMEOUT_MS,
+    killSignal: 'SIGTERM'
+  });
+  if (result.error) {
+    if (result.error.code === 'ETIMEDOUT') {
+      throw new Error(
+        `${command} timed out after ${CONTRACT_CLI_TIMEOUT_MS} ms.`
+      );
+    }
+    throw result.error;
   }
+  if (result.signal) {
+    throw new Error(`${command} stopped after signal ${result.signal}.`);
+  }
+  if (!Number.isInteger(result.status)) {
+    throw new Error(`${command} did not return an exit status.`);
+  }
+  return result;
+}
+
+function cliAccepts(command, path) {
+  return runContractCli(command, path).status === 0;
 }
 
 function cliFailure(command, path) {
-  const result = spawnSync(process.execPath, [contractCli, command, path], {
-    encoding: 'utf8'
-  });
+  const result = runContractCli(command, path);
   assert.notEqual(result.status, 0, `${command} unexpectedly accepted ${path}`);
   return result.stderr.trim();
 }
