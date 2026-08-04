@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 ## Comments
 
@@ -15,6 +15,7 @@
 - 2026-08-04: This cleanup does not change DBCode, the BSON display model, user-visible commands, shortcuts, profile state, update polling, release behaviour, or public documentation.
 - 2026-08-04: The activation characterization passed before the refactor. Removing the router then made the activation test fail because production still required the deleted module. Registering both commands in activation restored the focused viewer suite with 11 passing tests.
 - 2026-08-04: The complete prompt-free development gate passed in 23.84 seconds without rebuilding or launching the app. No public guide or wiki page changed because the product, privacy contract, architecture guidance, and supported workflow remain the same.
+- 2026-08-04: Final specification and engineering reviews reported no findings. The specification reviewer independently reran all 11 focused viewer tests and the complete prompt-free development gate, which passed in 23.65 seconds.
 
 ## Work
 
@@ -22,4 +23,10 @@
 - [x] Delete the shallow command-router module and register both commands during activation.
 - [x] Remove router-only and private implementation checks.
 - [x] Run the focused viewer checks and complete prompt-free development gate.
-- [ ] Run final specification and engineering reviews.
+- [x] Run final specification and engineering reviews.
+
+## Answer
+
+The BSON Result Viewer now registers its two explicit commands directly during extension activation. The shallow command-router file, its direct test, and its private implementation checks are gone.
+
+The activation test covers both command routes through the production extension interface and still verifies that the webview listener is ready before a document is loaded. All 11 focused viewer tests, the complete prompt-free development gate, and both final review axes passed. Product behaviour and public guidance did not change.
