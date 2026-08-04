@@ -65,7 +65,7 @@ function renderViewerDocument() {
       <div class="modes" role="tablist" aria-label="Viewer mode">
         <button class="mode active" data-mode="tree" role="tab" aria-selected="true">Tree</button>
         <button class="mode" data-mode="table" role="tab" aria-selected="false">Table</button>
-        <button class="mode" data-mode="raw" role="tab" aria-selected="false">Raw JSON</button>
+        <button class="mode" data-mode="raw" role="tab" aria-selected="false">JSON</button>
       </div>
       <input id="search" type="search" aria-label="Search result" placeholder="Search path, value, or type">
       <label class="embedded-toggle"><input id="parse-embedded" type="checkbox"> Parse JSON strings</label>
@@ -230,11 +230,14 @@ function renderViewerDocument() {
         : filtered.length + (filtered.length === 1 ? ' row' : ' rows');
     }
 
-    function renderRaw() {
-      const raw = makeElement('pre', '', displayDocument.rawText);
-      raw.tabIndex = 0;
-      content.replaceChildren(raw);
-      summary.textContent = new Blob([displayDocument.rawText]).size.toLocaleString() + ' bytes';
+    function renderJson() {
+      const jsonText = parseEmbedded.checked && displayDocument.plainJsonTextWithEmbedded
+        ? displayDocument.plainJsonTextWithEmbedded
+        : displayDocument.plainJsonText;
+      const json = makeElement('pre', '', jsonText);
+      json.tabIndex = 0;
+      content.replaceChildren(json);
+      summary.textContent = new Blob([jsonText]).size.toLocaleString() + ' bytes';
     }
 
     function saveUiState() {
@@ -242,7 +245,7 @@ function renderViewerDocument() {
     }
 
     function requestEmbeddedParsing() {
-      if (!displayDocument || activeMode === 'raw' || !parseEmbedded.checked ||
+      if (!displayDocument || !parseEmbedded.checked ||
           displayDocument.embeddedJsonIncluded === true || embeddedParsePending) {
         return;
       }
@@ -264,13 +267,13 @@ function renderViewerDocument() {
         button.classList.toggle('active', selected);
         button.setAttribute('aria-selected', String(selected));
       });
-      parseEmbedded.disabled = activeMode === 'raw' || embeddedParsePending;
+      parseEmbedded.disabled = embeddedParsePending;
       search.disabled = activeMode === 'raw';
       if (!displayDocument) return;
       const query = search.value.trim().toLocaleLowerCase();
       if (activeMode === 'tree') renderTree(query);
       else if (activeMode === 'table') renderTable(query);
-      else renderRaw();
+      else renderJson();
     }
 
     document.querySelector('.modes').addEventListener('click', event => {

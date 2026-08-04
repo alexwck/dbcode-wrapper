@@ -97,7 +97,7 @@ done
 for rendered_contract in \
   "verifyBsonResultViewerRoute" \
   "bson-result-viewer-sample.ejson" \
-  "BSON Result Viewer renders readable values with separate types without a database" \
+  "BSON Result Viewer renders readable values, separate types, and plain JSON without a database" \
   "databaseRead: false" \
   "networkUsed: false"; do
   rg -Fq "${rendered_contract}" "${rendered_qa}" || {
@@ -121,6 +121,11 @@ for adapter_contract in \
     exit 1
   }
 done
+
+if rg -Fq 'displayDocument.rawText' "${viewer_webview}"; then
+  echo "The JSON viewer still renders the original BSON type wrappers." >&2
+  exit 1
+fi
 
 for safety_contract in \
   "DEFAULT_MAX_INPUT_BYTES = 10 * 1024 * 1024" \

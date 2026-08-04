@@ -355,6 +355,42 @@ function createNode(value, key, path, depth, state, embeddedDepth = 0) {
   return { ...common, ...scalar('Null', 'null') };
 }
 
+function plainJsonScalar(node) {
+  if (node.type === 'Boolean' || node.type === 'Null') {
+    return node.displayValue;
+  }
+  if (['Number', 'Int32', 'Int64', 'Double', 'Decimal128'].includes(node.type) &&
+      DOUBLE_STRING.test(node.displayValue)) {
+    return node.displayValue;
+  }
+  return JSON.stringify(node.displayValue);
+}
+
+function plainJson(node, depth = 0, expandEmbedded = false) {
+  const indent = '  '.repeat(depth);
+  const childIndent = '  '.repeat(depth + 1);
+  if (expandEmbedded && node.type === 'String' && node.embeddedJson) {
+    return plainJson(node.embeddedJson, depth, expandEmbedded);
+  }
+  if (node.type === 'Array') {
+    if (node.children.length === 0) {
+      return '[]';
+    }
+    return `[\n${node.children.map(child => `${childIndent}${plainJson(child, depth + 1, expandEmbedded)}`).join(',\n')}\n${indent}]`;
+  }
+  if (node.type === 'Document') {
+    if (node.children.length === 0) {
+      return '{}';
+    }
+    return `{\n${node.children.map(child => `${childIndent}${JSON.stringify(child.key)}: ${plainJson(child, depth + 1, expandEmbedded)}`).join(',\n')}\n${indent}}`;
+  }
+  if (node.type === 'JavaScript with Scope') {
+    const scope = node.children[0];
+    return `{\n${childIndent}"code": ${JSON.stringify(node.displayValue)},\n${childIndent}"scope": ${plainJson(scope, depth + 1, expandEmbedded)}\n${indent}}`;
+  }
+  return plainJsonScalar(node);
+}
+
 function createDisplayDocument(rawText, options = {}) {
   if (typeof rawText !== 'string') {
     throw new TypeError('BSON result input must be text.');
@@ -374,6 +410,8 @@ function createDisplayDocument(rawText, options = {}) {
   return {
     schemaVersion: 1,
     rawText,
+    plainJsonText: plainJson(root),
+    plainJsonTextWithEmbedded: state.parseEmbedded ? plainJson(root, 0, true) : undefined,
     nodeCount: state.nodeCount,
     embeddedJsonIncluded: state.parseEmbedded,
     root

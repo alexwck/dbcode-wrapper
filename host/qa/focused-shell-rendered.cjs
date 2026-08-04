@@ -756,7 +756,11 @@ async function verifyBsonResultViewerRoute(app, page) {
 		throw renderError;
 	}
 	assert.ok(viewer);
-	await viewer.frame.getByRole('tab', { name: 'Tree' }).click();
+	assert.equal(
+		await viewer.frame.getByRole('tab', { name: 'Tree' }).getAttribute('aria-selected'),
+		'true',
+		'Tree was not the default BSON result view.'
+	);
 	const parseEmbeddedToggle = viewer.frame.getByLabel('Parse JSON strings');
 	await viewer.frame.waitForFunction(() => document.querySelector('#parse-embedded')?.disabled === false);
 	if (await parseEmbeddedToggle.isChecked()) {
@@ -776,10 +780,19 @@ async function verifyBsonResultViewerRoute(app, page) {
 	await viewer.frame.getByLabel('Search result').fill('');
 	await viewer.frame.getByRole('tab', { name: 'Table' }).click();
 	assert.match(await deepFrameText(viewer.frame), /Path.*Value.*Type.*\$\[0\]\.requestedamount.*0.*Int32/i);
-	await viewer.frame.getByRole('tab', { name: 'Raw JSON' }).click();
-	assert.match(await deepFrameText(viewer.frame), /"\$numberInt": "0"/);
+	await viewer.frame.getByRole('tab', { name: 'JSON', exact: true }).click();
+	const plainJsonText = await deepFrameText(viewer.frame);
+	assert.match(plainJsonText, /"requestedamount": 0/);
+	assert.match(plainJsonText, /"numericString": "0"/);
+	assert.match(plainJsonText, /"escapedJson": \{.*"nested": 2/s);
+	assert.doesNotMatch(plainJsonText, /"\$numberInt"/);
+	await parseEmbeddedToggle.uncheck();
+	assert.match(
+		await deepFrameText(viewer.frame),
+		/"escapedJson": "\{\\"nested\\":\{\\"\$numberInt\\":\\"2\\"\}\}"/
+	);
 
-	record('BSON Result Viewer renders readable values with separate types without a database', {
+	record('BSON Result Viewer renders readable values, separate types, and plain JSON without a database', {
 		evidence: 'rendered',
 		fixture: path.basename(bsonResultFixturePath),
 		databaseRead: false,

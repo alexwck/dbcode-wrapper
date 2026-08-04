@@ -1,7 +1,7 @@
 {
   "name": "bson-result-viewer",
   "displayName": "DBCode Wrapper BSON Result Viewer",
-  "description": "Displays explicitly opened MongoDB Extended JSON as readable values with separate BSON types.",
+  "description": "Displays explicitly opened MongoDB Extended JSON as readable values, separate BSON types, and plain JSON.",
   "publisher": "dbcode-wrapper",
   "version": "1.0.0",
   "license": "UNLICENSED",

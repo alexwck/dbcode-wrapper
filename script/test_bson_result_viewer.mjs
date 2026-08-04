@@ -73,12 +73,48 @@ test('canonical Extended JSON becomes readable values with separate BSON types',
   assert.equal(nodeAt(document, '$[0].escaped').displayValue, '{"nested":{"$numberInt":"2"}}');
   assert.equal(document.embeddedJsonIncluded, false);
   assert.equal(nodeAt(document, '$[0].escaped').embeddedJson, undefined);
+  assert.match(document.plainJsonText, /"escaped": "\{\\"nested\\":\{\\"\$numberInt\\":\\"2\\"\}\}"/);
 
   const parsedDocument = createDisplayDocument(source, { parseEmbedded: true });
   assert.equal(parsedDocument.embeddedJsonIncluded, true);
   assert.equal(nodeAt(parsedDocument, '$[0].escaped').embeddedJson.type, 'Document');
   assert.equal(nodeAt(parsedDocument, '$[0].escaped{json}.nested').type, 'Int32');
   assert.equal(nodeAt(parsedDocument, '$[0].escaped{json}.nested').displayValue, '2');
+  assert.match(parsedDocument.plainJsonText, /"escaped": "\{\\"nested/);
+  assert.match(parsedDocument.plainJsonTextWithEmbedded, /"escaped": \{\n\s+"nested": 2\n\s+\}/);
+  assert.doesNotMatch(parsedDocument.plainJsonTextWithEmbedded, /"escaped": "\{\\"nested/);
+});
+
+test('plain JSON removes supported BSON wrappers without adding type fields', () => {
+  const document = createDisplayDocument(JSON.stringify({
+    requestedamount: { $numberInt: '0' },
+    sequence: { $numberLong: '9223372036854775807' },
+    ratio: { $numberDouble: '0.0' },
+    nonFiniteRatio: { $numberDouble: 'NaN' },
+    price: { $numberDecimal: '1234567890.0123456789' },
+    createdOn: { $date: { $numberLong: '946684800000' } },
+    documentId: { $oid: '000000000000000000000123' },
+    numericString: '0',
+    malformedWrapper: { $numberInt: 4 }
+  }));
+
+  assert.equal(document.plainJsonText, `{
+  "requestedamount": 0,
+  "sequence": 9223372036854775807,
+  "ratio": 0.0,
+  "nonFiniteRatio": "NaN",
+  "price": 1234567890.0123456789,
+  "createdOn": "2000-01-01T00:00:00.000Z",
+  "documentId": "000000000000000000000123",
+  "numericString": "0",
+  "malformedWrapper": {
+    "$numberInt": 4
+  }
+}`);
+  assert.doesNotThrow(() => JSON.parse(document.plainJsonText));
+  assert.deepEqual(document.plainJsonText.match(/"\$numberInt"/g), ['"$numberInt"']);
+  assert.doesNotMatch(document.plainJsonText, /"\$number(?:Long|Double|Decimal)"/);
+  assert.doesNotMatch(document.plainJsonText, /"\$(?:date|oid)"/);
 });
 
 test('JSON stored inside strings is parsed only after the optional mode is requested', () => {
@@ -115,6 +151,13 @@ test('ordinary JSON numbers retain their exact source spelling without precision
       ['exponent', '1e+30', '1e+30', 'Number']
     ]
   );
+  assert.equal(document.plainJsonText, `{
+  "safeBoundary": 9007199254740991,
+  "unsafeInteger": 9007199254740993,
+  "decimal": 0.1234567890123456789,
+  "negativeZero": -0,
+  "exponent": 1e+30
+}`);
 });
 
 test('other BSON scalars are typed only when the whole object is an exact Extended JSON wrapper', () => {
@@ -311,7 +354,7 @@ test('viewer enforces the selected-file limit before reading and again after a s
   ]);
 });
 
-test('viewer webview exposes tree, table, raw, search, and parsed-string controls without embedding result data', () => {
+test('viewer webview keeps Tree first and exposes plain JSON without embedding result data', () => {
   assert.deepEqual(Object.keys(viewerWebview), ['renderViewerDocument']);
   const page = renderViewerDocument();
   const nonce = page.match(/script-src 'nonce-([^']+)'/)?.[1];
@@ -324,7 +367,9 @@ test('viewer webview exposes tree, table, raw, search, and parsed-string control
   assert.ok(page.includes(`<script nonce="${nonce}">`));
   assert.match(page, />Tree</);
   assert.match(page, />Table</);
-  assert.match(page, />Raw JSON</);
+  assert.match(page, />JSON</);
+  assert.doesNotMatch(page, />Raw JSON</);
+  assert.match(page, /displayDocument\.plainJsonText/);
   assert.match(page, /Search path, value, or type/);
   assert.match(page, /Parse JSON strings/);
   assert.match(page, /acquireVsCodeApi/);

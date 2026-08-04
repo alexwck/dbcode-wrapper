@@ -23,7 +23,7 @@ DBCode side drawers stay open while the user works in a query editor, the main c
 
 New DBCode query results open below the query at every window width. DBCode still owns the live result editor, grid, Inspector, copy, and export behavior; the wrapper does not add a second live Results panel.
 
-For MongoDB rows copied or exported as JSON or JSON Pretty, choose **DBCode tools → Open Copied BSON Result** or press `⌘⌥J`. **Open BSON Result File…** handles a saved `.json` or `.ejson` file. The local viewer offers Tree, Table, and Raw JSON modes; search by path, value, or type; optional parsing of JSON stored inside strings; and scalar copy actions. Canonical Extended JSON such as `{"$numberInt":"0"}` appears as value `0` with type `Int32` instead of as a wrapper object.
+For MongoDB rows copied or exported as JSON or JSON Pretty, choose **DBCode tools → Open Copied BSON Result** or press `⌘⌥J`. **Open BSON Result File…** handles a saved `.json` or `.ejson` file. The local viewer opens in Tree mode, also offers Table and JSON modes, searches by path, value, or type, optionally parses JSON stored inside strings, and provides scalar copy actions. Tree and Table keep readable values beside their types. JSON presents the same data as key-value JSON without supported BSON type wrappers, so `{"requestedamount":{"$numberInt":"0"}}` becomes `{"requestedamount":0}`.
 
 ## Public source and releases
 

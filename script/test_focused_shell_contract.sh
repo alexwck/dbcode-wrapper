@@ -372,7 +372,7 @@ for rendered_contract in \
   'permissionPromptExpected: false' \
   'DBCode Settings remains reachable from DBCode Tools without activating it' \
   'verifyBsonResultViewerRoute' \
-  'BSON Result Viewer renders readable values with separate types without a database' \
+  'BSON Result Viewer renders readable values, separate types, and plain JSON without a database' \
   'networkUsed: false' \
   'clipboardRead: false' \
   'the release status quick input stays above the toolbar and closes on outside click' \
