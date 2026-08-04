@@ -261,3 +261,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 187fa2b (was d01539e)
 - Coverage: explicit local BSON result handoff from clipboard or file; readable values with separate BSON types; Tree, Table, and Raw JSON views; opt-in embedded JSON parsing; bounded in-memory input and rendering; focused generated-script and ready-message regression checks; signed static and rendered acceptance without database, network, or clipboard access
 - Pages: [Overview](./OVERVIEW.md), [Product and upstream boundaries](./architecture/product-and-upstream-boundaries.md), [Prompt-free acceptance boundary](./concepts/representative-acceptance-fixtures.md), [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md), and [Verification Harness](./modules/verification-harness.md)
+
+## 2026-08-04: refresh
+
+- Profile: public/standard
+- source_commit: 1701597 (was 187fa2b)
+- Coverage: Tree remains the default BSON view; Tree and Table retain separate type information; JSON shows wrapper-free key-value data while preserving exact number spelling and ordinary strings; embedded JSON expansion is opt-in and reversible; focused viewer contracts and the complete development gate passed
+- Pages: [Overview](./OVERVIEW.md) and [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md)

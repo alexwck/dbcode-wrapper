@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 187fa2bf6982b805c49a456a03d6b305a57a56a0
+source_commit: 17015972336e5bfe3874bc3645807f9b85ffc9a4
 tags:
   - wiki
   - overview
@@ -14,7 +14,7 @@ DBCode Wrapper is a focused macOS host for the official, unmodified DBCode exten
 
 DBCode's own query results open below the query at every window width. The wrapper sets that one result-location preference and leaves the result grid, Inspector, copy, and export behavior with DBCode.
 
-The local BSON viewer is an explicit handoff, not a live result replacement. It opens only JSON or Extended JSON that the user deliberately copies or selects from a file. Tree, Table, and Raw JSON views keep ordinary strings unchanged, display supported BSON wrappers as readable values with separate types, and parse embedded JSON strings only when the user turns that option on. Input stays in memory; the viewer does not connect to a database, inspect DBCode internals, use the network, or persist the payload.
+The local BSON viewer is an explicit handoff, not a live result replacement. It opens only JSON or Extended JSON that the user deliberately copies or selects from a file. Tree opens by default, while Tree and Table display supported BSON wrappers as readable values with separate types. The JSON view presents key-value JSON without supported BSON wrappers and keeps ordinary strings as strings. Embedded JSON strings expand only when the user turns that option on. Input stays in memory; the viewer does not connect to a database, inspect DBCode internals, use the network, or persist the payload.
 
 DBCode side drawers stay open while the user works elsewhere. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent DBCode drawer used in the app session.
 

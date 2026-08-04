@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: 187fa2bf6982b805c49a456a03d6b305a57a56a0
+source_commit: 17015972336e5bfe3874bc3645807f9b85ffc9a4
 ---
 ## Summary
 
@@ -22,7 +22,7 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 - Present Connections, Database Explorer, SQL files, queries, history, library, scratch files, notebooks, Query Builder, settings, AI, and MCP routes.
 - Keep DBCode-owned editors, grids, actions, diagrams, exports, and account surfaces available.
 - Open DBCode's own result editor below each query at every window width through its public result-location preference.
-- Offer an explicit clipboard or file handoff to a local BSON viewer with Tree, Table, and Raw JSON views, readable values, separate types, and opt-in parsing of embedded JSON strings. The viewer does not access a database, DBCode internals, the network, or persistent storage.
+- Offer an explicit clipboard or file handoff to a local BSON viewer. Tree opens by default; Tree and Table keep readable values beside their BSON types; JSON shows key-value data without supported BSON wrappers. Embedded JSON parsing remains opt-in and reversible. The viewer does not access a database, DBCode internals, the network, or persistent storage.
 - Keep every DBCode-owned side drawer open during editor, canvas, grid, and Escape interactions. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent drawer.
 - Open file-backed scratch queries in the generated query folder without overwriting existing files.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
@@ -48,7 +48,7 @@ The feature policy keeps capability status separate from evidence depth. A featu
 - [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration) — runtime setup, profile setup, safe import, and recovery.
 - [dbcode-wrapper-python-kernel](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-python-kernel) — explicit notebook bridge.
 - [dbcode-wrapper-release-status](https://github.com/alexwck/dbcode-wrapper/tree/b3773b5ad1f3f3b0bcd3d7dce39f614bf082ce11/host/extensions/dbcode-wrapper-release-status) — official update discovery and read-only review UI.
-- [dbcode-wrapper-bson-viewer](https://github.com/alexwck/dbcode-wrapper/tree/187fa2bf6982b805c49a456a03d6b305a57a56a0/host/extensions/dbcode-wrapper-bson-viewer) — bounded Extended JSON parsing and local Tree, Table, and Raw JSON presentation.
+- [dbcode-wrapper-bson-viewer](https://github.com/alexwck/dbcode-wrapper/tree/17015972336e5bfe3874bc3645807f9b85ffc9a4/host/extensions/dbcode-wrapper-bson-viewer) — bounded Extended JSON parsing, Tree and Table type presentation, and wrapper-free key-value JSON.
 - [dbcode-feature-policy.json](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/dbcode-feature-policy.json) — capability and route policy.
 
 ## Dependencies
