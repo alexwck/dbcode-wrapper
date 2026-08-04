@@ -6,7 +6,7 @@
 
 **Type:** task
 
-**Status:** claimed
+**Status:** resolved
 
 ## Comments
 
@@ -16,6 +16,7 @@
 - 2026-08-04: This cleanup does not change DBCode, update polling, release records, profile state, application behaviour, version pins, or public documentation.
 - 2026-08-04: Test-first characterization preserved the exact missing, symlinked, and malformed-file errors. The focused Approved Release Set tests passed 7 of 7, and the owning update-status contract passed 7 Approved Release Set tests plus 15 Update Status tests.
 - 2026-08-04: The complete prompt-free development gate passed in 24.34 seconds without rebuilding or launching the app.
+- 2026-08-04: Final specification and engineering reviews reported no findings and identified no additional verification gap.
 
 ## Work
 
@@ -23,4 +24,10 @@
 - [x] Move plain JSON file reading into the command adapter.
 - [x] Remove filesystem knowledge from the Approved Release Set interface.
 - [x] Run focused checks and the complete prompt-free development gate.
-- [ ] Run final specification and engineering reviews.
+- [x] Run final specification and engineering reviews.
+
+## Answer
+
+Plain JSON file checking, reading, and parsing now belongs to the existing Approved Release Set command adapter. The Approved Release Set module no longer imports the filesystem or exposes a file-reading helper.
+
+The command-interface tests preserve the exact missing, symlinked, and malformed-file errors. The focused contracts, complete prompt-free development gate, and both final review axes passed. Product behaviour and public guidance did not change.
