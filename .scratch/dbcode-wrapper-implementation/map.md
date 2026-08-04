@@ -27,7 +27,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed.
+- [Issue 66 — Collapse BSON command registration](issues/66-collapse-bson-command-registration.md) is claimed.
 
 ## History
 

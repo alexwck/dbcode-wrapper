@@ -13,8 +13,6 @@ const bsonResultViewer = require('../host/extensions/dbcode-wrapper-bson-viewer/
 const { createBsonResultViewer } = bsonResultViewer;
 const viewerWebview = require('../host/extensions/dbcode-wrapper-bson-viewer/viewer-webview.js');
 const { renderViewerDocument } = viewerWebview;
-const bsonViewerCommands = require('../host/extensions/dbcode-wrapper-bson-viewer/command-router.js');
-const { registerBsonViewerCommands } = bsonViewerCommands;
 const bsonViewerManifest = require('../host/extensions/dbcode-wrapper-bson-viewer/package.json');
 
 function nodeAt(document, path) {
@@ -345,37 +343,7 @@ test('viewer webview exposes tree, table, raw, search, and parsed-string control
   assert.doesNotMatch(page, /requestedamount|000000000000000000000123/);
 });
 
-test('clipboard and file commands register synchronously and route only explicit actions', async () => {
-  assert.deepEqual(Object.keys(bsonViewerCommands), ['registerBsonViewerCommands']);
-  const commands = new Map();
-  const subscriptions = [];
-  const events = [];
-
-  registerBsonViewerCommands({
-    registerCommand(command, handler) {
-      commands.set(command, handler);
-      return { dispose() {} };
-    },
-    subscriptions,
-    viewer: {
-      openClipboard: async () => events.push('clipboard'),
-      openFile: async () => events.push('file')
-    }
-  });
-
-  assert.deepEqual([...commands.keys()].sort(), [
-    'dbcodeWrapper.openBsonResultFromClipboard',
-    'dbcodeWrapper.openBsonResultFromFile'
-  ]);
-  assert.equal(subscriptions.length, 2);
-  assert.deepEqual(events, []);
-
-  await commands.get('dbcodeWrapper.openBsonResultFromClipboard')();
-  await commands.get('dbcodeWrapper.openBsonResultFromFile')();
-  assert.deepEqual(events, ['clipboard', 'file']);
-});
-
-test('extension installs the webview ready listener before loading its document', async () => {
+test('extension registers both explicit commands and installs the ready listener before loading documents', async () => {
   const extensionUrl = new URL('../host/extensions/dbcode-wrapper-bson-viewer/extension.js', import.meta.url);
   const extensionRequire = createRequire(extensionUrl);
   const extensionModule = { exports: {} };
@@ -384,6 +352,8 @@ test('extension installs the webview ready listener before loading its document'
   const messages = [];
   const errors = [];
   const selectedFile = { fsPath: '/private/synthetic/result.ejson' };
+  let clipboardReads = 0;
+  let fileReads = 0;
   let readyHandler;
   let readyDelivered = false;
   let html = '';
@@ -428,7 +398,10 @@ test('extension installs the webview ready listener before loading its document'
     },
     env: {
       clipboard: {
-        readText: async () => '',
+        readText: async () => {
+          clipboardReads += 1;
+          return '[{"amount":{"$numberLong":"9007199254740993"}}]';
+        },
         writeText: async () => {}
       }
     },
@@ -440,7 +413,10 @@ test('extension installs the webview ready listener before loading its document'
     workspace: {
       fs: {
         stat: async () => ({ size: 35 }),
-        readFile: async () => Buffer.from('[{"amount":{"$numberInt":"12"}}]')
+        readFile: async () => {
+          fileReads += 1;
+          return Buffer.from('[{"amount":{"$numberInt":"12"}}]');
+        }
       }
     }
   };
@@ -457,11 +433,19 @@ test('extension installs the webview ready listener before loading its document'
   );
 
   extensionModule.exports.activate({ subscriptions: [] });
+  assert.deepEqual([...commands.keys()].sort(), [
+    'dbcodeWrapper.openBsonResultFromClipboard',
+    'dbcodeWrapper.openBsonResultFromFile'
+  ]);
+  await commands.get('dbcodeWrapper.openBsonResultFromClipboard')();
   await commands.get('dbcodeWrapper.openBsonResultFromFile')();
 
   assert.equal(readyDelivered, true);
+  assert.equal(clipboardReads, 1);
+  assert.equal(fileReads, 1);
   assert.equal(errors.length, 0);
-  assert.equal(messages.some(message => message.type === 'document'), true);
+  assert.equal(messages.some(message => message.type === 'document' && message.origin === 'Copied BSON result'), true);
+  assert.equal(messages.some(message => message.type === 'document' && message.origin === 'BSON result file'), true);
   assert.match(html, /BSON Result Viewer/);
 });
 

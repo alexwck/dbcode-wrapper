@@ -14,7 +14,6 @@ extension_manifest="${extension_root}/package.json"
 extension_runtime="${extension_root}/extension.js"
 display_model="${extension_root}/ejson-display.js"
 viewer_controller="${extension_root}/bson-result-viewer.js"
-command_router="${extension_root}/command-router.js"
 viewer_webview="${extension_root}/viewer-webview.js"
 focused_shell="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
 slimming_policy="${REPO_ROOT}/host/slimming-policy.json"
@@ -29,7 +28,6 @@ for required_file in \
   "${extension_runtime}" \
   "${display_model}" \
   "${viewer_controller}" \
-  "${command_router}" \
   "${viewer_webview}" \
   "${focused_shell}" \
   "${slimming_policy}" \
@@ -117,8 +115,7 @@ for adapter_contract in \
   "localResourceRoots: []" \
   "retainContextWhenHidden: false" \
   "message?.type === 'parseEmbedded'" \
-  "type: 'copySucceeded'" \
-  "registerBsonViewerCommands"; do
+  "type: 'copySucceeded'"; do
   rg -Fq "${adapter_contract}" "${extension_runtime}" || {
     echo "The BSON Result Viewer adapter is missing: ${adapter_contract}" >&2
     exit 1
@@ -148,7 +145,6 @@ if rg -n 'https?://|node:(http|https|net)|child_process|setInterval|globalState|
   "${extension_runtime}" \
   "${display_model}" \
   "${viewer_controller}" \
-  "${command_router}" \
   "${viewer_webview}"; then
   echo "The BSON Result Viewer must not use the network, polling, persistent state, processes, or secrets." >&2
   exit 1

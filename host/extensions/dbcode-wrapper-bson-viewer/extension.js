@@ -2,11 +2,12 @@
 
 const vscode = require('vscode');
 const { createBsonResultViewer } = require('./bson-result-viewer');
-const { registerBsonViewerCommands } = require('./command-router');
 const { createDisplayDocument } = require('./ejson-display');
 const { renderViewerDocument } = require('./viewer-webview');
 
 const VIEW_TYPE = 'dbcodeWrapper.bsonResultViewer';
+const OPEN_CLIPBOARD_COMMAND = 'dbcodeWrapper.openBsonResultFromClipboard';
+const OPEN_FILE_COMMAND = 'dbcodeWrapper.openBsonResultFromFile';
 
 function createDocumentPresenter(context) {
   let panel;
@@ -104,11 +105,10 @@ function activate(context) {
     showError: message => vscode.window.showErrorMessage(message)
   });
 
-  registerBsonViewerCommands({
-    registerCommand: (command, handler) => vscode.commands.registerCommand(command, handler),
-    subscriptions: context.subscriptions,
-    viewer
-  });
+  context.subscriptions.push(
+    vscode.commands.registerCommand(OPEN_CLIPBOARD_COMMAND, () => viewer.openClipboard()),
+    vscode.commands.registerCommand(OPEN_FILE_COMMAND, () => viewer.openFile())
+  );
 }
 
 function deactivate() {}
