@@ -268,3 +268,10 @@ Append-only audit trail. Add one dated entry per generation or refresh run, reco
 - source_commit: 1701597 (was 187fa2b)
 - Coverage: Tree remains the default BSON view; Tree and Table retain separate type information; JSON shows wrapper-free key-value data while preserving exact number spelling and ordinary strings; embedded JSON expansion is opt-in and reversible; focused viewer contracts and the complete development gate passed
 - Pages: [Overview](./OVERVIEW.md) and [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md)
+
+## 2026-08-05: refresh
+
+- Profile: public/standard
+- source_commit: 5664f1c (was 1701597)
+- Coverage: route-owned persistent drawer collapse and restore; temporary Account dismissal; a focused navigation policy behind the Code OSS adapter; inert signed-host source removal; exact generated-skill projection ignores; complete prompt-free development checks
+- Pages: [Overview](./OVERVIEW.md) and [Focused shell and wrapper extensions](./modules/focused-shell-extensions.md)

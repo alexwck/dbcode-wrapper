@@ -2,7 +2,7 @@
 title: DBCode Wrapper codebase wiki
 description: A public guide to the thin DBCode host, fast checks, updates, and releases.
 profile: public/standard
-source_commit: 17015972336e5bfe3874bc3645807f9b85ffc9a4
+source_commit: 5664f1cb8091131f940549db63c54b4ebdd95005
 tags:
   - wiki
   - overview
@@ -16,7 +16,7 @@ DBCode's own query results open below the query at every window width. The wrapp
 
 The local BSON viewer is an explicit handoff, not a live result replacement. It opens only JSON or Extended JSON that the user deliberately copies or selects from a file. Tree opens by default, while Tree and Table display supported BSON wrappers as readable values with separate types. The JSON view presents key-value JSON without supported BSON wrappers and keeps ordinary strings as strings. Embedded JSON strings expand only when the user turns that option on. Input stays in memory; the viewer does not connect to a database, inspect DBCode internals, use the network, or persist the payload.
 
-DBCode side drawers stay open while the user works elsewhere. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent DBCode drawer used in the app session.
+DBCode side drawers stay open while the user works elsewhere. Choose a persistent drawer's action again to collapse it, and choose it again to restore it. Account remains temporary and closes on an outside interaction or Escape.
 
 Runtime Setup and Profile Setup are registered as soon as the wrapper starts. If required packages are missing, Profile Setup opens Runtime Setup instead of failing. Both first-run screens share one fail-closed webview safety policy.
 

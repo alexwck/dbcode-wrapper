@@ -9,7 +9,7 @@ tags:
   - extensions
 wiki_profile: public
 wiki_depth: standard
-source_commit: 17015972336e5bfe3874bc3645807f9b85ffc9a4
+source_commit: 5664f1cb8091131f940549db63c54b4ebdd95005
 ---
 ## Summary
 
@@ -23,7 +23,7 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 - Keep DBCode-owned editors, grids, actions, diagrams, exports, and account surfaces available.
 - Open DBCode's own result editor below each query at every window width through its public result-location preference.
 - Offer an explicit clipboard or file handoff to a local BSON viewer. Tree opens by default; Tree and Table keep readable values beside their BSON types; JSON shows key-value data without supported BSON wrappers. Embedded JSON parsing remains opt-in and reversible. The viewer does not access a database, DBCode internals, the network, or persistent storage.
-- Keep every DBCode-owned side drawer open during editor, canvas, grid, and Escape interactions. Account remains temporary. One toolbar control collapses the current drawer and restores the last persistent drawer.
+- Keep every DBCode-owned side drawer open during editor, canvas, grid, and Escape interactions. Choose a persistent drawer's action again to collapse it, and choose it again to restore it. Account remains temporary and closes on an outside interaction or Escape.
 - Open file-backed scratch queries in the generated query folder without overwriting existing files.
 - Hide unrelated IDE surfaces and duplicate wrapper actions.
 - Provide profile safety, explicit user-started Python kernel setup, and release status around DBCode.
@@ -34,6 +34,8 @@ DBCode stays unmodified. The wrapper does not recreate its database, notebook, A
 
 The Patch Plan materializes the maintained focused-shell TypeScript and CSS into the pinned Code OSS tree. Small patches register that contribution and connect it to existing title bars and workbench startup. Wrapper commands use the `dbcodeWrapper` namespace. DBCode remains a separately acquired upstream extension and owns its commands, views, webviews, editors, providers, and tools.
 
+Focused Workspace Navigation owns the small list of retained drawer routes and decides whether a route action should open, close, or keep a drawer. The focused-shell contribution applies that decision through Code OSS. This keeps product rules separate from workbench calls without adding another user-facing control.
+
 The release-status extension imports three official metadata URLs and one status service. The service owns polling, cache, review decisions, and release-set matching behind a small maintained interface. Internal comparison and normalization helpers stay private.
 
 The BSON viewer registers `dbcodeWrapper.openBsonResultFromClipboard` and `dbcodeWrapper.openBsonResultFromFile`. The focused DBCode Tools menu exposes both routes, and macOS also maps Command-Option-J to the explicit clipboard route.
@@ -42,7 +44,8 @@ The feature policy keeps capability status separate from evidence depth. A featu
 
 ## Key files
 
-- [dbcodeWrapper.contribution.ts](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts) — focused workbench routing, query storage, result placement, drawer state, and wrapper commands.
+- [dbcodeWrapper.contribution.ts](https://github.com/alexwck/dbcode-wrapper/blob/5664f1cb8091131f940549db63c54b4ebdd95005/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts) — focused workbench routing, query storage, result placement, and Code OSS adapter calls.
+- [dbcodeWrapperDrawerNavigation.ts](https://github.com/alexwck/dbcode-wrapper/blob/5664f1cb8091131f940549db63c54b4ebdd95005/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapperDrawerNavigation.ts) — retained drawer routes and open, close, or keep decisions.
 - [dbcodeWrapper.css](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css) — focused workbench presentation.
 - [200-final-focused-dbcode-shell.patch](https://github.com/alexwck/dbcode-wrapper/blob/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/patches/code-oss/200-final-focused-dbcode-shell.patch) — small hooks into existing Code OSS files.
 - [dbcode-wrapper-profile-migration](https://github.com/alexwck/dbcode-wrapper/tree/5f77cbeeb00b79432ca86b95b0d392d68f0d1d27/host/extensions/dbcode-wrapper-profile-migration) — runtime setup, profile setup, safe import, and recovery.
