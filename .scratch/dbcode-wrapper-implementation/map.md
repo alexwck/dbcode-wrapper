@@ -27,7 +27,7 @@ Maintain a small Apple-silicon host for the official unchanged DBCode extension.
 
 ## Current work
 
-No issue is currently claimed.
+[Issue 71](issues/71-deepen-focused-navigation-and-remove-inert-source.md) is claimed: deepen focused navigation, remove inert source, and align generated and learning projections without changing DBCode-owned behaviour.
 
 ## History
 

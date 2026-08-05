@@ -39,7 +39,7 @@ jq -e '
     "host-slimming-policy",
     "release-profile-and-dbcode-integrations"
   ] and
-  ([.entries[].overlay_files[]] | length == 2) and
+  ([.entries[].overlay_files[]] | length == 3) and
   (has("migration_proof") | not)
 ' "${plan_file}" >/dev/null || {
   echo "The current semantic patch plan is incomplete or retains migration-only proof." >&2

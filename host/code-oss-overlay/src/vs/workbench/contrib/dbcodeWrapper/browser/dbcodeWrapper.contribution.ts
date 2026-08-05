@@ -30,15 +30,22 @@ import { IExtensionService } from '../../../services/extensions/common/extension
 import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
 import { IUserDataProfileService } from '../../../services/userDataProfile/common/userDataProfile.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
+import {
+	DBCODE_DRAWER_VIEWS,
+	decideDbcodeDrawerTransition,
+	isPersistentDbcodeDrawerView,
+	type DbcodeDrawerTransition,
+	type DbcodeDrawerViewId
+} from './dbcodeWrapperDrawerNavigation.js';
 
 const DBCODE_ACTIVITY_CONTAINER = 'workbench.view.extension.dbcodeActivitybarContainer';
-const DBCODE_CONNECTIONS_VIEW = 'dbcode.connections.view';
-const DBCODE_TUNNELS_VIEW = 'dbcode.tunnels.view';
-const DBCODE_AUTH_PROFILES_VIEW = 'dbcode.authProfiles.view';
-const DBCODE_STREAMS_VIEW = 'dbcode.streams.view';
-const DBCODE_HISTORY_VIEW = 'dbcode.history.view';
-const DBCODE_LIBRARY_VIEW = 'dbcode.library.view';
-const DBCODE_ACCOUNT_VIEW = 'dbcode.account.view';
+const DBCODE_CONNECTIONS_VIEW = DBCODE_DRAWER_VIEWS.connections;
+const DBCODE_TUNNELS_VIEW = DBCODE_DRAWER_VIEWS.tunnels;
+const DBCODE_AUTH_PROFILES_VIEW = DBCODE_DRAWER_VIEWS.authProfiles;
+const DBCODE_STREAMS_VIEW = DBCODE_DRAWER_VIEWS.streams;
+const DBCODE_HISTORY_VIEW = DBCODE_DRAWER_VIEWS.history;
+const DBCODE_LIBRARY_VIEW = DBCODE_DRAWER_VIEWS.library;
+const DBCODE_ACCOUNT_VIEW = DBCODE_DRAWER_VIEWS.account;
 const DBCODE_PANEL_CONTAINER = 'workbench.view.extension.dbcodePanelContainer';
 const DBCODE_PANEL_VIEW = 'dbcode.panelView';
 const DBCODE_RESULT_LOCATION_SETTING = 'dbcode.resultLocation';
@@ -52,8 +59,6 @@ const GET_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.getUpdateStatus';
 const REVIEW_UPDATES_COMMAND = 'dbcodeWrapper.reviewUpdates';
 const CHECK_FOR_UPDATES_COMMAND = 'dbcodeWrapper.checkForUpdates';
 const APPLY_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.applyUpdateStatus';
-
-type ResultLocation = 'beside' | 'below';
 
 interface DbcodeWrapperReleaseStatus {
 	kind: 'current' | 'update-available' | 'offline' | 'invalid';
@@ -125,7 +130,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 
 	private readonly root!: HTMLElement;
 	private readonly narrowBreakpoint = product.dbcodeWrapperFocusedShellNarrowBreakpoint ?? 1050;
-	private resultLocation: ResultLocation = 'below';
 	private surfaceOpeningCount = 0;
 	private connectionsHomeOpen = false;
 	private connectionsHomeTitle: HTMLElement | undefined;
@@ -168,7 +172,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this._register(CommandsRegistry.registerCommand(APPLY_UPDATE_STATUS_COMMAND, (_accessor, status: DbcodeWrapperReleaseStatus | undefined) => this.applyReleaseStatus(status)));
 
 		this.root.dataset.dbcodeWrapperShell = 'focused';
-		this.root.dataset.dbcodeWrapperResultLocationState = 'waiting';
 
 		this.lockProductionPresentation();
 		this.installToolbar();
@@ -443,10 +446,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		);
 	}
 
-	private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {
-		return Boolean(viewId && viewId !== DBCODE_ACCOUNT_VIEW);
-	}
-
 	private closeTransientSurfacesFromPointer(event: PointerEvent): void {
 		const quickInput = this.root.querySelector<HTMLElement>('.quick-input-widget');
 		const clickedQuickInput = this.eventPathContains(event, quickInput);
@@ -465,8 +464,11 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 			target instanceof Element && Boolean(target.closest('.context-view, .monaco-dialog-box, .notifications-toasts'))
 		);
 		const activeDrawerView = this.activeDrawerView();
-		if (activeDrawerView && !this.isPersistentDrawerView(activeDrawerView) && !this.eventPathContains(event, sidebar) && !clickedQuickInput && !clickedContextLayer && !this.isDrawerToggleEvent(event)) {
-			this.closeDbcodeDrawer();
+		if (activeDrawerView && !this.eventPathContains(event, sidebar) && !clickedQuickInput && !clickedContextLayer && !this.isDrawerToggleEvent(event)) {
+			void this.applyDrawerTransition(decideDbcodeDrawerTransition(
+				{ open: this.isDbcodeDrawerOpen(), activeView: activeDrawerView },
+				{ kind: 'dismiss' }
+			));
 		}
 	}
 
@@ -486,8 +488,11 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 			this.contextViewService.hideContextView(true);
 		}
 		const activeDrawerView = this.activeDrawerView();
-		if (activeDrawerView && !this.isPersistentDrawerView(activeDrawerView)) {
-			this.closeDbcodeDrawer();
+		if (activeDrawerView) {
+			void this.applyDrawerTransition(decideDbcodeDrawerTransition(
+				{ open: this.isDbcodeDrawerOpen(), activeView: activeDrawerView },
+				{ kind: 'dismiss' }
+			));
 		}
 		this.refreshWebviewDismissLayers();
 	}
@@ -501,7 +506,7 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		const quickInput = this.root.querySelector<HTMLElement>('.quick-input-widget');
 		const contextViewVisible = Array.from(this.root.querySelectorAll<HTMLElement>('.context-view')).some(element => this.isVisibleElement(element));
 		const activeDrawerView = this.activeDrawerView();
-		const transientDrawerVisible = Boolean(activeDrawerView && !this.isPersistentDrawerView(activeDrawerView));
+		const transientDrawerVisible = Boolean(activeDrawerView && !isPersistentDbcodeDrawerView(activeDrawerView));
 		if (!this.isVisibleElement(quickInput) && !contextViewVisible && !transientDrawerVisible) {
 			return;
 		}
@@ -612,17 +617,11 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 	}
 
 	private async applyDefaultResultLocation(): Promise<void> {
-		this.root.dataset.dbcodeWrapperResultLocationState = 'updating';
 		try {
 			await this.configurationService.updateValue(DBCODE_RESULT_LOCATION_SETTING, 'below', ConfigurationTarget.USER);
 		} catch {
-			this.root.dataset.dbcodeWrapperResultLocationState = 'error';
 			return;
 		}
-
-		this.resultLocation = 'below';
-		this.root.dataset.dbcodeWrapperResultLocationState = 'ready';
-		this.updateControlState();
 	}
 
 	private async restoreDbcodeSurface(): Promise<void> {
@@ -779,14 +778,25 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this.updateControlState();
 	}
 
-	private async toggleDrawer(viewId: string): Promise<void> {
+	private async toggleDrawer(viewId: DbcodeDrawerViewId): Promise<void> {
 		this.closeConnectionsHome();
-		if (this.isDbcodeDrawerOpen() && this.viewsService.isViewVisible(viewId)) {
-			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
-		} else {
-			await this.openDrawerView(viewId);
+		await this.applyDrawerTransition(decideDbcodeDrawerTransition(
+			{
+				open: this.isDbcodeDrawerOpen(),
+				activeView: this.viewsService.isViewVisible(viewId) ? viewId : undefined
+			},
+			{ kind: 'toggle', viewId }
+		));
+	}
+
+	private async applyDrawerTransition(transition: DbcodeDrawerTransition): Promise<void> {
+		if (transition.kind === 'open') {
+			await this.openDrawerView(transition.viewId);
+			return;
 		}
-		this.updateControlState();
+		if (transition.kind === 'close') {
+			this.closeDbcodeDrawer();
+		}
 	}
 
 	private isDbcodeDrawerOpen(): boolean {
@@ -801,7 +811,7 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		}
 	}
 
-	private configureDrawerViews(viewId: string): void {
+	private configureDrawerViews(viewId: DbcodeDrawerViewId): void {
 		const viewContainer = this.viewDescriptorService.getViewContainerById(DBCODE_ACTIVITY_CONTAINER);
 		if (!viewContainer) {
 			this.root.dataset.dbcodeWrapperDrawerViews = 'unavailable';
@@ -819,7 +829,7 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this.root.dataset.dbcodeWrapperDrawerViews = model.visibleViewDescriptors.map(descriptor => descriptor.id).join(',');
 	}
 
-	private async openDrawerView(viewId: string): Promise<void> {
+	private async openDrawerView(viewId: DbcodeDrawerViewId): Promise<void> {
 		this.closeConnectionsHome();
 		await this.runWhileOpeningSurface(async () => {
 			this.configureDrawerViews(viewId);
@@ -837,7 +847,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this.root.classList.toggle('dbcode-wrapper-drawer-open', drawerOpen);
 		this.root.dataset.dbcodeWrapperDrawer = drawerOpen ? 'open' : 'closed';
 		this.root.dataset.dbcodeWrapperConnectionsHome = this.connectionsHomeOpen ? 'open' : 'closed';
-		this.root.dataset.dbcodeWrapperResultLocation = this.resultLocation;
 		this.root.dataset.dbcodeWrapperActiveSurface = this.connectionsHomeOpen ? 'connections' :
 			drawerView === DBCODE_CONNECTIONS_VIEW ? 'explorer' :
 			drawerView ? 'dbcode' :
@@ -864,8 +873,12 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		if (event.key === 'Escape' && this.layoutService.isVisible(Parts.SIDEBAR_PART)) {
 			const visible = this.viewsService.getVisibleViewContainer(ViewContainerLocation.Sidebar);
 			const activeDrawerView = this.activeDrawerView();
-			if (visible?.id === DBCODE_ACTIVITY_CONTAINER && activeDrawerView && !this.isPersistentDrawerView(activeDrawerView)) {
-				this.closeDbcodeDrawer();
+			const transition = decideDbcodeDrawerTransition(
+				{ open: visible?.id === DBCODE_ACTIVITY_CONTAINER, activeView: activeDrawerView },
+				{ kind: 'dismiss' }
+			);
+			if (transition.kind === 'close') {
+				void this.applyDrawerTransition(transition);
 				event.preventDefault();
 				event.stopImmediatePropagation();
 			}
@@ -874,7 +887,7 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 
 		const key = event.key.toLowerCase();
 		if (event.metaKey && !event.shiftKey && key === 'b') {
-			void this.toggleDrawer('dbcode.connections.view');
+			void this.toggleDrawer(DBCODE_CONNECTIONS_VIEW);
 			this.blockKey(event);
 			return;
 		}

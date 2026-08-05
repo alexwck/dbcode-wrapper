@@ -67,6 +67,7 @@ Before changing behaviour, read:
 - For shell-wide redesigns, inventory the toolbar, sidebar, editor, result grid, panels, notifications, and right-click actions.
 - Walk the user through the proposed keep, move, and remove decisions before implementation.
 - Use names that describe the final purpose. Do not keep prototype labels such as `C1` or `C2` in maintained code or documentation.
+- Let each persistent DBCode route own its collapse and restore action. Do not add a shared drawer control or expose the generic Code OSS title-bar search. Account remains temporary.
 
 ### Release state and macOS prompts
 

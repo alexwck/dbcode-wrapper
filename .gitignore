@@ -109,8 +109,14 @@ tnsnames.ora
 __pycache__/
 *.py[cod]
 .claude/skills/open-knowledge/
+.claude/skills/open-knowledge-pack-codebase-wiki
 .cursor/skills/open-knowledge/
+.cursor/skills/open-knowledge-pack-codebase-wiki
 .codex/skills/open-knowledge/
+.codex/skills/open-knowledge-pack-codebase-wiki
 .github/skills/open-knowledge/
+.github/skills/open-knowledge-pack-codebase-wiki
 .opencode/skills/open-knowledge/
+.opencode/skills/open-knowledge-pack-codebase-wiki
 .pi/skills/open-knowledge/
+.pi/skills/open-knowledge-pack-codebase-wiki

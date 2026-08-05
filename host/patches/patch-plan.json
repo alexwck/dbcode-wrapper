@@ -72,12 +72,17 @@
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
           "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
-          "sha256": "0f5b796771fd0885152206f827a3abf61f4a10708cc7b98322d37dd83bf947c0"
+          "sha256": "686dda13056ea0706a5de6f3108af41fb958b90af9badf1cbcbdba3d668fd1fb"
+        },
+        {
+          "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapperDrawerNavigation.ts",
+          "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapperDrawerNavigation.ts",
+          "sha256": "c68cc9549df2dde872a5e2cccda1514490ac691e85f84b4c8c569123cd8f83b9"
         },
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
           "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
-          "sha256": "9f9227f4b9aae496fdeb90d276a7b4d29b1015f52e3f71aad9ca82776594855b"
+          "sha256": "4a77234e9d82ff94d23e2bed7905c2e6efa86138dc6e7da2afb72f0f6a3cb60f"
         }
       ],
       "sha256": "5e8d907e3a6e4ad388463912bf6ae2b64193331f66942ea71741be0e1f0c695d"
@@ -129,11 +134,12 @@
     "src/vs/workbench/browser/parts/titlebar/titlebarPart.ts",
     "src/vs/workbench/browser/parts/views/treeView.ts",
     "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
+    "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapperDrawerNavigation.ts",
     "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
     "src/vs/workbench/contrib/quickaccess/browser/quickAccess.contribution.ts",
     "src/vs/workbench/electron-browser/parts/titlebar/titlebarPart.ts",
     "src/vs/workbench/workbench.common.main.ts"
   ],
   "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
-  "expected_maintained_tree_sha256": "442526c3295ada7facc19379fb0a0e7a299f00f6a2bec0909eac8da913b0d064"
+  "expected_maintained_tree_sha256": "b7afe72f5f247de724c0edc84eb0f35da06bd755e7a9b4df50642d1e9661b88d"
 }

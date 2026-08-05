@@ -92,8 +92,6 @@ for required_runtime_contract in \
   'localApprovedHistoryUri' \
   'loadApprovedReleaseSets' \
   'getStatus(force, false)' \
-  'DBCODE_WRAPPER_QA_CAPTURE_RELEASE_LINKS' \
-  'rendered-release-link-capture.jsonl' \
   'vscode.env.openExternal' \
   'workspace.fs.rename'; do
   rg -Fq "${required_runtime_contract}" "${extension_runtime}" || {

@@ -56,22 +56,10 @@
 	-webkit-app-region: no-drag;
 }
 
-.dbcode-wrapper-brand,
 .dbcode-wrapper-toolbar-group {
 	display: inline-flex;
 	min-width: 0;
 	align-items: center;
-}
-
-.dbcode-wrapper-brand {
-	flex: 0 0 auto;
-	gap: 6px;
-	padding-right: 2px;
-	font-size: 12px;
-}
-
-.dbcode-wrapper-brand .codicon {
-	color: var(--dbcode-wrapper-accent-hover);
 }
 
 .dbcode-wrapper-toolbar-group {
@@ -214,7 +202,6 @@
 		margin-right: 2px;
 	}
 
-	.dbcode-wrapper-brand strong,
 	.dbcode-wrapper-toolbar-button .dbcode-wrapper-button-label {
 		display: none;
 	}
@@ -226,7 +213,6 @@
 }
 
 @media (max-width: 760px) {
-	.dbcode-wrapper-brand,
 	.dbcode-wrapper-toolbar-divider {
 		display: none;
 	}

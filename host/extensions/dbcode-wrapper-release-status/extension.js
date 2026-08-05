@@ -1,7 +1,6 @@
 'use strict';
 
 const https = require('node:https');
-const path = require('node:path');
 const vscode = require('vscode');
 const {
   CODE_OSS_METADATA_URL,
@@ -16,8 +15,6 @@ const APPROVED_RELEASES_FILENAME = 'approved-release-sets.json';
 const APPLY_UPDATE_STATUS_COMMAND = 'dbcodeWrapper.applyUpdateStatus';
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 10_000;
-const QA_RELEASE_LINK_CAPTURE_ENV = 'DBCODE_WRAPPER_QA_CAPTURE_RELEASE_LINKS';
-const QA_RELEASE_LINK_CAPTURE_FILENAME = 'rendered-release-link-capture.jsonl';
 const OFFICIAL_METADATA_URLS = new Set([
   VSCODIUM_METADATA_URL,
   CODE_OSS_METADATA_URL,
@@ -103,24 +100,7 @@ function updateItem(label, icon, release, explanation) {
   };
 }
 
-async function openReleaseNotes(context, releaseNotesUrl) {
-  const globalStoragePath = path.resolve(context.globalStorageUri.fsPath);
-  const qaPathSegment = `${path.sep}.build${path.sep}qa${path.sep}`;
-  if (process.env[QA_RELEASE_LINK_CAPTURE_ENV] === '1' && globalStoragePath.includes(qaPathSegment)) {
-    await vscode.workspace.fs.createDirectory(context.globalStorageUri);
-    const captureUri = vscode.Uri.joinPath(context.globalStorageUri, QA_RELEASE_LINK_CAPTURE_FILENAME);
-    let previous = Buffer.alloc(0);
-    try {
-      previous = await vscode.workspace.fs.readFile(captureUri);
-    } catch {
-      // The first captured link creates the file.
-    }
-    await vscode.workspace.fs.writeFile(
-      captureUri,
-      Buffer.concat([previous, Buffer.from(`${releaseNotesUrl}\n`, 'utf8')])
-    );
-    return;
-  }
+async function openReleaseNotes(releaseNotesUrl) {
   await vscode.env.openExternal(vscode.Uri.parse(releaseNotesUrl));
 }
 
@@ -202,7 +182,7 @@ async function activate(context) {
       matchOnDetail: true
     });
     if (selection?.releaseNotesUrl) {
-      await openReleaseNotes(context, selection.releaseNotesUrl);
+      await openReleaseNotes(selection.releaseNotesUrl);
     }
   };
 
@@ -270,9 +250,4 @@ async function activate(context) {
   );
 }
 
-function deactivate() {}
-
-module.exports = {
-  activate,
-  deactivate
-};
+module.exports = { activate };

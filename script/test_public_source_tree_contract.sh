@@ -87,6 +87,19 @@ for ignored_pattern in \
   }
 done
 
+for skill_projection in \
+  '.claude/skills/open-knowledge-pack-codebase-wiki' \
+  '.cursor/skills/open-knowledge-pack-codebase-wiki' \
+  '.codex/skills/open-knowledge-pack-codebase-wiki' \
+  '.github/skills/open-knowledge-pack-codebase-wiki' \
+  '.opencode/skills/open-knowledge-pack-codebase-wiki' \
+  '.pi/skills/open-knowledge-pack-codebase-wiki'; do
+  rg -Fxq "${skill_projection}" "${ignore_file}" || {
+    echo "The public repository ignore policy is missing ${skill_projection}." >&2
+    exit 1
+  }
+done
+
 tracked_forbidden="$({
   git -C "${repo_root}" ls-files
 } | rg -i '^(dist|\.build|output)/|^host/dbcode-public-contributions-[^/]+\.json$|\.duckdb\.gz\.base64$|\.(dmg|sha256|db|db3|sqlite|sqlite3|vsix|p12|pfx|key|duckdb|parquet|accdb|avro|csv|ddb|ipynb|mdb|sigzip|xlsx)$' |

@@ -7,11 +7,13 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/host_config.sh"
 focused_shell_patch="${REPO_ROOT}/host/patches/code-oss/200-final-focused-dbcode-shell.patch"
 integration_patch="${REPO_ROOT}/host/patches/code-oss/400-release-profile-and-dbcode-integrations.patch"
 focused_shell_typescript="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts"
+focused_drawer_navigation="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapperDrawerNavigation.ts"
 focused_shell_styles="${REPO_ROOT}/host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css"
 focused_sources=(
   "${focused_shell_patch}"
   "${integration_patch}"
   "${focused_shell_typescript}"
+  "${focused_drawer_navigation}"
   "${focused_shell_styles}"
 )
 transport_patches=("${focused_shell_patch}" "${integration_patch}")
@@ -21,6 +23,7 @@ manifest_generator="${REPO_ROOT}/script/generate_manifest.sh"
 smoke_test="${REPO_ROOT}/script/smoke_host.sh"
 extension_host_log_policy_test="${REPO_ROOT}/host/qa/extension-host-log-policy.test.cjs"
 rendered_session_support_test="${REPO_ROOT}/host/qa/rendered-session-support.test.cjs"
+focused_workspace_navigation_test="${REPO_ROOT}/script/test_focused_workspace_navigation.mjs"
 
 jq -e '
   .product.focused_shell.enabled == true and
@@ -61,8 +64,8 @@ for required_shell_simplification in \
   'ConfigurationTarget.USER' \
   'activeViewDescriptors' \
   'DBCODE_STREAMS_VIEW' \
-  'isPersistentDrawerView' \
-  'dbcodeWrapperResultLocationState' \
+  'decideDbcodeDrawerTransition' \
+  'isPersistentDbcodeDrawerView' \
   'enforcePanelOwnership' \
   'isConnectionsHomePanelVisible' \
   'this.viewsService.getVisibleViewContainer(ViewContainerLocation.Panel)' \
@@ -79,8 +82,8 @@ for required_shell_simplification in \
 done
 
 for required_bottom_result_contract in \
-  "private resultLocation: ResultLocation = 'below';" \
-  'applyDefaultResultLocation()'; do
+  'applyDefaultResultLocation()' \
+  "updateValue(DBCODE_RESULT_LOCATION_SETTING, 'below', ConfigurationTarget.USER)"; do
   rg -Fq -- "${required_bottom_result_contract}" "${focused_shell_typescript}" || {
     echo "The focused shell does not keep new DBCode results below the query: ${required_bottom_result_contract}" >&2
     exit 1
@@ -130,7 +133,7 @@ for required_transient_surface_contract in \
   'hasVisibleTransientOverlay' \
   'HTMLIFrameElement' \
   'closeDbcodeDrawer' \
-  '!this.isPersistentDrawerView(activeDrawerView)' \
+  "{ kind: 'dismiss' }" \
   'event.composedPath()'; do
   rg -Fq -- "${required_transient_surface_contract}" "${focused_sources[@]}" || {
     echo "The focused shell does not dismiss transient surfaces consistently: ${required_transient_surface_contract}" >&2
@@ -140,11 +143,11 @@ done
 
 focused_drawer_persistence_contract="$(
   sed -n \
-    '/private isPersistentDrawerView(viewId = this.activeDrawerView()): boolean {/,/^	}/p' \
-    "${focused_shell_typescript}"
+    '/export function isPersistentDbcodeDrawerView(viewId: string | undefined): boolean {/,/^}/p' \
+    "${focused_drawer_navigation}"
 )"
 for required_persistent_drawer_contract in \
-  'return Boolean(viewId && viewId !== DBCODE_ACCOUNT_VIEW);'; do
+  'return Boolean(viewId && viewId !== DBCODE_DRAWER_VIEWS.account);'; do
   rg -Fq -- "${required_persistent_drawer_contract}" <<<"${focused_drawer_persistence_contract}" || {
     echo "The focused shell does not keep every non-Account DBCode drawer persistent: ${required_persistent_drawer_contract}" >&2
     exit 1
@@ -184,7 +187,9 @@ focused_keydown_contract="$(
 )"
 for required_persistent_drawer_keydown_contract in \
   'const activeDrawerView = this.activeDrawerView();' \
-  '!this.isPersistentDrawerView(activeDrawerView)'; do
+  'decideDbcodeDrawerTransition(' \
+  "{ kind: 'dismiss' }" \
+  "transition.kind === 'close'"; do
   rg -Fq -- "${required_persistent_drawer_keydown_contract}" <<<"${focused_keydown_contract}" || {
     echo "Escape still closes a persistent DBCode drawer: ${required_persistent_drawer_keydown_contract}" >&2
     exit 1
@@ -442,5 +447,6 @@ fi
 
 "${NODE_BIN_DIR}/node" "${extension_host_log_policy_test}"
 "${NODE_BIN_DIR}/node" --test "${rendered_session_support_test}"
+"${NODE_BIN_DIR}/node" --experimental-strip-types --test "${focused_workspace_navigation_test}"
 
 echo "Focused-shell contract checks passed."
