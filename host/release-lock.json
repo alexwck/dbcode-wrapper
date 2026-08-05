@@ -36,11 +36,11 @@
     "electron_version": "42.2.0"
   },
   "release": {
-    "wrapper_version": "0.1.2",
+    "wrapper_version": "0.1.3",
     "release_set_base_id": "code-oss-1.126.0-dbcode-1.36.6",
     "compatibility_status": "candidate",
     "profile_schema_version": 1,
-    "validation_issue": "68-bound-approved-release-test-processes"
+    "validation_issue": "71-deepen-focused-navigation-and-remove-inert-source"
   },
   "distribution": {
     "channel": "github-published-release",
