@@ -132,8 +132,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 	private connectionsHomeCloseButton: HTMLButtonElement | undefined;
 	private connectionsButton: HTMLButtonElement | undefined;
 	private databaseExplorerButton: HTMLButtonElement | undefined;
-	private drawerToggleButton: HTMLButtonElement | undefined;
-	private lastPersistentDrawerView: string | undefined;
 	private dbcodeExtensionStatus: HTMLElement | undefined;
 	private releaseStatusButton: HTMLButtonElement | undefined;
 	private readonly emptyGroupCleanup = this._register(new MutableDisposable());
@@ -212,9 +210,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		databaseActions.append(this.createButton('connection-tools', localize('dbcodeWrapper.connectionTools', "Connection tools"), 'chevron-down', false, button => this.showConnectionsMenu(button)));
 		this.databaseExplorerButton = this.createButton('database-explorer', localize('dbcodeWrapper.databaseExplorer', "Database Explorer"), 'list-tree', false, () => this.toggleDrawer(DBCODE_CONNECTIONS_VIEW));
 		databaseActions.append(this.databaseExplorerButton);
-		this.drawerToggleButton = this.createButton('drawer-toggle', localize('dbcodeWrapper.collapseDrawer', "Collapse drawer"), 'chevron-left', true, () => this.togglePersistentDrawer());
-		this.drawerToggleButton.hidden = true;
-		databaseActions.append(this.drawerToggleButton);
 		databaseActions.append(this.createButton('open-sql', localize('dbcodeWrapper.openSqlFile', "Open SQL"), 'folder-opened', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand(OPEN_SQL_FILE_COMMAND))));
 		databaseActions.append(this.createButton('new-query', localize('dbcodeWrapper.newQuery', "New query"), 'new-file', true, () => this.runOutsideConnectionsHome(() => this.commandService.executeCommand('dbcode.connections.sqlFile'))));
 		databaseActions.append(this.createButton('queries', localize('dbcodeWrapper.queries', "Queries"), 'library', true, button => this.showQueriesMenu(button)));
@@ -270,14 +265,14 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 
 	private showConnectionsMenu(anchor: HTMLElement): void {
 		const actions = [
-			toAction({ id: 'dbcodeWrapper.tunnels', label: localize('dbcodeWrapper.tunnels', "Tunnels"), run: () => this.openDrawerView(DBCODE_TUNNELS_VIEW) }),
-			toAction({ id: 'dbcodeWrapper.authenticationProfiles', label: localize('dbcodeWrapper.authenticationProfiles', "Authentication Profiles"), run: () => this.openDrawerView(DBCODE_AUTH_PROFILES_VIEW) }),
+			toAction({ id: 'dbcodeWrapper.tunnels', label: localize('dbcodeWrapper.tunnels', "Tunnels"), run: () => this.toggleDrawer(DBCODE_TUNNELS_VIEW) }),
+			toAction({ id: 'dbcodeWrapper.authenticationProfiles', label: localize('dbcodeWrapper.authenticationProfiles', "Authentication Profiles"), run: () => this.toggleDrawer(DBCODE_AUTH_PROFILES_VIEW) }),
 			new Separator(),
 			toAction({ id: 'dbcodeWrapper.profileSetup', label: localize('dbcodeWrapper.profileSetup', "Profile Setup…"), run: () => this.executeDbcodeCommand('dbcodeWrapper.startProfileMigration') })
 		];
 		const streamsViewContainer = this.viewDescriptorService.getViewContainerByViewId(DBCODE_STREAMS_VIEW);
 		if (streamsViewContainer && this.viewDescriptorService.getViewContainerModel(streamsViewContainer).activeViewDescriptors.some(descriptor => descriptor.id === DBCODE_STREAMS_VIEW)) {
-			actions.push(toAction({ id: 'dbcodeWrapper.activeStreams', label: localize('dbcodeWrapper.activeStreams', "Active Streams"), run: () => this.openDrawerView(DBCODE_STREAMS_VIEW) }));
+			actions.push(toAction({ id: 'dbcodeWrapper.activeStreams', label: localize('dbcodeWrapper.activeStreams', "Active Streams"), run: () => this.toggleDrawer(DBCODE_STREAMS_VIEW) }));
 		}
 		this.contextMenuService.showContextMenu({
 			getAnchor: () => anchor,
@@ -289,8 +284,8 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this.contextMenuService.showContextMenu({
 			getAnchor: () => anchor,
 			getActions: () => [
-				toAction({ id: 'dbcodeWrapper.history', label: localize('dbcodeWrapper.history', "History"), run: () => this.openDrawerView(DBCODE_HISTORY_VIEW) }),
-				toAction({ id: 'dbcodeWrapper.library', label: localize('dbcodeWrapper.library', "Library"), run: () => this.openDrawerView(DBCODE_LIBRARY_VIEW) })
+				toAction({ id: 'dbcodeWrapper.history', label: localize('dbcodeWrapper.history', "History"), run: () => this.toggleDrawer(DBCODE_HISTORY_VIEW) }),
+				toAction({ id: 'dbcodeWrapper.library', label: localize('dbcodeWrapper.library', "Library"), run: () => this.toggleDrawer(DBCODE_LIBRARY_VIEW) })
 			]
 		});
 	}
@@ -799,22 +794,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		return this.layoutService.isVisible(Parts.SIDEBAR_PART) && visibleContainer?.id === DBCODE_ACTIVITY_CONTAINER;
 	}
 
-	private async togglePersistentDrawer(): Promise<void> {
-		const activeDrawerView = this.isDbcodeDrawerOpen()
-			? this.activeDrawerView()
-			: undefined;
-		if (activeDrawerView && this.isPersistentDrawerView(activeDrawerView)) {
-			this.lastPersistentDrawerView = activeDrawerView;
-			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
-			this.updateControlState();
-			return;
-		}
-
-		if (this.lastPersistentDrawerView) {
-			await this.openDrawerView(this.lastPersistentDrawerView);
-		}
-	}
-
 	private closeDbcodeDrawer(): void {
 		if (this.isDbcodeDrawerOpen()) {
 			this.layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
@@ -854,9 +833,6 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 	private updateControlState(): void {
 		const drawerOpen = this.isDbcodeDrawerOpen();
 		const drawerView = drawerOpen ? this.activeDrawerView() : undefined;
-		if (drawerView && this.isPersistentDrawerView(drawerView)) {
-			this.lastPersistentDrawerView = drawerView;
-		}
 
 		this.root.classList.toggle('dbcode-wrapper-drawer-open', drawerOpen);
 		this.root.dataset.dbcodeWrapperDrawer = drawerOpen ? 'open' : 'closed';
@@ -870,34 +846,7 @@ export class DbcodeWrapperFocusedShellContribution extends Disposable implements
 		this.connectionsButton?.classList.toggle('active', this.connectionsHomeOpen);
 		this.databaseExplorerButton?.setAttribute('aria-expanded', String(drawerView === DBCODE_CONNECTIONS_VIEW));
 		this.databaseExplorerButton?.classList.toggle('active', drawerView === DBCODE_CONNECTIONS_VIEW);
-		this.updateDrawerToggleButton(drawerView);
 		this.refreshWebviewDismissLayers();
-	}
-
-	private updateDrawerToggleButton(drawerView: string | undefined): void {
-		const button = this.drawerToggleButton;
-		if (!button) {
-			return;
-		}
-
-		const persistentDrawerOpen = Boolean(drawerView && this.isPersistentDrawerView(drawerView));
-		const controlAvailable = drawerView !== DBCODE_ACCOUNT_VIEW && Boolean(persistentDrawerOpen || this.lastPersistentDrawerView);
-		const label = persistentDrawerOpen
-			? localize('dbcodeWrapper.collapseDrawer', "Collapse drawer")
-			: localize('dbcodeWrapper.expandDrawer', "Expand drawer");
-		button.hidden = !controlAvailable;
-		button.title = label;
-		button.setAttribute('aria-label', label);
-		button.setAttribute('aria-expanded', String(persistentDrawerOpen));
-		button.classList.toggle('active', persistentDrawerOpen);
-
-		const text = button.querySelector<HTMLElement>('.dbcode-wrapper-button-label');
-		if (text) {
-			text.textContent = label;
-		}
-		const icon = button.querySelector<HTMLElement>('.codicon');
-		icon?.classList.toggle('codicon-chevron-left', persistentDrawerOpen);
-		icon?.classList.toggle('codicon-chevron-right', !persistentDrawerOpen);
 	}
 
 	private handleKeydown(event: KeyboardEvent): void {

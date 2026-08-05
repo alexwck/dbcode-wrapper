@@ -151,20 +151,30 @@ for required_persistent_drawer_contract in \
   }
 done
 
-for required_drawer_toggle_contract in \
+for required_drawer_route_toggle in \
+  "this.toggleDrawer(DBCODE_CONNECTIONS_VIEW)" \
+  "this.toggleDrawer(DBCODE_TUNNELS_VIEW)" \
+  "this.toggleDrawer(DBCODE_AUTH_PROFILES_VIEW)" \
+  "this.toggleDrawer(DBCODE_STREAMS_VIEW)" \
+  "this.toggleDrawer(DBCODE_HISTORY_VIEW)" \
+  "this.toggleDrawer(DBCODE_LIBRARY_VIEW)"; do
+  rg -Fq -- "${required_drawer_route_toggle}" "${focused_shell_typescript}" || {
+    echo "A persistent DBCode route cannot collapse and restore its own drawer: ${required_drawer_route_toggle}" >&2
+    exit 1
+  }
+done
+
+for redundant_drawer_control in \
   "createButton('drawer-toggle'" \
-  'private isDbcodeDrawerOpen(): boolean' \
-  'private async togglePersistentDrawer(): Promise<void>' \
+  'togglePersistentDrawer' \
   'lastPersistentDrawerView' \
   'drawerToggleButton' \
   '"Collapse drawer"' \
-  '"Expand drawer"' \
-  "codicon-chevron-left" \
-  "codicon-chevron-right"; do
-  rg -Fq -- "${required_drawer_toggle_contract}" "${focused_shell_typescript}" || {
-    echo "The focused shell is missing the persistent drawer collapse and expand control: ${required_drawer_toggle_contract}" >&2
+  '"Expand drawer"'; do
+  if rg -Fq -- "${redundant_drawer_control}" "${focused_shell_typescript}"; then
+    echo "The focused shell still exposes the redundant shared drawer control: ${redundant_drawer_control}" >&2
     exit 1
-  }
+  fi
 done
 
 focused_keydown_contract="$(
@@ -190,6 +200,11 @@ for required_quick_input_layer in \
     exit 1
   }
 done
+
+if ! rg -Uq '\.monaco-workbench\.dbcode-wrapper-focused \.part\.titlebar \.command-center \{\n[[:space:]]*display: none !important;' "${focused_shell_styles}"; then
+  echo "The focused shell does not hard-hide the generic Code OSS title-bar command center." >&2
+  exit 1
+fi
 
 if rg -Fq "toAction({ id: 'dbcodeWrapper.connectionsHome'" "${focused_shell_typescript}"; then
   echo "The connection-tools menu still duplicates the primary Connections route." >&2
@@ -355,7 +370,7 @@ for rendered_contract in \
   'Connections Home' \
   'Connections Home owns the main canvas without opening Terminal' \
   'Database Explorer remains persistent across outside click and Escape' \
-  'History remains persistent, Library replaces it, and the control collapses and expands the drawer' \
+  'History and Library remain persistent and their own actions collapse and restore the drawer' \
   'Account remains temporary and closes on outside click or Escape' \
   'captureConnectionCatalogueSnapshot' \
   'unchanged DBCode exposes the reviewed New Connection catalogue' \

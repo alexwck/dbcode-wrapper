@@ -39,6 +39,10 @@
 	display: none !important;
 }
 
+.monaco-workbench.dbcode-wrapper-focused .part.titlebar .command-center {
+	display: none !important;
+}
+
 .dbcode-wrapper-toolbar {
 	position: relative;
 	z-index: 2600;

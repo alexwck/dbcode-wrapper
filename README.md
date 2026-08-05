@@ -19,7 +19,7 @@ Unchanged DBCode + required Python/Jupyter extensions
 
 Code OSS is the extension host and application runtime. VSCodium supplies the reproducible macOS build and packaging flow. Open VSX supplies independently verified extension packages. DBCode supplies the database, notebook, AI, MCP, account, and licence features. The wrapper owns only the application identity, focused shell, private profile, compatibility checks, the explicit local BSON Result Viewer, and host-only packaging. The viewer is a display adapter, not another database client.
 
-DBCode side drawers stay open while the user works in a query editor, the main canvas, or a result grid. Another DBCode action may replace the current drawer. The shared Collapse drawer control hides it and then becomes Expand drawer so the same view can be restored. Account is the exception: it remains temporary and closes on an outside click or Escape.
+DBCode side drawers stay open while the user works in a query editor, the main canvas, or a result grid. Choose the action for the visible drawer again to collapse it, and choose it again to restore it. Another DBCode action may replace the current drawer. Account is the exception: it remains temporary and closes on an outside click or Escape.
 
 New DBCode query results open below the query at every window width. DBCode still owns the live result editor, grid, Inspector, copy, and export behavior; the wrapper does not add a second live Results panel.
 

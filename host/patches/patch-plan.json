@@ -72,12 +72,12 @@
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
           "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/dbcodeWrapper.contribution.ts",
-          "sha256": "5832810126a0b0ef45997b4e932f77d852a445211b121b53cb0b47269a8c7507"
+          "sha256": "0f5b796771fd0885152206f827a3abf61f4a10708cc7b98322d37dd83bf947c0"
         },
         {
           "source": "host/code-oss-overlay/src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
           "target": "src/vs/workbench/contrib/dbcodeWrapper/browser/media/dbcodeWrapper.css",
-          "sha256": "3d59b937be783da2275bdd3ad5bcb307e1ab30578d86ea4da83c61b65de65170"
+          "sha256": "9f9227f4b9aae496fdeb90d276a7b4d29b1015f52e3f71aad9ca82776594855b"
         }
       ],
       "sha256": "5e8d907e3a6e4ad388463912bf6ae2b64193331f66942ea71741be0e1f0c695d"
@@ -135,5 +135,5 @@
     "src/vs/workbench/workbench.common.main.ts"
   ],
   "maintained_tree_digest_algorithm": "sha256-of-sorted-sha256-space-space-path-records",
-  "expected_maintained_tree_sha256": "ee15705d560b70708f5088911aa9761457e219db045f5eb6fc5ea2d2cabc3b32"
+  "expected_maintained_tree_sha256": "442526c3295ada7facc19379fb0a0e7a299f00f6a2bec0909eac8da913b0d064"
 }
